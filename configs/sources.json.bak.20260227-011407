@@ -1,0 +1,28 @@
+{
+  "sources": [
+    /* ===== A. メジャー（クラファン） ===== */
+    {"name":"Kickstarter Technology","type":"rss","url":"https://www.kickstarter.com/discover/categories/technology.rss"},
+    {"name":"Kickstarter Design","type":"rss","url":"https://www.kickstarter.com/discover/categories/design.rss"},
+    {"name":"Kickstarter Gadgets (tech+design mix)","type":"rss","url":"https://www.kickstarter.com/discover/advanced?category_id=16&sort=newest&seed=2870422&format=rss"},
+    {"name":"Crowd Supply","type":"rss","url":"https://www.crowdsupply.com/rss.xml"},
+
+    /* Ulule / Gamefound / Zeczec / Indiegogo / BackerKit は後でHTML抽出を追加（まずは“安全に拾える入口”中心） */
+
+    /* ===== B. 横断 / ウォッチ系 ===== */
+    {"name":"Kicktraq - Popular","type":"html_list","url":"https://www.kicktraq.com/projects/popular/","selector_mode":"kicktraq"},
+    {"name":"Kicktraq - Newest","type":"html_list","url":"https://www.kicktraq.com/projects/newest/","selector_mode":"kicktraq"},
+
+    /* ===== C. スタートアップ発掘（クラファン外） ===== */
+    {"name":"Product Hunt (homepage)","type":"html_list","url":"https://www.producthunt.com/","selector_mode":"producthunt"},
+    {"name":"Hacker News - Show HN","type":"html_list","url":"https://news.ycombinator.com/show","selector_mode":"hn_show"},
+    {"name":"BetaList","type":"html_list","url":"https://betalist.com/","selector_mode":"betalist"},
+
+    /* RedditはAPIや制限が絡むので次フェーズ（まずは安全に公開ページ中心） */
+
+    /* ===== 日本クラファン（市場の今 + 日本にあるか補助） ===== */
+    {"name":"Makuake - Ranking","type":"html_list","url":"https://www.makuake.com/discover/ranking/","selector_mode":"jp_makuake"},
+    {"name":"CAMPFIRE - Ranking","type":"html_list","url":"https://camp-fire.jp/ranking","selector_mode":"jp_campfire"},
+    {"name":"READYFOR - Popular","type":"html_list","url":"https://readyfor.jp/discover/popular","selector_mode":"jp_readyfor"},
+    {"name":"GREEN FUNDING - Ranking","type":"html_list","url":"https://greenfunding.jp/lab/projects","selector_mode":"jp_greenfunding"}
+  ]
+}

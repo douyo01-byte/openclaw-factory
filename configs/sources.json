@@ -1,28 +1,22 @@
 {
   "sources": [
-    /* ===== A. メジャー（クラファン） ===== */
-    {"name":"Kickstarter Technology","type":"rss","url":"https://www.kickstarter.com/discover/categories/technology.rss"},
-    {"name":"Kickstarter Design","type":"rss","url":"https://www.kickstarter.com/discover/categories/design.rss"},
-    {"name":"Kickstarter Gadgets (tech+design mix)","type":"rss","url":"https://www.kickstarter.com/discover/advanced?category_id=16&sort=newest&seed=2870422&format=rss"},
-    {"name":"Crowd Supply","type":"rss","url":"https://www.crowdsupply.com/rss.xml"},
+    { "name": "BackerKit Launches", "kind": "rss", "url": "https://www.backerkit.com/launches.rss" },
+    { "name": "Indiegogo Explore", "kind": "rss", "url": "https://www.indiegogo.com/explore/rss" },
+    { "name": "Crowd Supply", "kind": "rss", "url": "https://www.crowdsupply.com/rss" },
+    { "name": "Ulule", "kind": "rss", "url": "https://www.ulule.com/discover.rss" },
 
-    /* Ulule / Gamefound / Zeczec / Indiegogo / BackerKit は後でHTML抽出を追加（まずは“安全に拾える入口”中心） */
+    { "name": "Kicktraq Trending", "kind": "rss", "url": "https://www.kicktraq.com/projects/feeds/trending/" },
+    { "name": "Kicktraq Popular", "kind": "rss", "url": "https://www.kicktraq.com/projects/feeds/popular/" },
 
-    /* ===== B. 横断 / ウォッチ系 ===== */
-    {"name":"Kicktraq - Popular","type":"html_list","url":"https://www.kicktraq.com/projects/popular/","selector_mode":"kicktraq"},
-    {"name":"Kicktraq - Newest","type":"html_list","url":"https://www.kicktraq.com/projects/newest/","selector_mode":"kicktraq"},
+    { "name": "Product Hunt", "kind": "rss", "url": "https://www.producthunt.com/feed" },
+    { "name": "BetaList", "kind": "rss", "url": "https://betalist.com/feed" },
+    { "name": "Hacker News Show", "kind": "rss", "url": "https://hnrss.org/show" },
 
-    /* ===== C. スタートアップ発掘（クラファン外） ===== */
-    {"name":"Product Hunt (homepage)","type":"html_list","url":"https://www.producthunt.com/","selector_mode":"producthunt"},
-    {"name":"Hacker News - Show HN","type":"html_list","url":"https://news.ycombinator.com/show","selector_mode":"hn_show"},
-    {"name":"BetaList","type":"html_list","url":"https://betalist.com/","selector_mode":"betalist"},
+    { "name": "Reddit Gadgets", "kind": "rss", "url": "https://www.reddit.com/r/gadgets/.rss" },
+    { "name": "Reddit Crowdfunding", "kind": "rss", "url": "https://www.reddit.com/r/Crowdfunding/.rss" },
+    { "name": "Reddit ShutUpAndTakeMyMoney", "kind": "rss", "url": "https://www.reddit.com/r/shutupandtakemymoney/.rss" },
 
-    /* RedditはAPIや制限が絡むので次フェーズ（まずは安全に公開ページ中心） */
-
-    /* ===== 日本クラファン（市場の今 + 日本にあるか補助） ===== */
-    {"name":"Makuake - Ranking","type":"html_list","url":"https://www.makuake.com/discover/ranking/","selector_mode":"jp_makuake"},
-    {"name":"CAMPFIRE - Ranking","type":"html_list","url":"https://camp-fire.jp/ranking","selector_mode":"jp_campfire"},
-    {"name":"READYFOR - Popular","type":"html_list","url":"https://readyfor.jp/discover/popular","selector_mode":"jp_readyfor"},
-    {"name":"GREEN FUNDING - Ranking","type":"html_list","url":"https://greenfunding.jp/lab/projects","selector_mode":"jp_greenfunding"}
+    { "name": "Makuake", "kind": "rss", "url": "https://www.makuake.com/feed/" },
+    { "name": "CAMPFIRE", "kind": "rss", "url": "https://camp-fire.jp/feed" }
   ]
 }
