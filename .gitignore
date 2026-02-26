@@ -1,0 +1,9 @@
+.env
+secrets/
+logs/
+data/
+.venv/
+openclaw-env/
+__pycache__/
+*.log
+.DS_Store
