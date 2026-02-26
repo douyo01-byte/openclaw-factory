@@ -7,3 +7,6 @@ openclaw-env/
 __pycache__/
 *.log
 .DS_Store
+
+# backups
+configs/*.bak.*
