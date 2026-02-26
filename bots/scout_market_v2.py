@@ -168,7 +168,7 @@ def main():
             save_item(conn, it.url, it.title, it.source)
         conn.commit()
 
-        tg_send(format_meeting(top_items)))
+        tg_send(format_meeting(top_items))
         print("Sent to Telegram:", len(top))
     else:
         print("No new items")
