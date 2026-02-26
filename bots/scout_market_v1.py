@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from libs.telegram import send as tg_send
+from oclibs.telegram import send as tg_send
 
 load_dotenv()
 client = OpenAI()
@@ -76,7 +76,7 @@ def fetch_html(url: str) -> Optional[str]:
         return None
 
 def parse_list(selector_mode: str, base_url: str, html: str) -> List[Dict[str, str]]:
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "xml")
     out: List[Dict[str, str]] = []
 
     def add(title: str, href: str, summary: str = ""):
@@ -153,7 +153,7 @@ def extract_contacts(url: str) -> Dict[str, List[str]]:
     if not html:
         return {"emails": [], "contact_urls": []}
 
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "xml")
     text = soup.get_text(" ", strip=True)
     emails = sorted(set(EMAIL_RE.findall(text)))[:10]
 
