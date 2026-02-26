@@ -3,6 +3,23 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 import feedparser
 
+def save_item(conn, url: str, title: str, source: str):
+    """
+    items に upsert（urlユニーク）
+    """
+    conn.execute(
+        """
+        INSERT INTO items (url, title, source, first_seen_at, last_seen_at, status)
+        VALUES (?, ?, ?, datetime('now'), datetime('now'), 'new')
+        ON CONFLICT(url) DO UPDATE SET
+            title=excluded.title,
+            source=excluded.source,
+            last_seen_at=datetime('now')
+        """,
+        (url, title, source),
+    )
+
+
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -123,6 +140,25 @@ def format_tg(items: List[Item]) -> str:
         msg += "\n"
     return msg
 
+def format_meeting(top):
+    lines = []
+    lines.append("ヤルデ（20代の天才/総括）\n🧠 会議開始。目的：海外候補→日本未上陸っぽい→連絡先取得まで。\n")
+    lines.append("スカウン（さすらいの旅人/30代）\n……旅の途中で拾った“宝”を並べる。今日は上位10件。\n")
+    lines.append("ジャパチェ（市場調査/50代）\n日本で既に売ってそうか、匂いで当たりをつけるぞ。\n")
+    lines.append("イインデスカ（利益判定/50代）\nはい、儲からないのは落とすわよ。ガジェット/家電寄り優先。\n")
+
+    for i, it in enumerate(top, 1):
+        score = getattr(it, "score", "-")
+        lines.append(f"【候補{i}】Score={score}\n{it.title}\n{it.url}\n")
+        emails = getattr(it, "emails", None)
+        if emails:
+            lines.append("連絡先(候補): " + ", ".join(emails[:5]) + ("\n" if len(emails) <= 5 else " ...\n"))
+
+    lines.append("タノシ（熱血営業/40代）\nよっしゃ！ 連絡先が取れたやつから次の一手を整える！\n")
+    lines.append("ヤルデ（20代の天才/総括）\n✅ 本日の結論：候補をDBに保存。次は公式サイトへ辿って“本物の連絡先”を抜く。\n")
+    return "\n".join(lines)
+
+
 def main():
     conn, cur = db()
     sources = load_sources()
@@ -164,11 +200,11 @@ def main():
     if top:
 
         # --- AUTO-SAVE to SQLite (AUTO-ADD) ---
-        for it in top_items:
+        for it in top:
             save_item(conn, it.url, it.title, it.source)
         conn.commit()
 
-        tg_send(format_meeting(top_items))
+        tg_send(format_meeting(top))
         print("Sent to Telegram:", len(top))
     else:
         print("No new items")
@@ -180,37 +216,3 @@ if __name__ == "__main__":
 
 
 # --- DB helpers (AUTO-ADD) ---
-def save_item(conn, url: str, title: str, source: str):
-    """
-    items に upsert（urlユニーク）
-    """
-    conn.execute(
-        """
-        INSERT INTO items (url, title, source, first_seen_at, last_seen_at, status)
-        VALUES (?, ?, ?, datetime('now'), datetime('now'), 'new')
-        ON CONFLICT(url) DO UPDATE SET
-            title=excluded.title,
-            source=excluded.source,
-            last_seen_at=datetime('now')
-        """,
-        (url, title, source),
-    )
-
-
-def format_meeting(top_items):
-    lines = []
-    lines.append("ヤルデ（20代の天才/総括）\n🧠 会議開始。目的：海外候補→日本未上陸っぽい→連絡先取得まで。\n")
-    lines.append("スカウン（さすらいの旅人/30代）\n……旅の途中で拾った“宝”を並べる。今日は上位10件。\n")
-    lines.append("ジャパチェ（市場調査/50代）\n日本で既に売ってそうか、匂いで当たりをつけるぞ。\n")
-    lines.append("イインデスカ（利益判定/50代）\nはい、儲からないのは落とすわよ。ガジェット/家電寄り優先。\n")
-
-    for i, it in enumerate(top_items, 1):
-        score = getattr(it, "score", "-")
-        lines.append(f"【候補{i}】Score={score}\n{it.title}\n{it.url}\n")
-        emails = getattr(it, "emails", None)
-        if emails:
-            lines.append("連絡先(候補): " + ", ".join(emails[:5]) + ("\n" if len(emails) <= 5 else " ...\n"))
-
-    lines.append("タノシ（熱血営業/40代）\nよっしゃ！ 連絡先が取れたやつから次の一手を整える！\n")
-    lines.append("ヤルデ（20代の天才/総括）\n✅ 本日の結論：候補をDBに保存。次は公式サイトへ辿って“本物の連絡先”を抜く。\n")
-    return "\n".join(lines)
