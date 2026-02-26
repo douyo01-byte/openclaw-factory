@@ -1,0 +1,8 @@
+greenlet==3.3.2
+packaging==26.0
+playwright==1.58.0
+pyee==13.0.1
+python-dotenv==1.2.1
+setuptools==82.0.0
+typing_extensions==4.15.0
+wheel==0.46.3
