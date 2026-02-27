@@ -1,4 +1,18 @@
 import re, sqlite3
+import os
+
+def _load_persona():
+  core=os.environ.get("CORE_PERSONA_FILE")
+  role=os.environ.get("PERSONA_FILE")
+  t=[]
+  if core and os.path.exists(core):
+    t.append(open(core,"r",encoding="utf-8").read().strip())
+  if role and os.path.exists(role):
+    t.append(open(role,"r",encoding="utf-8").read().strip())
+  return "\n\n".join([x for x in t if x])
+
+PERSONA=_load_persona()
+
 from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
