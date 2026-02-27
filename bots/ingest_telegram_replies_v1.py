@@ -36,31 +36,32 @@ def http_get(url, params):
         return json.loads(r.read().decode("utf-8"))
 
 def parse_text(text):
-    t = (text or "").strip()
-    if not t:
-        return None
-    u = t.upper()
-    if u.startswith("OK") or t.startswith("採用") or t.startswith("A"):
-        decision = "adopt"
-        rest = t[2:].strip() if u.startswith("OK") else (t[2:].strip() if t.startswith("A") else t[2:].strip())
-    elif u.startswith("NO") or t.startswith("見送り") or t.startswith("NG"):
-        decision = "reject"
-        rest = t[2:].strip() if u.startswith("NO") else t[3:].strip()
-    elif u.startswith("HOLD") or t.startswith("保留"):
-        decision = "hold"
-        rest = t[4:].strip() if u.startswith("HOLD") else t[2:].strip()
+    t=(text or "").strip()
+    if not t: return None
+    u=t.upper()
+    if u.startswith("OK"):
+        d="adopt"; rest=t[2:].strip()
+    elif u.startswith("NO"):
+        d="reject"; rest=t[2:].strip()
+    elif u.startswith("NG"):
+        d="reject"; rest=t[2:].strip()
+    elif u.startswith("HOLD"):
+        d="hold"; rest=t[4:].strip()
+    elif t.startswith("採用"):
+        d="adopt"; rest=t[len("採用"):].strip()
+    elif t.startswith("見送り"):
+        d="reject"; rest=t[len("見送り"):].strip()
+    elif t.startswith("保留"):
+        d="hold"; rest=t[len("保留"):].strip()
     else:
         return None
-    target = ""
-    reason = ""
+    target=""
+    reason=""
     if rest:
-        if " " in rest:
-            target, reason = rest.split(" ", 1)
-            target = target.strip()
-            reason = reason.strip()
-        else:
-            target = rest.strip()
-    return decision, target, reason
+        parts=rest.split(" ",1)
+        target=parts[0].strip()
+        reason=(parts[1].strip() if len(parts)>1 else "")
+    return d,target,reason
 
 def now():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
