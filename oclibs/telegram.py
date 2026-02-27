@@ -31,6 +31,8 @@ def _split_telegram_message(text: str, limit: int = TELEGRAM_MAX_LEN):
     return parts
 
 def send(message: str):
+  if _tg_dedupe(text):
+    return
     if not BOT_TOKEN or not CHAT_ID:
         print("Telegram env missing (TELEGRAM_BOT_TOKEN + (OCLAW_TELEGRAM_CHAT_ID or TELEGRAM_CHAT_ID))")
         return None

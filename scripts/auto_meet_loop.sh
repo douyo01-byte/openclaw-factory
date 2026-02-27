@@ -15,6 +15,7 @@ NO_MIN_AGE_MIN="${NO_MIN_AGE_MIN:-180}"
 
 mkdir -p logs
 export DB_PATH="$DB"
+export DB_PATH="$DB"
 
 while true; do
   echo "$(date +%F_%T) auto_meet_loop START" >> logs/heartbeat.log
