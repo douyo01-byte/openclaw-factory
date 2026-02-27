@@ -28,5 +28,5 @@ while true; do
   scripts/meeting_once.sh </dev/null >/dev/null 2>&1 || true
   echo "$(date +%F_%T) auto_meet_loop OK" >> logs/heartbeat.log
   sleep ""
-  sleep "$INTERVAL_SEC"
+  sleep ""
 done
