@@ -210,7 +210,8 @@ def main() -> None:
         reply = build_reply(role, item["title"], item["url"], summary)
 
         upsert_role_brief(conn, role or "yarde", item["title"], item["url"], reply)
-        set_ctx_last_item(conn, chat_id, int(item["id"]))
+        if item.get("id") is not None:
+            set_ctx_last_item(conn, chat_id, int(item["id"]))
 
         tg_send(reply)
 

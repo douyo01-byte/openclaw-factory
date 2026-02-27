@@ -4,6 +4,13 @@ import argparse
 import os
 import re
 import sqlite3
+
+
+def enqueue_chat_job(conn, chat_id, item_id, role, query):
+    conn.execute(
+        "insert into chat_jobs(chat_id,item_id,role,query,status) values(?,?,?,?, 'new')",
+        (str(chat_id), item_id, role, query),
+    )
 from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
 
@@ -161,6 +168,8 @@ def handle_chat(conn: sqlite3.Connection, row: sqlite3.Row) -> Tuple[str, Option
         )
 
     tg_send(reply)
+    enqueue_chat_job(conn, row["chat_id"], locals().get("item_id"), locals().get("role"), row["text"])
+    enqueue_chat_job(conn, row["chat_id"], locals().get("item_id"), locals().get("role"), row["text"])
     return ("chatted", None)
 
 def main() -> None:
