@@ -294,7 +294,10 @@ def main():
 
     top3 = ranked[:3]
     msg = format_meeting(top3, jp)
+    
+if not _tg_url_sent(url):
     tg_send(msg)
+
 
 if __name__ == "__main__":
     main()
