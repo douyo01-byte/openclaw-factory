@@ -26,3 +26,9 @@ def recall(topic,limit=20):
     rows=conn.execute("select content from learnings where topic like ? order by id desc limit ?",(f"%{topic}%",limit)).fetchall()
     conn.close()
     return "\n".join([r[0] for r in rows])
+
+def recall_decisions(limit=30):
+    conn=_db()
+    rows=conn.execute("select decision||':'||reason from decisions order by id desc limit ?",(limit,)).fetchall()
+    conn.close()
+    return "\n".join([r[0] for r in rows])
