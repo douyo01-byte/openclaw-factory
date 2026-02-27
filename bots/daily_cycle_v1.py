@@ -21,6 +21,9 @@ def main() -> None:
     # ※ モジュール名が違う場合はここだけ直す
     run([__import__("sys").executable, "-m", "bots.chat_research_v1"])
 
+    # 4) reflection (自動反省会)
+    run([__import__("sys").executable, "-m", "bots.reflection_v1", "--limit", "50"])
+
     # 4) healthcheck（生存ログ）
     print(f"[daily_cycle] OK {datetime.now().isoformat()}")
 
