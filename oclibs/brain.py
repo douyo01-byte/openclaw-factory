@@ -32,3 +32,13 @@ def recall_decisions(limit=30):
     rows=conn.execute("select decision||':'||reason from decisions order by id desc limit ?",(limit,)).fetchall()
     conn.close()
     return "\n".join([r[0] for r in rows])
+
+def recall_success_patterns(limit=50):
+    conn=_db()
+    rows=conn.execute("""
+        select reason from decisions
+        where decision like '%APPROVE%' or decision like '%GO%'
+        order by id desc limit ?
+    """,(limit,)).fetchall()
+    conn.close()
+    return "\n".join([r[0] for r in rows])
