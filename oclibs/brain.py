@@ -20,3 +20,9 @@ def save_decision(product_id, decision, reason):
     conn.execute("insert into decisions(product_id,decision,reason) values(?,?,?)",(product_id,decision,reason))
     conn.commit()
     conn.close()
+
+def recall(topic,limit=20):
+    conn=_db()
+    rows=conn.execute("select content from learnings where topic like ? order by id desc limit ?",(f"%{topic}%",limit)).fetchall()
+    conn.close()
+    return "\n".join([r[0] for r in rows])
