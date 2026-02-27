@@ -25,5 +25,6 @@ while true; do
   CORE_PERSONA_FILE=config/personas/core.txt PERSONA_FILE=config/personas/aya.txt .venv/bin/python -m bots.team.aya_judge </dev/null >/dev/null 2>&1 || true
   scripts/meeting_once.sh </dev/null >/dev/null 2>&1 || true
   echo "$(date +%F_%T) auto_meet_loop OK" >> logs/heartbeat.log
+  sleep ""
   sleep "$INTERVAL_SEC"
 done
