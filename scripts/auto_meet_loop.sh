@@ -15,7 +15,6 @@ NO_MIN_AGE_MIN="${NO_MIN_AGE_MIN:-180}"
 
 mkdir -p logs
 export DB_PATH="$DB"
-export DB_PATH="$DB"
 
 while true; do
   echo "$(date +%F_%T) auto_meet_loop START" >> logs/heartbeat.log
@@ -28,6 +27,4 @@ while true; do
   .venv/bin/python -m bots.build_decision_patterns </dev/null >/dev/null 2>&1 || true
 scripts/meeting_once.sh </dev/null >/dev/null 2>&1 || true
   echo "$(date +%F_%T) auto_meet_loop OK" >> logs/heartbeat.log
-  sleep ""
-  sleep ""
 done
