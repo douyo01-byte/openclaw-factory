@@ -12,35 +12,15 @@ def cols(conn, table):
 
 def ensure(conn):
     conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout=5000;")
     conn.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
-    conn.execute("""CREATE TABLE IF NOT EXISTS inbox_commands(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      source TEXT NOT NULL,
-      update_id TEXT NOT NULL,
-      chat_id TEXT,
-      user_id TEXT,
-      text TEXT NOT NULL,
-      received_at TEXT,
-      UNIQUE(source, update_id)
-    )""")
+    conn.execute("CREATE TABLE IF NOT EXISTS inbox_commands(id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL, update_id TEXT NOT NULL, chat_id TEXT, user_id TEXT, text TEXT NOT NULL, received_at TEXT, UNIQUE(source, update_id))")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_inbox_commands_received_at ON inbox_commands(received_at)")
-    conn.execute("""CREATE TABLE IF NOT EXISTS decisions(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      run_id TEXT,
-      target TEXT,
-      decision TEXT,
-      reason TEXT,
-      meta_json TEXT,
-      created_at TEXT
-    )""")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_decisions_created_at ON decisions(created_at)")
-    ic = cols(conn, "inbox_commands")
-    if "received_at" not in ic:
-        conn.execute("ALTER TABLE inbox_commands ADD COLUMN received_at TEXT")
-    dc = cols(conn, "decisions")
-    for c in ["run_id","target","decision","reason","meta_json","created_at"]:
-        if c not in dc:
-            conn.execute(f"ALTER TABLE decisions ADD COLUMN {c} TEXT")
+    dc = {r[1] for r in conn.execute("PRAGMA table_info(decisions)")}
+    if "run_id" not in dc: conn.execute("ALTER TABLE decisions ADD COLUMN run_id TEXT")
+    if "target" not in dc: conn.execute("ALTER TABLE decisions ADD COLUMN target TEXT")
+    if "meta_json" not in dc: conn.execute("ALTER TABLE decisions ADD COLUMN meta_json TEXT")
+
 
 def kv_get(conn, k, default=None):
     row = conn.execute("SELECT v FROM kv WHERE k=?", (k,)).fetchone()
