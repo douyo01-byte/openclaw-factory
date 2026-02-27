@@ -104,13 +104,13 @@ def main():
 
     for e in sorted(emails):
       conn.execute(
-        "insert or ignore into contacts(item_url,email,source,created_at) values(?,?,?,datetime('now'))",
+        "insert or ignore into contacts(item_url,email,source) values(?,?,?)",
         (item_url, e, "web_enrich"),
       )
 
     for k,v in socials:
       conn.execute(
-        "insert or ignore into contact_points(item_url,kind,value,source,created_at) values(?,?,?,?,datetime('now'))",
+        "insert or ignore into contact_points(item_url,kind,value,source) values(?,?,?,?)",
         (item_url, k, v, "web_enrich"),
       )
 
