@@ -16,6 +16,7 @@ while true; do
   python -m bots.chat_research_v1 --db "$DB" --limit "$CHAT_LIMIT" >/dev/null 2>&1 || true
   python -m bots.enrich_contacts_v1 --db "$DB" --limit "$ENRICH_LIMIT" >/dev/null 2>&1 || true
   scripts/meeting_once.sh >/dev/null 2>&1 || true
+  python -m bots.auto_plan_v1
   python -m bots.command_apply_v1 >/dev/null 2>&1 || true
   sleep "$INTERVAL_SEC"
 done

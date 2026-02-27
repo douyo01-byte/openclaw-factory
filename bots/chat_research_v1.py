@@ -110,7 +110,7 @@ def upsert_role_brief(conn: sqlite3.Connection, role: str, title: str, url: str,
         "title=excluded.title, summary=excluded.summary, fetched_at=datetime('now')",
         ((role or "").strip(), topic, source_url, (title or "").strip(), summary),
     )
-    conn.commit()
+    conn.execute("update items set researched_at=datetime("now") where id=?",(item_id,)); conn.commit()
 def build_reply(role: Optional[str], item_title: str, item_url: str, summary: Dict[str, Any]) -> str:
     head = "🧠 ヤルデ"
     if role == "japache":
@@ -206,7 +206,7 @@ def main() -> None:
 
         conn.execute("UPDATE chat_jobs SET status='done', updated_at=datetime('now'), error=NULL WHERE id=?", (job_id,))
         processed += 1
-        conn.commit()
+        conn.execute("update items set researched_at=datetime("now") where id=?",(item_id,)); conn.commit()
         time.sleep(0.2)
 
     conn.close()
