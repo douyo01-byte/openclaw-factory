@@ -270,8 +270,10 @@ def main():
         time.sleep(0.6)
 
     if not overseas:
-        tg_send("ヤルデ：新規の海外候補が拾えませんでした（既出スキップが効いてる/ソースが弱い可能性）。")
-        return
+        _m="ヤルデ：新規の海外候補が拾えませんでした（既出スキップが効いてる/ソースが弱い可能性）。"
+        if not _tg_msg_sent(_m):
+            tg_send(_m)
+            return
 
     # コスト制御：評価は最大20件
     batch = overseas[:20]
