@@ -164,7 +164,7 @@ def main() -> None:
     conn = connect_db(args.db)
 
     jobs = conn.execute(
-        "SELECT id, chat_id, item_id, role, query FROM chat_jobs WHERE status='new' ORDER BY id ASC LIMIT ?",
+        "SELECT id, chat_id, item_id, role, query FROM chat_jobs WHERE status='new' LIMIT ?",
         (args.limit,),
     ).fetchall()
 
