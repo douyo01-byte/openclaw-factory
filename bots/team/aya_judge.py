@@ -14,6 +14,10 @@ def _load_persona():
   return "\n\n".join([x for x in t if x])
 
 PERSONA=_load_persona()
+past_decisions=brain.recall_decisions()
+success_patterns=brain.recall_success_patterns()
+decision_patterns=brain.recall_decision_patterns()
+PERSONA=PERSONA+("\n\n過去の決定(直近):\n"+past_decisions if past_decisions else "")+("\n\n成功パターン:\n"+success_patterns if success_patterns else "")+("\n\n判断パターン重み:\n"+decision_patterns if decision_patterns else "")
 
 import re
 
