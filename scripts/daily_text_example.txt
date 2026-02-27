@@ -1,0 +1,18 @@
+📌 OpenClaw Daily (2026-02-27 22:16)
+Goal: 連絡先DB +3（email優先 / なければフォーム）
+
+New: +0 items / Reviewed: 10 / Decisions: review継続
+
+TOP候補
+1) EK-1 (Web) https://egokernel.com -> /contact /about
+2) Depwire (GH) https://github.com/depwire/depwire -> Website→contact/email
+3) Skills Playground (Web) https://skillsplayground.com/skills/ -> /contact
+
+担当
+- Scout: 外部リンク（公式）確定（Reddit/GH）
+- Japache: 日本上陸チェック（日本語LP/代理店/Amazon楽天）
+- Iindesuka: 即死判定（単価/サイズ/利益/法務）
+- Tanoshi: 初手文面（短文）
+
+Retro
+Action: 採用偏重 → 反証（競合/実現性/法務）チェック必須化
