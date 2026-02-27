@@ -1,80 +1,153 @@
-import sqlite3
+from typing import List, Tuple
 from dataclasses import dataclass
-from typing import List, Optional
+import sqlite3
+from datetime import datetime
 from oclibs.telegram import send as tg_send
 
-DB_PATH = "data/openclaw.db"
+DB="data/openclaw.db"
 
 @dataclass
 class Row:
-    id: int
-    title: str
-    url: str
-    source: str
-    status: str
-    first_seen_at: str
+    id:int
+    title:str
+    url:str
+    source:str
+    status:str
 
-def fetch_pool(limit: int = 60) -> List[Row]:
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-
-    # status='new' を優先。無ければ全部から引く。
-    rows = cur.execute("""
-        SELECT id, title, url, source, status, first_seen_at
+def fetch_pool(limit=60)->List[Row]:
+    conn=sqlite3.connect(DB)
+    cur=conn.cursor()
+    rows=cur.execute("""
+        SELECT id,
+               COALESCE(title,'(no title)') as title,
+               COALESCE(url,'') as url,
+               COALESCE(source,'unknown') as source,
+               COALESCE(status,'unknown') as status
         FROM items
-        WHERE status IN ('new','shortlisted','review')
-        ORDER BY
-          CASE status WHEN 'new' THEN 0 WHEN 'review' THEN 1 WHEN 'shortlisted' THEN 2 ELSE 9 END,
-          id DESC
+        WHERE status IN ('new','review')
+        ORDER BY id DESC
         LIMIT ?
-    """, (limit,)).fetchall()
-
-    if not rows:
-        rows = cur.execute("""
-            SELECT id, title, url, source, status, first_seen_at
-            FROM items
-            ORDER BY id DESC
-            LIMIT ?
-        """, (limit,)).fetchall()
-
+    """,(limit,)).fetchall()
     conn.close()
-    return [Row(**dict(r)) for r in rows]
+    return [Row(*r) for r in rows]
 
-def pick_top(rows: List[Row], k: int = 10) -> List[Row]:
-    # いまは最短のため「新しい順」。後でスコアリング/キャラ学習に差し替えOK。
-    return rows[:k]
+def pick_top(pool,k=10):
+    return pool[:k]
 
-def mark_status(item_ids: List[int], new_status: str = "review"):
-    if not item_ids:
-        return
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.executemany("UPDATE items SET status=? WHERE id=?", [(new_status, i) for i in item_ids])
-    conn.commit()
+def short_kind(url: str) -> str:
+    u = (url or "").lower()
+    if "github.com" in u: return "GitHub"
+    if "producthunt.com" in u: return "ProductHunt"
+    if "reddit.com" in u: return "Reddit"
+    if u.startswith("http"): return "Web"
+    return "Other"
+
+def action_plan(r: Row) -> str:
+    kind = short_kind(r.url)
+    if kind == "GitHub":
+        return "→ README/Websiteリンク抽出 → 公式サイト → contact/email"
+    if kind == "Reddit":
+        return "→ 投稿本文の外部URL → 公式/販売サイト → contact/email"
+    if kind == "ProductHunt":
+        return "→ 製品サイト → contact/email（無ければ company_finder）"
+    if kind == "Web":
+        return "→ /contact /about 優先クロール → email or フォームURL保存"
+    return "→ まず公式サイト特定"
+
+def fetch_role_briefs(role: str, n: int = 2) -> List[Tuple[str,str,str]]:
+    conn=sqlite3.connect(DB)
+    cur=conn.cursor()
+    rows=cur.execute("""
+        SELECT COALESCE(title,''), COALESCE(source_url,''), COALESCE(summary,'')
+        FROM role_briefs
+        WHERE role=?
+        ORDER BY fetched_at DESC, id DESC
+        LIMIT ?
+    """,(role,n)).fetchall()
     conn.close()
+    return [(t,u,s) for (t,u,s) in rows if t and u]
 
-def meeting_text(top: List[Row]) -> str:
-    lines = []
-    lines.append("ヤルデ（20代の天才/総括）\n🧠 会議開始。目的：DBに溜めた候補から“今日の当たり”を絞る。\n")
-    lines.append("スカウン（さすらいの旅人/30代）\n……倉庫（DB）から新しめの候補を持ってきた。まずは並べる。\n")
-    lines.append("ジャパチェ（市場調査/50代）\n日本で既に売ってそうな匂いがするやつは外すぞ。\n")
-    lines.append("イインデスカ（利益判定/50代）\n家電・ガジェット寄り優先。薄利は落とすわ。\n")
+def make_rule(role: str, brief_title: str, brief_summary: str) -> str:
+    """
+    “学習→ルール化”の雑変換（後でLLM要約に差し替え可能）
+    """
+    s = (brief_summary or "").lower()
+    t = (brief_title or "").lower()
 
-    for i, r in enumerate(top, 1):
-        lines.append(f"【候補{i}】({r.source}) status={r.status}\n{r.title}\n{r.url}\n")
+    if role == "japache":
+        if "amazon" in s or "marketplace" in s:
+            return "新ルール：日本Amazon/楽天の有無を最優先で当たる（代理店より先に）"
+        if "layoff" in t or "cuts" in t:
+            return "新ルール：組織縮小/混乱中の企業は連絡先取れても優先度を下げる"
+        return "新ルール：国内上陸の兆候（日本語LP/代理店表記）を先に探す"
 
-    lines.append("タノシ（熱血営業/40代）\nよっしゃ！次は“公式サイトの連絡先だけ”抜いて、勝ち筋を作るぞ！\n")
-    lines.append("ヤルデ（20代の天才/総括）\n✅ 本日の結論：この10件を review 扱いに更新。次回会議でさらに絞る。\n")
+    if role == "iindesuka":
+        if "pricing" in s or "subscription" in s or "saas" in s:
+            return "新ルール：価格ページが無いSaaSは“売り方不明”として減点"
+        return "新ルール：単価×輸送×差別化の3点で即死判定"
+
+    if role == "tanoshi":
+        if "crm" in t or "pipeline" in s:
+            return "新ルール：初手は『テスト輸入→反応→独占』の順で提案"
+        if "cold" in s or "outreach" in s:
+            return "新ルール：初手メールは3行（価値/理由/次の一歩）に固定"
+        return "新ルール：メール無ければフォームでもOK、返信導線を最短化"
+
+    if role == "scout":
+        if "product hunt" in s or "launch" in s or "release" in s:
+            return "新ルール：ローンチ直後は“公式サイトのContact”が出やすいので即回収"
+        return "新ルール：プラットフォームURLは必ず外部リンク（公式）まで辿ってから評価"
+
+    return "新ルール：学習を判断基準に反映する"
+
+def meeting_text(top:List[Row])->str:
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    lines=[]
+
+    lines.append("🧠 ヤルデ（20代の天才/総括）")
+    lines.append(f"会議開始（{now}）。目的：海外候補 → 日本未上陸っぽい → 連絡先取得まで一気通貫。")
+    lines.append("今日のゴール：『連絡先（メール or フォーム）』を最低3件、DBに積む。\n")
+
+    lines.append("📚 学習ログ（各自が空き時間に仕入れたネタ → 今日から使う新ルール）")
+    for role,label in [("scout","🌍 スカウン"),("japache","🕵️ ジャパチェ"),("iindesuka","💰 イインデスカ"),("tanoshi","🔥 タノシ")]:
+        briefs = fetch_role_briefs(role, n=2)
+        if briefs:
+            # 最新1件をルール化
+            rule = make_rule(role, briefs[0][0], briefs[0][2])
+            lines.append(f"{label}：{rule}")
+            # 学習ネタも2件だけ添付
+            for t,u,_s in briefs:
+                lines.append(f" - {t} / {u}")
+        else:
+            lines.append(f"{label}：新ルールなし（まだ学習メモなし）")
+    lines.append("")
+
+    lines.append("🌍 スカウン（さすらいの旅人/30代）")
+    lines.append("……旅の途中で拾った“宝”を並べる。今日は上位10件。『売れ筋』じゃなく『攻め筋』で選んだ。\n")
+
+    for i,r in enumerate(top,1):
+        kind = short_kind(r.url)
+        lines.append(f"【候補{i}】({r.status}/{kind})")
+        lines.append(r.title)
+        lines.append(r.url)
+        lines.append(f"次アクション {action_plan(r)}\n")
+
+    lines.append("🧠 ヤルデ（総括/決裁）")
+    lines.append("✅ 本日の決裁：この10件は review 継続。連絡先探索を回す。")
+    lines.append("担当割り当て：")
+    lines.append("・スカウン：Reddit/GitHubの外部リンク（公式）を確定")
+    lines.append("・ジャパチェ：日本上陸チェック（Amazon/楽天/代理店）")
+    lines.append("・イインデスカ：利益/サイズ/単価の即死判定")
+    lines.append("・タノシ：取れた連絡先から“最短で返事が来る初手文面”を準備")
+    lines.append("次回の勝ち条件：連絡先DB +3（メール優先、無ければフォームURL）。")
+
     return "\n".join(lines)
 
 def main():
-    pool = fetch_pool(limit=60)
-    top = pick_top(pool, k=10)
-    mark_status([r.id for r in top], new_status="review")
-    msg = meeting_text(top)
-    tg_send(msg)
-    print("Sent meeting_from_db_v1:", len(top))
+    pool=fetch_pool(limit=60)
+    top=pick_top(pool, k=10)
+    tg_send(meeting_text(top))
+    print("meeting sent")
 
-if __name__ == "__main__":
+if __name__=="__main__":
     main()
