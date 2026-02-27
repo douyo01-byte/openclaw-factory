@@ -84,7 +84,7 @@ def get_item(conn: sqlite3.Connection, item_id: int) -> Optional[sqlite3.Row]:
 
 def set_ctx_last_item(conn: sqlite3.Connection, chat_id: str, item_id: int) -> None:
     conn.execute(
-        "INSERT INTO bot_state(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        "INSERT INTO bot_state(k, v) VALUES(?, ?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",
         (f"ctx:last_item:{chat_id}", str(item_id)),
     )
 
@@ -105,6 +105,8 @@ def upsert_role_brief(conn: sqlite3.Connection, role: str, title: str, url: str,
         fields.append("role"); values.append(role)
     if "topic" in cols:
         fields.append("topic"); values.append((title or "unknown"))
+    if "source_url" in cols:
+        fields.append("source_url"); values.append((url or "about:blank"))
     if "title" in cols:
         fields.append("title"); values.append(title)
     if "url" in cols:
