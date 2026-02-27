@@ -182,6 +182,8 @@ def run_for_role(db_path: str, role: str, limit: int) -> int:
     return added
 
 def main():
+    import os
+    feeds_file=os.environ.get("FEEDS_FILE")
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default="data/openclaw.db")
     ap.add_argument("--role", default="all")

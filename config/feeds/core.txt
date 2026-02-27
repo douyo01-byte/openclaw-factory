@@ -1,0 +1,4 @@
+https://www.shopify.com/blog/feed
+https://www.bigcommerce.com/blog/rss/
+https://www.hubspot.com/blog/rss.xml
+https://news.ycombinator.com/rss
