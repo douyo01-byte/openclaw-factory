@@ -129,6 +129,12 @@ def parse_decision(text: str):
     r=(a[1] if len(a)>1 else "").strip()
     return (k,r)
 
+def insert_decision_event(conn, item_id: int, decision: str, score: int, reason: str, decided_by: str='tg', source: str='tg') -> None:
+    conn.execute(
+        "INSERT INTO decision_events(item_id, decision, score, reason, decided_by, source) VALUES(?,?,?,?,?,?)",
+        (item_id, decision, score, (reason or '').strip(), decided_by, source)
+    )
+
 def upsert_decision_reason(conn, item_id: int, reason: str) -> None:
     conn.execute(
         "INSERT INTO decision_reason(item_id, reason, updated_at) VALUES(?,?,datetime('now')) "
@@ -165,6 +171,8 @@ def handle_chat(conn: sqlite3.Connection, row: sqlite3.Row) -> Tuple[str, Option
         r = conn.execute("SELECT v FROM bot_state WHERE k=? LIMIT 1", (f"ctx:last_item:{chat_id}",)).fetchone()
         if r and str(r["v"]).strip():
             upsert_decision_reason(conn, int(r["v"]), f"{decision} {reason}".strip())
+            score = 1 if decision=='採用' else 0 if decision=='保留' else -1 if decision=='見送り' else 0
+            insert_decision_event(conn, int(r["v"]), decision, score, reason, decided_by='tg', source='tg')
             tg_send(f"{decision} {reason}".strip())
             return ("chatted", None)
 

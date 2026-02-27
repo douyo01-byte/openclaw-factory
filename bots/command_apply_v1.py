@@ -6,6 +6,12 @@ import re
 INTUITIVE_DECISION_RE = re.compile(r'^(A|D|H)\s+(\d+)\s*(.*)$', re.IGNORECASE)
 INTUITIVE_PRIO_RE     = re.compile(r'^P(\d{1,3})\s+(\d+)\s*(.*)$', re.IGNORECASE)
 
+def insert_decision_event(conn, item_id: int, decision: str, score: int, reason: str, decided_by: str='tg', source: str='tg'):
+    conn.execute(
+        "INSERT INTO decision_events(item_id, decision, score, reason, decided_by, source) VALUES(?,?,?,?,?,?)",
+        (item_id, decision, score, (reason or '').strip(), decided_by, source)
+    )
+
 def upsert_decision_reason(conn, item_id: int, reason: str):
     conn.execute("INSERT INTO decision_reason(item_id, reason, updated_at) VALUES(?,?,datetime('now')) ON CONFLICT(item_id) DO UPDATE SET reason=excluded.reason, updated_at=datetime('now')", (item_id, (reason or '').strip()))
 
@@ -22,6 +28,11 @@ def try_apply_intuitive(conn, text: str) -> bool:
         set_decision(conn, item_id, decision, note=(reason or None))
         if reason:
             upsert_decision_reason(conn, item_id, reason)
+            d=(reason or '').strip().split(' ',1)
+            decision=d[0] if d else ''
+            rest=d[1] if len(d)>1 else ''
+            score = 1 if decision=='採用' else 0 if decision=='保留' else -1 if decision=='見送り' else 0
+            insert_decision_event(conn, item_id, decision, score, rest, decided_by='tg', source='tg')
         return True
     m = INTUITIVE_PRIO_RE.match(t)
     if m:
