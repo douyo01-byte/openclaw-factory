@@ -2,6 +2,39 @@ from __future__ import annotations
 
 import argparse
 import re
+
+INTUITIVE_DECISION_RE = re.compile(r'^(A|D|H)\s+(\d+)\s*(.*)$', re.IGNORECASE)
+INTUITIVE_PRIO_RE     = re.compile(r'^P(\d{1,3})\s+(\d+)\s*(.*)$', re.IGNORECASE)
+
+def upsert_decision_reason(conn, item_id: int, reason: str):
+    conn.execute("INSERT INTO decision_reason(item_id, reason, updated_at) VALUES(?,?,datetime('now')) ON CONFLICT(item_id) DO UPDATE SET reason=excluded.reason, updated_at=datetime('now')", (item_id, (reason or '').strip()))
+
+def try_apply_intuitive(conn, text: str) -> bool:
+    t = (text or '').strip()
+    if not t:
+        return False
+    m = INTUITIVE_DECISION_RE.match(t)
+    if m:
+        code = m.group(1).upper()
+        item_id = int(m.group(2))
+        reason = (m.group(3) or '').strip()
+        decision = {'A':'approved','D':'drop','H':'hold'}[code]
+        set_decision(conn, item_id, decision, note=(reason or None))
+        if reason:
+            upsert_decision_reason(conn, item_id, reason)
+        return True
+    m = INTUITIVE_PRIO_RE.match(t)
+    if m:
+        pr = int(m.group(1))
+        item_id = int(m.group(2))
+        note = (m.group(3) or '').strip()
+        pr = max(0, min(100, pr))
+        set_priority(conn, item_id, pr)
+        if note:
+            add_note(conn, item_id, note)
+        return True
+    return False
+
 import sqlite3
 from datetime import datetime
 
@@ -17,6 +50,8 @@ def connect_db(path: str) -> sqlite3.Connection:
 def parse_item_id(s: str) -> tuple[int | None, str]:
     s = s.strip()
     m = re.match(r"^(\d+)\b(.*)$", s)
+    if try_apply_intuitive(conn, text):
+        return ('applied', None)
     if not m:
         return None, s
     return int(m.group(1)), (m.group(2) or "").strip()
@@ -65,6 +100,8 @@ def apply_one(conn: sqlite3.Connection, row) -> tuple[str, str | None]:
     text = (text or "").strip()
 
     m = CMD_PAT.match(text)
+    if try_apply_intuitive(conn, text):
+        return ('applied', None)
     if not m:
         return ("ignored", None)
 

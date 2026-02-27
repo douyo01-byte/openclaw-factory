@@ -118,6 +118,25 @@ def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
     body = "誰の意見が欲しい？ ジャパチェ/スカウン/イインデスカ/タノシ を文中に入れて投げて。"
     return head, body
 
+def parse_decision(text: str):
+    t=(text or "").strip()
+    if not t:
+        return None
+    a=t.split(None,1)
+    k=a[0]
+    if k not in ("採用","保留","見送り"):
+        return None
+    r=(a[1] if len(a)>1 else "").strip()
+    return (k,r)
+
+def upsert_decision_reason(conn, item_id: int, reason: str) -> None:
+    conn.execute(
+        "INSERT INTO decision_reason(item_id, reason, updated_at) VALUES(?,?,datetime('now')) "
+        "ON CONFLICT(item_id) DO UPDATE SET reason=excluded.reason, updated_at=datetime('now')",
+        (int(item_id), (reason or "").strip()),
+    )
+    conn.commit()
+
 def resolve_item(conn: sqlite3.Connection, text: str) -> Optional[sqlite3.Row]:
     urls = URL_RE.findall(text or "")
     if urls:
@@ -140,6 +159,15 @@ def handle_chat(conn: sqlite3.Connection, row: sqlite3.Row) -> Tuple[str, Option
         return ("ignored", None)
     if text.startswith("/"):
         return ("ignored", None)
+    d = parse_decision(text)
+    if d:
+        decision, reason = d
+        r = conn.execute("SELECT v FROM bot_state WHERE k=? LIMIT 1", (f"ctx:last_item:{chat_id}",)).fetchone()
+        if r and str(r["v"]).strip():
+            upsert_decision_reason(conn, int(r["v"]), f"{decision} {reason}".strip())
+            tg_send(f"{decision} {reason}".strip())
+            return ("chatted", None)
+
 
     role = role_from_text(text)
     item = resolve_item(conn, text)

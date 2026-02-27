@@ -53,3 +53,19 @@ def send(message: str):
         time.sleep(0.15)
 
     return last_resp
+
+def send_with_buttons(text: str, buttons):
+    if not BOT_TOKEN or not CHAT_ID:
+        print("Telegram env missing (TELEGRAM_BOT_TOKEN + (OCLAW_TELEGRAM_CHAT_ID or TELEGRAM_CHAT_ID))")
+        return None
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    payload = {"chat_id": CHAT_ID, "text": text, "reply_markup": {"inline_keyboard": buttons}}
+    try:
+        r = requests.post(url, json=payload, timeout=30)
+        if r.status_code >= 400:
+            print("Telegram send failed:", r.status_code, r.text[:200])
+            return None
+        return r
+    except Exception as e:
+        print("Telegram send error:", e)
+        return None
