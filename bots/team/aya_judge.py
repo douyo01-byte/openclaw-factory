@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+from oclibs import brain as brain
 
 def _load_persona():
   core=os.environ.get("CORE_PERSONA_FILE")
