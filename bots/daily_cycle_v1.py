@@ -27,6 +27,9 @@ def main() -> None:
     # 5) reflection worker (生成)
     run([__import__("sys").executable, "-m", "bots.reflection_worker_v1", "--limit", "5"])
 
+    # 6) send reflection to telegram
+    run([__import__("sys").executable, "-m", "bots.tg_send_reflection_v1"])
+
     # 4) healthcheck（生存ログ）
     print(f"[daily_cycle] OK {datetime.now().isoformat()}")
 
