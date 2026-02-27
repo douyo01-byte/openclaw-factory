@@ -173,7 +173,7 @@ def main() -> None:
         job_id = int(job["id"])
         chat_id = str(job["chat_id"])
         item_id = job["item_id"]
-        role = (job["role"] or "").strip() or None
+        role = (job["role"] or "").strip() or "jpcheck"
 
         if not item_id:
             conn.execute("UPDATE chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
