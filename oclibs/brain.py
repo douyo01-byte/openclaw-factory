@@ -42,3 +42,9 @@ def recall_success_patterns(limit=50):
     """,(limit,)).fetchall()
     conn.close()
     return "\n".join([r[0] for r in rows])
+
+def recall_decision_patterns(limit=60):
+    conn=_db()
+    rows=conn.execute("select token,weight from decision_patterns order by abs(weight) desc limit ?",(limit,)).fetchall()
+    conn.close()
+    return "\n".join([f"{t}:{w:.2f}" for t,w in rows])
