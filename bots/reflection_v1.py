@@ -61,13 +61,13 @@ def main():
     ])
 
     conn.execute(
-        "INSERT INTO retrospectives(chat_id, from_username, text) VALUES(?,?,?)",
-        (args.chat_id, "system", text),
+        "INSERT INTO reflection_requests(window_n,status) VALUES(?,?)",
+        (args.limit, "new"),
     )
     conn.commit()
     conn.close()
 
-    print("Done. reflections=1")
+    print("Done. enqueued=1")
 
 if __name__ == "__main__":
     main()

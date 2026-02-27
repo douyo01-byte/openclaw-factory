@@ -24,6 +24,9 @@ def main() -> None:
     # 4) reflection (自動反省会)
     run([__import__("sys").executable, "-m", "bots.reflection_v1", "--limit", "50"])
 
+    # 5) reflection worker (生成)
+    run([__import__("sys").executable, "-m", "bots.reflection_worker_v1", "--limit", "5"])
+
     # 4) healthcheck（生存ログ）
     print(f"[daily_cycle] OK {datetime.now().isoformat()}")
 
