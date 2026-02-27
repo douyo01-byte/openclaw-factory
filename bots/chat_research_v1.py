@@ -98,30 +98,19 @@ def enqueue_contact(conn: sqlite3.Connection, item_id: int, email: str, source: 
         pass
 
 def upsert_role_brief(conn: sqlite3.Connection, role: str, title: str, url: str, text: str) -> None:
-    cols = {c["name"] for c in conn.execute("PRAGMA table_info(role_briefs);").fetchall()}
-    fields = []
-    values = []
-    if "role" in cols:
-        fields.append("role"); values.append(role)
-    if "topic" in cols:
-        fields.append("topic"); values.append((title or "unknown"))
-    if "source_url" in cols:
-        fields.append("source_url"); values.append((url or "about:blank"))
-    if "title" in cols:
-        fields.append("title"); values.append(title)
-    if "url" in cols:
-        fields.append("url"); values.append(url)
-    if "text" in cols:
-        fields.append("text"); values.append(text)
-    if "score" in cols:
-        fields.append("score"); values.append(0)
-    if "created_at" in cols:
-        fields.append("created_at"); values.append(now_str())
-    if not fields:
+    topic = (title or "unknown").strip()
+    source_url = (url or "").strip()
+    if not source_url:
         return
-    q = "INSERT INTO role_briefs(" + ",".join(fields) + ") VALUES(" + ",".join(["?"] * len(fields)) + ")"
-    conn.execute(q, tuple(values))
-
+    summary = text
+    conn.execute(
+        "INSERT INTO role_briefs(role, topic, source_url, title, summary, fetched_at) "
+        "VALUES(?,?,?,?,?,datetime('now')) "
+        "ON CONFLICT(role,topic,source_url) DO UPDATE SET "
+        "title=excluded.title, summary=excluded.summary, fetched_at=datetime('now')",
+        ((role or "").strip(), topic, source_url, (title or "").strip(), summary),
+    )
+    conn.commit()
 def build_reply(role: Optional[str], item_title: str, item_url: str, summary: Dict[str, Any]) -> str:
     head = "🧠 ヤルデ"
     if role == "japache":
@@ -210,7 +199,7 @@ def main() -> None:
         reply = build_reply(role, item["title"], item["url"], summary)
 
         upsert_role_brief(conn, role or "yarde", item["title"], item["url"], reply)
-        if item.get("id") is not None:
+        if item and item["id"] is not None:
             set_ctx_last_item(conn, chat_id, int(item["id"]))
 
         tg_send(reply)

@@ -127,6 +127,10 @@ def resolve_item(conn: sqlite3.Connection, text: str) -> Optional[sqlite3.Row]:
     hint = extract_title_hint(text)
     return find_item_by_title_hint(conn, hint)
 
+
+
+def get_item(conn, item_id):
+    return conn.execute("SELECT id,title,url FROM items WHERE id=? LIMIT 1", (item_id,)).fetchone()
 def handle_chat(conn: sqlite3.Connection, row: sqlite3.Row) -> Tuple[str, Optional[str]]:
     cmd_id = row["id"]
     chat_id = str(row["chat_id"])
@@ -139,7 +143,13 @@ def handle_chat(conn: sqlite3.Connection, row: sqlite3.Row) -> Tuple[str, Option
 
     role = role_from_text(text)
     item = resolve_item(conn, text)
-
+    if not item:
+        q = strip_role_words(text)
+        hint = extract_title_hint(text) or extract_title_hint(q) or (q.split()[0] if q else "")
+        item = find_item_by_title_hint(conn, hint) if hint else None
+    if not item:
+        r = conn.execute("SELECT v FROM bot_state WHERE k=? LIMIT 1", (f"ctx:last_item:{chat_id}",)).fetchone()
+        item = get_item(conn, int(r["v"])) if r and str(r["v"]).strip() else None
     head, body = build_role_reply(role)
 
     if item:
@@ -169,7 +179,7 @@ def handle_chat(conn: sqlite3.Connection, row: sqlite3.Row) -> Tuple[str, Option
 
     tg_send(reply)
     if item:
-        enqueue_chat_job(conn, row["chat_id"], int(item["id"]), role or "", row["text"])
+        enqueue_chat_job(conn, row["chat_id"], int(item["id"]), role or "", strip_role_words(text))
     return ("chatted", None)
 
 def main() -> None:
