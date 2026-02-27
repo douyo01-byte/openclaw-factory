@@ -1,165 +1,121 @@
-import argparse, re, sqlite3, time
-from urllib.parse import urlparse, urljoin
+import re, sqlite3
+from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
-from ddgs import DDGS
 
-EMAIL_RE=re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.I)
-SOC_HOSTS={
-  "x.com":"x","twitter.com":"x",
-  "instagram.com":"instagram",
-  "tiktok.com":"tiktok",
-  "youtube.com":"youtube","youtu.be":"youtube",
-  "facebook.com":"facebook","fb.com":"facebook",
-  "linkedin.com":"linkedin",
+SOC = {
+  "instagram":"instagram.com",
+  "x":"x.com",
+  "twitter":"twitter.com",
+  "tiktok":"tiktok.com",
+  "facebook":"facebook.com",
+  "youtube":"youtube.com",
+  "linkedin":"linkedin.com",
+  "github":"github.com",
+  "discord":"discord.gg",
+  "telegram":"t.me",
 }
 
-BAD_DOMAINS=set([
-  "reddit.com","www.reddit.com","news.ycombinator.com","github.com","www.github.com",
-  "producthunt.com","www.producthunt.com","medium.com","substack.com"
-])
+EMAIL_RE = re.compile(r'([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})')
 
-def norm_domain(u:str)->str:
-    try:
-        return (urlparse(u).netloc or "").lower().lstrip("www.")
-    except Exception:
-        return ""
-
-def pick_official(results):
-    for r in results:
-        href=r.get("href") or ""
-        d=norm_domain(href)
-        if not d:
-            continue
-        if d in BAD_DOMAINS:
-            continue
-        return href
+def dom(u: str) -> str:
+  try:
+    return (urlparse(u).netloc or "").lower().replace("www.","")
+  except Exception:
     return ""
 
-def fetch(url, timeout=10):
-    try:
-        r=requests.get(url, timeout=timeout, headers={"User-Agent":"Mozilla/5.0"})
-        if r.status_code>=400:
-            return ""
-        ct=(r.headers.get("content-type") or "").lower()
-        if ct and ("text/html" not in ct and "application/xhtml" not in ct):
-            return ""
-        return r.text[:400000]
-    except Exception:
-        return ""
+def pick_official(item_url: str, html: str) -> str:
+  d = dom(item_url)
+  if d in ("github.com","egokernel.com","mthds.ai","cifer-security.com","conjure.tech","getpando.ai","codedoc.us","alcazarsec.github.io","playzafiro.com","smmall.cloud","skillsplayground.com","blog.peeramid.xyz"):
+    return item_url
+  soup = BeautifulSoup(html, "lxml")
+  cand = []
+  for a in soup.select("a[href]"):
+    h = a.get("href","").strip()
+    if not h.startswith("http"):
+      continue
+    hd = dom(h)
+    if not hd or hd == d:
+      continue
+    if hd.endswith("reddit.com") or hd.endswith("producthunt.com") or hd.endswith("hnrss.org") or hd.endswith("ycombinator.com"):
+      continue
+    cand.append(h)
+  if not cand:
+    return ""
+  return cand[0]
 
-def extract_emails(html):
-    return sorted(set(m.group(0) for m in EMAIL_RE.finditer(html or "")))
+def extract_emails(text: str):
+  return sorted(set(m.group(1).lower() for m in EMAIL_RE.finditer(text or "")))
 
-def extract_social_links(base_url, html):
-    soup=BeautifulSoup(html or "", "lxml")
-    out=[]
-    for a in soup.find_all("a"):
-        href=a.get("href") or ""
-        if not href:
-            continue
-        u=urljoin(base_url, href)
-        d=norm_domain(u)
-        if not d:
-            continue
-        for host,kind in SOC_HOSTS.items():
-            if d==host or d.endswith("."+host):
-                out.append((kind,u))
-                break
-    uniq=[]
-    seen=set()
-    for kind,u in out:
-        k=(kind,u)
-        if k in seen:
-            continue
-        seen.add(k)
-        uniq.append((kind,u))
-    return uniq[:50]
+def extract_socials(html: str):
+  s = set()
+  soup = BeautifulSoup(html, "lxml")
+  for a in soup.select("a[href]"):
+    h = a.get("href","").strip()
+    if not h.startswith("http"):
+      continue
+    hd = dom(h)
+    for k,host in SOC.items():
+      if host in hd:
+        s.add((k, h.split("?")[0]))
+  return sorted(s)
 
-def find_contact_pages(base_url, html):
-    soup=BeautifulSoup(html or "", "lxml")
-    links=set()
-    for a in soup.find_all("a"):
-        href=a.get("href") or ""
-        txt=(a.get_text(" ", strip=True) or "").lower()
-        if not href:
-            continue
-        h=href.lower()
-        if any(k in h for k in ["contact","support","about","help","company","privacy","terms","legal"]) or any(k in txt for k in ["contact","support","about","help","company"]):
-            links.add(urljoin(base_url, href))
-    out=[]
-    base_dom=norm_domain(base_url)
-    for u in links:
-        if norm_domain(u)==base_dom:
-            out.append(u)
-    return out[:12]
+def fetch(url: str):
+  r = requests.get(url, timeout=20, headers={"User-Agent":"Mozilla/5.0"})
+  if r.status_code >= 400:
+    return ""
+  return r.text or ""
 
 def main():
-    ap=argparse.ArgumentParser()
-    ap.add_argument("--db", default="data/openclaw.db")
-    ap.add_argument("--limit", type=int, default=50)
-    ap.add_argument("--region", default="jp-jp")
-    ap.add_argument("--timelimit", default="m")
-    args=ap.parse_args()
+  import argparse
+  ap = argparse.ArgumentParser()
+  ap.add_argument("--db", default="data/openclaw.db")
+  ap.add_argument("--limit", type=int, default=50)
+  args = ap.parse_args()
 
-    conn=sqlite3.connect(args.db)
-    conn.row_factory=sqlite3.Row
-    cur=conn.cursor()
+  conn = sqlite3.connect(args.db)
+  conn.row_factory = sqlite3.Row
+  bad = set(r["domain"] for r in conn.execute("select domain from bad_domains"))
+  rows = conn.execute(
+    "select id,url,title,coalesce(official_url,'') official_url from items where coalesce(url,'')!='' limit ?",
+    (args.limit,)
+  ).fetchall()
 
-    rows=cur.execute("""
-    select i.id,i.title,i.url
-    from items i
-    join opportunity o on o.item_id=i.id
-    where coalesce(i.official_url,'')=''
-      and coalesce(i.contacts_checked_at,'')=''
-    order by i.id
-    limit ?
-    """,(args.limit,)).fetchall()
+  for it in rows:
+    item_id = int(it["id"])
+    item_url = it["url"]
+    title = it["title"] or ""
+    official_url = it["official_url"] or ""
 
-    dd=DDGS()
+    html = fetch(item_url)
+    if not official_url:
+      off = pick_official(item_url, html)
+      if off and dom(off) not in bad:
+        conn.execute("update items set official_url=?, official_domain=? where id=?", (off, dom(off), item_id))
+        official_url = off
 
-    for r in rows:
-        item_id=int(r["id"])
-        title=(r["title"] or "").strip()
-        seed_url=(r["url"] or "").strip()
-        q=title if title else seed_url
+    emails = set(extract_emails(html))
+    if official_url:
+      off_html = fetch(official_url)
+      emails |= set(extract_emails(off_html))
+      socials = extract_socials(off_html)
+    else:
+      socials = extract_socials(html)
 
-        results=[]
-        try:
-            results=list(dd.text(q + " official site", region=args.region, timelimit=args.timelimit, max_results=10))
-        except Exception:
-            results=[]
-        official=pick_official(results) or seed_url
-        dom=norm_domain(official)
+    for e in sorted(emails):
+      conn.execute(
+        "insert or ignore into contacts(item_url,email,source,created_at) values(?,?,?,datetime('now'))",
+        (item_url, e, "web_enrich"),
+      )
 
-        cur.execute("update items set official_url=?, official_domain=?, contacts_checked_at=datetime('now') where id=?",(official, dom, item_id))
-        conn.commit()
+    for k,v in socials:
+      conn.execute(
+        "insert or ignore into contact_points(item_url,kind,value,source,created_at) values(?,?,?,?,datetime('now'))",
+        (item_url, k, v, "web_enrich"),
+      )
 
-        html0=fetch(official)
-        emails=set(extract_emails(html0))
-        socials=set(extract_social_links(official, html0))
-
-        for u in find_contact_pages(official, html0):
-            h=fetch(u)
-            emails.update(extract_emails(h))
-            socials.update(extract_social_links(u, h))
-
-        for e in sorted(emails):
-            try:
-                cur.execute("insert into contacts(item_url,email,source,created_at) values(?,?,?,datetime('now'))",(seed_url or official, e, "web_enrich"))
-            except Exception:
-                pass
-
-        for kind,u in sorted(socials):
-            try:
-                cur.execute("insert into contact_points(item_url,kind,value,source,created_at) values(?,?,?,?,datetime('now'))",(seed_url or official, kind, u, "web_enrich"))
-            except Exception:
-                pass
-
-        conn.commit()
-        time.sleep(0.3)
-
-    conn.close()
+  conn.commit()
+  conn.close()
 
 if __name__=="__main__":
-    main()
+  main()
