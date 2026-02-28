@@ -57,7 +57,7 @@ def create_pr(proposal_id):
 
     existing = _run(["gh","pr","list","--head",branch,"--state","all","--json","number"]).strip()
     if existing == "[]":
-        _run(["gh","pr","create","--title",title,"--body",(description or "")])
+        _run(["gh","pr","create","--head",branch,"--base","main","--title",title,"--body",(description or "")])
 
     cur.execute("UPDATE dev_proposals SET status='pr_created' WHERE id=?", (proposal_id,))
     cur.execute("INSERT INTO dev_events (proposal_id,event_type,payload) VALUES (?,?,?)", (proposal_id,"pr_created","{}"))
