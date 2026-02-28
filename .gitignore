@@ -14,3 +14,7 @@ configs/*.bak.*
 *.bak.*
 .env.openclaw
 .env.*
+
+/env/
+.env
+.env.*
