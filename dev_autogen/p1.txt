@@ -1,5 +1,5 @@
 id=1
 title=Dev Agent smoke test
-ts=2026-02-28T19:42:12Z
+ts=2026-02-28T20:20:44Z
 
 Create PR from proposal
