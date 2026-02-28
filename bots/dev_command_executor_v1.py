@@ -29,7 +29,7 @@ def run():
             branch=f"dev/{base}-proposal-{r['id']}"
             conn.execute(
                 "insert into dev_proposals(title,description,branch_name,status,risk_level,created_at) values(?,?,?,?,?,datetime('now'))",
-                (title, body, branch, 'pending', 'medium')
+                (title, body, branch, 'proposed', 'medium')
             )
             conn.execute("update inbox_commands set status='applied', applied_at=datetime('now'), error=null where id=?", (r["id"],))
             continue
@@ -63,6 +63,37 @@ def run():
             conn.execute(
                 "update dev_proposals set status='approved', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
                 (who, pid)
+            )
+            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
+            continue
+
+        m=re.match(r"^承認\s*#(\d+)\s*$", txt)
+        if m:
+            pid=int(m.group(1))
+            conn.execute(
+                "update dev_proposals set status='approved', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
+                (who, pid)
+            )
+            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
+            continue
+
+        m=re.match(r"^保留\s*#(\d+)\s*$", txt)
+        if m:
+            pid=int(m.group(1))
+            conn.execute(
+                "update dev_proposals set status='hold', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
+                (who, pid)
+            )
+            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
+            continue
+
+        m=re.match(r"^質問\s*#(\d+)\s+(.+)$", txt, re.S)
+        if m:
+            pid=int(m.group(1))
+            q=m.group(2).strip()
+            conn.execute(
+                "update dev_proposals set status='needs_info', last_question=?, decided_at=datetime('now'), decided_by=coalesce(?,'') where id=?",
+                (q, who, pid)
             )
             conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
             continue
