@@ -66,7 +66,7 @@ def run():
     sh(["git","commit","-m",f"docs: proposal flow ({pid})"])
     sh(["git","push","-u","origin",branch])
 
-    j=sh(["gh","pr","create","-R",REPO,"-H",branch,"-B","main","-t",title,"-b",body,"--json","number,url"])
+    j=sh(["gh","pr","create","-R",REPO,"-H",branch,"-B","main","-t",title,"-b",body])
     data=json.loads(j)
     conn.execute(
       "update dev_proposals set pr_number=?, pr_url=?, pr_status='pr_created' where id=?",
