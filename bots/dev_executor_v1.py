@@ -45,7 +45,7 @@ def main():
         sh(["/usr/bin/git","checkout",branch])
         sh(["/usr/bin/git","pull","--rebase","origin",branch])
     else:
-        sh(["/usr/bin/git","checkout","-b",branch])
+        sh(["/usr/bin/git","checkout","-B",branch])
     os.makedirs("dev_autogen",exist_ok=True)
     fpath=f"dev_autogen/p{pid}.txt"
     with open(fpath,"w",encoding="utf-8") as f:
