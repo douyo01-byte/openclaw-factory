@@ -1,14 +1,2 @@
-.env
-secrets/
-logs/
-data/
-.venv/
-openclaw-env/
-__pycache__/
-*.log
-.DS_Store
-
-# backups
-configs/*.bak.*
-
-*.bak.*
+.env.openclaw
+scripts/run_daemon.sh
