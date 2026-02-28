@@ -1,4 +1,5 @@
 import sqlite3
+import json
 import subprocess
 from bots.dev_schema_apply import apply as apply_dev_schema
 
@@ -26,13 +27,13 @@ def create_pr(proposal_id):
     apply_dev_schema(DB_PATH)
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("SELECT title, description FROM dev_proposals WHERE id = ?", (proposal_id,))
+    cur.execute("SELECT title, description, branch_name FROM dev_proposals WHERE id = ?", (proposal_id,))
     row = cur.fetchone()
     if not row:
         conn.close()
         return False
-    title, description = row
-    branch = f"dev/proposal-{proposal_id}"
+    title, description, branch_name = row
+    branch = branch_name or f"dev/proposal-{proposal_id}"
 
     _run(["git","fetch","origin",branch])
     has_remote = subprocess.run(["git","rev-parse","--verify",f"origin/{branch}"], capture_output=True, text=True).returncode == 0
@@ -53,10 +54,10 @@ def create_pr(proposal_id):
     existing = _run(["gh","pr","list","--head",branch,"--state","all","--json","number"]).strip()
     if existing == "[]":
         _run(["gh","pr","create","--head",branch,"--base","main","--title",title,"--body",(description or "")])
-
-    cur.execute("UPDATE dev_proposals SET status='pr_created' WHERE id=?", (proposal_id,))
-    cur.execute("INSERT INTO dev_events (proposal_id,event_type,payload) VALUES (?,?,?)", (proposal_id,"pr_created","{}"))
-    _run(["git","checkout","-B",branch])
+    prj = _run(["gh","pr","view",branch,"--json","number,url","-q","{number:.number,url:.url}"])
+    pr = json.loads(prj)
+        
+            _run(["git","checkout","-B",branch])
     _run(["git","stash","push","-u","-m",f"dev_executor_{proposal_id}"])
     _run(["git","fetch","origin",branch])
     _run(["git","rebase",f"origin/{branch}"])
