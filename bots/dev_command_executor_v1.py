@@ -21,6 +21,19 @@ def run():
 
         who=r["from_username"] or r["from_name"] or ""
 
+        m=re.match(r"^提案:\s*(.+)$", txt, re.S)
+        if m:
+            body=m.group(1).strip()
+            title=(body.splitlines()[0].strip() if body else "proposal")[:80]
+            base=re.sub(r"[^a-z0-9]+","-",(who or "user").lower()).strip("-")[:24] or "user"
+            branch=f"dev/{base}-proposal-{r['id']}"
+            conn.execute(
+                "insert into dev_proposals(title,description,branch_name,status,risk_level,created_at) values(?,?,?,?,?,datetime('now'))",
+                (title, body, branch, 'pending', 'medium')
+            )
+            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now'), error=null where id=?", (r["id"],))
+            continue
+
         m=re.match(r"^(ok|hold)\s+(\d+)\s*$", txt, re.I)
         if m:
             cmd=m.group(1).lower()
