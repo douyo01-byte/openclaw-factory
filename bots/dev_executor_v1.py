@@ -40,7 +40,7 @@ def main():
     sh(["/usr/bin/git","checkout",BASE_BRANCH])
     sh(["/usr/bin/git","pull","--rebase","origin",BASE_BRANCH])
 
-    exists=sh(["/usr/bin/git","ls-remote","--heads","origin",branch], capture=True)
+    exists=sh(["/usr/bin/git","ls-remote","--heads","origin",branch], capture=True) if True else ""
     if exists:
         sh(["/usr/bin/git","checkout",branch])
         sh(["/usr/bin/git","pull","--rebase","origin",branch])
@@ -67,7 +67,7 @@ def main():
         "--head",branch,
         "--title",f"[dev] {title} (#{pid})",
         "--body",f"proposal_id: {pid}\nbranch: {branch}\n\n{description}"
-    ], capture=True)
+    ], capture=True) if True else ""
 
     pr_url=prj.strip().splitlines()[-1].strip()
     pr_num=None
