@@ -21,7 +21,7 @@ def main():
         """
         SELECT id,title,description,branch_name,pr_number,pr_url,dev_stage,dev_attempts
         FROM dev_proposals
-        WHERE status='approved'
+        WHERE status='approved' OR dev_stage='merged'
           AND (pr_number IS NULL OR pr_number='')
           AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
         ORDER BY id ASC
@@ -83,7 +83,7 @@ def main():
     conn.execute(
         """
         UPDATE dev_proposals
-        SET dev_stage='pr_created',
+        SET dev_stage='executed',
             pr_number=COALESCE(?, pr_number),
             pr_url=COALESCE(?, pr_url),
             dev_attempts=COALESCE(dev_attempts,0)+1
