@@ -16,6 +16,8 @@ from typing import Any, Dict, Optional, Tuple
 
 from oclibs.telegram import send as tg_send
 
+from bots.dev_approval_parser import parse_approval
+from bots.dev_executor_v1 import create_pr
 DB_DEFAULT = os.environ.get("OCLAW_DB_PATH", "./data/openclaw.db")
 
 ROLE_ALIASES = {
@@ -235,6 +237,30 @@ def main() -> None:
     ignored = 0
 
     for r in rows:
+
+        dev_id = parse_approval(r)
+
+        if dev_id is not None:
+
+            try:
+
+                ok = create_pr(dev_id)
+
+                if ok:
+
+                    conn.execute("UPDATE inbox_commands SET status=?, applied_at=datetime('now'), error=? WHERE id=?", ("applied", None, r))
+
+                else:
+
+                    conn.execute("UPDATE inbox_commands SET status=?, applied_at=datetime('now'), error=? WHERE id=?", ("error", "proposal_not_found", r))
+
+            except Exception as e:
+
+                conn.execute("UPDATE inbox_commands SET status=?, applied_at=datetime('now'), error=? WHERE id=?", ("error", str(e)[:500], r))
+
+            conn.commit()
+
+            continue
         status, error = handle_chat(conn, r)
         if status == "chatted":
             chatted += 1
