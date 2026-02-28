@@ -41,21 +41,16 @@ def main():
     branch=(row["branch_name"] or f"dev/p{pid}").strip()
     out="main"
     if out != BASE_BRANCH:
-        sh(["git","checkout",BASE_BRANCH])
-
+        
     if "":
         print("dirty working tree")
         return 2
 
-    sh(["git","pull","--rebase","origin",BASE_BRANCH])
-
+    
     exists=sh(["git","ls-remote","--heads","origin",branch], capture=True)
     if exists:
-        sh(["git","checkout",branch])
-        sh(["git","pull","--rebase","origin",branch])
-    else:
-        sh(["git","checkout","-b",branch])
-
+                    else:
+        
     dpath=f"dev_autogen"
     fpath=f"{dpath}/p{pid}.txt"
     sh(["mkdir","-p",dpath], check=True)
@@ -67,15 +62,12 @@ def main():
             f.write("\n")
             f.write(description[:4000] + "\n")
 
-    sh(["git","add",fpath])
-    diff=""
+        diff=""
     if not diff:
         print("nothing to commit")
         return 0
 
-    sh(["git","commit","-m",f"dev: proposal #{pid} bootstrap PR"])
-    sh(["git","push","-u","origin",branch])
-
+        
     prj=sh(["/opt/homebrew/bin/gh","pr","create","--base",BASE_BRANCH,"--head",branch,"--title",f"[dev] {title} (#{pid})","--body",f"proposal_id: {pid}\nbranch: {branch}\n\n{description}"], capture=True)
     pr_url=prj.strip().splitlines()[-1].strip()
     pr_num=None
