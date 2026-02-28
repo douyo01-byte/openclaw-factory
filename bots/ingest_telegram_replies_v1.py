@@ -14,7 +14,7 @@ def ensure(conn):
     conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA busy_timeout=5000;")
     conn.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
-    conn.execute("CREATE TABLE IF NOT EXISTS inbox_commands(id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL, update_id TEXT NOT NULL, chat_id TEXT, user_id TEXT, text TEXT NOT NULL, received_at TEXT, UNIQUE(source, update_id))")
+    conn.execute("CREATE TABLE IF NOT EXISTS inbox_commands(id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id TEXT, message_id INTEGER, reply_to_message_id INTEGER, from_username TEXT, from_name TEXT, text TEXT NOT NULL, received_at TEXT NOT NULL DEFAULT (datetime('now')), applied_at TEXT, status TEXT DEFAULT 'new', error TEXT)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_inbox_commands_received_at ON inbox_commands(received_at)")
     dc = {r[1] for r in conn.execute("PRAGMA table_info(decisions)")}
     if "run_id" not in dc: conn.execute("ALTER TABLE decisions ADD COLUMN run_id TEXT")
@@ -95,19 +95,19 @@ def main():
             frm = msg.get("from") or {}
             text = msg.get("text") or ""
             conn.execute(
-                "INSERT OR IGNORE INTO inbox_commands(source, update_id, chat_id, user_id, text, received_at) VALUES(?,?,?,?,?,?)",
-                ("telegram", str(uid), str(chat.get("id","")), str(frm.get("id","")), text, now())
+                "INSERT OR IGNORE INTO inbox_commands(chat_id, message_id, reply_to_message_id, from_username, from_name, text, received_at) VALUES(?,?,?,?,?,?,?)",
+                (str(chat.get("id","")), int(msg.get("message_id") or 0), int((msg.get("reply_to_message") or {}).get("message_id") or 0), str((frm.get("username") or "")), str((frm.get("first_name") or "")), text, now())
             )
             parsed = parse_text(text)
             if parsed:
                 decision, target, reason = parsed
-                meta = {"chat_id": chat.get("id"), "user_id": frm.get("id"), "raw": text, "update_id": uid}
+                meta = {"chat_id": chat.get("id"), "message_id": msg.get("message_id"), "raw": text}
                 conn.execute(
                     "INSERT INTO decisions(run_id, target, decision, reason, meta_json, created_at) VALUES(?,?,?,?,?,?)",
                     (os.environ.get("RUN_ID"), target, decision, reason, json.dumps(meta, ensure_ascii=False), now())
                 )
         if max_update_id is not None:
-            kv_set(conn, "tg_offset", int(max_update_id) + 1)
+            if max_update_id is not None: kv_set(conn, "tg_offset", int(max_update_id) + 1)
 
 if __name__ == "__main__":
     main()
