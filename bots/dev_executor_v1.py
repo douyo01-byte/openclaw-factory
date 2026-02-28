@@ -26,8 +26,7 @@ def main():
         SELECT id,title,description,branch_name,pr_number,pr_url,dev_stage,dev_attempts
         FROM dev_proposals
         WHERE status='approved'
-          AND (pr_number IS NULL OR pr_number='')
-          AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
+AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
         ORDER BY id ASC
         LIMIT 1
     """).fetchone()
@@ -39,11 +38,15 @@ def main():
     branch=row["branch_name"] or f"dev/proposal-{pid}"
     description=row["description"] or ""
     sh(["/usr/bin/git","checkout",BASE_BRANCH])
-    sh(["/usr/bin/git","pull","--rebase","origin",BASE_BRANCH])
+    sh(["/usr/bin/git","fetch","origin",BASE_BRANCH])
+    sh(["/usr/bin/git","reset","--hard","origin/"+BASE_BRANCH])
+    sh(["/usr/bin/git","clean","-fd"])
     exists=sh(["/usr/bin/git","ls-remote","--heads","origin",branch],capture=True)
     if exists:
         sh(["/usr/bin/git","checkout",branch])
-        sh(["/usr/bin/git","pull","--rebase","origin",branch])
+        sh(["/usr/bin/git","fetch","origin",branch])
+        sh(["/usr/bin/git","reset","--hard","origin/"+branch])
+        sh(["/usr/bin/git","clean","-fd"])
     else:
         sh(["/usr/bin/git","checkout","-B",branch])
     os.makedirs("dev_autogen",exist_ok=True)
