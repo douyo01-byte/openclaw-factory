@@ -5,23 +5,21 @@ from datetime import datetime, timezone
 DB_PATH=os.environ.get("OCLAW_DB_PATH","/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
 BASE_BRANCH="main"
 
-def sh(args, check=True, capture=False):
+def sh(args, capture=False):
+    env=dict(os.environ)
+    env["HOME"]="/Users/doyopc"
+    env["PATH"]="/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     if capture:
-        p=subprocess.run(args, check=False, cwd="/Users/doyopc/AI/openclaw-factory", env=GIT_ENV, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        p=subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd="/Users/doyopc/AI/openclaw-factory", env=env)
         return p.stdout.strip()
-    subprocess.run(args, check=check, cwd="/Users/doyopc/AI/openclaw-factory", env=GIT_ENV)
+    subprocess.run(args, cwd="/Users/doyopc/AI/openclaw-factory", env=env, check=True)
 
 def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def main():
-    import os
     os.environ["HOME"]="/Users/doyopc"
-os.chdir("/Users/doyopc/AI/openclaw-factory")
     os.chdir("/Users/doyopc/AI/openclaw-factory")
-    os.makedirs(os.path.dirname(DB_PATH),exist_ok=True)
-    print("DB_PATH=",DB_PATH)
-    print("DIR_EXISTS=",os.path.isdir(os.path.dirname(DB_PATH)))
     conn=sqlite3.connect(DB_PATH,timeout=30)
     conn.row_factory=sqlite3.Row
     row=conn.execute("""
@@ -33,39 +31,31 @@ os.chdir("/Users/doyopc/AI/openclaw-factory")
         ORDER BY id ASC
         LIMIT 1
     """).fetchone()
-
     if not row:
         print("no approved proposals")
         return 0
-
     pid=int(row["id"])
     title=(row["title"] or f"proposal {pid}").strip()
     branch=row["branch_name"] or f"dev/proposal-{pid}"
     description=row["description"] or ""
     sh(["/usr/bin/git","checkout",BASE_BRANCH])
     sh(["/usr/bin/git","pull","--rebase","origin",BASE_BRANCH])
-
     exists=sh(["/usr/bin/git","ls-remote","--heads","origin",branch], capture=True)
     if exists:
         sh(["/usr/bin/git","checkout",branch])
         sh(["/usr/bin/git","pull","--rebase","origin",branch])
     else:
         sh(["/usr/bin/git","checkout","-b",branch])
-
-    dpath="dev_autogen"
-    fpath=f"{dpath}/p{pid}.txt"
-    os.makedirs(dpath, exist_ok=True)
-
+    os.makedirs("dev_autogen", exist_ok=True)
+    fpath=f"dev_autogen/p{pid}.txt"
     with open(fpath,"w",encoding="utf-8") as f:
         f.write(f"id={pid}\n")
         f.write(f"title={title}\n")
         f.write(f"ts={now()}\n\n")
         f.write(description[:4000])
-
     sh(["/usr/bin/git","add",fpath])
     sh(["/usr/bin/git","commit","-m",f"dev: proposal #{pid} bootstrap PR"])
     sh(["/usr/bin/git","push","-u","origin",branch])
-
     prj=sh([
         "/opt/homebrew/bin/gh","pr","create",
         "--base",BASE_BRANCH,
@@ -73,13 +63,11 @@ os.chdir("/Users/doyopc/AI/openclaw-factory")
         "--title",f"[dev] {title} (#{pid})",
         "--body",f"proposal_id: {pid}\nbranch: {branch}\n\n{description}"
     ], capture=True)
-
     pr_url=prj.strip().splitlines()[-1].strip()
     pr_num=None
     m=re.search(r"/pull/(\\d+)", pr_url)
     if m:
         pr_num=int(m.group(1))
-
     conn.execute("""
         UPDATE dev_proposals
         SET dev_stage='pr_created',
@@ -89,7 +77,6 @@ os.chdir("/Users/doyopc/AI/openclaw-factory")
         WHERE id=?
     """,(pr_num, pr_url, pid))
     conn.commit()
-
     print(json.dumps({"proposal_id":pid,"branch":branch,"pr_number":pr_num,"pr_url":pr_url}, ensure_ascii=False))
     return 0
 
