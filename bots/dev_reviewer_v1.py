@@ -39,7 +39,7 @@ def analyze(diff_text, files):
   if re.search(r"\bTODO\b", diff_text):
     issues.append("TODOが残っています。削除か理由の記載が必要です。")
   if re.search(r"\bprint\(", diff_text):
-    issues.append("print()が残っています。ログ方針に合わせてください。")
+    issues.append("print\(\)が差分に含まれています。必要ならloggingへ置換してください。")
   if re.search(r"\bDEBUG\b", diff_text):
     issues.append("DEBUGが残っています。削除してください。")
   if "py_compile" in diff_text:
