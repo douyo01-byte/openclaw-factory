@@ -32,7 +32,7 @@ def main():
         LIMIT 1
     """).fetchone()
     if not row:
-        print("no approved proposals")
+        raise SystemExit("no approved proposals")
         return 0
     pid=int(row["id"])
     title=(row["title"] or f"proposal {pid}").strip()
