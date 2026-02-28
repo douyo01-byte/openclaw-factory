@@ -1,6 +1,6 @@
 import os,sqlite3,requests
 
-DB=os.environ.get("DB_PATH","data/openclaw.db")
+DB=os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH","data/openclaw.db")
 TOKEN=os.environ["GITHUB_TOKEN"]
 REPO=os.environ["GITHUB_REPO"]
 
@@ -16,7 +16,7 @@ def q(path):
 
 def main():
     conn=sqlite3.connect(DB); conn.row_factory=sqlite3.Row
-    rows=conn.execute("select id, pr_number from dev_proposals where status='pr_created' and pr_number is not null").fetchall()
+    rows=conn.execute("select id, pr_number from dev_proposals where status='approved' and pr_number is not null").fetchall()
     for row in rows:
         pr=row["pr_number"]
         gql=f"""
