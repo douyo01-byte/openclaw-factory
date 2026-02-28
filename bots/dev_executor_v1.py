@@ -1,5 +1,6 @@
 import sqlite3
 import subprocess
+from bots.dev_schema_apply import apply as apply_dev_schema
 
 DB_PATH = "data/openclaw.db"
 
@@ -10,6 +11,7 @@ def _run(cmd):
     return r.stdout.strip()
 
 def create_pr(proposal_id):
+    apply_dev_schema(DB_PATH)
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("SELECT title, description FROM dev_proposals WHERE id = ?", (proposal_id,))

@@ -1,4 +1,5 @@
 import sqlite3
+from bots.dev_schema_apply import apply as apply_dev_schema
 from bots.dev_gatekeeper import evaluate_risk
 
 DB_PATH = "data/openclaw.db"
@@ -6,6 +7,7 @@ DB_PATH = "data/openclaw.db"
 def create_proposal(title, description, branch_name=None):
     risk = evaluate_risk()
     branch_name = branch_name or "dev/proposal-temp"
+    apply_dev_schema(DB_PATH)
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute(
