@@ -238,7 +238,7 @@ def main() -> None:
 
     for r in rows:
 
-        dev_id = parse_approval(r)
+        dev_id = parse_approval(r['text'])
 
         if dev_id is not None:
 
@@ -248,15 +248,15 @@ def main() -> None:
 
                 if ok:
 
-                    conn.execute("UPDATE inbox_commands SET status=?, applied_at=datetime('now'), error=? WHERE id=?", ("applied", None, r))
+                    conn.execute("UPDATE inbox_commands SET status=?, applied_at=datetime('now'), error=? WHERE id=?", ("applied", None, r["id"]))
 
                 else:
 
-                    conn.execute("UPDATE inbox_commands SET status=?, applied_at=datetime('now'), error=? WHERE id=?", ("error", "proposal_not_found", r))
+                    conn.execute("UPDATE inbox_commands SET status=?, applied_at=datetime('now'), error=? WHERE id=?", ("error", "proposal_not_found", r["id"]))
 
             except Exception as e:
 
-                conn.execute("UPDATE inbox_commands SET status=?, applied_at=datetime('now'), error=? WHERE id=?", ("error", str(e)[:500], r))
+                conn.execute("UPDATE inbox_commands SET status=?, applied_at=datetime('now'), error=? WHERE id=?", ("error", str(e)[:500], r["id"]))
 
             conn.commit()
 
