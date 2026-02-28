@@ -24,7 +24,7 @@ def run():
         else:
             new="pr_created"
         if new!=r["status"]:
-            conn.execute("update dev_proposals set status=?,updated_at=datetime('now') where id=?", (new,r["id"]))
+            conn.execute("update dev_proposals set status=? where id=?", (new,r["id"]))
     conn.commit()
 
 if __name__=="__main__":
