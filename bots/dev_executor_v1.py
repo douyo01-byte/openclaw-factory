@@ -7,7 +7,7 @@ BASE_BRANCH="main"
 
 def sh(args, check=True, capture=False):
     if capture:
-        p=subprocess.run(args, check=check, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        p=subprocess.run(args, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         return p.stdout.strip()
     subprocess.run(args, check=check)
 
@@ -38,12 +38,12 @@ def main():
     branch=(row["branch_name"] or f"dev/p{pid}").strip()
 
     sh(["/usr/bin/git","checkout",BASE_BRANCH])
-    sh(["/usr/bin/git","pull","--rebase","origin",BASE_BRANCH])
+    sh(["/usr/bin/git","pull","--rebase","origin",BASE_BRANCH],check=False)
 
     exists=sh(["/usr/bin/git","ls-remote","--heads","origin",branch], capture=True) if True else ""
     if exists:
         sh(["/usr/bin/git","checkout",branch])
-        sh(["/usr/bin/git","pull","--rebase","origin",branch])
+        sh(["/usr/bin/git","pull","--rebase","origin",branch],check=False)
     else:
         sh(["/usr/bin/git","checkout","-b",branch])
 
