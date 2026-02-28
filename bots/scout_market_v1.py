@@ -1,4 +1,18 @@
 import os, re, json, time, sqlite3
+import os
+
+def _load_persona_from_env():
+  core=os.environ.get("CORE_PERSONA_FILE")
+  role=os.environ.get("PERSONA_FILE")
+  t=[]
+  if core and os.path.exists(core):
+    t.append(open(core,"r",encoding="utf-8").read().strip())
+  if role and os.path.exists(role):
+    t.append(open(role,"r",encoding="utf-8").read().strip())
+  return "\n\n".join([x for x in t if x])
+
+PERSONA=_load_persona_from_env()
+
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 from urllib.parse import urljoin
@@ -256,8 +270,10 @@ def main():
         time.sleep(0.6)
 
     if not overseas:
-        tg_send("ヤルデ：新規の海外候補が拾えませんでした（既出スキップが効いてる/ソースが弱い可能性）。")
-        return
+        _m="ヤルデ：新規の海外候補が拾えませんでした（既出スキップが効いてる/ソースが弱い可能性）。"
+        if not _tg_msg_sent(_m):
+            tg_send(_m)
+            return
 
     # コスト制御：評価は最大20件
     batch = overseas[:20]
@@ -280,7 +296,10 @@ def main():
 
     top3 = ranked[:3]
     msg = format_meeting(top3, jp)
-    tg_send(msg)
+    
+    if not _tg_url_sent(top3[0].url):
+        tg_send(msg)
+
 
 if __name__ == "__main__":
     main()

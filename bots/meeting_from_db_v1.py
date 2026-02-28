@@ -1,8 +1,42 @@
 from typing import List, Tuple
 from dataclasses import dataclass
+import os
 import sqlite3
 from datetime import datetime
 from oclibs.telegram import send as tg_send
+
+def _fetch_item_meta(conn: sqlite3.Connection, item_id: int) -> tuple[str, int, str]:
+    """Return (decision, priority, last_note_line). Missing -> ('-', 0, '')."""
+    try:
+        cur = conn.execute(
+            "SELECT decision, priority, note FROM item_meta WHERE item_id=?",
+            (item_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            return ('-', 0, '')
+        decision, priority, note = row
+        decision = (decision or '-').strip()
+        try:
+            priority = int(priority or 0)
+        except Exception:
+            priority = 0
+        note = (note or '')
+        # noteは追記されているので「最後の非空行」を表示
+        lines = [ln.strip() for ln in note.splitlines() if ln.strip()]
+        last_note = lines[-1] if lines else ''
+        # 長すぎる場合は短縮
+        if len(last_note) > 60:
+            last_note = last_note[:60] + '…'
+        return (decision, priority, last_note)
+    except Exception:
+        return ('-', 0, '')
+
+def _meta_line(conn: sqlite3.Connection, item_id: int) -> str:
+    decision, priority, last_note = _fetch_item_meta(conn, item_id)
+    note_part = f" note={last_note}" if last_note else ""
+    return f"[meta] prio={priority} decision={decision}{note_part}"
+
 
 DB="data/openclaw.db"
 
@@ -101,48 +135,54 @@ def make_rule(role: str, brief_title: str, brief_summary: str) -> str:
     return "新ルール：学習を判断基準に反映する"
 
 def meeting_text(top:List[Row])->str:
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    lines=[]
+    conn = sqlite3.connect(os.environ.get('OCLAW_DB_PATH','./data/openclaw.db'))
+    try:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M")
+        lines=[]
 
-    lines.append("🧠 ヤルデ（20代の天才/総括）")
-    lines.append(f"会議開始（{now}）。目的：海外候補 → 日本未上陸っぽい → 連絡先取得まで一気通貫。")
-    lines.append("今日のゴール：『連絡先（メール or フォーム）』を最低3件、DBに積む。\n")
+        lines.append("🧠 ヤルデ（20代の天才/総括）")
+        lines.append(f"会議開始（{now}）。目的：海外候補 → 日本未上陸っぽい → 連絡先取得まで一気通貫。")
+        lines.append("今日のゴール：『連絡先（メール or フォーム）』を最低3件、DBに積む。\n")
 
-    lines.append("📚 学習ログ（各自が空き時間に仕入れたネタ → 今日から使う新ルール）")
-    for role,label in [("scout","🌍 スカウン"),("japache","🕵️ ジャパチェ"),("iindesuka","💰 イインデスカ"),("tanoshi","🔥 タノシ")]:
-        briefs = fetch_role_briefs(role, n=2)
-        if briefs:
-            # 最新1件をルール化
-            rule = make_rule(role, briefs[0][0], briefs[0][2])
-            lines.append(f"{label}：{rule}")
-            # 学習ネタも2件だけ添付
-            for t,u,_s in briefs:
-                lines.append(f" - {t} / {u}")
-        else:
-            lines.append(f"{label}：新ルールなし（まだ学習メモなし）")
-    lines.append("")
+        lines.append("📚 学習ログ（各自が空き時間に仕入れたネタ → 今日から使う新ルール）")
+        for role,label in [("scout","🌍 スカウン"),("japache","🕵️ ジャパチェ"),("iindesuka","💰 イインデスカ"),("tanoshi","🔥 タノシ")]:
+            briefs = fetch_role_briefs(role, n=2)
+            if briefs:
+                # 最新1件をルール化
+                rule = make_rule(role, briefs[0][0], briefs[0][2])
+                lines.append(f"{label}：{rule}")
+                # 学習ネタも2件だけ添付
+                for t,u,_s in briefs:
+                    lines.append(f" - {t} / {u}")
+            else:
+                lines.append(f"{label}：新ルールなし（まだ学習メモなし）")
+        lines.append("")
 
-    lines.append("🌍 スカウン（さすらいの旅人/30代）")
-    lines.append("……旅の途中で拾った“宝”を並べる。今日は上位10件。『売れ筋』じゃなく『攻め筋』で選んだ。\n")
+        lines.append("🌍 スカウン（さすらいの旅人/30代）")
+        lines.append("……旅の途中で拾った“宝”を並べる。今日は上位10件。『売れ筋』じゃなく『攻め筋』で選んだ。\n")
 
-    for i,r in enumerate(top,1):
-        kind = short_kind(r.url)
-        lines.append(f"【候補{i}】({r.status}/{kind})")
-        lines.append(r.title)
-        lines.append(r.url)
-        lines.append(f"次アクション {action_plan(r)}\n")
+        for i,r in enumerate(top,1):
+            # injected: show human meta
+            lines.append(_meta_line(conn, r.id))
+            kind = short_kind(r.url)
+            lines.append(f"【候補{i}】({r.status}/{kind})")
+            lines.append(r.title)
+            lines.append(r.url)
+            lines.append(f"次アクション {action_plan(r)}\n")
 
-    lines.append("🧠 ヤルデ（総括/決裁）")
-    lines.append("✅ 本日の決裁：この10件は review 継続。連絡先探索を回す。")
-    lines.append("担当割り当て：")
-    lines.append("・スカウン：Reddit/GitHubの外部リンク（公式）を確定")
-    lines.append("・ジャパチェ：日本上陸チェック（Amazon/楽天/代理店）")
-    lines.append("・イインデスカ：利益/サイズ/単価の即死判定")
-    lines.append("・タノシ：取れた連絡先から“最短で返事が来る初手文面”を準備")
-    lines.append("次回の勝ち条件：連絡先DB +3（メール優先、無ければフォームURL）。")
+        lines.append("🧠 ヤルデ（総括/決裁）")
+        lines.append("✅ 本日の決裁：この10件は review 継続。連絡先探索を回す。")
+        lines.append("担当割り当て：")
+        lines.append("・スカウン：Reddit/GitHubの外部リンク（公式）を確定")
+        lines.append("・ジャパチェ：日本上陸チェック（Amazon/楽天/代理店）")
+        lines.append("・イインデスカ：利益/サイズ/単価の即死判定")
+        lines.append("・タノシ：取れた連絡先から“最短で返事が来る初手文面”を準備")
+        lines.append("次回の勝ち条件：連絡先DB +3（メール優先、無ければフォームURL）。")
 
-    return "\n".join(lines)
+        return "\n".join(lines)
 
+    finally:
+        conn.close()
 def main():
     pool=fetch_pool(limit=60)
     top=pick_top(pool, k=10)
