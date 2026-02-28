@@ -7,16 +7,17 @@ BASE_BRANCH="main"
 
 def sh(args, check=True, capture=False):
     if capture:
-        p=subprocess.run(args, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        p=subprocess.run(args, check=False, cwd="/Users/doyopc/AI/openclaw-factory", env=GIT_ENV, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         return p.stdout.strip()
-    subprocess.run(args, check=check)
+    subprocess.run(args, check=check, cwd="/Users/doyopc/AI/openclaw-factory", env=GIT_ENV)
 
 def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def main():
     import os
-    os.chdir("/Users/doyopc/AI/openclaw-factory")
+    os.environ["HOME"]="/Users/doyopc"
+os.chdir("/Users/doyopc/AI/openclaw-factory")
     os.chdir("/Users/doyopc/AI/openclaw-factory")
     os.makedirs(os.path.dirname(DB_PATH),exist_ok=True)
     print("DB_PATH=",DB_PATH)
