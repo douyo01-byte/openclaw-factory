@@ -29,7 +29,7 @@ def run():
             branch=f"dev/{base}-proposal-{r['id']}"
             conn.execute(
                 "insert into dev_proposals(title,description,branch_name,status,risk_level,created_at) values(?,?,?,?,?,datetime('now'))",
-                (title, body, branch, 'pending', 'medium')
+                (title, body, branch, 'proposed', 'medium')
             )
             conn.execute("update inbox_commands set status='applied', applied_at=datetime('now'), error=null where id=?", (r["id"],))
             continue
