@@ -28,10 +28,10 @@ def run():
             base=re.sub(r"[^a-z0-9]+","-",(who or "user").lower()).strip("-")[:24] or "user"
             branch=f"dev/{base}-proposal-{r['id']}"
             conn.execute(
-                "insert into dev_proposals(title,description,branch_name,status,risk_level,created_at) values(?,?,?,?,?,datetime('now'))",
+                "insert into dev_proposals(title,description,branch_name,status,risk_level,created_at) values(?,?,?,?,?,datetime('now','localtime'))",
                 (title, body, branch, 'proposed', 'medium')
             )
-            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now'), error=null where id=?", (r["id"],))
+            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now','localtime'), error=null where id=?", (r["id"],))
             continue
 
         m=re.match(r"^(ok|hold)\s+(\d+)\s*$", txt, re.I)
@@ -40,10 +40,10 @@ def run():
             pid=int(m.group(2))
             st="approved" if cmd=="ok" else "hold"
             conn.execute(
-                "update dev_proposals set status=?, decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
+                "update dev_proposals set status=?, decided_at=datetime('now','localtime'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
                 (st, who, pid)
             )
-            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
+            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now','localtime') where id=?", (r["id"],))
             continue
 
         m=re.match(r"^req\s+(\d+)\s+(.+)$", txt, re.I|re.S)
@@ -51,40 +51,40 @@ def run():
             pid=int(m.group(1))
             note=m.group(2).strip()
             conn.execute(
-                "update dev_proposals set status='req', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=? where id=?",
+                "update dev_proposals set status='req', decided_at=datetime('now','localtime'), decided_by=coalesce(?,''), decision_note=? where id=?",
                 (who, note, pid)
             )
-            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
+            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now','localtime') where id=?", (r["id"],))
             continue
 
         m=re.match(r"^承認します\s*#(\d+)\s*$", txt)
         if m:
             pid=int(m.group(1))
             conn.execute(
-                "update dev_proposals set status='approved', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
+                "update dev_proposals set status='approved', decided_at=datetime('now','localtime'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
                 (who, pid)
             )
-            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
+            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now','localtime') where id=?", (r["id"],))
             continue
 
         m=re.match(r"^承認\s*#(\d+)\s*$", txt)
         if m:
             pid=int(m.group(1))
             conn.execute(
-                "update dev_proposals set status='approved', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
+                "update dev_proposals set status='approved', decided_at=datetime('now','localtime'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
                 (who, pid)
             )
-            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
+            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now','localtime') where id=?", (r["id"],))
             continue
 
         m=re.match(r"^保留\s*#(\d+)\s*$", txt)
         if m:
             pid=int(m.group(1))
             conn.execute(
-                "update dev_proposals set status='hold', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
+                "update dev_proposals set status='hold', decided_at=datetime('now','localtime'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
                 (who, pid)
             )
-            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
+            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now','localtime') where id=?", (r["id"],))
             continue
 
         m=re.match(r"^質問\s*#(\d+)\s+(.+)$", txt, re.S)
@@ -92,15 +92,15 @@ def run():
             pid=int(m.group(1))
             q=m.group(2).strip()
             conn.execute(
-                "update dev_proposals set status='needs_info', last_question=?, decided_at=datetime('now'), decided_by=coalesce(?,'') where id=?",
+                "update dev_proposals set status='needs_info', last_question=?, decided_at=datetime('now','localtime'), decided_by=coalesce(?,'') where id=?",
                 (q, who, pid)
             )
-            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
+            conn.execute("update inbox_commands set status='applied', applied_at=datetime('now','localtime') where id=?", (r["id"],))
             continue
 
         if has_error:
             conn.execute("update inbox_commands set error=? where id=?", ("unrecognized", r["id"]))
-        conn.execute("update inbox_commands set status='ignored', applied_at=datetime('now') where id=?", (r["id"],))
+        conn.execute("update inbox_commands set status='ignored', applied_at=datetime('now','localtime') where id=?", (r["id"],))
 
     conn.commit()
 

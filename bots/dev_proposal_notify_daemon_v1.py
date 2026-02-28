@@ -57,7 +57,7 @@ def tick():
         text=build_text(r)
         mid=tg_send(text)
         conn.execute(
-            "UPDATE dev_proposals SET notified_at=datetime('now'), notified_msg_id=? WHERE id=?",
+            "UPDATE dev_proposals SET notified_at=datetime('now','localtime'), notified_msg_id=? WHERE id=?",
             (mid, r["id"]),
         )
         conn.commit()

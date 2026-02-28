@@ -33,7 +33,7 @@ def ensure(c):
   from_username TEXT,
   from_name TEXT,
   text TEXT NOT NULL,
-  received_at TEXT NOT NULL DEFAULT (datetime('now')),
+  received_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
   applied_at TEXT,
   status TEXT DEFAULT 'new',
   error TEXT
