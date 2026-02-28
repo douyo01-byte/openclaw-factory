@@ -36,9 +36,6 @@ def main():
 
     pid=int(row["id"])
     title=(row["title"] or f"proposal {pid}").strip()
-    description=(row["description"] or "").strip()
-    branch=(row["branch_name"] or f"dev/p{pid}").strip()
-
     sh(["/usr/bin/git","checkout",BASE_BRANCH])
     sh(["/usr/bin/git","pull","--rebase","origin",BASE_BRANCH])
 
