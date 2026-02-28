@@ -4,22 +4,22 @@ from datetime import datetime, timezone
 
 DB_PATH=os.environ.get("OCLAW_DB_PATH","/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
 BASE_BRANCH="main"
+REPO="/Users/doyopc/AI/openclaw-factory"
 
-def sh(args, capture=False):
+def sh(args,capture=False):
     env=dict(os.environ)
     env["HOME"]="/Users/doyopc"
     env["PATH"]="/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     if capture:
-        p=subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd="/Users/doyopc/AI/openclaw-factory", env=env)
+        p=subprocess.run(args,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,cwd=REPO,env=env)
         return p.stdout.strip()
-    subprocess.run(args, cwd="/Users/doyopc/AI/openclaw-factory", env=env, check=True)
+    subprocess.run(args,cwd=REPO,env=env,check=True)
 
 def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def main():
-    os.environ["HOME"]="/Users/doyopc"
-    os.chdir("/Users/doyopc/AI/openclaw-factory")
+    os.makedirs(os.path.dirname(DB_PATH),exist_ok=True)
     conn=sqlite3.connect(DB_PATH,timeout=30)
     conn.row_factory=sqlite3.Row
     row=conn.execute("""
@@ -40,13 +40,13 @@ def main():
     description=row["description"] or ""
     sh(["/usr/bin/git","checkout",BASE_BRANCH])
     sh(["/usr/bin/git","pull","--rebase","origin",BASE_BRANCH])
-    exists=sh(["/usr/bin/git","ls-remote","--heads","origin",branch], capture=True)
+    exists=sh(["/usr/bin/git","ls-remote","--heads","origin",branch],capture=True)
     if exists:
         sh(["/usr/bin/git","checkout",branch])
         sh(["/usr/bin/git","pull","--rebase","origin",branch])
     else:
         sh(["/usr/bin/git","checkout","-b",branch])
-    os.makedirs("dev_autogen", exist_ok=True)
+    os.makedirs("dev_autogen",exist_ok=True)
     fpath=f"dev_autogen/p{pid}.txt"
     with open(fpath,"w",encoding="utf-8") as f:
         f.write(f"id={pid}\n")
@@ -56,29 +56,22 @@ def main():
     sh(["/usr/bin/git","add",fpath])
     sh(["/usr/bin/git","commit","-m",f"dev: proposal #{pid} bootstrap PR"])
     sh(["/usr/bin/git","push","-u","origin",branch])
-    prj=sh([
-        "/opt/homebrew/bin/gh","pr","create",
-        "--base",BASE_BRANCH,
-        "--head",branch,
-        "--title",f"[dev] {title} (#{pid})",
-        "--body",f"proposal_id: {pid}\nbranch: {branch}\n\n{description}"
-    ], capture=True)
+    prj=sh(["/opt/homebrew/bin/gh","pr","create","--base",BASE_BRANCH,"--head",branch,"--title",f"[dev] {title} (#{pid})","--body",f"proposal_id: {pid}\nbranch: {branch}\n\n{description}"],capture=True)
     pr_url=prj.strip().splitlines()[-1].strip()
     pr_num=None
-    m=re.search(r"/pull/(\\d+)", pr_url)
-    if m:
-        pr_num=int(m.group(1))
+    m=re.search(r"/pull/(\\d+)",pr_url)
+    if m: pr_num=int(m.group(1))
     conn.execute("""
         UPDATE dev_proposals
         SET dev_stage='pr_created',
-            pr_number=COALESCE(?, pr_number),
-            pr_url=COALESCE(?, pr_url),
+            pr_number=COALESCE(?,pr_number),
+            pr_url=COALESCE(?,pr_url),
             dev_attempts=COALESCE(dev_attempts,0)+1
         WHERE id=?
-    """,(pr_num, pr_url, pid))
+    """,(pr_num,pr_url,pid))
     conn.commit()
-    print(json.dumps({"proposal_id":pid,"branch":branch,"pr_number":pr_num,"pr_url":pr_url}, ensure_ascii=False))
+    print(json.dumps({"proposal_id":pid,"branch":branch,"pr_number":pr_num,"pr_url":pr_url},ensure_ascii=False))
     return 0
 
-if __name__ == "__main__":
+if __name__=="__main__":
     raise SystemExit(main())
