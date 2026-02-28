@@ -17,6 +17,8 @@ def run():
 
     for r in rows:
         txt=(r["text"] or "").strip()
+        txt=re.sub(r'^\s*開発提案\s*:\s*','提案: ',txt)
+
         who=r["from_username"] or r["from_name"] or ""
 
         m=re.match(r"^(ok|hold)\s+(\d+)\s*$", txt, re.I)
