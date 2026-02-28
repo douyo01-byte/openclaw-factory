@@ -15,6 +15,7 @@ def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def main():
+    os.chdir("/Users/doyopc/AI/openclaw-factory")
     conn=sqlite3.connect(DB_PATH)
     conn.row_factory=sqlite3.Row
     row=conn.execute("""
