@@ -47,6 +47,16 @@ def try_apply_intuitive(conn, text: str) -> bool:
     return False
 
 import sqlite3
+
+import re
+
+def parse_free_text(text):
+    t=(text or "").strip()
+    if not t: return None
+    m=re.search(r'(作って|実装|追加|修正|直して|作成|build|implement)',t,re.I)
+    if not m: return None
+    return ("dev_request",t,"")
+
 from datetime import datetime
 
 DB_DEFAULT = "data/openclaw.db"
