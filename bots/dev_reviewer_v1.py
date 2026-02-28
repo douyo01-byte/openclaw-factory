@@ -97,10 +97,8 @@ def main():
     issues=analyze(d, files)
     body, ok=build_comment(meta, issues)
     if a.dry:
-      sys.stdout.write(f"PR #{n}\n{body}\n\n")
       continue
     comment_pr(repo, n, body)
-    sys.stdout.write(f"commented PR #{n} ok={ok}\n")
 
 if __name__=="__main__":
   main()
