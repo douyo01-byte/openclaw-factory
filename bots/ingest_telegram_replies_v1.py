@@ -26,17 +26,18 @@ def ensure(c):
  c.execute("PRAGMA journal_mode=WAL;");c.execute("PRAGMA busy_timeout=5000;")
  c.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
  c.execute("""CREATE TABLE IF NOT EXISTS inbox_commands(
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-chat_id TEXT,
-message_id INTEGER,
-reply_to_message_id INTEGER,
-from_username TEXT,
-from_name TEXT,
-text TEXT NOT NULL,
-received_at TEXT NOT NULL DEFAULT (datetime('now')),
-applied_at TEXT,
-status TEXT DEFAULT 'new',
-error TEXT)""")
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  chat_id TEXT,
+  message_id INTEGER,
+  reply_to_message_id INTEGER,
+  from_username TEXT,
+  from_name TEXT,
+  text TEXT NOT NULL,
+  received_at TEXT NOT NULL DEFAULT (datetime('now')),
+  applied_at TEXT,
+  status TEXT DEFAULT 'new',
+  error TEXT
+)""")
  c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_inbox_chat_msg ON inbox_commands(chat_id,message_id)")
  dc={r[1] for r in c.execute("PRAGMA table_info(decisions)")}
  if "run_id" not in dc:c.execute("ALTER TABLE decisions ADD COLUMN run_id TEXT")
@@ -60,11 +61,11 @@ def main():
   chat_id=str(chat.get("id",""));message_id=int(msg.get("message_id") or 0)
   reply_id=int(((msg.get("reply_to_message") or {}).get("message_id")) or 0)
   from_username=str(frm.get("username") or "");from_name=str(frm.get("first_name") or "")
-  c.execute("INSERT OR IGNORE INTO inbox_commands(chat_id,message_id,reply_to_message_id,from_username,from_name,text,received_at) VALUES(?,?,?,?,?,?,?)",(chat_id,message_id,reply_id,from_username,from_name,text,now()))
+  c.execute("INSERT OR IGNORE INTO inbox_commands(chat_id, message_id, reply_to_message_id, from_username, from_name, text, received_at) VALUES(?,?,?,?,?,?,?)",(chat_id,message_id,reply_id,from_username,from_name,text,now()))
   p=parse_text(text)
   if p:
    decision,target,reason=p
-   meta={"chat_id":chat.get("id"),"message_id":message_id,"update_id":uid,"raw":text}
+   meta = {"chat_id": chat.get("id"), "message_id": msg.get("message_id"), "update_id": uid, "raw": text}
    c.execute("INSERT INTO decisions(run_id,target,decision,reason,meta_json,created_at) VALUES(?,?,?,?,?,?)",(os.environ.get("RUN_ID"),target,decision,reason,json.dumps(meta,ensure_ascii=False),now()))
  if max_uid is not None:kv_set(c,"tg_offset",int(max_uid)+1)
  c.commit();c.close()
