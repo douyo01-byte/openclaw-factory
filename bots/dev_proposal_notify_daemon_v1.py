@@ -51,7 +51,7 @@ def build_text(row) -> str:
 def tick():
     conn=_conn()
     rows=conn.execute(
-        "SELECT * FROM dev_proposals WHERE status='proposed' AND (notified_at IS NULL OR notified_at='') ORDER BY id ASC LIMIT 20"
+        "SELECT * FROM dev_proposals WHERE status='proposed' AND ((notified_at IS NULL OR notified_at='') OR (notified_msg_id IS NULL OR notified_msg_id='')) ORDER BY id ASC LIMIT 20"
     ).fetchall()
     for r in rows:
         text=build_text(r)
