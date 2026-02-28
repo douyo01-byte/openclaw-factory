@@ -14,8 +14,10 @@ def ensure(conn):
     conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA busy_timeout=5000;")
     conn.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
-    conn.execute("CREATE TABLE IF NOT EXISTS inbox_commands(id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id TEXT, message_id INTEGER, reply_to_message_id INTEGER, from_username TEXT, from_name TEXT, text TEXT NOT NULL, received_at TEXT NOT NULL DEFAULT (datetime('now')), applied_at TEXT, status TEXT DEFAULT 'new', error TEXT)")
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_inbox_commands_received_at ON inbox_commands(received_at)")
+    conn.execute("CREATE TABLE IF NOT EXISTS inbox_commands(id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id TEXT, message_id INTEGER, reply_to_message_id INTEGER, from_username TEXT, from_name TEXT, text TEXT NOT NULL, received_at TEXT NOT NULL DEFAULT (datetime(
+ow\)), applied_at TEXT, status TEXT DEFAULT 
+ew\, error TEXT)")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_inbox_chat_msg ON inbox_commands(chat_id, message_id)")
     dc = {r[1] for r in conn.execute("PRAGMA table_info(decisions)")}
     if "run_id" not in dc: conn.execute("ALTER TABLE decisions ADD COLUMN run_id TEXT")
     if "target" not in dc: conn.execute("ALTER TABLE decisions ADD COLUMN target TEXT")
@@ -101,7 +103,7 @@ def main():
             parsed = parse_text(text)
             if parsed:
                 decision, target, reason = parsed
-                meta = {"chat_id": chat.get("id"), "message_id": msg.get("message_id"), "raw": text}
+                meta = {"chat_id": chat.get("id"), "message_id": msg.get("message_id"), "update_id": uid, "raw": text}
                 conn.execute(
                     "INSERT INTO decisions(run_id, target, decision, reason, meta_json, created_at) VALUES(?,?,?,?,?,?)",
                     (os.environ.get("RUN_ID"), target, decision, reason, json.dumps(meta, ensure_ascii=False), now())
