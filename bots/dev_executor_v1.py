@@ -10,7 +10,7 @@ def sh(args, check=True, capture=False):
     if args and args[0]=="/opt/homebrew/bin/gh":
         args=[GH_BIN]+args[1:]
     if capture:
-        p=subprocess.run(["/opt/homebrew/bin/gh" if args[0]=="/opt/homebrew/bin/gh" else args[0]] + args[1:], check=check, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        p=subprocess.run(args, check=check, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         return p.stdout.strip()
     subprocess.run(["/opt/homebrew/bin/gh" if args[0]=="/opt/homebrew/bin/gh" else args[0]] + args[1:], check=check)
 
