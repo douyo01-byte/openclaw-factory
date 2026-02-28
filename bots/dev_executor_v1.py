@@ -21,7 +21,7 @@ def main():
     os.makedirs(os.path.dirname(DB_PATH),exist_ok=True)
     print("DB_PATH=",DB_PATH)
     print("DIR_EXISTS=",os.path.isdir(os.path.dirname(DB_PATH)))
-    conn=sqlite3.connect(DB_PATH)
+    conn=sqlite3.connect(DB_PATH,timeout=30)
     conn.row_factory=sqlite3.Row
     row=conn.execute("""
         SELECT id,title,description,branch_name,pr_number,pr_url,dev_stage,dev_attempts
