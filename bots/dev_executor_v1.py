@@ -56,17 +56,8 @@ def create_pr(proposal_id):
         _run(["gh","pr","create","--head",branch,"--base","main","--title",title,"--body",(description or "")])
     prj = _run(["gh","pr","view",branch,"--json","number,url","-q","{number:.number,url:.url}"])
     pr = json.loads(prj)
-        
-            _run(["git","checkout","-B",branch])
-    _run(["git","stash","push","-u","-m",f"dev_executor_{proposal_id}"])
-    _run(["git","fetch","origin",branch])
-    _run(["git","rebase",f"origin/{branch}"])
-    _run(["git","stash","pop"])
-    _run(["git", "add", "."])
-    _run(["git", "commit", "-m", f"Dev Proposal #{proposal_id}"])
-    _run(["git","push","origin",branch])
-    _run(["gh", "pr", "create", "--title", title, "--body", (description or "")])
-    cur.execute("UPDATE dev_proposals SET status = 'pr_created' WHERE id = ?", (proposal_id,))    conn.commit()
+    cur.execute("UPDATE dev_proposals SET status=?, pr_number=?, pr_url=? WHERE id=?", ("pr_created", pr.get("number"), pr.get("url"), proposal_id))
+    cur.execute("INSERT INTO dev_events (proposal_id,event_type,payload) VALUES (?,?,?)", (proposal_id,"pr_created",prj))
+    conn.commit()
     conn.close()
     return True
-
