@@ -39,7 +39,7 @@ def main():
     title=(row["title"] or f"proposal {pid}").strip()
     description=(row["description"] or "").strip()
     branch=(row["branch_name"] or f"dev/p{pid}").strip()
-    out=sh(["git","rev-parse","--abbrev-ref","HEAD"], capture=True)
+    out="main"
     if out != BASE_BRANCH:
         sh(["git","checkout",BASE_BRANCH])
 
