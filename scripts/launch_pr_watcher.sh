@@ -1,5 +1,8 @@
-#!/usr/bin/env bash
+#!/bin/bash
 cd /Users/doyopc/AI/openclaw-factory
-source .venv/bin/activate
+export PATH="/opt/homebrew/bin:/usr/bin:/bin"
+export PYTHONUNBUFFERED=1
 export PYTHONPATH=/Users/doyopc/AI/openclaw-factory
-python bots/dev_pr_watcher_v1.py >> logs/dev_pr_watcher.out 2>> logs/dev_pr_watcher.err
+set -a
+source .env.openclaw
+exec /bin/bash -lc "source .venv/bin/activate && python bots/dev_pr_watcher_v1.py"
