@@ -68,17 +68,17 @@ def parse_product_id(conn, s: str) -> tuple[int | None, str]:
     return int(m.group(1)), (m.group(2) or "").strip()
 
 def upsert_item_meta(conn: sqlite3.Connection, product_id: int):
-    conn.execute("INSERT OR IGNORE INTO item_meta(product_id) VALUES(?)", (product_id,))
+    conn.execute("INSERT OR IGNORE INTO item_meta(item_id) VALUES(?)", (product_id,))
 
 def set_decision(conn: sqlite3.Connection, product_id: int, decision: str, note: str | None = None):
     upsert_item_meta(conn, product_id)
     conn.execute(
-        "UPDATE item_meta SET decision=?, updated_at=datetime('now') WHERE product_id=?",
+        "UPDATE item_meta SET decision=?, updated_at=datetime('now') WHERE item_id=?",
         (decision, product_id),
     )
     if note:
         conn.execute(
-            "UPDATE item_meta SET note=COALESCE(note,'') || CASE WHEN note IS NULL OR note='' THEN '' ELSE '\n' END || ?, updated_at=datetime('now') WHERE product_id=?",
+            "UPDATE item_meta SET note=COALESCE(note,'') || CASE WHEN note IS NULL OR note='' THEN '' ELSE '\n' END || ?, updated_at=datetime('now') WHERE item_id=?",
             (note, product_id),
         )
 
@@ -86,14 +86,14 @@ def set_priority(conn: sqlite3.Connection, product_id: int, prio: int):
     prio = max(0, min(100, prio))
     upsert_item_meta(conn, product_id)
     conn.execute(
-        "UPDATE item_meta SET priority=?, updated_at=datetime('now') WHERE product_id=?",
+        "UPDATE item_meta SET priority=?, updated_at=datetime('now') WHERE item_id=?",
         (prio, product_id),
     )
 
 def add_note(conn: sqlite3.Connection, product_id: int, note: str):
     upsert_item_meta(conn, product_id)
     conn.execute(
-        "UPDATE item_meta SET note=COALESCE(note,'') || CASE WHEN note IS NULL OR note='' THEN '' ELSE '\n' END || ?, updated_at=datetime('now') WHERE product_id=?",
+        "UPDATE item_meta SET note=COALESCE(note,'') || CASE WHEN note IS NULL OR note='' THEN '' ELSE '\n' END || ?, updated_at=datetime('now') WHERE item_id=?",
         (note, product_id),
     )
 
