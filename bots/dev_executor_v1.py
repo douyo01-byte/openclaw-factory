@@ -33,7 +33,6 @@ def create_pr(proposal_id):
         return False
     title, description = row
     branch = f"dev/proposal-{proposal_id}"
-<<<<<<< HEAD
 
     _run(["git","fetch","origin",branch])
     has_remote = subprocess.run(["git","rev-parse","--verify",f"origin/{branch}"], capture_output=True, text=True).returncode == 0
@@ -57,7 +56,6 @@ def create_pr(proposal_id):
 
     cur.execute("UPDATE dev_proposals SET status='pr_created' WHERE id=?", (proposal_id,))
     cur.execute("INSERT INTO dev_events (proposal_id,event_type,payload) VALUES (?,?,?)", (proposal_id,"pr_created","{}"))
-=======
     _run(["git","checkout","-B",branch])
     _run(["git","stash","push","-u","-m",f"dev_executor_{proposal_id}"])
     _run(["git","fetch","origin",branch])
@@ -69,7 +67,6 @@ def create_pr(proposal_id):
     _run(["gh", "pr", "create", "--title", title, "--body", (description or "")])
     cur.execute("UPDATE dev_proposals SET status = 'pr_created' WHERE id = ?", (proposal_id,))
     cur.execute("INSERT INTO dev_events (proposal_id, event_type, payload) VALUES (?, ?, ?)", (proposal_id, "pr_created", "{}"))
->>>>>>> 5f0c0de (Dev Proposal #3)
     conn.commit()
     conn.close()
     return True
