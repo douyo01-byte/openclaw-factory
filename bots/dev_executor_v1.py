@@ -34,26 +34,21 @@ def create_pr(proposal_id):
     title, description = row
     branch = f"dev/proposal-{proposal_id}"
 
-    stashed = _stash_push(f"dev_executor_{proposal_id}")
-
-    _run_ok(["git","fetch","origin",branch])
-
-    if _has_remote(branch):
+    _run(["git","fetch","origin",branch])
+    has_remote = subprocess.run(["git","rev-parse","--verify",f"origin/{branch}"], capture_output=True, text=True).returncode == 0
+    if has_remote:
         _run(["git","checkout","-B",branch,f"origin/{branch}"])
     else:
         _run(["git","checkout","-B",branch])
 
-    _run(["git","add","."])
-
+    _run(["git","add","-A"])
     has_changes = subprocess.run(["git","diff","--cached","--quiet"]).returncode != 0
     if has_changes:
         _run(["git","commit","-m",f"Dev Proposal #{proposal_id}"])
-        r = subprocess.run(["git","push","--force-with-lease","origin",branch], capture_output=True, text=True)
-        if r.returncode != 0:
-            _run_ok(["git","fetch","origin",branch])
-            if _has_remote(branch):
-                _run(["git","rebase",f"origin/{branch}"])
-            _run(["git","push","--force-with-lease","origin",branch])
+
+    r = subprocess.run(["git","push","-u","origin",branch], capture_output=True, text=True)
+    if r.returncode != 0:
+        _run(["git","push","--force-with-lease","-u","origin",branch])
 
     existing = _run(["gh","pr","list","--head",branch,"--state","all","--json","number"]).strip()
     if existing == "[]":
@@ -63,8 +58,5 @@ def create_pr(proposal_id):
     cur.execute("INSERT INTO dev_events (proposal_id,event_type,payload) VALUES (?,?,?)", (proposal_id,"pr_created","{}"))
     conn.commit()
     conn.close()
-
-    if stashed:
-        subprocess.run(["git","stash","pop"], capture_output=True, text=True)
-
     return True
+
