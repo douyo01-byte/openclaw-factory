@@ -66,9 +66,7 @@ def create_pr(proposal_id):
     _run(["git", "commit", "-m", f"Dev Proposal #{proposal_id}"])
     _run(["git","push","origin",branch])
     _run(["gh", "pr", "create", "--title", title, "--body", (description or "")])
-    cur.execute("UPDATE dev_proposals SET status = 'pr_created' WHERE id = ?", (proposal_id,))
-    cur.execute("INSERT INTO dev_events (proposal_id, event_type, payload) VALUES (?, ?, ?)", (proposal_id, "pr_created", "{}"))
-    conn.commit()
+    cur.execute("UPDATE dev_proposals SET status = 'pr_created' WHERE id = ?", (proposal_id,))    conn.commit()
     conn.close()
     return True
 
