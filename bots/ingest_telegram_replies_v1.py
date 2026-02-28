@@ -14,9 +14,19 @@ def ensure(conn):
     conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA busy_timeout=5000;")
     conn.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
-    conn.execute("CREATE TABLE IF NOT EXISTS inbox_commands(id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id TEXT, message_id INTEGER, reply_to_message_id INTEGER, from_username TEXT, from_name TEXT, text TEXT NOT NULL, received_at TEXT NOT NULL DEFAULT (datetime(
-ow\)), applied_at TEXT, status TEXT DEFAULT 
-ew\, error TEXT)")
+    conn.execute("""CREATE TABLE IF NOT EXISTS inbox_commands(
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ chat_id TEXT,
+ message_id INTEGER,
+ reply_to_message_id INTEGER,
+ from_username TEXT,
+ from_name TEXT,
+ text TEXT NOT NULL,
+ received_at TEXT NOT NULL DEFAULT (datetime("now")),
+ applied_at TEXT,
+ status TEXT DEFAULT "new",
+ error TEXT
+)""")")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_inbox_chat_msg ON inbox_commands(chat_id, message_id)")
     dc = {r[1] for r in conn.execute("PRAGMA table_info(decisions)")}
     if "run_id" not in dc: conn.execute("ALTER TABLE decisions ADD COLUMN run_id TEXT")
