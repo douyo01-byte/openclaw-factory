@@ -237,6 +237,7 @@ def main() -> None:
     ignored = 0
 
     for r in rows:
+        status, error = handle_chat(conn, r)
 
         dev_id = parse_approval(r['text'])
 
@@ -261,7 +262,6 @@ def main() -> None:
             conn.commit()
 
             continue
-        status, error = handle_chat(conn, r)
         if status == "chatted":
             chatted += 1
             conn.execute(

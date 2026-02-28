@@ -71,3 +71,6 @@ def send_with_buttons(text: str, buttons):
     except Exception as e:
         print("Telegram send error:", e)
         return None
+
+def _tg_dedupe(text: str) -> bool:
+    return False
