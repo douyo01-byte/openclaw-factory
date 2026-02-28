@@ -3,10 +3,8 @@ import time
 import requests
 from dotenv import load_dotenv
 
-load_dotenv();BOT_TOKEN=os.getenv("TELEGRAM_BOT_TOKEN");CHAT_ID=(os.getenv("OCLAW_TELEGRAM_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID"))
+load_dotenv("env/telegram.env", override=True);BOT_TOKEN=os.getenv("TELEGRAM_BOT_TOKEN");CHAT_ID=(os.getenv("OCLAW_TELEGRAM_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID"))
 
-BOT_TOKEN=os.getenv("TELEGRAM_BOT_TOKEN")
-CHAT_ID=(os.getenv("OCLAW_TELEGRAM_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID"))
 
 TELEGRAM_MAX_LEN=3900
 
