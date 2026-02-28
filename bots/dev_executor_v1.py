@@ -2,12 +2,12 @@ from __future__ import annotations
 import json, os, re, sqlite3, subprocess
 from datetime import datetime, timezone
 
-DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+DB_PATH=os.environ.get("OCLAW_DB_PATH","/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
 BASE_BRANCH="main"
 
 def sh(args, check=True, capture=False):
     if capture:
-        p=subprocess.run(args, check=check, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        p=subprocess.run(args, check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         return p.stdout.strip()
     subprocess.run(args, check=check)
 
