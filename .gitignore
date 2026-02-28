@@ -12,3 +12,5 @@ __pycache__/
 configs/*.bak.*
 
 *.bak.*
+.env.openclaw
+.env.*
