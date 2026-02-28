@@ -24,6 +24,10 @@ def _stash_push(tag):
     return r.returncode == 0 and "No local changes" not in out
 
 def create_pr(proposal_id):
+    import subprocess
+    r=subprocess.run(['python','-m','bots.dev_guardrails_v1'],capture_output=True,text=True)
+    if r.returncode!=0:
+        raise SystemExit((r.stdout or r.stderr).strip())
     apply_dev_schema(DB_PATH)
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
