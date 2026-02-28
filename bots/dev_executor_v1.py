@@ -19,6 +19,8 @@ def main():
     os.chdir("/Users/doyopc/AI/openclaw-factory")
     os.chdir("/Users/doyopc/AI/openclaw-factory")
     os.makedirs(os.path.dirname(DB_PATH),exist_ok=True)
+    print("DB_PATH=",DB_PATH)
+    print("DIR_EXISTS=",os.path.isdir(os.path.dirname(DB_PATH)))
     conn=sqlite3.connect(DB_PATH)
     conn.row_factory=sqlite3.Row
     row=conn.execute("""
