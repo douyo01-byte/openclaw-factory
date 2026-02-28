@@ -123,7 +123,19 @@ def apply_one(conn: sqlite3.Connection, row) -> tuple[str, str | None]:
     m = CMD_PAT.match(text)
     if try_apply_intuitive(conn, text):
         return ('applied', None)
+
+    # free-text dev request -> dev_proposals
     if not m:
+        ft = parse_free_text(text)
+        if ft:
+            req_text = ft[1]
+            title = (req_text[:60] + "…") if len(req_text) > 60 else req_text
+            branch = f"dev/free-{cmd_id}"
+            conn.execute(
+                "INSERT INTO dev_proposals(title, description, branch_name, status, risk_level) VALUES(?,?,?,?,?)",
+                (title, req_text, branch, "pending", "medium"),
+            )
+            return ("applied", None)
         return ("ignored", None)
 
     cmd = m.group(1).lower()
