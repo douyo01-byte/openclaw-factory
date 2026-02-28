@@ -52,7 +52,7 @@ def insert_command(conn: sqlite3.Connection, chat_id: str, msg: Dict[str, Any]):
 
     conn.execute(
         """
-        INSERT INTO inbox_commands(chat_id, message_id, reply_to_message_id, from_username, from_name, text)
+        INSERT OR IGNORE INTO inbox_commands(chat_id, message_id, reply_to_message_id, from_username, from_name, text)
         VALUES(?,?,?,?,?,?)
         """,
         (str(chat_id), message_id, reply_to_id, username, name, text),
