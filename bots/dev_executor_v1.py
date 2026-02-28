@@ -19,7 +19,7 @@ def main():
     conn.row_factory=sqlite3.Row
     row=conn.execute(
         """
-        SELECT id,title,description,pr_number,pr_url,dev_stage,dev_attempts
+        SELECT id,title,description,branch_name,pr_number,pr_url,dev_stage,dev_attempts
         FROM dev_proposals
         WHERE status='approved'
           AND (pr_number IS NULL OR pr_number='')
@@ -35,10 +35,14 @@ def main():
     pid=int(row["id"])
     title=(row["title"] or f"proposal {pid}").strip()
     description=(row["description"] or "").strip()
-    branch=f"dev/p{pid}"
+    branch=(row["branch_name"] or f"dev/p{pid}").strip()
     out=sh(["git","rev-parse","--abbrev-ref","HEAD"], capture=True)
     if out != BASE_BRANCH:
         sh(["git","checkout",BASE_BRANCH])
+
+    if sh(["git","status","--porcelain"], capture=True):
+        print("dirty working tree")
+        return 2
 
     sh(["git","pull","--rebase","origin",BASE_BRANCH])
 
@@ -69,7 +73,7 @@ def main():
     sh(["git","commit","-m",f"dev: proposal #{pid} bootstrap PR"])
     sh(["git","push","-u","origin",branch])
 
-    prj=sh(["gh","pr","create","--base",BASE_BRANCH,"--head",branch,"--title",f"[dev] {title} (#{pid})","--body",f"proposal_id: {pid}\n\n{description}"], capture=True)
+    prj=sh(["gh","pr","create","--base",BASE_BRANCH,"--head",branch,"--title",f"[dev] {title} (#{pid})","--body",f"proposal_id: {pid}\nbranch: {branch}\n\n{description}"], capture=True)
     pr_url=prj.strip().splitlines()[-1].strip()
     pr_num=None
     m=re.search(r"/pull/(\d+)", pr_url)
