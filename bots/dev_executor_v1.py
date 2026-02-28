@@ -7,9 +7,9 @@ BASE_BRANCH=os.environ.get("GIT_BASE_BRANCH") or "main"
 
 def sh(args, check=True, capture=False):
     if capture:
-        p=subprocess.run(args, check=check, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        p=subprocess.run(["/opt/homebrew/bin/gh" if args[0]=="/opt/homebrew/bin/gh" else args[0]] + args[1:], check=check, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         return p.stdout.strip()
-    subprocess.run(args, check=check)
+    subprocess.run(["/opt/homebrew/bin/gh" if args[0]=="/opt/homebrew/bin/gh" else args[0]] + args[1:], check=check)
 
 def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -73,7 +73,7 @@ def main():
     sh(["git","commit","-m",f"dev: proposal #{pid} bootstrap PR"])
     sh(["git","push","-u","origin",branch])
 
-    prj=sh(["gh","pr","create","--base",BASE_BRANCH,"--head",branch,"--title",f"[dev] {title} (#{pid})","--body",f"proposal_id: {pid}\nbranch: {branch}\n\n{description}"], capture=True)
+    prj=sh(["/opt/homebrew/bin/gh","pr","create","--base",BASE_BRANCH,"--head",branch,"--title",f"[dev] {title} (#{pid})","--body",f"proposal_id: {pid}\nbranch: {branch}\n\n{description}"], capture=True)
     pr_url=prj.strip().splitlines()[-1].strip()
     pr_num=None
     m=re.search(r"/pull/(\d+)", pr_url)
