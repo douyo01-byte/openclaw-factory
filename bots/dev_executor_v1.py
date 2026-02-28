@@ -2,12 +2,12 @@ from __future__ import annotations
 import json, os, re, sqlite3, subprocess, sys
 from datetime import datetime, timezone
 
-DB_PATH=os.environ.get("DB_PATH") or os.environ.get("OCLAW_DB_PATH") or "data/openclaw.db"
+DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 BASE_BRANCH=os.environ.get("GIT_BASE_BRANCH") or "main"
 
 GH_BIN="/opt/homebrew/bin/gh"
 def sh(args, check=True, capture=False):
-    if args and args[0]=="gh":
+    if args and args[0]=="/opt/homebrew/bin/gh":
         args=[GH_BIN]+args[1:]
     if capture:
         p=subprocess.run(["/opt/homebrew/bin/gh" if args[0]=="/opt/homebrew/bin/gh" else args[0]] + args[1:], check=check, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
