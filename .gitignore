@@ -1,2 +1,6 @@
+.env
 .env.openclaw
-scripts/run_daemon.sh
+data/
+logs/
+**/__pycache__/
+*.bak.*
