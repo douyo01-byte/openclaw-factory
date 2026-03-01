@@ -1,0 +1,5 @@
+id=33
+title=24h Autonomous Run
+ts=2026-03-01T01:27:17Z
+
+Verify full 24h unattended run
