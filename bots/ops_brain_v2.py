@@ -1,4 +1,4 @@
-import subprocess, sqlite3, os, requests, datetime
+import subprocess, sqlite3, os, requests
 
 DB="data/openclaw.db"
 TOKEN=os.getenv("TELEGRAM_BOT_TOKEN")
@@ -17,12 +17,7 @@ def run_apply(target):
 def check_adopt():
     conn=sqlite3.connect(DB)
     cur=conn.cursor()
-    cur.execute("""
-        select target
-        from decisions
-        where decision='adopt'
-        and updated_at >= datetime('now','-2 minutes')
-    """)
+    cur.execute("select target from decisions where decision='adopt'")
     rows=cur.fetchall()
     for r in rows:
         target=r[0]
