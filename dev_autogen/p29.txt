@@ -1,0 +1,5 @@
+id=29
+title=Scale Factory
+ts=2026-03-01T01:23:10Z
+
+Prepare multi factory scaling
