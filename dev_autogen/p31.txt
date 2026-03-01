@@ -1,0 +1,5 @@
+id=31
+title=KPI Tracking
+ts=2026-03-01T01:25:41Z
+
+Add automatic KPI metrics collection
