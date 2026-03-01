@@ -1,0 +1,5 @@
+id=20
+title=Auto Proposal Ops
+ts=2026-03-01T01:13:36Z
+
+Run proposal generator periodically
