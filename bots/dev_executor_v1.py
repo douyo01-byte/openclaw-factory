@@ -49,8 +49,8 @@ AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
         sh(["/usr/bin/git","clean","-fd"])
     else:
         sh(["/usr/bin/git","checkout","-B",branch])
-    os.makedirs("dev_autogen",exist_ok=True)
-    fpath=f"dev_autogen/p{pid}.txt"
+    os.makedirs(os.path.join(REPO,"dev_autogen"),exist_ok=True)
+    fpath=os.path.join(REPO,"dev_autogen",f"p{pid}.txt")
     with open(fpath,"w",encoding="utf-8") as f:
         f.write(f"id={pid}\n")
         f.write(f"title={title}\n")
