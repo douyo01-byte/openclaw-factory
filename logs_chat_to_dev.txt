@@ -10,3 +10,58 @@ daemon start: chat_to_dev
 no approved proposals
 no approved proposals
 daemon start: chat_to_dev
+no approved proposals
+daemon start: chat_to_dev
+no approved proposals
+daemon start: chat_to_dev
+Traceback (most recent call last):
+  File "/Users/doyopc/AI/openclaw-factory/bots/chat_to_dev/daemon_chat_to_dev_v1.py", line 2, in <module>
+    from bots.chat_to_dev.ingest_private_chat_v1 import main as ingest
+ModuleNotFoundError: No module named 'bots'
+Traceback (most recent call last):
+  File "/Users/doyopc/AI/openclaw-factory/bots/chat_to_dev/daemon_chat_to_dev_v1.py", line 4, in <module>
+    from bots.dev_executor_v1 import main as execdev
+ModuleNotFoundError: No module named 'bots'
+no approved proposals
+daemon start: chat_to_dev
+Traceback (most recent call last):
+  File "/Users/doyopc/AI/openclaw-factory/bots/chat_to_dev/daemon_chat_to_dev_v1.py", line 4, in <module>
+    from bots.chat_to_dev.ingest_private_chat_v1 import main as ingest
+ModuleNotFoundError: No module named 'bots'
+daemon start: chat_to_dev
+no approved proposals
+/Users/doyopc/AI/openclaw-factory/.venv/bin/python: Error while finding module specification for 'chat_to_dev.daemon_chat_to_dev_v1' (ModuleNotFoundError: No module named 'chat_to_dev')
+Traceback (most recent call last):
+  File "/Users/doyopc/AI/openclaw-factory/bots/chat_to_dev/daemon_chat_to_dev_v1.py", line 4, in <module>
+    from bots.chat_to_dev.ingest_private_chat_v1 import main as ingest
+  File "/Users/doyopc/AI/openclaw-factory/bots/chat_to_dev/../../bots/chat_to_dev/ingest_private_chat_v1.py", line 1, in <module>
+    import os,sqlite3,requests
+ModuleNotFoundError: No module named 'requests'
+daemon start: chat_to_dev
+ingest error unable to open database file
+proposal error unable to open database file
+no approved proposals
+Traceback (most recent call last):
+  File "/Users/doyopc/AI/openclaw-factory/bots/chat_to_dev/daemon_chat_to_dev_v1.py", line 4, in <module>
+    from bots.chat_to_dev.ingest_private_chat_v1 import main as ingest
+ModuleNotFoundError: No module named 'bots'
+Traceback (most recent call last):
+  File "/Users/doyopc/AI/openclaw-factory/bots/chat_to_dev/daemon_chat_to_dev_v1.py", line 4, in <module>
+    from bots.chat_to_dev.ingest_private_chat_v1 import main as ingest
+ModuleNotFoundError: No module named 'bots'
+Traceback (most recent call last):
+  File "/Users/doyopc/AI/openclaw-factory/bots/chat_to_dev/daemon_chat_to_dev_v1.py", line 4, in <module>
+    from bots.chat_to_dev.ingest_private_chat_v1 import main as ingest
+ModuleNotFoundError: No module named 'bots'
+daemon start: chat_to_dev
+no approved proposals
+daemon start: chat_to_dev
+no approved proposals
+daemon start: chat_to_dev
+no approved proposals
+daemon start: chat_to_dev
+no approved proposals
+daemon start: chat_to_dev
+no approved proposals
+daemon start: chat_to_dev
+no approved proposals
