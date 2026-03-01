@@ -6,6 +6,7 @@ DB_PATH=os.environ.get("OCLAW_DB_PATH","/Users/doyopc/AI/openclaw-factory/data/o
 BASE_BRANCH="main"
 REPO="/Users/doyopc/AI/openclaw-factory"
 
+KAI_LOG=os.path.join(REPO,"logs","kai_actions.log")
 def sh(args,capture=False):
     env=dict(os.environ)
     env["HOME"]="/Users/doyopc"
@@ -17,6 +18,16 @@ def sh(args,capture=False):
 
 def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def kai(conn, pid, event, **kw):
+    os.makedirs(os.path.dirname(KAI_LOG), exist_ok=True)
+    payload={"ts": now(), "proposal_id": pid, "event": event, **kw}
+    with open(KAI_LOG, "a", encoding="utf-8") as f:
+        f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    conn.execute(
+        "INSERT INTO dev_events (proposal_id,event_type,payload) VALUES (?,?,?)",
+        (pid, event, json.dumps(payload, ensure_ascii=False)),
+    )
 
 def main():
     os.makedirs(os.path.dirname(DB_PATH),exist_ok=True)
@@ -34,10 +45,12 @@ AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
         raise SystemExit("no approved proposals")
         return 0
     pid=int(row["id"])
+    kai(conn,pid,"picked",branch_name=(row["branch_name"] or ""),title=(row["title"] or ""))
     title=(row["title"] or f"proposal {pid}").strip()
     branch=row["branch_name"] or f"dev/proposal-{pid}"
     description=row["description"] or ""
     sh(["/usr/bin/git","checkout",BASE_BRANCH])
+    kai(conn,pid,"git_base",base=BASE_BRANCH)
     sh(["/usr/bin/git","fetch","origin",BASE_BRANCH])
     sh(["/usr/bin/git","reset","--hard","origin/"+BASE_BRANCH])
     sh(["/usr/bin/git","clean","-fd"])
@@ -59,6 +72,7 @@ AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
     sh(["/usr/bin/git","add",fpath])
     sh(["/usr/bin/git","commit","-m",f"dev: proposal #{pid} bootstrap PR"])
     sh(["/usr/bin/git","push","-u","origin",branch])
+    kai(conn,pid,"git_push",branch=branch)
     prj=sh(["/opt/homebrew/bin/gh","pr","create","--base",BASE_BRANCH,"--head",branch,"--title",f"[dev] {title} (#{pid})","--body",f"proposal_id: {pid}\nbranch: {branch}\n\n{description}"],capture=True)
     pr_url=prj.strip().splitlines()[-1].strip()
     pr_num=None
@@ -72,6 +86,7 @@ AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
             dev_attempts=COALESCE(dev_attempts,0)+1
         WHERE id=?
     """,(pr_num,pr_url,pid))
+    kai(conn,pid,"db_updated",pr_url=pr_url,pr_number=pr_num)
     conn.commit()
     print(json.dumps({"proposal_id":pid,"branch":branch,"pr_number":pr_num,"pr_url":pr_url},ensure_ascii=False))
     return 0
