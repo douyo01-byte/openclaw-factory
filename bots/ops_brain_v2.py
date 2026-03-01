@@ -1,42 +1,32 @@
-import os, sqlite3, subprocess, requests
-
+import os,sqlite3,subprocess,requests
 DB="data/openclaw.db"
 TOKEN=os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID="-5293321023"
-
-def notify(msg):
+def n(m):
     if TOKEN:
-        requests.post(
-            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-            data={"chat_id":CHAT_ID,"text":msg}
-        )
-
-def run_apply():
+        requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage",data={"chat_id":CHAT_ID,"text":m})
+def r():
     return subprocess.call(["python","-m","bots.command_apply_v1","--db",DB,"--limit","50"])
-
-def mark_once(conn, k):
-    cur=conn.execute("insert or ignore into executed_decisions(key) values(?)",(k,))
-    return cur.rowcount==1
-
 def main():
-    conn=sqlite3.connect(DB)
-    rows=conn.execute("""
-      select target, updated_at
-      from decisions
-      where decision='adopt'
-      order by updated_at asc
-    """).fetchall()
-
-    for target,ts in rows:
-        k=f"adopt|{target}|{ts}"
-        if not mark_once(conn,k):
+    c=sqlite3.connect(DB)
+    rows=c.execute("select target,updated_at from decisions where decision='adopt' order by updated_at asc").fetchall()
+    c.close()
+    for t,ts in rows:
+        c2=sqlite3.connect(DB)
+        k=f"{t}|{ts}"
+        cur=c2.execute("insert or ignore into executed_decisions(key) values(?)",(k,))
+        if cur.rowcount!=1:
+            c2.close()
             continue
-        notify(f"[AutoExecute] {target}")
-        rc=run_apply()
-        notify(f"[Apply] rc={rc}")
-
-    conn.commit()
-    conn.close()
-
+        c2.commit()
+        c2.close()
+        n(f"[AutoExecute] {t}")
+        rc=r()
+        n(f"[Apply] rc={rc}")
+        if rc==0:
+            c3=sqlite3.connect(DB)
+            c3.execute("update decisions set decision='done' where target=? and updated_at=?",(t,ts))
+            c3.commit()
+            c3.close()
 if __name__=="__main__":
     main()
