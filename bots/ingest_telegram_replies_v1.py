@@ -1,3 +1,4 @@
+import requests
 from oclibs.human.dev_reply import format_dev_reply
 import os,json,datetime,urllib.parse,urllib.request,sqlite3
 from dotenv import load_dotenv
