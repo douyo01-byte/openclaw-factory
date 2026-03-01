@@ -8,7 +8,7 @@ test -f env/telegram.env && { set -a; source env/telegram.env; set +a; }
 export DB_PATH="${DB_PATH:-$PWD/data/openclaw.db}"
 export OCLAW_DB_PATH="${OCLAW_DB_PATH:-$PWD/data/openclaw.db}"
 while true; do
-  python -u bots/chat_to_dev/ingest_private_chat_v1.py </dev/null >> logs/tg_private_poll.log 2>&1 || true
-  python -u bots/ingest_telegram_replies_v1.py </dev/null >> logs/tg_poll.log 2>&1 || true
+  /Users/doyopc/AI/openclaw-factory-daemon/.venv/bin/python -u bots/chat_to_dev/ingest_private_chat_v1.py >> logs/tg_private_poll.log 2>&1 || true
+  /Users/doyopc/AI/openclaw-factory-daemon/.venv/bin/python -u bots/ingest_telegram_replies_v1.py >> logs/tg_poll.log 2>&1 || true
   sleep 2
 done
