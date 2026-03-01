@@ -1,0 +1,5 @@
+id=21
+title=Autonomous Loop
+ts=2026-03-01T01:14:41Z
+
+Connect research to sales feedback loop
