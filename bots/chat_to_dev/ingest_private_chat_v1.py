@@ -8,7 +8,7 @@ def main():
     conn.row_factory=sqlite3.Row
     offset_row=conn.execute("select ifnull(max(message_id),0) m from tg_private_chat_log").fetchone()
     offset=offset_row["m"]
-    url=f"https://api.telegram.org/bot{TOKEN}/getUpdates?offset={offset+1}&timeout=30"
+    url=f"https://api.telegram.org/bot{TOKEN}/getUpdates?offset={offset+1}&timeout=0"
     r=requests.get(url,timeout=60).json()
     for u in r.get("result",[]):
         m=u.get("message")
