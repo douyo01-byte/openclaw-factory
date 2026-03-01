@@ -105,7 +105,7 @@ AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
     if m: pr_num=int(m.group(1))
     conn.execute("""
         UPDATE dev_proposals
-        SET dev_stage='pr_created',
+        SET status='pr_created', dev_stage='pr_created',
             pr_number=COALESCE(?,pr_number),
             pr_url=COALESCE(?,pr_url),
             dev_attempts=COALESCE(dev_attempts,0)+1
