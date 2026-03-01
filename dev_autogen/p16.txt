@@ -1,0 +1,5 @@
+id=16
+title=PR Auto Merge
+ts=2026-03-01T01:06:16Z
+
+Automatically merge PR when checks pass
