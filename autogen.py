@@ -1,4 +1,4 @@
 ```python
-class NewAuto2:
+class NewAuto3:
     pass
 ```
