@@ -3,9 +3,9 @@ import sqlite3,datetime,random
 DB="data/openclaw.db"
 
 ideas=[
-("Improve Research Quality","Add better search sources","dev/idea-a"),
-("Optimize Costs","Add cost estimator","dev/idea-b"),
-("Speed Pipeline","Parallelize jobs","dev/idea-c")
+("Improve Research Quality","Add better search sources",f"dev/idea-a-{pid}"),
+("Optimize Costs","Add cost estimator",f"dev/idea-b-{pid}"),
+("Speed Pipeline","Parallelize jobs",f"dev/idea-c-{pid}")
 ]
 
 def main():
