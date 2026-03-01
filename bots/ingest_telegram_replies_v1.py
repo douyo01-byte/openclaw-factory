@@ -2,7 +2,7 @@ import requests
 from oclibs.human.dev_reply import format_dev_reply
 import os,json,datetime,urllib.parse,urllib.request,sqlite3
 from dotenv import load_dotenv
-load_dotenv("env/telegram.env", override=True)
+load_dotenv("env/telegram_daemon.env", override=True)
 DB_PATH=os.environ.get("DB_PATH","data/openclaw.db")
 TOKEN=os.environ.get("TELEGRAM_BOT_TOKEN","").strip()
 API=f"https://api.telegram.org/bot{TOKEN}/getUpdates"
