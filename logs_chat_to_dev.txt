@@ -1,0 +1,12 @@
+no approved proposals
+daemon start: chat_to_dev
+no approved proposals
+daemon start: chat_to_dev
+Traceback (most recent call last):
+  File "/Users/doyopc/AI/openclaw-factory/bots/chat_to_dev/daemon_chat_to_dev_v1.py", line 2, in <module>
+    from bots.chat_to_dev.ingest_private_chat_v1 import main as ingest
+ModuleNotFoundError: No module named 'bots'
+daemon start: chat_to_dev
+no approved proposals
+no approved proposals
+daemon start: chat_to_dev
