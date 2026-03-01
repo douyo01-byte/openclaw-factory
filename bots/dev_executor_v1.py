@@ -1,5 +1,30 @@
 from __future__ import annotations
 import json, os, re, sqlite3, subprocess
+
+import os, json, datetime, urllib.parse, urllib.request
+
+REPO=os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
+
+def kai(conn,pid,event,**kw):
+    ts=datetime.datetime.utcnow().replace(microsecond=0).isoformat()+"Z"
+    d={"ts":ts,"proposal_id":pid,"event":event,**kw}
+    line=json.dumps(d,ensure_ascii=False)
+    try:
+        os.makedirs(os.path.join(REPO,"logs"),exist_ok=True)
+        with open(os.path.join(REPO,"logs","kai_actions.log"),"a",encoding="utf-8") as f:
+            f.write(line+"\n")
+    except Exception:
+        pass
+    tok=os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("TG_BOT_TOKEN") or ""
+    chat=os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get("TG_CHAT_ID") or ""
+    if tok and chat:
+        try:
+            msg=("Kai: %s pid=%s " % (event,pid)) + " ".join([("%s=%s" % (k,v)) for k,v in kw.items()])
+            q=urllib.parse.urlencode({"chat_id":chat,"text":msg})
+            url="https://api.telegram.org/bot%s/sendMessage?%s" % (tok,q)
+            urllib.request.urlopen(url, timeout=10).read()
+        except Exception:
+            pass
 from datetime import datetime, timezone
 
 DB_PATH=os.environ.get("OCLAW_DB_PATH","/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
