@@ -14,35 +14,28 @@ def notify(msg):
 def run_apply():
     return subprocess.call(["python","-m","bots.command_apply_v1","--db",DB,"--limit","50"])
 
-def get_kv(conn,k,default=""):
-    r=conn.execute("select v from kv where k=?",(k,)).fetchone()
-    return r[0] if r else default
-
-def set_kv(conn,k,v):
-    conn.execute("insert into kv(k,v) values(?,?) on conflict(k) do update set v=excluded.v",(k,v))
+def mark_once(conn, k):
+    cur=conn.execute("insert or ignore into executed_decisions(key) values(?)",(k,))
+    return cur.rowcount==1
 
 def main():
     conn=sqlite3.connect(DB)
-    last=get_kv(conn,"ops_last_decision_ts","1970-01-01 00:00:00")
-
     rows=conn.execute("""
       select target, updated_at
       from decisions
       where decision='adopt'
-        and updated_at > ?
       order by updated_at asc
-    """,(last,)).fetchall()
+    """).fetchall()
 
-    max_ts=last
     for target,ts in rows:
+        k=f"adopt|{target}|{ts}"
+        if not mark_once(conn,k):
+            continue
         notify(f"[AutoExecute] {target}")
         rc=run_apply()
         notify(f"[Apply] rc={rc}")
-        if ts>max_ts: max_ts=ts
 
-    if max_ts!=last:
-        set_kv(conn,"ops_last_decision_ts",max_ts)
-        conn.commit()
+    conn.commit()
     conn.close()
 
 if __name__=="__main__":
