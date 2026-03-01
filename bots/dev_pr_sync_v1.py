@@ -28,7 +28,12 @@ def sync():
 
         info = None
         try:
-            j = _run(["gh","pr","view",str(pr_number) if pr_number else branch,"--json","number,url,state,mergedAt,closedAt","-q","{number:.number,url:.url,state:.state,mergedAt:.mergedAt,closedAt:.closedAt}"])
+            if (branch or "").strip()=="dev/proposal-temp" and not pr_url and not pr_number:
+                cur.execute("INSERT INTO dev_events (proposal_id,event_type,payload) VALUES (?,?,?)",(pid,"pr_sync_skip_temp_branch","{}"))
+                con.commit()
+                continue
+            target = str(pr_number) if pr_number else (pr_url if pr_url else branch)
+            j = _run(["gh","pr","view",target,"--json","number,url,state,mergedAt,closedAt","-q","{number:.number,url:.url,state:.state,mergedAt:.mergedAt,closedAt:.closedAt}"])
             info = json.loads(j)
         except Exception as e:
             cur.execute(
