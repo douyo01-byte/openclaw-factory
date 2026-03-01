@@ -17,7 +17,7 @@ from typing import Any, Dict, Optional, Tuple
 from oclibs.telegram import send as tg_send
 
 from bots.dev_approval_parser import parse_approval
-from bots.dev_executor_v1 import create_pr
+from bots.dev_executor_v1 import main as create_pr
 DB_DEFAULT = os.environ.get("OCLAW_DB_PATH", "./data/openclaw.db")
 
 ROLE_ALIASES = {
