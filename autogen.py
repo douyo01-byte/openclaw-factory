@@ -1,4 +1,4 @@
-```python
+
 """
 Constraints:
 - Cannot fully automate large-scale specification decomposition
@@ -18,4 +18,3 @@ def plan_implementation():
 
 if __name__ == "__main__":
     plan_implementation()
-```
