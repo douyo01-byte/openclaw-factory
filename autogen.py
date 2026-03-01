@@ -1,8 +1,4 @@
 ```python
-def main():
-    # ここに処理を実装
+class TestAuto:
     pass
-
-if __name__ == "__main__":
-    main()
 ```
