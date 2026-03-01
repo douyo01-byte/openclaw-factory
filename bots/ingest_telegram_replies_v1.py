@@ -48,7 +48,7 @@ def ensure(c):
  if "meta_json" not in dc:c.execute("ALTER TABLE decisions ADD COLUMN meta_json TEXT")
 def http_get(url,params):
  qs=urllib.parse.urlencode(params,safe='[]",')
- with urllib.request.urlopen(urllib.request.Request(f"{url}?{qs}"),timeout=0) as r:
+ with urllib.request.urlopen(urllib.request.Request(f"{url}?{qs}"),timeout=20) as r:
   return json.loads(r.read().decode())
 def main():
  if not TOKEN:raise SystemExit("TELEGRAM_BOT_TOKEN empty")
