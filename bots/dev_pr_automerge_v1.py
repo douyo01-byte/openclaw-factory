@@ -19,7 +19,7 @@ def main():
         return
 
     conn=sqlite3.connect(DB); conn.row_factory=sqlite3.Row
-    rows=conn.execute("select id, pr_number from dev_proposals where status='approved' and pr_number is not null").fetchall()
+    rows=conn.execute("select id, pr_number from dev_proposals where status in ('approved','pr_created') and pr_number is not null").fetchall()
     for row in rows:
         pr=row["pr_number"]
         gql=f"""
@@ -48,7 +48,7 @@ mutation {{
 }}
 """
         q(mg)
-        conn.execute("update dev_proposals set status='merged' where id=?", (row["id"],))
+        conn.execute("update dev_proposals set status='merged', dev_stage='merged' where id=?", (row["id"],))
     conn.commit()
 
 if __name__=="__main__":
