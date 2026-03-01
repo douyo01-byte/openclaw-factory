@@ -11,8 +11,8 @@ def notify(msg):
             data={"chat_id":CHAT_ID,"text":msg}
         )
 
-def run_apply(target):
-    subprocess.call(["python","-m","bots.command_apply_v1",target])
+def run_apply():
+    return subprocess.call(["python","-m","bots.command_apply_v1","--db",DB,"--limit","50"])
 
 def get_kv(conn,k,default=""):
     r=conn.execute("select v from kv where k=?",(k,)).fetchone()
@@ -36,7 +36,8 @@ def main():
     max_ts=last
     for target,ts in rows:
         notify(f"[AutoExecute] {target}")
-        run_apply(target)
+        rc=run_apply()
+        notify(f"[Apply] rc={rc}")
         if ts>max_ts: max_ts=ts
 
     if max_ts!=last:
