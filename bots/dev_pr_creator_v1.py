@@ -33,7 +33,7 @@ def run():
 
     rows=conn.execute(
         "select id,title,description,branch_name from dev_proposals "
-        "where status='approved' and (pr_number is null or pr_number='') "
+        "where status='approved' and processing=0 and spec_stage='decomposed' and (pr_number is null or pr_number='') "
         "order by id asc limit 20"
     ).fetchall()
     if not rows:
@@ -62,7 +62,7 @@ def run():
             sh(["git","checkout","main"])
             continue
 
-        sh(["git","add","README.md"])
+        sh(["git","add","-A"])
         sh(["git","commit","-m",f"docs: proposal flow ({pid})"])
         sh(["git","push","-u","origin",branch])
 
