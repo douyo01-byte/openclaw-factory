@@ -107,9 +107,7 @@ def tick():
         if state=="MERGED":
             c.execute("""
             update dev_proposals
-            set status='merged',
-                dev_stage='merged',
-                pr_status='merged'
+            set status="merged", dev_stage="merged", pr_status="merged"
             where id=?
             """,(pid,))
             learn(c,pid,title,url,prn,"merged")
