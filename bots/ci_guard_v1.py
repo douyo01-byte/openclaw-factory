@@ -24,7 +24,8 @@ def extract_pr_number(url):
     return int(m.group(1)) if m else None
 
 def gh_pr(num):
-    out=subprocess.check_output(["gh","pr","view",str(num),"-R",REPO,"--json","number,headRefName,statusCheckRollup"],stderr=subprocess.DEVNULL)
+    out=subprocess.check_output([
+"gh","pr","view",str(num),"-R",REPO,"--json","number,headRefName,statusCheckRollup"], stderr=subprocess.DEVNULL, timeout=10)
     j=json.loads(out.decode())
     return j
 
@@ -46,7 +47,8 @@ def conclusion_from_rollup(j):
 
 def rerun_ci(head_ref):
     try:
-        out=subprocess.check_output(["gh","workflow","run","ci.yml","-R",REPO,"--ref",head_ref],stderr=subprocess.DEVNULL)
+        out=subprocess.check_output([
+"gh","workflow","run","ci.yml","-R",REPO,"--ref",head_ref], stderr=subprocess.DEVNULL, timeout=10)
         m=re.search(r'https://github\.com/.*/actions/runs/(\d+)',out.decode())
         return m.group(1) if m else ""
     except:
