@@ -1,4 +1,4 @@
-import sqlite3, os
+import sqlite3, os, time
 
 DB=os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH","data/openclaw.db")
 
@@ -15,7 +15,7 @@ def run():
         for i,p in enumerate(parts,1):
             conn.execute(
                 "insert into dev_proposals(title,description,branch_name,status,spec_stage) values(?,?,?,?,?)",
-                (f"{pid}-sub{i}",p,f"dev/sub-{pid}-{i}","approved","decomposed")
+                (f"{pid}-sub{i}",p,f"dev/sub-{pid}-{i}-{int(time.time())}","approved","decomposed")
             )
         conn.execute("update dev_proposals set spec_stage='done',processing=0 where id=?", (pid,))
         conn.commit()
