@@ -38,6 +38,10 @@ def run():
     ).fetchall()
     if not rows:
         return
+    sh(["git","fetch","origin","main"])
+    sh(["git","checkout","main"])
+    sh(["git","reset","--hard","origin/main"])
+    sh(["git","clean","-fd"])
 
     ensure_clean()
     sh(["git","fetch","origin","main"])
