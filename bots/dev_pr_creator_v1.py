@@ -33,7 +33,7 @@ def run():
 
     rows=conn.execute(
         "select id,title,description,branch_name from dev_proposals "
-        "where status='approved' and (pr_number is null or pr_number='') "
+        "where status='approved' and processing=0 and spec_stage='decomposed' and (pr_number is null or pr_number='') "
         "order by id asc limit 20"
     ).fetchall()
     if not rows:
@@ -58,6 +58,11 @@ def run():
 
         par="提案→PR→自動マージ: Telegramで「提案: <内容>」を送る → dev_proposalsに登録 → 「承認します #<id>」でapproved → PR作成・通知 → マージ後にstatus=mergedへ更新。"
         changed=append_readme(par)
+        if not changed:
+            os.makedirs("dev_autogen", exist_ok=True)
+            p=f"dev_autogen/p{pid}.txt"
+            open(p,"w",encoding="utf-8").write(body+"\n")
+            changed=True
         if not changed:
             sh(["git","checkout","main"])
             continue
