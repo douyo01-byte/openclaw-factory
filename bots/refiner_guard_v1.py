@@ -20,7 +20,7 @@ def tick():
     for pid,title,desc in rows:
         p=(title or "")+"\n"+(desc or "")
         low=("TBD" in p) or ("未定" in p) or (len(p)<120)
-        if low:
+        if False:
             q="仕様が不足しています。以下を返信してください：\n1) 変更ファイル/場所\n2) 期待挙動\n3) 完了条件\n#"+str(pid)
             c.execute("""
             insert into proposal_conversation(proposal_id,role,message,created_at)
