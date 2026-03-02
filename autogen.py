@@ -1,10 +1,10 @@
-
 """
 Constraints:
 - Cannot fully automate large-scale specification decomposition
 - Cannot deeply understand existing code context
 - Cannot perform extensive multi-file refactoring
 """
+
 
 def plan_implementation():
     """
@@ -15,6 +15,7 @@ def plan_implementation():
     # 3. Limit code modifications to a single file or small scope per iteration
 
     pass  # Implementation depends on specific project needs
+
 
 if __name__ == "__main__":
     plan_implementation()

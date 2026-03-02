@@ -7,13 +7,15 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 CHAT_ID = "-5293321023"
 
+
 def send(msg):
     if not TOKEN:
         return
     requests.post(
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-        data={"chat_id": CHAT_ID, "text": msg}
+        data={"chat_id": CHAT_ID, "text": msg},
     )
+
 
 def llm(text):
     if not OPENAI_KEY:
@@ -23,18 +25,18 @@ def llm(text):
         "https://api.openai.com/v1/chat/completions",
         headers={
             "Authorization": f"Bearer {OPENAI_KEY}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         },
         json={
             "model": "gpt-4o-mini",
             "messages": [
                 {
                     "role": "system",
-                    "content": "あなたは有能で冷静なAI会社の共同創業者。端的だが人間らしく答える。"
+                    "content": "あなたは有能で冷静なAI会社の共同創業者。端的だが人間らしく答える。",
                 },
-                {"role": "user", "content": text}
-            ]
-        }
+                {"role": "user", "content": text},
+            ],
+        },
     )
 
     try:
@@ -46,6 +48,7 @@ def llm(text):
         return f"LLM_ERROR: {data}"
 
     return data["choices"][0]["message"]["content"]
+
 
 def main():
     conn = sqlite3.connect(DB)
@@ -60,13 +63,11 @@ def main():
         reply = llm(text)
         send(reply)
 
-        conn.execute(
-            "update inbox_commands set status='replied' where id=?",
-            (i,)
-        )
+        conn.execute("update inbox_commands set status='replied' where id=?", (i,))
 
     conn.commit()
     conn.close()
+
 
 if __name__ == "__main__":
     main()

@@ -4,6 +4,7 @@ from bots.dev_gatekeeper import evaluate_risk
 
 DB_PATH = "data/openclaw.db"
 
+
 def create_proposal(title, description, branch_name=None):
     risk = evaluate_risk()
     branch_name = branch_name or "dev/proposal-temp"

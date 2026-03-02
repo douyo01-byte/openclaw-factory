@@ -46,38 +46,87 @@ PLATFORM_DOMAINS = {"reddit.com", "github.com", "producthunt.com"}
 # official候補としては採用しない（運営/ドキュメント/紹介/SNS/マーケット）
 BLOCK_DOMAINS = {
     # markets
-    "amazon.co.jp", "amazon.com", "rakuten.co.jp", "yahoo.co.jp", "mercari.com",
-    "aliexpress.com", "temu.com", "shein.com",
+    "amazon.co.jp",
+    "amazon.com",
+    "rakuten.co.jp",
+    "yahoo.co.jp",
+    "mercari.com",
+    "aliexpress.com",
+    "temu.com",
+    "shein.com",
     # sns
-    "facebook.com", "instagram.com", "x.com", "twitter.com", "tiktok.com", "youtube.com",
+    "facebook.com",
+    "instagram.com",
+    "x.com",
+    "twitter.com",
+    "tiktok.com",
+    "youtube.com",
     "linkedin.com",
     # platform ops/docs
-    "redditinc.com", "reddithelp.com", "support.reddithelp.com",
-    "github.com", "githubstatus.com", "github.community", "docs.github.com",
+    "redditinc.com",
+    "reddithelp.com",
+    "support.reddithelp.com",
+    "github.com",
+    "githubstatus.com",
+    "github.community",
+    "docs.github.com",
     # misc
-    "google.com", "line.me",
+    "google.com",
+    "line.me",
     "claude.ai",
 }
 
 # これらのドメインは「公式候補」として弱いので減点/除外
 BAD_DOMAIN_SUBSTR = (
-    "support.", "help.", "docs.", "status.", "community.", "policy.", "policies."
+    "support.",
+    "help.",
+    "docs.",
+    "status.",
+    "community.",
+    "policy.",
+    "policies.",
 )
 
 # URLパスで除外（規約/ポリシー/ステータス/求人/紹介 etc）
 BAD_PATH_HINTS = (
-    "/policies", "/policy", "/privacy", "/terms", "/legal", "/status",
-    "/careers", "/jobs", "/press",
-    "/referral", "/signup", "/login",
+    "/policies",
+    "/policy",
+    "/privacy",
+    "/terms",
+    "/legal",
+    "/status",
+    "/careers",
+    "/jobs",
+    "/press",
+    "/referral",
+    "/signup",
+    "/login",
 )
 
 OFFICIAL_HINTS = (
-    "official", "公式", "website", "homepage", "site",
-    "company", "brand", "about", "contact",
-    "お問い合わせ", "運営", "公式サイト", "webサイト",
+    "official",
+    "公式",
+    "website",
+    "homepage",
+    "site",
+    "company",
+    "brand",
+    "about",
+    "contact",
+    "お問い合わせ",
+    "運営",
+    "公式サイト",
+    "webサイト",
 )
 
-PRIORITY_PATH_HINTS = ("/contact", "/support", "/help", "/about", "/company", "/impressum")
+PRIORITY_PATH_HINTS = (
+    "/contact",
+    "/support",
+    "/help",
+    "/about",
+    "/company",
+    "/impressum",
+)
 
 EMAIL_RE = re.compile(r"(?i)\b([a-z0-9._%+\-]+)@([a-z0-9.\-]+\.[a-z]{2,})\b")
 URL_RE = re.compile(r"(?i)\bhttps?://[^\s<>\")]+")  # 本文からURL抽出用
@@ -174,7 +223,9 @@ def extract_a_links(html: str, base_url: str) -> List[Tuple[str, str]]:
     out: List[Tuple[str, str]] = []
     if not html:
         return out
-    for m in re.finditer(r'(?is)<a[^>]+href\s*=\s*["\']([^"\']+)["\'][^>]*>(.*?)</a>', html):
+    for m in re.finditer(
+        r'(?is)<a[^>]+href\s*=\s*["\']([^"\']+)["\'][^>]*>(.*?)</a>', html
+    ):
         href = (m.group(1) or "").strip()
         inner = re.sub(r"(?is)<.*?>", " ", (m.group(2) or ""))
         inner = re.sub(r"\s+", " ", inner).strip()
@@ -255,7 +306,18 @@ def pick_official_candidate(item_html: str, item_url: str) -> Optional[str]:
             score += 3
 
         # トラッカー減点
-        if any(x in nurl.lower() for x in ("utm_", "affiliate", "track", "click", "redir", "redirect", "ref=")):
+        if any(
+            x in nurl.lower()
+            for x in (
+                "utm_",
+                "affiliate",
+                "track",
+                "click",
+                "redir",
+                "redirect",
+                "ref=",
+            )
+        ):
             score -= 2
 
         scored.append((score, nurl))
@@ -281,7 +343,9 @@ class FoundEmail:
     found_url: str
 
 
-def crawl_same_domain_for_emails(start_url: str, max_pages: int, max_depth: int) -> List[FoundEmail]:
+def crawl_same_domain_for_emails(
+    start_url: str, max_pages: int, max_depth: int
+) -> List[FoundEmail]:
     start_url = normalize_url(start_url)
     base = registrable_domain(start_url)
     if not base:
@@ -352,7 +416,9 @@ def fetch_review_items(conn: sqlite3.Connection, limit: int) -> List[sqlite3.Row
     return list(conn.execute(sql, (REVIEW_STATUS, limit)))
 
 
-def insert_contact_ignore(conn: sqlite3.Connection, item_url: str, email: str, domain: str, source: str) -> None:
+def insert_contact_ignore(
+    conn: sqlite3.Connection, item_url: str, email: str, domain: str, source: str
+) -> None:
     conn.execute(
         "INSERT OR IGNORE INTO contacts (item_url,email,domain,source) VALUES (?,?,?,?)",
         (item_url, email, domain, source),
@@ -418,6 +484,7 @@ def main():
         print("\nDone (dry-run).")
     else:
         print("\nDone.")
+
 
 if __name__ == "__main__":
     main()

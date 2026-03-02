@@ -2,8 +2,9 @@ import asyncio
 from pathlib import Path
 from playwright.async_api import async_playwright
 
-URL="https://www.kickstarter.com/"
-STATE_PATH="configs/ks_storage_state.json"
+URL = "https://www.kickstarter.com/"
+STATE_PATH = "configs/ks_storage_state.json"
+
 
 async def main():
     Path("configs").mkdir(parents=True, exist_ok=True)
@@ -19,5 +20,6 @@ async def main():
         await context.storage_state(path=STATE_PATH)
         print("saved:", STATE_PATH)
         await browser.close()
+
 
 asyncio.run(main())

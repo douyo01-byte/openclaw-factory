@@ -3,19 +3,20 @@ from __future__ import annotations
 import argparse
 import os
 
+
 def _load_persona():
-  core=os.environ.get("CORE_PERSONA_FILE")
-  role=os.environ.get("PERSONA_FILE")
-  t=[]
-  if core and os.path.exists(core):
-    t.append(open(core,"r",encoding="utf-8").read().strip())
-  if role and os.path.exists(role):
-    t.append(open(role,"r",encoding="utf-8").read().strip())
-  return "\n\n".join([x for x in t if x])
+    core = os.environ.get("CORE_PERSONA_FILE")
+    role = os.environ.get("PERSONA_FILE")
+    t = []
+    if core and os.path.exists(core):
+        t.append(open(core, "r", encoding="utf-8").read().strip())
+    if role and os.path.exists(role):
+        t.append(open(role, "r", encoding="utf-8").read().strip())
+    return "\n\n".join([x for x in t if x])
 
-PERSONA=_load_persona()
 
-import os
+PERSONA = _load_persona()
+
 import re
 import sqlite3
 import time
@@ -31,23 +32,31 @@ DB_DEFAULT = os.environ.get("OCLAW_DB_PATH", "./data/openclaw.db")
 
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
 JP_RE = re.compile(r"[\u3040-\u30ff\u4e00-\u9fff]")
-CONTACT_HINT_RE = re.compile(r"(contact|support|help|inquiry|お問い合わせ|問合せ|問い合わせ)", re.IGNORECASE)
-AMAZON_RAKUTEN_RE = re.compile(r"(amazon\.co\.jp|rakuten\.co\.jp|楽天|アマゾン)", re.IGNORECASE)
+CONTACT_HINT_RE = re.compile(
+    r"(contact|support|help|inquiry|お問い合わせ|問合せ|問い合わせ)", re.IGNORECASE
+)
+AMAZON_RAKUTEN_RE = re.compile(
+    r"(amazon\.co\.jp|rakuten\.co\.jp|楽天|アマゾン)", re.IGNORECASE
+)
 
 PATH_CANDIDATES = ["/", "/contact", "/about", "/privacy", "/terms", "/company"]
+
 
 def connect_db(path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     return conn
 
+
 def now_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 
 def fetch(url: str, timeout: int = 15) -> Tuple[int, str]:
     headers = {"User-Agent": "OpenClawResearch/1.0"}
     r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
     return r.status_code, r.text or ""
+
 
 def normalize_base(url: str) -> str:
     u = (url or "").strip()
@@ -57,6 +66,7 @@ def normalize_base(url: str) -> str:
     if not p.scheme:
         u = "https://" + u
     return u
+
 
 def extract_signals(html: str) -> Dict[str, Any]:
     emails = sorted(set(EMAIL_RE.findall(html or "")))
@@ -69,6 +79,7 @@ def extract_signals(html: str) -> Dict[str, Any]:
         "has_contact_hint": has_contact_hint,
         "has_amazon_rakuten": has_amazon_rakuten,
     }
+
 
 def summarize(signals_by_path: List[Tuple[str, int, Dict[str, Any]]]) -> Dict[str, Any]:
     emails = []
@@ -93,8 +104,12 @@ def summarize(signals_by_path: List[Tuple[str, int, Dict[str, Any]]]) -> Dict[st
         "ok_paths": ok_paths,
     }
 
+
 def get_item(conn: sqlite3.Connection, item_id: int) -> Optional[sqlite3.Row]:
-    return conn.execute("SELECT id, title, url FROM items WHERE id=? LIMIT 1", (item_id,)).fetchone()
+    return conn.execute(
+        "SELECT id, title, url FROM items WHERE id=? LIMIT 1", (item_id,)
+    ).fetchone()
+
 
 def set_ctx_last_item(conn: sqlite3.Connection, chat_id: str, item_id: int) -> None:
     conn.execute(
@@ -102,7 +117,10 @@ def set_ctx_last_item(conn: sqlite3.Connection, chat_id: str, item_id: int) -> N
         (f"ctx:last_item:{chat_id}", str(item_id)),
     )
 
-def enqueue_contact(conn: sqlite3.Connection, item_id: int, email: str, source: str) -> None:
+
+def enqueue_contact(
+    conn: sqlite3.Connection, item_id: int, email: str, source: str
+) -> None:
     try:
         conn.execute(
             "INSERT INTO contacts(item_id, email, source, created_at) VALUES(?,?,?,datetime('now'))",
@@ -111,7 +129,10 @@ def enqueue_contact(conn: sqlite3.Connection, item_id: int, email: str, source: 
     except Exception:
         pass
 
-def upsert_role_brief(conn: sqlite3.Connection, role: str, title: str, url: str, text: str) -> None:
+
+def upsert_role_brief(
+    conn: sqlite3.Connection, role: str, title: str, url: str, text: str
+) -> None:
     topic = (title or "unknown").strip()
     source_url = (url or "").strip()
     if not source_url:
@@ -124,7 +145,11 @@ def upsert_role_brief(conn: sqlite3.Connection, role: str, title: str, url: str,
         "title=excluded.title, summary=excluded.summary, fetched_at=datetime('now')",
         ((role or "").strip(), topic, source_url, (title or "").strip(), summary),
     )
-def build_reply(role: Optional[str], item_title: str, item_url: str, summary: Dict[str, Any]) -> str:
+
+
+def build_reply(
+    role: Optional[str], item_title: str, item_url: str, summary: Dict[str, Any]
+) -> str:
     head = "🧠 ヤルデ"
     if role == "japache":
         head = "🕵️ ジャパチェ"
@@ -154,8 +179,11 @@ def build_reply(role: Optional[str], item_title: str, item_url: str, summary: Di
     lines.append(f"メール候補: {', '.join(emails) if emails else '未検出'}")
     lines.append("")
     lines.append("次どうする？")
-    lines.append("採用/保留/見送り のどれかで返して。理由も一言あると decision_reason に残せるようにする。")
+    lines.append(
+        "採用/保留/見送り のどれかで返して。理由も一言あると decision_reason に残せるようにする。"
+    )
     return "\n".join(lines)
+
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -178,20 +206,26 @@ def main() -> None:
         role = (job["role"] or "").strip() or "jpcheck"
 
         if not item_id:
-            conn.execute("UPDATE chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
-                         ("missing item_id", job_id))
+            conn.execute(
+                "UPDATE chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
+                ("missing item_id", job_id),
+            )
             continue
 
         item = get_item(conn, int(item_id))
         if not item:
-            conn.execute("UPDATE chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
-                         ("item not found", job_id))
+            conn.execute(
+                "UPDATE chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
+                ("item not found", job_id),
+            )
             continue
 
         base = normalize_base(item["url"])
         if not base:
-            conn.execute("UPDATE chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
-                         ("missing url", job_id))
+            conn.execute(
+                "UPDATE chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
+                ("missing url", job_id),
+            )
             continue
 
         signals_by_path = []
@@ -202,7 +236,18 @@ def main() -> None:
                 sig = extract_signals(html)
                 signals_by_path.append((path, code, sig))
             except Exception:
-                signals_by_path.append((path, 0, {"emails": [], "has_jp": False, "has_contact_hint": False, "has_amazon_rakuten": False}))
+                signals_by_path.append(
+                    (
+                        path,
+                        0,
+                        {
+                            "emails": [],
+                            "has_jp": False,
+                            "has_contact_hint": False,
+                            "has_amazon_rakuten": False,
+                        },
+                    )
+                )
 
         summary = summarize(signals_by_path)
 
@@ -217,12 +262,16 @@ def main() -> None:
 
         tg_send(reply)
 
-        conn.execute("UPDATE chat_jobs SET status='done', updated_at=datetime('now'), error=NULL WHERE id=?", (job_id,))
+        conn.execute(
+            "UPDATE chat_jobs SET status='done', updated_at=datetime('now'), error=NULL WHERE id=?",
+            (job_id,),
+        )
         processed += 1
         time.sleep(0.2)
 
     conn.close()
     print(f"Done. processed={processed}")
+
 
 if __name__ == "__main__":
     main()

@@ -3,42 +3,62 @@ from __future__ import annotations
 import argparse
 import re
 
-INTUITIVE_DECISION_RE = re.compile(r'^(A|D|H)\s+(\d+)\s*(.*)$', re.IGNORECASE)
-INTUITIVE_PRIO_RE     = re.compile(r'^P(\d{1,3})\s+(\d+)\s*(.*)$', re.IGNORECASE)
+INTUITIVE_DECISION_RE = re.compile(r"^(A|D|H)\s+(\d+)\s*(.*)$", re.IGNORECASE)
+INTUITIVE_PRIO_RE = re.compile(r"^P(\d{1,3})\s+(\d+)\s*(.*)$", re.IGNORECASE)
 
-def insert_decision_event(conn, product_id: int, decision: str, score: int, reason: str, decided_by: str='tg', source: str='tg'):
+
+def insert_decision_event(
+    conn,
+    product_id: int,
+    decision: str,
+    score: int,
+    reason: str,
+    decided_by: str = "tg",
+    source: str = "tg",
+):
     conn.execute(
         "INSERT INTO decision_events(product_id, decision, score, reason, decided_by, source) VALUES(?,?,?,?,?,?)",
-        (product_id, decision, score, (reason or '').strip(), decided_by, source)
+        (product_id, decision, score, (reason or "").strip(), decided_by, source),
     )
 
+
 def upsert_decision_reason(conn, product_id: int, reason: str):
-    conn.execute("INSERT INTO decision_reason(product_id, reason, updated_at) VALUES(?,?,datetime('now')) ON CONFLICT(product_id) DO UPDATE SET reason=excluded.reason, updated_at=datetime('now')", (product_id, (reason or '').strip()))
+    conn.execute(
+        "INSERT INTO decision_reason(product_id, reason, updated_at) VALUES(?,?,datetime('now')) ON CONFLICT(product_id) DO UPDATE SET reason=excluded.reason, updated_at=datetime('now')",
+        (product_id, (reason or "").strip()),
+    )
+
 
 def try_apply_intuitive(conn, text: str) -> bool:
-    t = (text or '').strip()
+    t = (text or "").strip()
     if not t:
         return False
     m = INTUITIVE_DECISION_RE.match(t)
     if m:
         code = m.group(1).upper()
         product_id = int(m.group(2))
-        reason = (m.group(3) or '').strip()
-        decision = {'A':'approved','D':'drop','H':'hold'}[code]
+        reason = (m.group(3) or "").strip()
+        decision = {"A": "approved", "D": "drop", "H": "hold"}[code]
         set_decision(conn, product_id, decision, note=(reason or None))
         if reason:
             upsert_decision_reason(conn, product_id, reason)
-            d=(reason or '').strip().split(' ',1)
-            decision=d[0] if d else ''
-            rest=d[1] if len(d)>1 else ''
-            score = 1 if decision=='採用' else 0 if decision=='保留' else -1 if decision=='見送り' else 0
-            insert_decision_event(conn, product_id, decision, score, rest, decided_by='tg', source='tg')
+            d = (reason or "").strip().split(" ", 1)
+            decision = d[0] if d else ""
+            rest = d[1] if len(d) > 1 else ""
+            score = (
+                1
+                if decision == "採用"
+                else 0 if decision == "保留" else -1 if decision == "見送り" else 0
+            )
+            insert_decision_event(
+                conn, product_id, decision, score, rest, decided_by="tg", source="tg"
+            )
         return True
     m = INTUITIVE_PRIO_RE.match(t)
     if m:
         pr = int(m.group(1))
         product_id = int(m.group(2))
-        note = (m.group(3) or '').strip()
+        note = (m.group(3) or "").strip()
         pr = max(0, min(100, pr))
         set_priority(conn, product_id, pr)
         if note:
@@ -46,41 +66,50 @@ def try_apply_intuitive(conn, text: str) -> bool:
         return True
     return False
 
+
 import sqlite3
 
 import re
 
-def parse_free_text(text):
-    t=(text or "").strip()
-    if not t: return None
-    m=re.search(r'(作って|実装|追加|修正|直して|作成|build|implement)',t,re.I)
-    if not m: return None
-    return ("dev_request",t,"")
 
-from datetime import datetime
+def parse_free_text(text):
+    t = (text or "").strip()
+    if not t:
+        return None
+    m = re.search(r"(作って|実装|追加|修正|直して|作成|build|implement)", t, re.I)
+    if not m:
+        return None
+    return ("dev_request", t, "")
+
 
 DB_DEFAULT = "data/openclaw.db"
 
 CMD_PAT = re.compile(r"^/(approve|reject|hold|prio|note|retro)\b(.*)$", re.I)
+
 
 def connect_db(path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL;")
     return conn
 
+
 def parse_product_id(conn, s: str) -> tuple[int | None, str]:
     s = s.strip()
     m = re.match(r"^(\d+)\b(.*)$", s)
     if try_apply_intuitive(conn, s):
-        return ('applied', None)
+        return ("applied", None)
     if not m:
         return None, s
     return int(m.group(1)), (m.group(2) or "").strip()
 
+
 def upsert_item_meta(conn: sqlite3.Connection, product_id: int):
     conn.execute("INSERT OR IGNORE INTO item_meta(item_id) VALUES(?)", (product_id,))
 
-def set_decision(conn: sqlite3.Connection, product_id: int, decision: str, note: str | None = None):
+
+def set_decision(
+    conn: sqlite3.Connection, product_id: int, decision: str, note: str | None = None
+):
     upsert_item_meta(conn, product_id)
     conn.execute(
         "UPDATE item_meta SET decision=?, updated_at=datetime('now') WHERE item_id=?",
@@ -92,6 +121,7 @@ def set_decision(conn: sqlite3.Connection, product_id: int, decision: str, note:
             (note, product_id),
         )
 
+
 def set_priority(conn: sqlite3.Connection, product_id: int, prio: int):
     prio = max(0, min(100, prio))
     upsert_item_meta(conn, product_id)
@@ -100,6 +130,7 @@ def set_priority(conn: sqlite3.Connection, product_id: int, prio: int):
         (prio, product_id),
     )
 
+
 def add_note(conn: sqlite3.Connection, product_id: int, note: str):
     upsert_item_meta(conn, product_id)
     conn.execute(
@@ -107,11 +138,15 @@ def add_note(conn: sqlite3.Connection, product_id: int, note: str):
         (note, product_id),
     )
 
-def insert_retro(conn: sqlite3.Connection, chat_id: str, from_username: str | None, text: str):
+
+def insert_retro(
+    conn: sqlite3.Connection, chat_id: str, from_username: str | None, text: str
+):
     conn.execute(
         "INSERT INTO retrospectives(chat_id, from_username, text) VALUES(?,?,?)",
         (chat_id, from_username or "", text),
     )
+
 
 def apply_one(conn: sqlite3.Connection, row) -> tuple[str, str | None]:
     """
@@ -122,7 +157,7 @@ def apply_one(conn: sqlite3.Connection, row) -> tuple[str, str | None]:
 
     m = CMD_PAT.match(text)
     if try_apply_intuitive(conn, text):
-        return ('applied', None)
+        return ("applied", None)
 
     # free-text dev request -> dev_proposals
     if not m:
@@ -177,6 +212,7 @@ def apply_one(conn: sqlite3.Connection, row) -> tuple[str, str | None]:
 
     return ("ignored", None)
 
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=DB_DEFAULT)
@@ -219,6 +255,7 @@ def main():
     conn.close()
 
     print(f"Done. applied={applied} ignored={ignored} error={err}")
+
 
 if __name__ == "__main__":
     main()

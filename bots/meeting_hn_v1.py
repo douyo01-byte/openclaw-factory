@@ -1,17 +1,21 @@
-import os, json, re, time
 import os
+import json
+import re
+import time
+
 
 def _load_persona_from_env():
-  core=os.environ.get("CORE_PERSONA_FILE")
-  role=os.environ.get("PERSONA_FILE")
-  t=[]
-  if core and os.path.exists(core):
-    t.append(open(core,"r",encoding="utf-8").read().strip())
-  if role and os.path.exists(role):
-    t.append(open(role,"r",encoding="utf-8").read().strip())
-  return "\n\n".join([x for x in t if x])
+    core = os.environ.get("CORE_PERSONA_FILE")
+    role = os.environ.get("PERSONA_FILE")
+    t = []
+    if core and os.path.exists(core):
+        t.append(open(core, "r", encoding="utf-8").read().strip())
+    if role and os.path.exists(role):
+        t.append(open(role, "r", encoding="utf-8").read().strip())
+    return "\n\n".join([x for x in t if x])
 
-PERSONA=_load_persona_from_env()
+
+PERSONA = _load_persona_from_env()
 
 from dataclasses import dataclass
 from typing import List
@@ -33,9 +37,11 @@ SCORE = ("イインデスカ", "利益判定のお局（女/50代）")
 OUT = ("タノシ", "熱血営業マン（男/40代）")
 REPORT = ("ヤルデ", "20代の天才（総括）")
 
+
 def say(who, text):
     name, persona = who
     print(f"\n{name}（{persona}）\n{text}")
+
 
 @dataclass
 class Candidate:
@@ -48,18 +54,22 @@ class Candidate:
     rationale: str = ""
     email_en: str = ""
 
+
 def fetch_hn(n=20) -> List[Candidate]:
     feed = feedparser.parse("https://hnrss.org/frontpage")
     items = feed.entries[:n]
     out = []
     for it in items:
-        out.append(Candidate(
-            source="HackerNews",
-            title=(it.get("title","") or "")[:200],
-            url=it.get("link",""),
-            summary=re.sub(r"\s+"," ", it.get("summary","") or "")[:400],
-        ))
+        out.append(
+            Candidate(
+                source="HackerNews",
+                title=(it.get("title", "") or "")[:200],
+                url=it.get("link", ""),
+                summary=re.sub(r"\s+", " ", it.get("summary", "") or "")[:400],
+            )
+        )
     return out
+
 
 def ddg_collect_domains(query: str) -> list[str]:
     url = f"https://duckduckgo.com/?q={quote_plus(query)}"
@@ -92,12 +102,14 @@ def ddg_collect_domains(query: str) -> list[str]:
         uniq.append(d)
     return uniq
 
+
 def japan_presence_check(title: str) -> str:
     q = f"{title} 代理店 日本語"
     domains = ddg_collect_domains(q)
     if any(d.endswith(".jp") for d in domains):
         return "likely"
     return "unlikely"
+
 
 def landing_title(url: str) -> str:
     try:
@@ -112,15 +124,28 @@ def landing_title(url: str) -> str:
     except Exception as e:
         return f"(landing title failed: {type(e).__name__})"
 
+
 def should_skip_for_exclusive(c: Candidate) -> bool:
     # 独占販売に向かないものを最初から弾く（軽量フィルタ）
     t = (c.title + " " + c.url).lower()
     blacklist = [
-        "cnn.com", "bbc.co.uk", "nytimes.com", "reuters.com", "scripps.edu",
-        "paper", "study", "research", "clinical", "fentanyl", "opioid",
-        "github.com", "gitlab.com", "arxiv.org"
+        "cnn.com",
+        "bbc.co.uk",
+        "nytimes.com",
+        "reuters.com",
+        "scripps.edu",
+        "paper",
+        "study",
+        "research",
+        "clinical",
+        "fentanyl",
+        "opioid",
+        "github.com",
+        "gitlab.com",
+        "arxiv.org",
     ]
     return any(b in t for b in blacklist)
+
 
 def llm_score_and_email(c: Candidate) -> dict:
     prompt = f"""
@@ -143,15 +168,19 @@ landing_title: {landing_title(c.url)}
     res = client.chat.completions.create(
         model=MODEL,
         messages=[
-            {"role":"system","content":"Return only JSON. No markdown."},
-            {"role":"user","content":prompt}
+            {"role": "system", "content": "Return only JSON. No markdown."},
+            {"role": "user", "content": prompt},
         ],
-        response_format={"type":"json_object"},
+        response_format={"type": "json_object"},
     )
     return json.loads(res.choices[0].message.content or "{}")
 
+
 def main():
-    say(REPORT, "🧠 会議開始。目的：海外ネタ→日本未上陸→独占販売アプローチ候補を3件に絞る。")
+    say(
+        REPORT,
+        "🧠 会議開始。目的：海外ネタ→日本未上陸→独占販売アプローチ候補を3件に絞る。",
+    )
 
     # Scout
     say(SCOUT, "……風の匂いが変わった。今日の“まだ日本にない宝”を拾ってくる。")
@@ -173,17 +202,27 @@ def main():
         if c.japan_presence == "unlikely":
             j = llm_score_and_email(c)
             c.score = int(j.get("score", 0))
-            c.rationale = j.get("rationale_jp","")
-            c.email_en = j.get("email_en","")
+            c.rationale = j.get("rationale_jp", "")
+            c.email_en = j.get("email_en", "")
 
-    top = sorted([c for c in cands if c.japan_presence == "unlikely"], key=lambda x: x.score, reverse=True)[:3]
+    top = sorted(
+        [c for c in cands if c.japan_presence == "unlikely"],
+        key=lambda x: x.score,
+        reverse=True,
+    )[:3]
 
     if not top:
-        say(REPORT, "今日は“独占向き”が薄い。次は情報源をKickstarter/PH寄りにするのが正解。")
+        say(
+            REPORT,
+            "今日は“独占向き”が薄い。次は情報源をKickstarter/PH寄りにするのが正解。",
+        )
         return
 
     for i, c in enumerate(top, 1):
-        say(SCORE, f"【候補{i}】Score={c.score}\n{c.title}\n{c.url}\n理由：\n{c.rationale}")
+        say(
+            SCORE,
+            f"【候補{i}】Score={c.score}\n{c.title}\n{c.url}\n理由：\n{c.rationale}",
+        )
 
     # Outreach
     say(OUT, "よっしゃ！刺さる形に整えて、すぐ送れる状態にする！")
@@ -191,7 +230,11 @@ def main():
         say(OUT, f"【候補{i}：英語メール案】\n{c.email_en}")
 
     # Report
-    say(REPORT, "✅ 本日の結論：上位3件を“送信候補”として保存。次はKickstarter等のソース追加で当たり率を上げる。")
+    say(
+        REPORT,
+        "✅ 本日の結論：上位3件を“送信候補”として保存。次はKickstarter等のソース追加で当たり率を上げる。",
+    )
+
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,5 @@
-import os, requests
+import os
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -33,8 +34,10 @@ for u in reversed(results):
         print("Found chat:")
         print(" chat_id:", chat_id)
         print(" type:", chat_type)
-        if title: print(" title:", title)
-        if username: print(" username:", username)
+        if title:
+            print(" title:", title)
+        if username:
+            print(" username:", username)
         break
 else:
     print("No chat_id found in updates. Send a normal message to the bot and retry.")

@@ -59,12 +59,14 @@ TOPIC_RULES = [
     ("product", re.compile(r"\bproduct\b|launch|release", re.I)),
 ]
 
+
 def guess_topic(title: str, link: str) -> str:
     s = f"{title} {link}"
     for topic, pat in TOPIC_RULES:
         if pat.search(s):
             return topic
     return "general"
+
 
 def clean_text(s: str) -> str:
     if not s:
@@ -73,11 +75,13 @@ def clean_text(s: str) -> str:
     s = re.sub(r"\s+", " ", s).strip()
     return s
 
+
 @dataclass
 class FeedItem:
     title: str
     link: str
     summary: str
+
 
 def fetch_text(url: str) -> Tuple[Optional[str], Optional[int], Optional[str]]:
     try:
@@ -97,6 +101,7 @@ def fetch_text(url: str) -> Tuple[Optional[str], Optional[int], Optional[str]]:
     except Exception as e:
         return None, None, f"exc:{type(e).__name__}:{e}"
 
+
 def parse_rss(xml_text: str, limit: int) -> List[FeedItem]:
     out: List[FeedItem] = []
     try:
@@ -111,8 +116,14 @@ def parse_rss(xml_text: str, limit: int) -> List[FeedItem]:
             title = (e.findtext("{http://www.w3.org/2005/Atom}title") or "").strip()
             link_el = e.find("{http://www.w3.org/2005/Atom}link")
             link = (link_el.get("href") if link_el is not None else "") or ""
-            summ = (e.findtext("{http://www.w3.org/2005/Atom}summary") or e.findtext("{http://www.w3.org/2005/Atom}content") or "")
-            out.append(FeedItem(clean_text(title), link.strip(), clean_text(summ)[:500]))
+            summ = (
+                e.findtext("{http://www.w3.org/2005/Atom}summary")
+                or e.findtext("{http://www.w3.org/2005/Atom}content")
+                or ""
+            )
+            out.append(
+                FeedItem(clean_text(title), link.strip(), clean_text(summ)[:500])
+            )
         return out
 
     # RSS
@@ -120,16 +131,25 @@ def parse_rss(xml_text: str, limit: int) -> List[FeedItem]:
     for it in items[:limit]:
         title = (it.findtext("title") or "").strip()
         link = (it.findtext("link") or "").strip()
-        summ = (it.findtext("description") or it.findtext("content:encoded") or "")
+        summ = it.findtext("description") or it.findtext("content:encoded") or ""
         out.append(FeedItem(clean_text(title), link, clean_text(summ)[:500]))
     return out
+
 
 def connect_db(path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL;")
     return conn
 
-def insert_brief(conn: sqlite3.Connection, role: str, topic: str, source_url: str, title: str, summary: str) -> bool:
+
+def insert_brief(
+    conn: sqlite3.Connection,
+    role: str,
+    topic: str,
+    source_url: str,
+    title: str,
+    summary: str,
+) -> bool:
     cur = conn.cursor()
     cur.execute(
         """
@@ -139,6 +159,7 @@ def insert_brief(conn: sqlite3.Connection, role: str, topic: str, source_url: st
         (role, topic, source_url, title, summary),
     )
     return cur.rowcount == 1
+
 
 def run_for_role(db_path: str, role: str, limit: int) -> int:
     feeds = ROLE_FEEDS.get(role, [])
@@ -181,9 +202,11 @@ def run_for_role(db_path: str, role: str, limit: int) -> int:
     print(f"[{role}] added={added}")
     return added
 
+
 def main():
     import os
-    feeds_file=os.environ.get("FEEDS_FILE")
+
+    feeds_file = os.environ.get("FEEDS_FILE")
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default="data/openclaw.db")
     ap.add_argument("--role", default="all")
@@ -196,6 +219,7 @@ def main():
         total += run_for_role(args.db, r, args.limit)
 
     print(f"\nDone. total_added={total}")
+
 
 if __name__ == "__main__":
     main()

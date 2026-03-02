@@ -1,17 +1,22 @@
-import os, re, json, time, sqlite3
 import os
+import re
+import json
+import time
+import sqlite3
+
 
 def _load_persona_from_env():
-  core=os.environ.get("CORE_PERSONA_FILE")
-  role=os.environ.get("PERSONA_FILE")
-  t=[]
-  if core and os.path.exists(core):
-    t.append(open(core,"r",encoding="utf-8").read().strip())
-  if role and os.path.exists(role):
-    t.append(open(role,"r",encoding="utf-8").read().strip())
-  return "\n\n".join([x for x in t if x])
+    core = os.environ.get("CORE_PERSONA_FILE")
+    role = os.environ.get("PERSONA_FILE")
+    t = []
+    if core and os.path.exists(core):
+        t.append(open(core, "r", encoding="utf-8").read().strip())
+    if role and os.path.exists(role):
+        t.append(open(role, "r", encoding="utf-8").read().strip())
+    return "\n\n".join([x for x in t if x])
 
-PERSONA=_load_persona_from_env()
+
+PERSONA = _load_persona_from_env()
 
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
@@ -33,6 +38,7 @@ DB_PATH = "data/openclaw.db"
 
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 
+
 @dataclass
 class Item:
     source: str
@@ -50,9 +56,11 @@ class Item:
         self.emails = self.emails or []
         self.contact_urls = self.contact_urls or []
 
+
 def db() -> sqlite3.Connection:
     os.makedirs("data", exist_ok=True)
     return sqlite3.connect(DB_PATH)
+
 
 def is_seen(url: str) -> bool:
     con = db()
@@ -62,23 +70,29 @@ def is_seen(url: str) -> bool:
     con.close()
     return row is not None
 
+
 def upsert_item(it: Item) -> None:
     con = db()
     cur = con.cursor()
-    cur.execute("""
+    cur.execute(
+        """
       INSERT INTO items(url, title, source)
       VALUES(?,?,?)
       ON CONFLICT(url) DO UPDATE SET
         last_seen_at = datetime('now'),
         title=excluded.title,
         source=excluded.source
-    """, (it.url, it.title, it.source))
+    """,
+        (it.url, it.title, it.source),
+    )
     con.commit()
     con.close()
+
 
 def load_sources(path="configs/sources.json") -> List[Dict[str, Any]]:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)["sources"]
+
 
 def fetch_html(url: str) -> Optional[str]:
     try:
@@ -88,6 +102,7 @@ def fetch_html(url: str) -> Optional[str]:
         return r.text
     except Exception:
         return None
+
 
 def parse_list(selector_mode: str, base_url: str, html: str) -> List[Dict[str, str]]:
     soup = BeautifulSoup(html, "xml")
@@ -104,7 +119,7 @@ def parse_list(selector_mode: str, base_url: str, html: str) -> List[Dict[str, s
     # --- Kicktraq ---
     if selector_mode == "kicktraq":
         for a in soup.select("a[href]"):
-            href = a.get("href","")
+            href = a.get("href", "")
             txt = a.get_text(" ", strip=True)
             # projects/xxxx/xxxx/ の形を拾う
             if "/projects/" in href and txt and len(txt) > 6:
@@ -115,7 +130,7 @@ def parse_list(selector_mode: str, base_url: str, html: str) -> List[Dict[str, s
     if selector_mode == "producthunt":
         # ざっくり “post” のリンクっぽいのを拾う
         for a in soup.select("a[href]"):
-            href = a.get("href","")
+            href = a.get("href", "")
             if href.startswith("/posts/"):
                 title = a.get_text(" ", strip=True)
                 if title:
@@ -125,7 +140,7 @@ def parse_list(selector_mode: str, base_url: str, html: str) -> List[Dict[str, s
     # --- HN Show ---
     if selector_mode == "hn_show":
         for a in soup.select("a.storylink, span.titleline > a"):
-            href = a.get("href","")
+            href = a.get("href", "")
             title = a.get_text(" ", strip=True)
             add(title, href)
         return dedupe(out)
@@ -133,7 +148,7 @@ def parse_list(selector_mode: str, base_url: str, html: str) -> List[Dict[str, s
     # --- BetaList ---
     if selector_mode == "betalist":
         for a in soup.select("a[href]"):
-            href = a.get("href","")
+            href = a.get("href", "")
             if "/startup/" in href:
                 title = a.get_text(" ", strip=True)
                 add(title, href)
@@ -142,7 +157,7 @@ def parse_list(selector_mode: str, base_url: str, html: str) -> List[Dict[str, s
     # --- JP crowdfund（各サイトは後で精度改善。まずはリンク拾い） ---
     if selector_mode.startswith("jp_"):
         for a in soup.select("a[href]"):
-            href = a.get("href","")
+            href = a.get("href", "")
             title = a.get_text(" ", strip=True)
             # 短すぎるのは除外
             if title and len(title) >= 8:
@@ -150,6 +165,7 @@ def parse_list(selector_mode: str, base_url: str, html: str) -> List[Dict[str, s
         return dedupe(out)
 
     return dedupe(out)
+
 
 def dedupe(items: List[Dict[str, str]]) -> List[Dict[str, str]]:
     seen = set()
@@ -162,6 +178,7 @@ def dedupe(items: List[Dict[str, str]]) -> List[Dict[str, str]]:
         out.append(x)
     return out
 
+
 def extract_contacts(url: str) -> Dict[str, List[str]]:
     html = fetch_html(url)
     if not html:
@@ -173,15 +190,18 @@ def extract_contacts(url: str) -> Dict[str, List[str]]:
 
     contact_urls = []
     for a in soup.select("a[href]"):
-        href = a.get("href","").strip()
+        href = a.get("href", "").strip()
         if not href:
             continue
         h = href.lower()
-        if any(k in h for k in ["contact", "support", "help", "inquiry", "about", "press"]):
+        if any(
+            k in h for k in ["contact", "support", "help", "inquiry", "about", "press"]
+        ):
             contact_urls.append(href if href.startswith("http") else urljoin(url, href))
     contact_urls = sorted(set(contact_urls))[:10]
 
     return {"emails": emails, "contact_urls": contact_urls}
+
 
 def llm_assess(it: Item) -> Dict[str, Any]:
     prompt = f"""
@@ -204,31 +224,50 @@ URL: {it.url}
 """
     res = client.chat.completions.create(
         model=MODEL,
-        messages=[{"role":"user","content":prompt}],
+        messages=[{"role": "user", "content": prompt}],
         temperature=0.2,
     )
     txt = res.choices[0].message.content.strip()
     m = re.search(r"\{.*\}", txt, re.DOTALL)
     if not m:
-        return {"japan_presence":"unknown","score":0,"category_guess":"不明","rationale_jp":"JSON取得失敗"}
+        return {
+            "japan_presence": "unknown",
+            "score": 0,
+            "category_guess": "不明",
+            "rationale_jp": "JSON取得失敗",
+        }
     try:
         return json.loads(m.group(0))
     except Exception:
-        return {"japan_presence":"unknown","score":0,"category_guess":"不明","rationale_jp":"JSONパース失敗"}
+        return {
+            "japan_presence": "unknown",
+            "score": 0,
+            "category_guess": "不明",
+            "rationale_jp": "JSONパース失敗",
+        }
+
 
 def format_meeting(top: List[Item], jp_trends: List[Item]) -> str:
     lines = []
-    lines.append("ヤルデ（総括）🧠 会議：海外発掘→日本未上陸推定→連絡先抽出（営業文は未作成）")
+    lines.append(
+        "ヤルデ（総括）🧠 会議：海外発掘→日本未上陸推定→連絡先抽出（営業文は未作成）"
+    )
     lines.append("")
-    lines.append("スカウン：風まかせに拾う。カテゴリは縛らないが、ガジェット/家電は強めに見る。")
+    lines.append(
+        "スカウン：風まかせに拾う。カテゴリは縛らないが、ガジェット/家電は強めに見る。"
+    )
     lines.append("")
     lines.append("==== 海外候補 TOP ====")
     for i, it in enumerate(top, 1):
-        lines.append(f"【候補{i}】Score={it.score} / 日本未上陸={it.japan_presence} / 種別={it.category_guess}")
+        lines.append(
+            f"【候補{i}】Score={it.score} / 日本未上陸={it.japan_presence} / 種別={it.category_guess}"
+        )
         lines.append(it.title)
         lines.append(it.url)
         if it.summary:
-            lines.append(f"概要: {it.summary[:160]}{'…' if len(it.summary)>160 else ''}")
+            lines.append(
+                f"概要: {it.summary[:160]}{'…' if len(it.summary)>160 else ''}"
+            )
         lines.append(f"判断: {it.rationale_jp}")
         if it.emails:
             lines.append("メール: " + ", ".join(it.emails))
@@ -243,8 +282,11 @@ def format_meeting(top: List[Item], jp_trends: List[Item]) -> str:
         lines.append(f"  {it.url}")
 
     lines.append("")
-    lines.append("次アクション：上位候補の公式サイトContact精査→法人情報→独占交渉可否を判断。")
+    lines.append(
+        "次アクション：上位候補の公式サイトContact精査→法人情報→独占交渉可否を判断。"
+    )
     return "\n".join(lines)
+
 
 def main():
     sources = load_sources()
@@ -255,22 +297,27 @@ def main():
         html = fetch_html(s["url"])
         if not html:
             continue
-        items = parse_list(s.get("selector_mode",""), s["url"], html)
+        items = parse_list(s.get("selector_mode", ""), s["url"], html)
         for x in items[:40]:
-            it = Item(source=s["name"], title=x["title"], url=x["url"], summary=x.get("summary",""))
+            it = Item(
+                source=s["name"],
+                title=x["title"],
+                url=x["url"],
+                summary=x.get("summary", ""),
+            )
             # 既出スキップ（永続）
             if is_seen(it.url):
                 continue
             upsert_item(it)
 
-            if s.get("selector_mode","").startswith("jp_"):
+            if s.get("selector_mode", "").startswith("jp_"):
                 jp.append(it)
             else:
                 overseas.append(it)
         time.sleep(0.6)
 
     if not overseas:
-        _m="ヤルデ：新規の海外候補が拾えませんでした（既出スキップが効いてる/ソースが弱い可能性）。"
+        _m = "ヤルデ：新規の海外候補が拾えませんでした（既出スキップが効いてる/ソースが弱い可能性）。"
         if not _tg_msg_sent(_m):
             tg_send(_m)
             return
@@ -280,10 +327,10 @@ def main():
     for it in batch:
         time.sleep(0.9)
         j = llm_assess(it)
-        it.japan_presence = j.get("japan_presence","unknown")
+        it.japan_presence = j.get("japan_presence", "unknown")
         it.score = int(j.get("score", 0))
-        it.category_guess = j.get("category_guess","")
-        it.rationale_jp = j.get("rationale_jp","")
+        it.category_guess = j.get("category_guess", "")
+        it.rationale_jp = j.get("rationale_jp", "")
 
     ranked = sorted(batch, key=lambda x: x.score, reverse=True)[:5]
 
@@ -296,7 +343,7 @@ def main():
 
     top3 = ranked[:3]
     msg = format_meeting(top3, jp)
-    
+
     if not _tg_url_sent(top3[0].url):
         tg_send(msg)
 

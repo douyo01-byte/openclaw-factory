@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS dev_events (
 CREATE INDEX IF NOT EXISTS idx_dev_events_proposal ON dev_events(proposal_id);
 """
 
+
 def apply(db_path="data/openclaw.db"):
     conn = sqlite3.connect(db_path)
     conn.executescript(DDL)

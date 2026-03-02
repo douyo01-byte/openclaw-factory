@@ -8,19 +8,20 @@ DB = os.environ.get("DB_PATH", "data/openclaw.db")
 CHAT_ID = os.environ.get("DEV_CHAT_ID")
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 
+
 def tg_send(text):
     if not TOKEN or not CHAT_ID:
         return
     requests.post(
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
         json={"chat_id": CHAT_ID, "text": text},
-        timeout=20
+        timeout=20,
     )
+
 
 def refine_one(conn, proposal_id):
     row = conn.execute(
-        "select title, description from dev_proposals where id=?",
-        (proposal_id,)
+        "select title, description from dev_proposals where id=?", (proposal_id,)
     ).fetchone()
     if not row:
         return
@@ -29,7 +30,7 @@ def refine_one(conn, proposal_id):
 
     conv = conn.execute(
         "select role, message from proposal_conversation where proposal_id=? order by id",
-        (proposal_id,)
+        (proposal_id,),
     ).fetchall()
 
     history = "\n".join([f"{r[0]}: {r[1]}" for r in conv])
@@ -63,21 +64,21 @@ Conversation:
         spec = data.get("refined_spec", "")
 
         conn.execute(
-            "update dev_proposals set spec_stage='refined' where id=?",
-            (proposal_id,)
+            "update dev_proposals set spec_stage='refined' where id=?", (proposal_id,)
         )
 
         conn.execute(
             "insert into proposal_conversation(proposal_id, role, message) values (?, 'assistant', ?)",
-            (proposal_id, spec)
+            (proposal_id, spec),
         )
 
         conn.execute(
             "update proposal_state set stage='refined', updated_at=datetime('now') where proposal_id=?",
-            (proposal_id,)
+            (proposal_id,),
         )
 
         tg_send(f"[Refined #{proposal_id}]\n{spec}")
+
 
 def run():
     conn = sqlite3.connect(DB)
@@ -101,6 +102,7 @@ def run():
 
     conn.commit()
     conn.close()
+
 
 if __name__ == "__main__":
     run()

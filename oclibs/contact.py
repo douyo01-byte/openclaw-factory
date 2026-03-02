@@ -25,11 +25,13 @@ PLATFORM_DOMAINS = {
 
 EMAIL_RE = re.compile(r"[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}", re.I)
 
+
 def _domain(u: str) -> str:
     try:
         return urlparse(u).netloc.lower()
     except Exception:
         return ""
+
 
 def guess_official_site(url: str, html: str) -> str | None:
     d = _domain(url)
@@ -49,25 +51,37 @@ def guess_official_site(url: str, html: str) -> str | None:
             continue
         if cd in PLATFORM_DOMAINS:
             continue
-        if any(x in cd for x in ["twitter.com", "x.com", "facebook.com", "instagram.com"]):
+        if any(
+            x in cd for x in ["twitter.com", "x.com", "facebook.com", "instagram.com"]
+        ):
             continue
         cands.append(absu)
 
     return cands[0] if cands else None
+
 
 def fetch(url: str, timeout: int = 25) -> str:
     r = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0"})
     r.raise_for_status()
     return r.text
 
+
 def extract_emails_from_html(html: str) -> list[str]:
     # 変なエスケープ(u003e...)が混ざることがあるので一旦除去
     html = html.replace("u003e", "").replace("u003c", "")
     emails = sorted(set(EMAIL_RE.findall(html)))
     # 明らかなゴミを弾く
-    emails = [e for e in emails if "@" in e and " " not in e and "<" not in e and ">" not in e]
-    emails = [e for e in emails if '%' not in e and not any(x in e.lower() for x in ['.png','.jpg','.jpeg','.gif','.svg'])]
+    emails = [
+        e for e in emails if "@" in e and " " not in e and "<" not in e and ">" not in e
+    ]
+    emails = [
+        e
+        for e in emails
+        if "%" not in e
+        and not any(x in e.lower() for x in [".png", ".jpg", ".jpeg", ".gif", ".svg"])
+    ]
     return sorted(set(emails))
+
 
 def filter_emails_by_domain(emails: list[str], site_url: str) -> list[str]:
     d = _domain(site_url)
@@ -92,7 +106,7 @@ def drop_platform_emails(emails: list[str]) -> list[str]:
     out = []
     for e in emails:
         try:
-            dom = e.split("@",1)[1].lower()
+            dom = e.split("@", 1)[1].lower()
             dom2 = dom[4:] if dom.startswith("www.") else dom
             if dom in bad_domains or dom2 in bad_domains:
                 continue
@@ -100,4 +114,3 @@ def drop_platform_emails(emails: list[str]) -> list[str]:
         except Exception:
             continue
     return sorted(set(out))
-

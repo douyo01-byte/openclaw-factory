@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 import argparse
-import os
 import sqlite3
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from oclibs.tg_api import get_updates
 
 DB_DEFAULT = "data/openclaw.db"
 
+
 def connect_db(path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL;")
     return conn
+
 
 def ensure_state_table(conn: sqlite3.Connection):
     conn.execute("""
@@ -24,19 +25,30 @@ def ensure_state_table(conn: sqlite3.Connection):
     """)
     conn.commit()
 
+
 def load_offset(conn: sqlite3.Connection) -> int:
     cur = conn.execute("SELECT v FROM bot_state WHERE k='tg_offset'")
     row = cur.fetchone()
     return int(row[0]) if row else 0
 
+
 def save_offset(conn: sqlite3.Connection, offset: int):
-    conn.execute("INSERT INTO bot_state(k,v) VALUES('tg_offset', ?) ON CONFLICT(k) DO UPDATE SET v=excluded.v", (str(offset),))
+    conn.execute(
+        "INSERT INTO bot_state(k,v) VALUES('tg_offset', ?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",
+        (str(offset),),
+    )
     conn.commit()
+
 
 def extract_user(u: Dict[str, Any]) -> tuple[str, str]:
     username = u.get("username") or ""
-    name = " ".join([p for p in [u.get("first_name"), u.get("last_name")] if p]) or u.get("name") or ""
+    name = (
+        " ".join([p for p in [u.get("first_name"), u.get("last_name")] if p])
+        or u.get("name")
+        or ""
+    )
     return username, name
+
 
 def insert_command(conn: sqlite3.Connection, chat_id: str, msg: Dict[str, Any]):
     message_id = msg.get("message_id")
@@ -57,6 +69,7 @@ def insert_command(conn: sqlite3.Connection, chat_id: str, msg: Dict[str, Any]):
         """,
         (str(chat_id), message_id, reply_to_id, username, name, text),
     )
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -114,6 +127,7 @@ def main():
             time.sleep(3)
 
     conn.close()
+
 
 if __name__ == "__main__":
     main()

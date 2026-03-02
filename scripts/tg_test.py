@@ -17,10 +17,7 @@ if not CHAT_ID:
 
 url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
-payload = {
-    "chat_id": CHAT_ID,
-    "text": "🚀 OpenClaw Factory\nTelegram送信テスト成功！"
-}
+payload = {"chat_id": CHAT_ID, "text": "🚀 OpenClaw Factory\nTelegram送信テスト成功！"}
 
 res = requests.post(url, json=payload)
 
