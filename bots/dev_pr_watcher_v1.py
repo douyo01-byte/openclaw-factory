@@ -25,7 +25,28 @@ def tg_send(text: str):
         data={"chat_id": chat, "text": text},
         timeout=20,
     ).raise_for_status()
+        if merged:
+            new = "merged"
+        elif state == "closed":
+            new = "closed"
+        else:
+            new = "open"
 
+        if new != (r["pr_status"] or ""):
+            conn.execute(
+                "update dev_proposals set pr_status=? where id=?", (new, r["id"])
+            )
+            if new == "merged":
+                conn.execute(
+                    "update dev_proposals set status='merged' where id=? and status!='merged'",
+                    (r["id"],),
+                )
+            conn.commit()
+            msg = (
+                "DEV PROPOSAL\nid: %s\npr_number: %s\npr_status: %s\n\nreply:\nok %s\nhold %s\nreq %s <text>"
+                % (r["id"], r["pr_number"], new, r["id"], r["id"], r["id"])
+            )
+            tg_send(msg)
 
 def main():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
