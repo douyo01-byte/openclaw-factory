@@ -1,14 +1,25 @@
-import os,sqlite3,subprocess,re,json,sys
+import os,sqlite3,subprocess,re,json
 
 DB_PATH=os.environ.get("DB_PATH","data/openclaw.db")
 REPO=os.environ.get("GITHUB_REPO","douyo01-byte/openclaw-factory")
-CORE_DB=os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db")
 
 def conn():
     return sqlite3.connect(DB_PATH,timeout=30)
 
-def core_conn():
-    return sqlite3.connect(CORE_DB,timeout=30)
+def ensure_tables(c):
+    c.execute("""
+    create table if not exists decision_memory(
+      id integer primary key autoincrement,
+      proposal_id integer,
+      title text,
+      refined_spec text,
+      pr_url text,
+      pr_number integer,
+      result text,
+      attempts integer default 1,
+      created_at datetime default current_timestamp
+    )
+    """)
 
 def extract_pr_number(url):
     m=re.search(r'/pull/(\d+)',url or "")
@@ -25,29 +36,28 @@ def gh_pr_state(num):
     except:
         return None
 
-def learn(pid):
-    c=core_conn()
-    row=c.execute("""
-    select title,description from dev_proposals where id=?
-    """,(pid,)).fetchone()
-    if not row:
-        c.close()
-        return
-    title,desc=row
+def refined_spec_for(c,pid):
+    row=c.execute("select refined_spec from dev_proposals where id=?", (pid,)).fetchone()
+    return (row[0] if row else None) or ""
+
+def learn(c,pid,title,pr_url,prn,result):
+    refined=refined_spec_for(c,pid)
     c.execute("""
-    insert into decision_patterns(kind,content,created_at)
-    values('merged',?,datetime('now'))
-    """,(f"{title}\n{desc}",))
-    c.commit()
-    c.close()
+    insert into decision_memory(proposal_id,title,refined_spec,pr_url,pr_number,result,attempts,created_at)
+    values(?,?,?,?,?,?,1,datetime('now'))
+    """,(pid,title or "",refined,pr_url or "",prn,result))
 
 def tick():
     c=conn()
+    ensure_tables(c)
+
     rows=c.execute("""
-    select id,pr_number,pr_url,status from dev_proposals
+    select id,pr_number,pr_url,status,title
+    from dev_proposals
     where pr_url is not null
     """).fetchall()
-    for pid,prn,url,status in rows:
+
+    for pid,prn,url,status,title in rows:
         if not prn and url:
             n=extract_pr_number(url)
             if n:
@@ -63,7 +73,8 @@ def tick():
                     pr_status='merged'
                 where id=?
                 """,(pid,))
-                learn(pid)
+                learn(c,pid,title,url,prn,"merged")
+
     c.commit()
     c.close()
 
