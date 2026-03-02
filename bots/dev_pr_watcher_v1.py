@@ -79,7 +79,17 @@ def main():
                 conn.execute("UPDATE dev_proposals SET pr_number=? WHERE id=?", (pn, r["id"]))
                 conn.commit()
             else:
-                continue
+pn = r.get("pr_number")
+if pn in (None, 0, "", "0"):
+    u = (r.get("pr_url") or "")
+    m = re.search(r"/pull/(\d+)", u)
+    if m:
+        pn = int(m.group(1))
+        conn.execute("update dev_proposals set pr_number=? where id=?", (pn, r["id"]))
+        conn.commit()
+    else:
+        continue
+r["pr_number"] = pn                continue
         r["pr_number"] = pn
 
         pr = gh(f"/repos/douyo01-byte/openclaw-factory/pulls/{r['pr_number']}")
