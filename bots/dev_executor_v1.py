@@ -56,7 +56,7 @@ def main():
     row=conn.execute("""
         SELECT id,title,description,branch_name,pr_number,pr_url,dev_stage,dev_attempts
         FROM dev_proposals
-        WHERE status='approved'
+        WHERE status='approved' and spec_stage='decomposed'
 AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
         ORDER BY id ASC
         LIMIT 1
