@@ -5,25 +5,34 @@ from urllib.parse import urljoin, urlparse
 EMAIL_RE = re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.I)
 
 CANDIDATE_PATHS = [
-    "/contact", "/contact-us", "/contacts",
-    "/about", "/about-us",
-    "/press", "/media",
-    "/support", "/help",
-    "/privacy", "/terms"
+    "/contact",
+    "/contact-us",
+    "/contacts",
+    "/about",
+    "/about-us",
+    "/press",
+    "/media",
+    "/support",
+    "/help",
+    "/privacy",
+    "/terms",
 ]
+
 
 def _get(url: str, timeout=20):
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
-        "Accept": "text/html,application/xhtml+xml"
+        "Accept": "text/html,application/xhtml+xml",
     }
     r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
     r.raise_for_status()
     return r.text, r.url
 
+
 def _domain(url: str) -> str:
     p = urlparse(url)
     return f"{p.scheme}://{p.netloc}"
+
 
 def find_contacts(project_url: str):
     """

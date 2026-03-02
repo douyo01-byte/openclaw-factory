@@ -5,10 +5,12 @@ from datetime import datetime
 
 DB_DEFAULT = "data/openclaw.db"
 
+
 def connect_db(path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL;")
     return conn
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -35,7 +37,7 @@ def main():
 
     # v1: ルールベース反省（LLM未接続）
     adopted = sum(1 for r in rows if r[1] in ("採用", "approved") or r[2] > 0)
-    held    = sum(1 for r in rows if r[1] in ("保留", "hold") or r[2] == 0)
+    held = sum(1 for r in rows if r[1] in ("保留", "hold") or r[2] == 0)
     dropped = sum(1 for r in rows if r[1] in ("見送り", "drop", "rejected") or r[2] < 0)
 
     top = rows[0]
@@ -52,13 +54,15 @@ def main():
     if not actions:
         actions.append("判断分布は正常: 次はTAM推定/スコアリング項目拡張")
 
-    text = "\n".join([
-        f"[reflection_v1] {datetime.now().isoformat()}",
-        f"window={args.limit} adopted={adopted} held={held} dropped={dropped}",
-        latest,
-        "actions:",
-        *[f"- {a}" for a in actions],
-    ])
+    text = "\n".join(
+        [
+            f"[reflection_v1] {datetime.now().isoformat()}",
+            f"window={args.limit} adopted={adopted} held={held} dropped={dropped}",
+            latest,
+            "actions:",
+            *[f"- {a}" for a in actions],
+        ]
+    )
 
     conn.execute(
         "INSERT INTO reflection_requests(window_n,status) VALUES(?,?)",
@@ -68,6 +72,7 @@ def main():
     conn.close()
 
     print("Done. enqueued=1")
+
 
 if __name__ == "__main__":
     main()

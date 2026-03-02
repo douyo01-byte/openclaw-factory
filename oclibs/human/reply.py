@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 def build_human_reply(decision: str, proposal_id: int, extra: str | None = None) -> str:
     """
     内部コマンド → 人間向け日本語メッセージ変換
