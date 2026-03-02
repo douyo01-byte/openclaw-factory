@@ -52,6 +52,8 @@ def run():
         pid=int(r["id"])
         title=(r["title"] or f"Proposal {pid}").strip()
         body=(r["description"] or "").strip()
+        os.makedirs("dev_autogen", exist_ok=True)
+        open(f"dev_autogen/p{pid}.txt","w",encoding="utf-8").write((body or "")+"\n")
         branch=(r["branch_name"] or f"dev/proposal-{pid}").strip()
 
         if sh(["git","branch","--list",branch]).strip()=="":
