@@ -125,3 +125,8 @@ def run():
 
 if __name__ == "__main__":
     run()
+
+if spec_stage == "refined":
+    decomposed = spec_decompose_v1(spec)
+    update_spec_stage(decomposed)
+

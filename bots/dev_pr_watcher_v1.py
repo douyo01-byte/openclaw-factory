@@ -113,3 +113,7 @@ r["pr_number"] = pn                continue
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+if pr_state == "MERGED":
+    save_to_decision_patterns(proposal_data)
+
