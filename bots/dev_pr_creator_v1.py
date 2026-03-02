@@ -66,6 +66,13 @@ def run():
         sh(["git","commit","-m",f"docs: proposal flow ({pid})"])
         sh(["git","push","-u","origin",branch])
 
+        diff = subprocess.check_output(['git','diff','--stat']).decode()
+        lines = sum(int(x.split()[0]) for x in diff.splitlines() if x.strip() and x.split()[0].isdigit())
+        files = len([l for l in diff.splitlines() if '|' in l])
+        if lines > 400 or files > 5:
+            conn.execute("update dev_proposals set processing=0,status='blocked' where id=?",(pid,))
+            conn.commit()
+            continue
         j=sh(["gh","api",f"repos/{REPO}/pulls","-f",f"title={title}","-f",f"head={branch}","-f","base=main","-f",f"body={body}"])
         data=json.loads(j)
         conn.execute(
