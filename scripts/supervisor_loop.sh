@@ -8,6 +8,7 @@ export TELEGRAM_BOT_TOKEN="$(launchctl getenv TELEGRAM_BOT_TOKEN)"
 while true; do
   python bots/ingest_telegram_replies_v1.py || true
   python bots/dev_pr_watcher_v1.py || true
+  python bots/auto_fix_v1.py || true
   python bots/ci_guard_v1.py || true
   python bots/refiner_guard_v1.py || true
   python bots/decompose_trigger_v1.py || true
