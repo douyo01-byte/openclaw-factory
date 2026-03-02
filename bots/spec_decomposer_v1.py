@@ -14,7 +14,7 @@ def run():
         parts=[p.strip() for p in desc.replace("\n"," ").split("。") if p.strip()]
         for i,p in enumerate(parts,1):
             conn.execute(
-                "insert into dev_proposals(title,description,branch_name,status,spec_stage) values(?,?,?,?,?)",
+                "insert or ignore into dev_proposals(title,description,branch_name,status,spec_stage) values(?,?,?,?,?)",
                 (f"{pid}-sub{i}",p,f"dev/sub-{pid}-{i}-{int(time.time())}","approved","decomposed")
             )
         conn.execute("update dev_proposals set spec_stage='done',processing=0 where id=?", (pid,))
