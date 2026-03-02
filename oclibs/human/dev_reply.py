@@ -1,5 +1,5 @@
-def format_dev_reply(proposal_id:int, decision:str, extra:str|None=None)->str:
-    decision=(decision or "").strip().lower()
+def format_dev_reply(proposal_id: int, decision: str, extra: str | None = None) -> str:
+    decision = (decision or "").strip().lower()
     if decision.startswith("ok"):
         return f"""✅ 開発提案 #{proposal_id} を承認しました
 
@@ -13,7 +13,7 @@ Factoryは次のフェーズへ進みます。"""
 
 追加判断が行われるまで実行は停止しています。"""
     if decision.startswith("req"):
-        reason=extra or "追加情報が必要です"
+        reason = extra or "追加情報が必要です"
         return f"""❓ 開発提案 #{proposal_id} は追加確認が必要です
 
 理由：

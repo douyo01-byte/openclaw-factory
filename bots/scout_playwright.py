@@ -10,10 +10,20 @@ from oclibs.telegram import send as tg_send
 DB = "data/openclaw.db"
 
 TARGETS = [
-    ("Kickstarter Gadgets", "https://www.kickstarter.com/discover/advanced?category_id=337"),
-    ("Kickstarter Tech", "https://www.kickstarter.com/discover/advanced?category_id=16"),
-    ("Kickstarter Design", "https://www.kickstarter.com/discover/advanced?category_id=28"),
+    (
+        "Kickstarter Gadgets",
+        "https://www.kickstarter.com/discover/advanced?category_id=337",
+    ),
+    (
+        "Kickstarter Tech",
+        "https://www.kickstarter.com/discover/advanced?category_id=16",
+    ),
+    (
+        "Kickstarter Design",
+        "https://www.kickstarter.com/discover/advanced?category_id=28",
+    ),
 ]
+
 
 def db():
     conn = sqlite3.connect(DB)
@@ -22,12 +32,15 @@ def db():
     conn.commit()
     return conn, cur
 
+
 def seen(cur, url: str) -> bool:
     cur.execute("SELECT 1 FROM seen WHERE url=?", (url,))
     return cur.fetchone() is not None
 
+
 def save(cur, url: str):
     cur.execute("INSERT OR IGNORE INTO seen(url) VALUES(?)", (url,))
+
 
 async def collect_projects(page):
     # 遅延ロード対策：少しスクロールして「増える」状態を作る
@@ -39,7 +52,7 @@ async def collect_projects(page):
     # KickstarterのプロジェクトURL（/projects/...）を直接取得
     links = await page.eval_on_selector_all(
         'a[href^="/projects/"]',
-        "els => els.map(e => ({href:e.getAttribute('href'), text:(e.innerText||'').trim()}))"
+        "els => els.map(e => ({href:e.getAttribute('href'), text:(e.innerText||'').trim()}))",
     )
 
     items = []
@@ -55,15 +68,17 @@ async def collect_projects(page):
 
     # 重複除去
     uniq = {}
-    for t,u in items:
+    for t, u in items:
         uniq[u] = t
-    return [(t,u) for u,t in uniq.items()]
+    return [(t, u) for u, t in uniq.items()]
+
 
 def format_message(source_name: str, items):
     msg = f"🚀 <b>{source_name}</b> New candidates: {len(items)}\n\n"
     for title, url in items[:12]:
         msg += f"• {title}\n{url}\n\n"
     return msg
+
 
 async def main():
     conn, cur = db()
@@ -102,6 +117,7 @@ async def main():
     conn.close()
     if total_new == 0:
         print("No new items (all seen or nothing extracted).")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -1,6 +1,7 @@
 import asyncio
 from playwright.async_api import async_playwright
 
+
 async def main():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -8,5 +9,6 @@ async def main():
         await page.goto("https://example.com", wait_until="domcontentloaded")
         print("TITLE:", await page.title())
         await browser.close()
+
 
 asyncio.run(main())
