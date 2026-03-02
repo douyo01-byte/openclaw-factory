@@ -130,3 +130,8 @@ if spec_stage == "refined":
     decomposed = spec_decompose_v1(spec)
     update_spec_stage(decomposed)
 
+
+if spec_stage == "refined":
+    decomposed = spec_decompose_v1(spec)
+    update_spec_stage(decomposed)
+

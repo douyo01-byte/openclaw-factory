@@ -117,3 +117,7 @@ if __name__ == "__main__":
 if pr_state == "MERGED":
     save_to_decision_patterns(proposal_data)
 
+
+if pr_state == "MERGED":
+    save_to_decision_patterns(proposal_data)
+
