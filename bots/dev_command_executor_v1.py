@@ -61,7 +61,7 @@ def run():
         if m:
             pid=int(m.group(1))
             conn.execute(
-                "update dev_proposals set status='approved', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
+                "update dev_proposals set status='approved',spec_stage='raw', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
                 (who, pid)
             )
             conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
@@ -71,7 +71,7 @@ def run():
         if m:
             pid=int(m.group(1))
             conn.execute(
-                "update dev_proposals set status='approved', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
+                "update dev_proposals set status='approved',spec_stage='raw', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
                 (who, pid)
             )
             conn.execute("update inbox_commands set status='applied', applied_at=datetime('now') where id=?", (r["id"],))
