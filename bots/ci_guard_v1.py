@@ -101,7 +101,7 @@ def tick():
 
         if concl in ("PASS","PENDING","UNKNOWN"):
             c.execute("""
-            insert into ci_retry(proposal_id,pr_number,head_ref,retry_count,last_conclusion,last_checked_at,last_run_id)
+            insert into ci_retry(proposal_id,pr_number,head_ref,retry_count,last_conclusion,last_checked_at,last_run_id,failure_reason)
             values(?,?,?,?,?,?,?,?)
             on conflict(proposal_id) do update set
               pr_number=excluded.pr_number,
@@ -119,7 +119,7 @@ def tick():
                 run_id=rerun_ci(head)
                 retry_count+=1
                 c.execute("""
-                insert into ci_retry(proposal_id,pr_number,head_ref,retry_count,last_conclusion,last_checked_at,last_run_id)
+                insert into ci_retry(proposal_id,pr_number,head_ref,retry_count,last_conclusion,last_checked_at,last_run_id,failure_reason)
                 values(?,?,?,?,?,?,?,?)
                 on conflict(proposal_id) do update set
                   pr_number=excluded.pr_number,
@@ -133,7 +133,7 @@ def tick():
                 c.execute("update dev_proposals set dev_stage='ci_retrying' where id=?", (pid,))
             else:
                 c.execute("""
-                insert into ci_retry(proposal_id,pr_number,head_ref,retry_count,last_conclusion,last_checked_at,last_run_id)
+                insert into ci_retry(proposal_id,pr_number,head_ref,retry_count,last_conclusion,last_checked_at,last_run_id,failure_reason)
                 values(?,?,?,?,?,?,?,?)
                 on conflict(proposal_id) do update set
                   pr_number=excluded.pr_number,
