@@ -72,6 +72,12 @@ def run():
         if lines > 400 or files > 5:
             conn.execute("update dev_proposals set processing=0,status='blocked' where id=?",(pid,))
             conn.commit()
+        code = subprocess.check_output(['git','diff']).decode().lower()
+        bad = ['drop table','delete from','rm -rf','os.remove','shutil.rmtree']
+        if any(b in code for b in bad):
+            conn.execute("update dev_proposals set processing=0,status='blocked' where id=?",(pid,))
+            conn.commit()
+            continue
             continue
         j=sh(["gh","api",f"repos/{REPO}/pulls","-f",f"title={title}","-f",f"head={branch}","-f","base=main","-f",f"body={body}"])
         data=json.loads(j)
