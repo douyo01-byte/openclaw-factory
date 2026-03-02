@@ -54,8 +54,8 @@ def extract_title_hint(text: str) -> str:
     t = re.sub(r"\s+", " ", t)
     m = re.search(r"^(.+?)(いいね|面白|気になる|良い|微妙|高い|安い|見送り|保留|採用)", t)
     if m:
-        return m.group(1).strip(" 　「」\"'")
-    return t[:40].strip(" 　「」\"'")
+        return m.group(1).strip("     「」\"'")
+    return t[:40].strip("     「」\"'")
 
 def find_item_by_url(conn: sqlite3.Connection, url: str) -> Optional[sqlite3.Row]:
     if not url:
@@ -162,7 +162,22 @@ def handle_chat(conn: sqlite3.Connection, row: sqlite3.Row) -> Tuple[str, Option
     cmd_id = row["id"]
     chat_id = str(row["chat_id"])
     text = (row["text"] or "").strip()
+    st = conn.execute(
+        "select proposal_id from proposal_state where stage='waiting_answer' order by updated_at desc limit 1"
+    ).fetchone()
 
+    if st:
+        pid = int(st["proposal_id"])
+        conn.execute(
+            "insert into proposal_conversation(proposal_id, role, message, created_at) values(?,?,?,datetime('now'))",
+            (pid, "user", text),
+        )
+        conn.execute(
+            "update proposal_state set stage='answer_received', updated_at=datetime('now') where proposal_id=?",
+            (pid,),
+        )
+        conn.commit()
+        return ("chatted", None)
     if not text:
         return ("ignored", None)
     if text.startswith("/"):
