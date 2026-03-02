@@ -18,6 +18,9 @@ def tg_send(text):
     )
 
 def refine_one(conn, proposal_id):
+    st = conn.execute("select stage from proposal_state where proposal_id=?", (proposal_id,)).fetchone()
+    stage = st[0] if st else None
+
     row = conn.execute(
         "select title, description from dev_proposals where id=?",
         (proposal_id,)
@@ -58,7 +61,7 @@ If clear, return:
     except:
         return
 
-    if data.get("status") == "questions":
+    if data.get("status") == "questions" and stage != 'answer_received':
         questions = "\n".join(data.get("questions", []))
 
         conn.execute("""
