@@ -25,7 +25,26 @@ def main():
         text = m.get("text", "")
         conn.execute(
             "insert or ignore into tg_private_chat_log(message_id,text) values(?,?)",
-            (mid, text),
+# 既存のコード
+for u in r.get("result", []):
+    m = u.get("message")
+    if not m:
+        continue
+    if m.get("chat", {}).get("type") != "private":
+        continue
+    mid = m["message_id"]
+    text = m.get("text", "")
+    
+    # proposal_idが含まれている場合、状態を更新
+    if proposal_id is not None and stage == "waiting_answer":
+        update_proposal_stage(proposal_id, "answer_received")
+    
+    # テキストとメッセージIDをデータベースに保存
+    conn.execute(
+        "insert or ignore into tg_private_chat_log(message_id,text) values(?,?)",
+        (mid, text),
+    )
+conn.commit()            (mid, text),
         )
     conn.commit()
 
