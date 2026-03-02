@@ -78,7 +78,7 @@ def tick():
 
         head=j.get("headRefName") or ""
         concl=conclusion_from_rollup(j)
-        now=datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        now=datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
         cur=c.execute("select retry_count,last_conclusion from ci_retry where proposal_id=?", (pid,)).fetchone()
         if cur:
