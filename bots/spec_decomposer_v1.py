@@ -7,6 +7,8 @@ def run():
     conn.row_factory=sqlite3.Row
     rows=conn.execute("select id,description from dev_proposals where status='approved' and spec_stage='raw'").fetchall()
     for r in rows:
+        conn.execute("update dev_proposals set processing=1 where id=?",(r['id'],))
+        conn.commit()
         pid=r["id"]
         desc=(r["description"] or "").strip()
         parts=[p.strip() for p in desc.replace("\n"," ").split("。") if p.strip()]
@@ -15,7 +17,7 @@ def run():
                 "insert into dev_proposals(title,description,branch_name,status,spec_stage) values(?,?,?,?,?)",
                 (f"{pid}-sub{i}",p,f"dev/sub-{pid}-{i}","approved","decomposed")
             )
-        conn.execute("update dev_proposals set spec_stage='done' where id=?", (pid,))
+        conn.execute("update dev_proposals set spec_stage='done',processing=0 where id=?", (pid,))
         conn.commit()
 
 if __name__=="__main__":
