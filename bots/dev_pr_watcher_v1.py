@@ -63,3 +63,43 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+def main():
+    conn = sqlite3.connect(DB_PATH)
+    prs = conn.execute(
+        "SELECT id, pr_number, pr_url, pr_status FROM dev_proposals WHERE pr_number IS NULL OR pr_number = '' OR pr_number = 0 OR pr_url IS NOT NULL"
+    ).fetchall()
+
+    for r in prs:
+        pn = r.get("pr_number")
+        if pn in (None, 0, "", "0"):
+            u = (r.get("pr_url") or "")
+            m = re.search(r"/pull/(\d+)", u)
+            if m:
+                pn = int(m.group(1))
+                conn.execute("UPDATE dev_proposals SET pr_number=? WHERE id=?", (pn, r["id"]))
+                conn.commit()
+            else:
+                continue
+        r["pr_number"] = pn
+
+        pr = gh(f"/repos/douyo01-byte/openclaw-factory/pulls/{r['pr_number']}")
+        merged = bool(pr.get("merged_at"))
+        state = (pr.get("state") or "").lower()
+        if merged:
+            new = "merged"
+        elif state == "closed":
+            new = "closed"
+        else:
+            new = "open"
+
+        if new != (r["pr_status"] or ""):
+            conn.execute("UPDATE dev_proposals SET pr_status=? WHERE id=?", (new, r["id"]))
+            if new == "merged":
+                conn.execute("UPDATE dev_proposals SET status='merged' WHERE id=? AND status!='merged'", (r["id"],))
+            conn.commit()
+            msg = f"DEV PROPOSAL\nid: {r['id']}\npr_number: {r['pr_number']}\npr_status: {new}\n\nreply:\nok {r['id']}\nhold {r['id']}\nreq {r['id']} <text>"
+            tg_send(msg)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
