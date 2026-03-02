@@ -1,34 +1,42 @@
 ```python
-import numpy as np
-from sklearn.decomposition import PCA
+# large_scale_refactor.py
 
-def large_scale_automatic_decomposition(data: np.ndarray, n_components: int = None):
-    """
-    Fully automatic large-scale data decomposition using PCA with variance-based component selection.
+from typing import List, Dict
+import ast
+import os
 
-    Args:
-        data (np.ndarray): 2D data array (samples x features).
-        n_components (int, optional): Number of components. If None, select components automatically.
+class CodeContextAnalyzer:
+    def __init__(self, root_dir: str):
+        self.root_dir = root_dir
+        self.code_map: Dict[str, ast.Module] = {}
 
-    Returns:
-        np.ndarray: Transformed data (samples x components).
-        PCA: Fitted PCA model.
-    """
-    pca = PCA(n_components=n_components or min(data.shape))
-    pca.fit(data)
-    if n_components is None:
-        # Choose components to explain 95% variance automatically
-        cum_var = np.cumsum(pca.explained_variance_ratio_)
-        n_components = np.searchsorted(cum_var, 0.95) + 1
-        pca = PCA(n_components=n_components).fit(data)
-    return pca.transform(data), pca
+    def load_files(self) -> None:
+        for subdir, _, files in os.walk(self.root_dir):
+            for file in files:
+                if file.endswith('.py'):
+                    path = os.path.join(subdir, file)
+                    with open(path, 'r', encoding='utf-8') as f:
+                        source = f.read()
+                    self.code_map[path] = ast.parse(source)
+
+    def analyze_context(self) -> None:
+        # Placeholder for advanced context analysis across files
+        pass
+
+class LargeScaleRefactor:
+    def __init__(self, root_dir: str):
+        self.analyzer = CodeContextAnalyzer(root_dir)
+
+    def run(self) -> None:
+        self.analyzer.load_files()
+        self.analyzer.analyze_context()
+        # Placeholder for full-automatic spec decomposition & refactor logic
 
 if __name__ == "__main__":
     import sys
-    import pandas as pd
-
-    # Usage: python script.py input.csv output.npy
-    data = pd.read_csv(sys.argv[1]).values
-    transformed, model = large_scale_automatic_decomposition(data)
-    np.save(sys.argv[2], transformed)
+    if len(sys.argv) != 2:
+        print("Usage: python large_scale_refactor.py <root_directory>")
+        sys.exit(1)
+    refactor = LargeScaleRefactor(sys.argv[1])
+    refactor.run()
 ```
