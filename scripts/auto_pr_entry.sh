@@ -11,7 +11,7 @@ export DB_PATH="$PWD/data/openclaw.db"
 export OCLAW_DB_PATH="$PWD/data/openclaw.db"
 
 export GITHUB_REPO="douyo01-byte/openclaw-factory"
-export GITHUB_TOKEN="$(gh auth token)"
+: "${GITHUB_TOKEN:?}"
 
 set -a
 source env/telegram.env
