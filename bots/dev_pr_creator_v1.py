@@ -61,10 +61,7 @@ def run():
             sh(["git","reset","--hard","origin/main"])
 
         par="提案→PR→自動マージ: Telegramで「提案: <内容>」を送る → dev_proposalsに登録 → 「承認します #<id>」でapproved → PR作成・通知 → マージ後にstatus=mergedへ更新。"
-        changed=append_readme(par)
-        if not changed:
-            sh(["git","checkout","main"])
-            continue
+        append_readme(par)
 
         sh(["git","add","-A"])
         sh(["git","commit","-m",f"docs: proposal flow ({pid})"])
