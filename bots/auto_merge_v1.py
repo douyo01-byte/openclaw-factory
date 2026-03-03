@@ -22,23 +22,29 @@ def get_open_auto_prs():
     prs=json.loads(out)
     return [p for p in prs if p["headRefName"].startswith("auto-")]
 
-def ci_success(pr_number):
+def ci_success(head_ref):
     out=_run([
-        "gh","pr","checks",str(pr_number),
-        "--json","state"
+        "gh","run","list",
+        "--workflow","ci.yml",
+        "--branch",head_ref,
+        "--limit","1",
+        "--json","status,conclusion"
     ])
     try:
-        checks=json.loads(out)
+        xs=json.loads(out)
     except Exception:
         return False
+    if not xs:
+        return False
+    x=xs[0]
+    return x.get("status")=="completed" and x.get("conclusion")=="success"
     return bool(checks) and all(c.get("state")=="SUCCESS" for c in checks)
 
 def main():
     prs=get_open_auto_prs()
     for pr in prs:
         n=pr["number"]
-        if ci_success(n):
+        if ci_success(pr["headRefName"]):
             subprocess.call(["gh","pr","merge",str(n),"--merge","--admin"])
-
 if __name__=="__main__":
     main()
