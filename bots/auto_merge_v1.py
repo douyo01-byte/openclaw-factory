@@ -27,7 +27,10 @@ def ci_success(pr_number):
         "gh","pr","checks",str(pr_number),
         "--json","state"
     ])
-    checks=json.loads(out)
+    try:
+        checks=json.loads(out)
+    except Exception:
+        return False
     return bool(checks) and all(c.get("state")=="SUCCESS" for c in checks)
 
 def main():
