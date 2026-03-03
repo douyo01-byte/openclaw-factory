@@ -6,6 +6,16 @@ import re
 import sqlite3
 
 
+def _normalize_text(s: str) -> str:
+    if s is None:
+        return ""
+    s = str(s)
+    s = re.sub(r"\s+", " ", s).strip()
+    jp = r"\u3040-\u30ff\u4e00-\u9fff"
+    s = re.sub(rf"(?<=[{jp}])\s+(?=[{jp}])", "", s)
+    s = s.replace("＃", "#")
+    return s
+
 def enqueue_chat_job(conn, chat_id, item_id, role, query):
     conn.execute(
         "insert into chat_jobs(chat_id,item_id,role,query,status) values(?,?,?,?, 'new')",
@@ -298,9 +308,11 @@ def main() -> None:
     ignored = 0
 
     for r in rows:
-        status, error = handle_chat(conn, r)
+        txt = _normalize_text(r["text"])
+        r2 = {"id": r["id"], "chat_id": r["chat_id"], "message_id": r["message_id"], "text": txt}
+        status, error = handle_chat(conn, r2)
 
-        dev_id = parse_approval(r["text"])
+        dev_id = parse_approval(txt)
 
         if dev_id is not None:
 
