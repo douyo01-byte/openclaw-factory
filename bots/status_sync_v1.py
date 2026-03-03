@@ -33,18 +33,25 @@ def tick():
     update proposal_state
     set stage='done',updated_at=datetime('now')
     where proposal_id in (select id from dev_proposals where status='merged')
-      and stage!='done'
+      and stage not in ('waiting_answer','answer_received','refined','decomposed','executed','done')
     """)
 
     c.execute("""
     update proposal_state
     set stage='approved',updated_at=datetime('now')
     where proposal_id in (select id from dev_proposals where status='approved')
-      and stage not in ('waiting_answer','answer_received','done')
+      and stage not in ('waiting_answer','answer_received','refined','decomposed','executed','done')
     """)
 
+    _sync_dev_stage(c)
     c.commit()
     c.close()
 
+def _sync_dev_stage(c):
+    c.execute(
+        "update dev_proposals set dev_stage='merged' "
+        "where coalesce(pr_status,'')='merged' and coalesce(status,'')='merged' "
+        "and (dev_stage is null or dev_stage='' or dev_stage!='merged')"
+    )
 if __name__=="__main__":
     tick()
