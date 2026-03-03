@@ -1,5 +1,5 @@
 import os, time, traceback
-from oclibs.tg_api import send_message
+from openclaw_factory.oclibs.tg_api import send_message
 from bots.tg_inbox_poll_v1 import main as poll_main
 
 CHAT_ID = os.environ.get("OCLAW_TELEGRAM_CHAT_ID", "-5208829484")
