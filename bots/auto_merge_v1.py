@@ -28,7 +28,7 @@ def ci_success(pr_number):
         "--json","state"
     ])
     checks=json.loads(out)
-    return all(c["state"]=="SUCCESS" for c in checks)
+    return bool(checks) and all(c.get("state")=="SUCCESS" for c in checks)
 
 def main():
     prs=get_open_auto_prs()
