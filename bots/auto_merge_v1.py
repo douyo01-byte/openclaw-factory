@@ -1,7 +1,20 @@
 import subprocess,json
+import time
+
+def _run(args, tries=4, base_sleep=2):
+    for k in range(tries):
+        try:
+            return subprocess.check_output(args)
+        except subprocess.CalledProcessError as e:
+            msg=(getattr(e,'output',b'') or b'').decode('utf-8','ignore')
+            if 'HTTP 502' in msg or '502 Bad Gateway' in msg or 'api.github.com/graphql' in msg:
+                time.sleep(base_sleep*(2**k))
+                continue
+            raise
+    return b''
 
 def get_open_auto_prs():
-    out=subprocess.check_output([
+    out=_run([
         "gh","pr","list",
         "--state","open",
         "--json","number,headRefName"
@@ -10,7 +23,7 @@ def get_open_auto_prs():
     return [p for p in prs if p["headRefName"].startswith("auto-")]
 
 def ci_success(pr_number):
-    out=subprocess.check_output([
+    out=_run([
         "gh","pr","checks",str(pr_number),
         "--json","state"
     ])
