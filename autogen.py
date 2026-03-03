@@ -1,4 +1,3 @@
-```python
 import numpy as np
 from sklearn.decomposition import PCA
 
@@ -31,4 +30,3 @@ if __name__ == "__main__":
     data = pd.read_csv(sys.argv[1]).values
     transformed, model = large_scale_automatic_decomposition(data)
     np.save(sys.argv[2], transformed)
-```
