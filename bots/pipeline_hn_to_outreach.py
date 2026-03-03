@@ -1,17 +1,21 @@
-import os, json, re, time
 import os
+import json
+import re
+import time
+
 
 def _load_persona_from_env():
-  core=os.environ.get("CORE_PERSONA_FILE")
-  role=os.environ.get("PERSONA_FILE")
-  t=[]
-  if core and os.path.exists(core):
-    t.append(open(core,"r",encoding="utf-8").read().strip())
-  if role and os.path.exists(role):
-    t.append(open(role,"r",encoding="utf-8").read().strip())
-  return "\n\n".join([x for x in t if x])
+    core = os.environ.get("CORE_PERSONA_FILE")
+    role = os.environ.get("PERSONA_FILE")
+    t = []
+    if core and os.path.exists(core):
+        t.append(open(core, "r", encoding="utf-8").read().strip())
+    if role and os.path.exists(role):
+        t.append(open(role, "r", encoding="utf-8").read().strip())
+    return "\n\n".join([x for x in t if x])
 
-PERSONA=_load_persona_from_env()
+
+PERSONA = _load_persona_from_env()
 
 from dataclasses import dataclass
 from typing import List
@@ -26,6 +30,7 @@ load_dotenv()
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 client = OpenAI()
 
+
 @dataclass
 class Candidate:
     title: str
@@ -36,17 +41,21 @@ class Candidate:
     rationale: str = ""
     email_en: str = ""
 
+
 def fetch_hn(n=10) -> List[Candidate]:
     feed = feedparser.parse("https://hnrss.org/frontpage")
     items = feed.entries[:n]
     out = []
     for it in items:
-        out.append(Candidate(
-            title=(it.get("title","") or "")[:200],
-            url=it.get("link",""),
-            summary=re.sub(r"\s+"," ", it.get("summary","") or "")[:400]
-        ))
+        out.append(
+            Candidate(
+                title=(it.get("title", "") or "")[:200],
+                url=it.get("link", ""),
+                summary=re.sub(r"\s+", " ", it.get("summary", "") or "")[:400],
+            )
+        )
     return out
+
 
 def ddg_collect_domains(query: str) -> list[str]:
     """DuckDuckGo検索結果からリンク先ドメインを最大10件集める（タイトルは見ない）"""
@@ -86,6 +95,7 @@ def ddg_collect_domains(query: str) -> list[str]:
         uniq.append(d)
     return uniq
 
+
 def japan_presence_check(title: str) -> str:
     """
     日本存在チェック（軽量・低頻度）：
@@ -99,6 +109,7 @@ def japan_presence_check(title: str) -> str:
         return "likely"
     return "unlikely"
 
+
 def landing_title(url: str) -> str:
     try:
         with sync_playwright() as p:
@@ -111,6 +122,7 @@ def landing_title(url: str) -> str:
             return t
     except Exception as e:
         return f"(landing title failed: {type(e).__name__})"
+
 
 def llm_score_and_email(c: Candidate) -> dict:
     prompt = f"""
@@ -131,12 +143,13 @@ landing_title: {landing_title(c.url)}
     res = client.chat.completions.create(
         model=MODEL,
         messages=[
-            {"role":"system","content":"Return only JSON. No markdown."},
-            {"role":"user","content":prompt}
+            {"role": "system", "content": "Return only JSON. No markdown."},
+            {"role": "user", "content": prompt},
         ],
-        response_format={"type":"json_object"},
+        response_format={"type": "json_object"},
     )
     return json.loads(res.choices[0].message.content or "{}")
+
 
 def main():
     cands = fetch_hn(10)
@@ -152,8 +165,8 @@ def main():
         if c.japan_presence == "unlikely":
             j = llm_score_and_email(c)
             c.score = int(j.get("score", 0))
-            c.rationale = j.get("rationale_jp","")
-            c.email_en = j.get("email_en","")
+            c.rationale = j.get("rationale_jp", "")
+            c.email_en = j.get("email_en", "")
 
     top = sorted(cands, key=lambda x: x.score, reverse=True)[:3]
     print("\n=== TOP 3 ===")
@@ -164,6 +177,7 @@ def main():
         print("理由:", c.rationale)
         print("---- email(en) ----")
         print(c.email_en)
+
 
 if __name__ == "__main__":
     main()

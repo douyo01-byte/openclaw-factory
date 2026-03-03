@@ -1,0 +1,5 @@
+id=132
+title=test danger auto
+ts=2026-03-03T03:18:51Z
+
+DROP TABLE users;

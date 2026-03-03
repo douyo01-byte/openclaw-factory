@@ -5,10 +5,12 @@ from datetime import datetime
 
 DB_DEFAULT = "data/openclaw.db"
 
+
 def connect_db(path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL;")
     return conn
+
 
 def build_reflection(conn: sqlite3.Connection, window_n: int) -> str:
     rows = conn.execute(
@@ -25,7 +27,7 @@ def build_reflection(conn: sqlite3.Connection, window_n: int) -> str:
         return f"[reflection_worker_v1] {datetime.now().isoformat()}\nwindow={window_n}\n(no decision_events)"
 
     adopted = sum(1 for r in rows if r[2] > 0)
-    held    = sum(1 for r in rows if r[2] == 0)
+    held = sum(1 for r in rows if r[2] == 0)
     dropped = sum(1 for r in rows if r[2] < 0)
 
     top = rows[0]
@@ -41,13 +43,16 @@ def build_reflection(conn: sqlite3.Connection, window_n: int) -> str:
     if not actions:
         actions.append("判断分布は正常: 次はTAM推定/スコア項目拡張")
 
-    return "\n".join([
-        f"[reflection_worker_v1] {datetime.now().isoformat()}",
-        f"window={window_n} adopted={adopted} held={held} dropped={dropped}",
-        latest,
-        "actions:",
-        *[f"- {a}" for a in actions],
-    ])
+    return "\n".join(
+        [
+            f"[reflection_worker_v1] {datetime.now().isoformat()}",
+            f"window={window_n} adopted={adopted} held={held} dropped={dropped}",
+            latest,
+            "actions:",
+            *[f"- {a}" for a in actions],
+        ]
+    )
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -91,6 +96,7 @@ def main():
     conn.close()
 
     print(f"Done. processed={done}")
+
 
 if __name__ == "__main__":
     main()

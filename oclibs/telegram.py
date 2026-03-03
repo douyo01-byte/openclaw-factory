@@ -3,49 +3,56 @@ import time
 import requests
 from dotenv import load_dotenv
 
-load_dotenv("env/telegram.env", override=True);BOT_TOKEN=os.getenv("TELEGRAM_BOT_TOKEN");CHAT_ID=(os.getenv("OCLAW_TELEGRAM_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID"))
+load_dotenv("env/telegram.env", override=True)
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.getenv("OCLAW_TELEGRAM_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID")
 
 
-TELEGRAM_MAX_LEN=3900
+TELEGRAM_MAX_LEN = 3900
 
-def _split_telegram_message(message:str, limit:int=TELEGRAM_MAX_LEN):
-    message=message or ""
-    if len(message)<=limit:
+
+def _split_telegram_message(message: str, limit: int = TELEGRAM_MAX_LEN):
+    message = message or ""
+    if len(message) <= limit:
         return [message]
-    parts=[]
-    buf=message
-    while len(buf)>limit:
-        cut=buf.rfind("\n\n",0,limit)
-        if cut==-1:
-            cut=buf.rfind("\n",0,limit)
-        if cut==-1:
-            cut=limit
-        chunk=buf[:cut].rstrip()
+    parts = []
+    buf = message
+    while len(buf) > limit:
+        cut = buf.rfind("\n\n", 0, limit)
+        if cut == -1:
+            cut = buf.rfind("\n", 0, limit)
+        if cut == -1:
+            cut = limit
+        chunk = buf[:cut].rstrip()
         if chunk:
             parts.append(chunk)
-        buf=buf[cut:].lstrip()
+        buf = buf[cut:].lstrip()
     if buf.strip():
         parts.append(buf.strip())
     return parts
 
-def _tg_dedupe(message:str)->bool:
+
+def _tg_dedupe(message: str) -> bool:
     return False
 
-def send(message:str):
+
+def send(message: str):
     if not BOT_TOKEN or not CHAT_ID:
-        print("Telegram env missing (TELEGRAM_BOT_TOKEN + (OCLAW_TELEGRAM_CHAT_ID or TELEGRAM_CHAT_ID))")
+        print(
+            "Telegram env missing (TELEGRAM_BOT_TOKEN + (OCLAW_TELEGRAM_CHAT_ID or TELEGRAM_CHAT_ID))"
+        )
         return None
     if _tg_dedupe(message):
         return None
-    url=f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    chunks=_split_telegram_message(message)
-    last_resp=None
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    chunks = _split_telegram_message(message)
+    last_resp = None
     for ch in chunks:
-        payload={"chat_id":CHAT_ID,"text":ch}
+        payload = {"chat_id": CHAT_ID, "text": ch}
         try:
-            r=requests.post(url,json=payload,timeout=30)
-            last_resp=r
-            if r.status_code>=400:
+            r = requests.post(url, json=payload, timeout=30)
+            last_resp = r
+            if r.status_code >= 400:
                 print("Telegram send failed:", r.status_code, r.text[:200])
                 return None
         except Exception as e:

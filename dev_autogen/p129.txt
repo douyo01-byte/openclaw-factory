@@ -1,0 +1,1 @@
+refiner guard 複数処理確認用

@@ -1,4 +1,5 @@
-import os, requests
+import os
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,4 +16,13 @@ for u in data.get("result", [])[-10:]:
     msg = u.get("message") or u.get("channel_post") or {}
     chat = msg.get("chat", {})
     text = msg.get("text", "")
-    print("chat_id:", chat.get("id"), "title:", chat.get("title"), "user:", chat.get("username"), "text:", text)
+    print(
+        "chat_id:",
+        chat.get("id"),
+        "title:",
+        chat.get("title"),
+        "user:",
+        chat.get("username"),
+        "text:",
+        text,
+    )
