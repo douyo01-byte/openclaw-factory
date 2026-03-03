@@ -13,6 +13,17 @@ def _run(args, tries=4, base_sleep=2):
             raise
     return b''
 
+def pr_mergeable(pr_number):
+    out=_run([
+        "gh","pr","view",str(pr_number),
+        "--json","mergeable,mergeStateStatus"
+    ])
+    try:
+        x=json.loads(out)
+    except Exception:
+        return ("UNKNOWN","UNKNOWN")
+    return (x.get("mergeable") or "UNKNOWN", x.get("mergeStateStatus") or "UNKNOWN")
+
 def get_open_auto_prs():
     out=_run([
         "gh","pr","list",
@@ -45,6 +56,11 @@ def main():
     for pr in prs:
         n=pr["number"]
         if ci_success(pr["headRefName"]):
-            subprocess.call(["gh","pr","merge",str(n),"--merge","--admin","--auto"])
+            m,ms=pr_mergeable(n)
+            if m=="MERGEABLE" and ms=="CLEAN":
+                subprocess.call(["gh","pr","merge",str(n),"--merge","--admin"])
+            else:
+                subprocess.call(["gh","pr","merge",str(n),"--merge","--auto"])
+
 if __name__=="__main__":
     main()
