@@ -6,7 +6,7 @@ import sqlite3
 import time
 from typing import Any, Dict, Optional
 
-from openclaw_factory.oclibs.tg_api import get_updates
+from oclibs.tg_api import get_updates
 
 DB_DEFAULT = "data/openclaw.db"
 
