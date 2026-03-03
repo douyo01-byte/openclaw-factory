@@ -45,6 +45,6 @@ def main():
     for pr in prs:
         n=pr["number"]
         if ci_success(pr["headRefName"]):
-            subprocess.call(["gh","pr","merge",str(n),"--merge","--admin"])
+            subprocess.call(["gh","pr","merge",str(n),"--merge","--admin","--auto"])
 if __name__=="__main__":
     main()
