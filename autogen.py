@@ -1,4 +1,3 @@
-```python
 # large_scale_decomposition.py
 
 def large_scale_decomposition(data, components):
@@ -60,4 +59,3 @@ if __name__ == "__main__":
     comps = large_scale_decomposition(signal, 3)
     for i, c in enumerate(comps, 1):
         print(f"Component {i} mean: {np.mean(c):.4f}")
-```
