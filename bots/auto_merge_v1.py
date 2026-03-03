@@ -58,9 +58,9 @@ def main():
         if ci_success(pr["headRefName"]):
             m,ms=pr_mergeable(n)
             if m=="MERGEABLE" and ms=="CLEAN":
-                subprocess.call(["gh","pr","merge",str(n),"--merge","--admin"])
+                subprocess.call(["gh","pr","merge",str(n),"--merge"])
             else:
-                subprocess.call(["gh","pr","merge",str(n),"--merge","--auto"])
+                subprocess.call(["gh","pr","merge",str(n),"--merge"])
 
 if __name__=="__main__":
     main()
