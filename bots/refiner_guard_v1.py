@@ -36,7 +36,7 @@ def tick():
             """,(pid,"waiting_answer",q))
             continue
 
-        subprocess.call([sys.executable,"-m","bots.spec_refiner_v2",str(pid)],cwd=CORE_PATH)
+        subprocess.call([sys.executable,"-m","spec_refiner_v2",str(pid)],cwd=CORE_PATH, env=dict(os.environ, PYTHONPATH=CORE_PATH))
         c.execute("""
         update dev_proposals
         set spec_stage='refined'

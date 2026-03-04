@@ -16,7 +16,7 @@ def tick_once():
     con.execute("pragma busy_timeout=5000;")
 
     rows=con.execute(
-        "select id,text from inbox_commands where processed=0 order by id asc limit 300"
+        "select id,text from inbox_commands WHERE status='queued' AND processed=0 order by id asc limit 300"
     ).fetchall()
 
     applied=0
@@ -35,7 +35,7 @@ def tick_once():
         st=con.execute("select stage from proposal_state where proposal_id=?", (pid,)).fetchone()
         stage=(st["stage"] if st else "") or ""
 
-        if stage in ("waiting_answer","waiting_answer_user","waiting_spec_answer","waiting"):
+        if stage in ("waiting_answer","waiting_answer_user","waiting_spec_answer","waiting","refined"):
             con.execute(
                 "update proposal_state set stage=?, updated_at=? where proposal_id=?",
                 ("answer_received", now(), pid),
