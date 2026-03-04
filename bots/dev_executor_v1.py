@@ -1,115 +1,88 @@
-from __future__ import annotations
-from datetime import datetime, timezone
-import json, os, re, sqlite3, subprocess, urllib.parse, urllib.request
+import os,sqlite3,subprocess,time
+from pathlib import Path
 
-DB_PATH=os.environ.get("OCLAW_DB_PATH","/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
-BASE_BRANCH="main"
-REPO="/Users/doyopc/AI/openclaw-factory"
-KAI_LOG=os.path.join(REPO,"logs","kai_actions.log")
+DB=os.environ.get("DB_PATH") or "data/openclaw.db"
 
-def _now():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+def db():
+    p=str(Path(DB).resolve())
+    con=sqlite3.connect(p,timeout=30,isolation_level=None)
+    con.execute("PRAGMA journal_mode=WAL")
+    return con
 
-def kai(conn,pid,event,**kw):
-    payload={"ts":_now(),"proposal_id":pid,"event":event,**kw}
-    os.makedirs(os.path.join(REPO,"logs"),exist_ok=True)
-    with open(KAI_LOG,"a",encoding="utf-8") as f:
-        f.write(json.dumps(payload,ensure_ascii=False)+"\n")
-    conn.execute("INSERT INTO dev_events (proposal_id,event_type,payload) VALUES (?,?,?)",(pid,event,json.dumps(payload,ensure_ascii=False)))
-    tok=os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("TG_BOT_TOKEN") or ""
-    chat=os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get("TG_CHAT_ID") or ""
-    if tok and chat:
-        data=urllib.parse.urlencode({"chat_id":chat,"text":("Kai: %s pid=%s " % (event,pid)) + " ".join([("%s=%s" % (k,v)) for k,v in kw.items()])}).encode("utf-8")
-        urllib.request.urlopen("https://api.telegram.org/bot%s/sendMessage" % tok, data=data, timeout=10).read()
+def ensure(con):
+    con.execute("""
+    create table if not exists dev_execution_log(
+        id integer primary key autoincrement,
+        proposal_id integer,
+        status text,
+        message text,
+        created_at datetime default current_timestamp
+    )
+    """)
 
-DB_PATH=os.environ.get("OCLAW_DB_PATH","/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
-BASE_BRANCH="main"
-REPO="/Users/doyopc/AI/openclaw-factory"
+def mark_stage(con,pid,stage):
+    con.execute("""
+    insert into proposal_state(proposal_id,stage)
+    values(?,?)
+    on conflict(proposal_id)
+    do update set stage=excluded.stage,updated_at=datetime('now')
+    """,(pid,stage))
 
-KAI_LOG=os.path.join(REPO,"logs","kai_actions.log")
-def sh(args,capture=False):
-    env=dict(os.environ)
-    env["HOME"]="/Users/doyopc"
-    env["PATH"]="/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-    if capture:
-        p=subprocess.run(args,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,cwd=REPO,env=env)
-        return p.stdout.strip()
-    subprocess.run(args,cwd=REPO,env=env,check=True)
+def run_cmd(cmd):
+    return subprocess.run(cmd,shell=True,capture_output=True,text=True)
 
-def now():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+def process(con,pid):
+    mark_stage(con,pid,"executing")
 
-def kai(conn, pid, event, **kw):
-    os.makedirs(os.path.dirname(KAI_LOG), exist_ok=True)
-    payload={"ts": now(), "proposal_id": pid, "event": event, **kw}
-    with open(KAI_LOG, "a", encoding="utf-8") as f:
-        f.write(json.dumps(payload, ensure_ascii=False) + "\n")
-    conn.execute(
-        "INSERT INTO dev_events (proposal_id,event_type,payload) VALUES (?,?,?)",
-        (pid, event, json.dumps(payload, ensure_ascii=False)),
+    cmd=f'echo "auto change for proposal {pid}" >> executor_test_{pid}.txt'
+    r=run_cmd(cmd)
+
+    if r.returncode!=0:
+        con.execute(
+            "insert into dev_execution_log(proposal_id,status,message) values(?,?,?)",
+            (pid,"error",r.stderr)
+        )
+        mark_stage(con,pid,"error")
+        return
+
+    r=run_cmd("git add -A")
+    r=run_cmd(f'git commit -m "auto: proposal {pid}"')
+
+    branch=f"auto/proposal-{pid}"
+    run_cmd(f"git checkout -B {branch}")
+    run_cmd(f"git push -u origin {branch}")
+
+    pr=run_cmd(f'gh pr create --title "Auto proposal {pid}" --body "auto generated" --base main --head {branch}')
+
+    pr_url=pr.stdout.strip().splitlines()[-1] if pr.stdout else ""
+
+    con.execute(
+        "update dev_proposals set dev_stage='pr_created',pr_status='open',pr_url=? where id=?",
+        (pr_url,pid)
     )
 
+    con.execute(
+        "insert into dev_execution_log(proposal_id,status,message) values(?,?,?)",
+        (pid,"ok","pr created")
+    )
+
+    mark_stage(con,pid,"pr_created")
+
 def main():
-    os.makedirs(os.path.dirname(DB_PATH),exist_ok=True)
-    conn=sqlite3.connect(DB_PATH,timeout=30)
-    conn.row_factory=sqlite3.Row
-    row=conn.execute("""
-        SELECT id,title,description,branch_name,pr_number,pr_url,dev_stage,dev_attempts
-        FROM dev_proposals
-        WHERE status='approved'
-AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
-        ORDER BY id ASC
-        LIMIT 1
-    """).fetchone()
-    if not row:
-        raise SystemExit("no approved proposals")
-        return 0
-    pid=int(row["id"])
-    kai(conn,pid,"picked",branch_name=(row["branch_name"] or ""),title=(row["title"] or ""))
-    title=(row["title"] or f"proposal {pid}").strip()
-    branch=row["branch_name"] or f"dev/proposal-{pid}"
-    description=row["description"] or ""
-    sh(["/usr/bin/git","checkout",BASE_BRANCH])
-    kai(conn,pid,"git_base",base=BASE_BRANCH)
-    sh(["/usr/bin/git","fetch","origin",BASE_BRANCH])
-    sh(["/usr/bin/git","reset","--hard","origin/"+BASE_BRANCH])
-    sh(["/usr/bin/git","clean","-fd"])
-    exists=sh(["/usr/bin/git","ls-remote","--heads","origin",branch],capture=True)
-    if exists:
-        sh(["/usr/bin/git","checkout",branch])
-        sh(["/usr/bin/git","fetch","origin",branch])
-        sh(["/usr/bin/git","reset","--hard","origin/"+branch])
-        sh(["/usr/bin/git","clean","-fd"])
-    else:
-        sh(["/usr/bin/git","checkout","-B",branch])
-    os.makedirs(os.path.join(REPO,"dev_autogen"),exist_ok=True)
-    fpath=os.path.join(REPO,"dev_autogen",f"p{pid}.txt")
-    with open(fpath,"w",encoding="utf-8") as f:
-        f.write(f"id={pid}\n")
-        f.write(f"title={title}\n")
-        f.write(f"ts={now()}\n\n")
-        f.write(description[:4000])
-    sh(["/usr/bin/git","add",fpath])
-    sh(["/usr/bin/git","commit","-m",f"dev: proposal #{pid} bootstrap PR"])
-    sh(["/usr/bin/git","push","-u","origin",branch])
-    kai(conn,pid,"git_push",branch=branch)
-    prj=sh(["/opt/homebrew/bin/gh","pr","create","--base",BASE_BRANCH,"--head",branch,"--title",f"[dev] {title} (#{pid})","--body",f"proposal_id: {pid}\nbranch: {branch}\n\n{description}"],capture=True)
-    pr_url=prj.strip().splitlines()[-1].strip()
-    pr_num=None
-    m=re.search(r"/pull/(\\d+)",pr_url)
-    if m: pr_num=int(m.group(1))
-    conn.execute("""
-        UPDATE dev_proposals
-        SET status='pr_created', dev_stage='pr_created',
-            pr_number=COALESCE(?,pr_number),
-            pr_url=COALESCE(?,pr_url),
-            dev_attempts=COALESCE(dev_attempts,0)+1
-        WHERE id=?
-    """,(pr_num,pr_url,pid))
-    kai(conn,pid,"db_updated",pr_url=pr_url,pr_number=pr_num)
-    conn.commit()
-    print(json.dumps({"proposal_id":pid,"branch":branch,"pr_number":pr_num,"pr_url":pr_url},ensure_ascii=False))
-    return 0
+    con=db()
+    ensure(con)
+
+    while True:
+        rows=con.execute("""
+        select proposal_id
+        from proposal_state
+        where stage='approved'
+        """).fetchall()
+
+        for (pid,) in rows:
+            process(con,pid)
+
+        time.sleep(5)
 
 if __name__=="__main__":
-    raise SystemExit(main())
+    main()

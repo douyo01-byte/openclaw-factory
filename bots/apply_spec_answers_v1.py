@@ -7,8 +7,19 @@ def now():
 
 def norm(s: str) -> str:
     s=unicodedata.normalize("NFKC", s or "")
-    s=re.sub(r"[ \t\u3000]+","",s)
+    s=re.sub(r"[ \t\r\n\u3000]+","",s)
     return s
+
+def parse_cmd(raw: str):
+    t=norm(raw)
+    kind=None
+    if t.startswith("回答") or t.startswith("回답"):
+        kind="answer"
+    elif t.startswith("任せます") or t.startswith("任せま"):
+        kind="entrust"
+    m=re.search(r"#(\d+)", t)
+    pid=int(m.group(1)) if m else None
+    return kind,pid,t
 
 def tick_once():
     con=sqlite3.connect(DB_PATH, timeout=30)
@@ -16,26 +27,43 @@ def tick_once():
     con.execute("pragma busy_timeout=5000;")
 
     rows=con.execute(
-        "select id,text from inbox_commands WHERE status='queued' AND processed=0 order by id asc limit 300"
+        "select id,text from inbox_commands "
+        "where processed=0 and coalesce(status,'') in ('queued','received','new','') "
+        "order by id asc limit 300"
     ).fetchall()
 
     applied=0
     touched=0
+    ignored=0
 
     for r in rows:
         cmd_id=r["id"]
-        t=norm(r["text"])
+        kind,pid,t=parse_cmd(r["text"] or "")
 
-        m=re.search(r"#(\d+)", t)
-        if not m:
+        if not kind or not pid:
+            con.execute(
+                "update inbox_commands set processed=1, status='ignored', applied_at=? where id=?",
+                (now(), cmd_id),
+            )
+            ignored += 1
             continue
 
-        pid=int(m.group(1))
+        st=con.execute(
+            "select stage from proposal_state where proposal_id=?",
+            (pid,),
+        ).fetchone()
 
-        st=con.execute("select stage from proposal_state where proposal_id=?", (pid,)).fetchone()
-        stage=(st["stage"] if st else "") or ""
+        if not st:
+            con.execute(
+                "update inbox_commands set processed=1, status='ignored', applied_at=? where id=?",
+                (now(), cmd_id),
+            )
+            ignored += 1
+            continue
 
-        if stage in ("waiting_answer","waiting_answer_user","waiting_spec_answer","waiting","refined"):
+        stage=(st["stage"] or "")
+
+        if stage != "done" and stage != "answer_received":
             con.execute(
                 "update proposal_state set stage=?, updated_at=? where proposal_id=?",
                 ("answer_received", now(), pid),
@@ -43,15 +71,19 @@ def tick_once():
             touched += 1
 
         con.execute(
+            "insert into proposal_conversation(proposal_id,role,message,created_at) values(?,?,?,?)",
+            (pid,"user",r["text"],now()),
+        )
+
+        con.execute(
             "update inbox_commands set processed=1, status='applied', applied_at=? where id=?",
             (now(), cmd_id),
         )
-
         applied += 1
 
     con.commit()
     con.close()
-    print("APPLIED", applied, "TOUCHED", touched)
+    print("APPLIED", applied, "TOUCHED", touched, "IGNORED", ignored)
 
 if __name__=="__main__":
     tick_once()

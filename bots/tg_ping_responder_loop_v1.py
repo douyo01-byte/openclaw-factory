@@ -1,4 +1,8 @@
-import os,sqlite3,time,urllib.parse,urllib.request
+import os,sqlite3
+from pathlib import Path
+import time
+import urllib.parse
+import urllib.request
 DB=os.environ.get("DB_PATH","data/openclaw.db")
 TOK=(os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
 def send(chat_id,text,reply_to=None):

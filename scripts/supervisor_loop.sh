@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.." || exit 1
 source .venv/bin/activate || exit 1
-export DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"
+export DB_PATH="$HOME/AI/openclaw-factory-daemon/data/openclaw.db"
 export GITHUB_REPO="douyo01-byte/openclaw-factory"
 export TELEGRAM_BOT_TOKEN="$(launchctl getenv TELEGRAM_BOT_TOKEN)"
 while true; do

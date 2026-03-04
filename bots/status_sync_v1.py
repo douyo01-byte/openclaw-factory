@@ -10,16 +10,16 @@ def tick():
 
     c.execute("""
     update proposal_state
-    set pending_question=pending_questions
-    where (pending_question is null or pending_question='')
+    set pending_questions=pending_questions
+    where (pending_questions is null or pending_questions='')
       and (pending_questions is not null and pending_questions!='')
     """)
 
     c.execute("""
     update proposal_state
-    set pending_questions=pending_question
+    set pending_questions=pending_questions
     where (pending_questions is null or pending_questions='')
-      and (pending_question is not null and pending_question!='')
+      and (pending_questions is not null and pending_questions!='')
     """)
 
     c.execute("""

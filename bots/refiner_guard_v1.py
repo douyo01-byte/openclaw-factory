@@ -1,6 +1,6 @@
 import os,sqlite3,subprocess,sys,datetime
 
-DB_PATH=os.environ.get("DB_PATH",os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db"))
+DB_PATH=os.environ.get("DB_PATH",os.path.expanduser("~/AI/openclaw-factory-daemon/data/openclaw.db"))
 CORE_PATH=os.path.expanduser("~/AI/openclaw-factory")
 
 def conn():
