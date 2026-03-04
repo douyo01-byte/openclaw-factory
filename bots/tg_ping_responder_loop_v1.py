@@ -13,7 +13,7 @@ def send(chat_id,text,reply_to=None):
         r.read()
 def tick(conn):
     rows=conn.execute(
-        "select id,chat_id,message_id from inbox_commands where status='queued' and processed=0 and trim(text) like '/ping%' order by id asc limit 50"
+        "select id,chat_id,message_id from inbox_commands where processed=0 and coalesce(status,'') in ('queued','received','new','') and (trim(text) like 'ping%' or trim(text) like '/ping%') order by id asc limit 50"
     ).fetchall()
     for rid,chat_id,mid in rows:
         send(chat_id,"pong",mid)
