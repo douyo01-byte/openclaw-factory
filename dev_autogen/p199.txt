@@ -1,5 +1,5 @@
 id=199
-title=auto
-ts=2026-03-03T04:27:39Z
+title=Promotion Metrics for Simplicity Improvements
+ts=2026-03-04T17:24:53Z
 
-テスト通知
+Develop a system to track and reward developers who simplify codebases, encouraging simplicity as a key factor in promotions.
