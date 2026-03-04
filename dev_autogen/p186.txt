@@ -1,5 +1,1 @@
-id=186
-title=auto
-ts=2026-03-03T04:23:55Z
-
-テスト通知
+SPEC:Add health check endpoint
