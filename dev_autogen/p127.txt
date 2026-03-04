@@ -1,1 +1,1 @@
-refiner guard 動作確認用
+Add watchdog for stuck proposal stages
