@@ -1,1 +1,1 @@
-仕様確認用
+Add retry wrapper for GitHub API calls
