@@ -1,5 +1,1 @@
-id=136
-title=notify final
-ts=2026-03-03T03:23:06Z
-
-simple
+Improve SQLite connection reuse
