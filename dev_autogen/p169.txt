@@ -1,5 +1,1 @@
-id=169
-title=auto
-ts=2026-03-03T04:19:31Z
-
-テスト通知
+SPEC:Add memory usage debug command
