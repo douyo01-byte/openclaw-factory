@@ -1,5 +1,1 @@
-id=255
-title=auto
-ts=2026-03-03T04:40:50Z
-
-テスト通知
+Develop an interactive map feature for OpenClaw Factory that displays real-time video feeds from connected cameras, allowing users to monitor and control devices remotely through a visual interface.
