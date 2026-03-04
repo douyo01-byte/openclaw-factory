@@ -1,5 +1,1 @@
-id=134
-title=notify test 2
-ts=2026-03-03T03:20:26Z
-
-simple test
+Add automatic branch cleanup after merge
