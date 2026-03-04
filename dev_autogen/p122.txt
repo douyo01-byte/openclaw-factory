@@ -1,5 +1,4 @@
 id=122
-title=auto flow test
-ts=2026-03-02T12:19:04Z
+title=proposal 122
+ts=2026-03-04T10:28:32Z
 
-Telegram経由で双方向に仕様確定し、自動でPRを生成・マージするフローを実装する。対象はopenclaw-factory。Python + SQLite + GitHub CLIを使用。提案→質問→回答→refine→PR生成までを自律実行する。
