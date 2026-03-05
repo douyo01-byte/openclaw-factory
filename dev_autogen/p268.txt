@@ -1,5 +1,2 @@
-id=268
-title=auto
-ts=2026-03-03T04:45:14Z
-
-テスト通知
+OpenClaw MacBook Neo Integration
+Develop a seamless toolchain in OpenClaw Factory to support building, testing, and deploying software optimized for MacBook Neo architecture, focusing on enhanced performance and native macOS features.
