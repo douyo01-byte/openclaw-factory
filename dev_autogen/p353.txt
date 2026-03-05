@@ -1,0 +1,5 @@
+id=353
+title=OpenClaw Factory CLI Integration
+ts=2026-03-05T13:53:30Z
+
+Develop a command-line interface for OpenClaw Factory to streamline workspace management, automate project tasks, and enhance developer productivity through efficient terminal commands.
