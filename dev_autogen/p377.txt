@@ -1,0 +1,5 @@
+id=377
+title=OpenClaw Workspace CLI
+ts=2026-03-05T13:57:41Z
+
+Create a CLI tool for OpenClaw Factory users to manage projects, automate workflows, and access factory services seamlessly from the terminal.
