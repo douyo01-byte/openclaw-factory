@@ -1,5 +1,2 @@
-id=254
-title=auto
-ts=2026-03-03T04:40:41Z
-
-テスト通知
+Interactive Factory Floor Map
+Develop an interactive map feature for OpenClaw Factory to visualize real-time status and locations of all robotic units and machinery on the factory floor, improving monitoring and coordination.
