@@ -1,5 +1,5 @@
 id=286
-title=auto
-ts=2026-03-03T04:51:42Z
+title=OpenClaw MacBook Neo Customizer
+ts=2026-03-05T13:42:11Z
 
-テスト通知
+Create a modular software platform within OpenClaw Factory that allows users to customize MacBook Neo hardware and software configurations, enabling seamless integration and optimization for developers and power users.
