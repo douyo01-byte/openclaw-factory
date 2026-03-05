@@ -1,0 +1,2 @@
+OpenClaw GPT-5.4 Thinking Module
+Integrate the GPT-5.4 Thinking System Card as a modular AI coprocessor to enhance OpenClaw Factory's decision-making and natural language processing capabilities.
