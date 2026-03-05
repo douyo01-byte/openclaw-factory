@@ -1,0 +1,2 @@
+Admin Account Security Audit Tool
+Develop a security auditing tool for admin accounts that detects unusual activity and vulnerabilities to prevent mass compromises in real-time.
