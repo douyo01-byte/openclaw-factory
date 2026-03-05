@@ -1,5 +1,5 @@
 id=292
-title=auto
-ts=2026-03-03T04:54:37Z
+title=OpenClaw Factory for MacBook Neo
+ts=2026-03-05T13:43:13Z
 
-テスト通知
+Develop a streamlined manufacturing system optimized for the new MacBook Neo design, integrating automated assembly and quality control workflows.
