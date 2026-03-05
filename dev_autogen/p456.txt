@@ -1,0 +1,2 @@
+Admin Account Security Monitor
+Develop a tool that continuously monitors admin account activities and detects suspicious behavior to prevent mass compromises.
