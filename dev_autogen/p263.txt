@@ -1,5 +1,2 @@
-id=263
-title=auto
-ts=2026-03-03T04:43:38Z
-
-テスト通知
+Interactive Map for OpenClaw Factory Cameras
+Develop an interactive map feature to visualize real-time feeds and statuses of OpenClaw Factory cameras, enhancing monitoring and management efficiency.
