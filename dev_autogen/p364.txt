@@ -1,0 +1,5 @@
+id=364
+title=Programmable Pixel Art Canvas
+ts=2026-03-05T13:55:26Z
+
+Create an interactive pixel canvas where each pixel can run a tiny user-defined program, enabling dynamic and programmable art creation within OpenClaw Factory.
