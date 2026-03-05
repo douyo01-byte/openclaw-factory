@@ -1,0 +1,5 @@
+id=365
+title=AI-Optimized CLI Builder
+ts=2026-03-05T13:55:37Z
+
+Develop a tool in OpenClaw Factory that helps developers automatically rewrite and optimize command-line interfaces for AI agents, improving usability and integration.
