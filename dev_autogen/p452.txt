@@ -1,0 +1,2 @@
+Admin Account Security Monitor
+Develop a real-time monitoring tool for admin account activities to detect and respond to suspicious behavior, preventing mass account compromises in collaborative platforms like Wikipedia.
