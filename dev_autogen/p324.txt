@@ -1,0 +1,5 @@
+id=324
+title=OpenClaw Workspace CLI
+ts=2026-03-05T13:48:27Z
+
+Develop a CLI tool for OpenClaw Factory enabling seamless management of projects, resources, and collaboration within the platform from the terminal.
