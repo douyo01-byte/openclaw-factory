@@ -1,0 +1,5 @@
+id=388
+title=Apple Silicon Full-Duplex Speech-to-Speech Module
+ts=2026-03-05T13:59:36Z
+
+Develop a Swift-based full-duplex speech-to-speech processing module optimized for Apple Silicon, leveraging AI models similar to Nvidia's PersonaPlex 7B for real-time voice interaction in OpenClaw Factory.
