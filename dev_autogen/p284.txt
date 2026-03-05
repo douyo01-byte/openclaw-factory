@@ -1,5 +1,5 @@
 id=284
-title=auto
-ts=2026-03-03T04:51:21Z
+title=OpenClaw Neo MacBook Detector
+ts=2026-03-05T13:41:50Z
 
-テスト通知
+Create a tool that detects and tracks the usage of the latest MacBook Neo models using OpenClaw Factory's device recognition framework.
