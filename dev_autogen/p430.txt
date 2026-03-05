@@ -1,0 +1,2 @@
+Admin Account Security Dashboard
+Develop a security monitoring dashboard for admin accounts that tracks suspicious activity and enforces multi-factor authentication to prevent mass account compromises.
