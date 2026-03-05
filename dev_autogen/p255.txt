@@ -1,1 +1,2 @@
+OpenClaw Interactive Cam Map
 Develop an interactive map feature for OpenClaw Factory that displays real-time video feeds from connected cameras, allowing users to monitor and control devices remotely through a visual interface.
