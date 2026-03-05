@@ -1,5 +1,5 @@
 id=278
-title=auto
-ts=2026-03-03T04:48:28Z
+title=OpenClaw Neo Laptop
+ts=2026-03-05T13:40:48Z
 
-テスト通知
+Develop a sleek, high-performance developer laptop prototype inspired by MacBook Neo, optimized for coding, hacking, and fast deployments in OpenClaw Factory.
