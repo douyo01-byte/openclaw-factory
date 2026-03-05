@@ -1,5 +1,2 @@
-id=260
-title=auto
-ts=2026-03-03T04:43:10Z
-
-テスト通知
+Interactive Map Integration for OpenClaw Robots
+Develop an interactive real-time map feature for OpenClaw Factory, allowing users to monitor and control multiple OpenClaw robots remotely with live location and status updates.
