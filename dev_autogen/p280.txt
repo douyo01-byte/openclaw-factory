@@ -1,5 +1,5 @@
 id=280
-title=auto
-ts=2026-03-03T04:49:45Z
+title=OpenClaw Factory for MacBook Neo
+ts=2026-03-05T13:40:59Z
 
-テスト通知
+Develop a modular, open-source hardware platform inspired by MacBook Neo, enabling customizable laptop components and easy upgrades for developers and makers.
