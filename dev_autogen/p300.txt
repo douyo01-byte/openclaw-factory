@@ -1,5 +1,5 @@
 id=300
-title=auto
-ts=2026-03-03T04:56:58Z
+title=OpenClaw MacBook Neo Emulator
+ts=2026-03-05T13:44:26Z
 
-テスト通知
+Develop a lightweight MacBook Neo emulator within OpenClaw Factory to enable testing and development of macOS-style apps in a virtual environment.
