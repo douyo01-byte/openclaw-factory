@@ -1,0 +1,2 @@
+Enhanced Phishing Detection Module
+Develop an advanced phishing site detection module for OpenClaw Factory that leverages multiple sources and machine learning to identify phishing sites missed by existing services like Google Safe Browsing.
