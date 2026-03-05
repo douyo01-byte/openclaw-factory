@@ -1,0 +1,5 @@
+id=362
+title=OpenClaw Intentional Connections
+ts=2026-03-05T13:55:05Z
+
+Create a simple app within OpenClaw Factory that helps developers and teams stay intentional with their professional relationships by tracking communication, setting reminders, and fostering meaningful collaboration.
