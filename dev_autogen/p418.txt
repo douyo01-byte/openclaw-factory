@@ -1,0 +1,2 @@
+OpenClaw Elixir Agent Framework
+Develop an Elixir-based agent framework for OpenClaw Factory to automate factory processes with scalable, concurrent agents managing tasks and communications seamlessly.
