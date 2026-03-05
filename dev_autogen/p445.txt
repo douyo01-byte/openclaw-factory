@@ -1,0 +1,2 @@
+Admin Account Security Module
+Develop a security module for OpenClaw Factory to detect and prevent mass admin account compromises, including multi-factor authentication and anomaly detection for admin activities.
