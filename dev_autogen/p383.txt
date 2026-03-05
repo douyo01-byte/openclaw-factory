@@ -1,0 +1,5 @@
+id=383
+title=Full-Duplex Speech-to-Speech Module for OpenClaw
+ts=2026-03-05T13:58:44Z
+
+Develop a full-duplex speech-to-speech communication module optimized for Apple Silicon in Swift, enabling real-time bidirectional voice interaction within OpenClaw Factory applications.
