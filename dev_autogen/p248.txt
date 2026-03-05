@@ -1,1 +1,2 @@
-テスト通知
+Interactive Real-Time Flock Cam Map
+Develop an interactive map feature for OpenClaw Factory that displays real-time video feeds from multiple Flock Cams, allowing users to monitor various locations dynamically.
