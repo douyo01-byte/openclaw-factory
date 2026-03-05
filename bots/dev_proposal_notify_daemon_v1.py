@@ -10,7 +10,19 @@ CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 
 def _conn():
-    c = sqlite3.connect(DB_PATH)
+    c = sqlite3.connect(DB_PATH, timeout=20, isolation_level=None)
+    try:
+        c.execute("PRAGMA busy_timeout=20000")
+    except Exception:
+        pass
+    try:
+        c.execute("PRAGMA journal_mode=WAL")
+    except Exception:
+        pass
+    try:
+        c.execute("PRAGMA synchronous=NORMAL")
+    except Exception:
+        pass
     c.row_factory = sqlite3.Row
     return c
 
@@ -56,27 +68,32 @@ def build_text(row) -> str:
 
 def tick():
     conn = _conn()
-    rows = conn.execute(
-        "SELECT * FROM dev_proposals WHERE status='proposed' AND ((notified_at IS NULL OR notified_at='') OR (notified_msg_id IS NULL OR notified_msg_id='')) ORDER BY id ASC LIMIT 20"
-    ).fetchall()
-    for r in rows:
-        text = build_text(r)
-        mid = tg_send(text)
-        conn.execute(
-            "UPDATE dev_proposals SET notified_at=datetime('now'), notified_msg_id=? WHERE id=?",
-            (mid, r["id"]),
-        )
-        conn.commit()
-    conn.close()
-
+    try:
+        rows = conn.execute(
+            "SELECT * FROM dev_proposals WHERE status='proposed' AND ((notified_at IS NULL OR notified_at='') OR (notified_msg_id IS NULL OR notified_msg_id='')) ORDER BY id ASC LIMIT 20"
+        ).fetchall()
+        for r in rows:
+            text = build_text(r)
+            try:
+                mid = tg_send(text)
+            except Exception:
+                mid = ""
+            conn.execute(
+                "UPDATE dev_proposals SET notified_at=datetime('now'), notified_msg_id=? WHERE id=?",
+                (mid, r["id"]),
+            )
+        if rows:
+            conn.commit()
+    finally:
+        conn.close()
 
 def main():
     interval = int(os.environ.get("PROPOSAL_NOTIFY_INTERVAL", "5"))
     while True:
         try:
             tick()
-        except Exception:
-            pass
+        except Exception as e:
+            print('[notify] err', repr(e), flush=True)
         time.sleep(interval)
 
 
