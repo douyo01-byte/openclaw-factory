@@ -1,0 +1,2 @@
+Automated Tariff Refund Tracker
+Build a tool that monitors government announcements on tariff refunds and automatically calculates and tracks owed refunds for businesses, integrating with accounting systems for seamless reimbursement management.
