@@ -1,0 +1,5 @@
+id=385
+title=Full-Duplex Speech-to-Speech on Apple Silicon with Swift
+ts=2026-03-05T13:59:05Z
+
+Develop a real-time full-duplex speech-to-speech translation system using Nvidia PersonaPlex 7B optimized for Apple Silicon, implemented in Swift for seamless integration and performance.
