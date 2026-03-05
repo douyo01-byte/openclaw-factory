@@ -1,0 +1,5 @@
+id=357
+title=OpenClaw Factory CLI
+ts=2026-03-05T13:54:13Z
+
+Develop a command-line interface for OpenClaw Factory enabling users to automate project setup, deployment, and management tasks efficiently.
