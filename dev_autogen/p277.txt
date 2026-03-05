@@ -1,5 +1,5 @@
 id=277
-title=auto
-ts=2026-03-03T04:48:19Z
+title=OpenClaw Neo MacBook Dashboard
+ts=2026-03-05T13:40:37Z
 
-テスト通知
+Develop a sleek, customizable dashboard application for MacBook users built with OpenClaw Factory, combining system monitoring, productivity tools, and seamless integration with macOS features.
