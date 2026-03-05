@@ -1,0 +1,2 @@
+Read-Only Mode for Security Breach Mitigation
+Implement a feature that allows OpenClaw Factory to switch projects into read-only mode automatically upon detection of admin account compromises to prevent unauthorized changes.
