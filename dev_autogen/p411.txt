@@ -1,0 +1,5 @@
+id=411
+title=Spec test
+ts=2026-03-05T15:30:33Z
+
+create script that prints hello world
