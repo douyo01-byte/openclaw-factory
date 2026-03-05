@@ -1,0 +1,2 @@
+Admin Account Security Monitor for OpenClaw
+Develop a real-time security monitoring tool for OpenClaw admin accounts that detects suspicious activities and potential compromises to prevent unauthorized access.
