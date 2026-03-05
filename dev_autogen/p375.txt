@@ -1,0 +1,5 @@
+id=375
+title=Dead Internet Survivor Dashboard
+ts=2026-03-05T13:57:20Z
+
+Create a tool that aggregates and visualizes chaotic and dystopian news trends to help 'dead internet' survivors make sense of online noise and find meaningful content.
