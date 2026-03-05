@@ -1,0 +1,5 @@
+id=390
+title=Apple Silicon Speech-to-Speech Module
+ts=2026-03-05T13:59:57Z
+
+Develop a full-duplex speech-to-speech AI module using Nvidia PersonaPlex 7B optimized in Swift for Apple Silicon, enabling seamless real-time voice interaction in OpenClaw Factory projects.
