@@ -1,0 +1,2 @@
+Admin Account Security Dashboard
+Develop a real-time admin account security dashboard that monitors anomalies and potential compromises to prevent unauthorized access in collaborative platforms like Wikipedia.
