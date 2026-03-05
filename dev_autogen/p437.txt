@@ -1,0 +1,2 @@
+Admin Account Security Monitoring Module
+Develop a security monitoring feature for OpenClaw Factory that detects unusual admin activities and automatically switches critical systems to read-only mode to prevent damage during potential account compromises.
