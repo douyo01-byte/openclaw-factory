@@ -1,5 +1,5 @@
 id=308
-title=auto
-ts=2026-03-03T10:44:11Z
+title=OpenClaw Neo MacBook Setup
+ts=2026-03-05T13:45:39Z
 
-テスト通知
+Develop an optimized OpenClaw Factory workflow tailored for MacBook Neo hardware, enabling seamless deployment and testing of OpenClaw projects on the latest Apple Silicon devices.
