@@ -1,5 +1,5 @@
 id=285
-title=auto
-ts=2026-03-03T04:51:32Z
+title=OpenClaw Neo Workspace
+ts=2026-03-05T13:42:01Z
 
-テスト通知
+Create a developer environment inspired by the MacBook Neo concept, offering a sleek, customizable, and high-performance coding workspace for OpenClaw Factory users.
