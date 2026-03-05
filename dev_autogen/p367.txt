@@ -1,0 +1,5 @@
+id=367
+title=OpenClaw Intentional Connections
+ts=2026-03-05T13:55:57Z
+
+An OpenClaw module that helps developers build apps focused on maintaining intentional and meaningful user relationships through reminders and interaction insights.
