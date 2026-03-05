@@ -1,5 +1,5 @@
 id=281
-title=auto
-ts=2026-03-03T04:49:55Z
+title=OpenClaw MacBook Neo Edition
+ts=2026-03-05T13:41:09Z
 
-テスト通知
+Design a sleek, modular laptop prototype inspired by the MacBook Neo concept, featuring customizable hardware components and an open-source firmware for enhanced developer control.
