@@ -1,0 +1,5 @@
+id=384
+title=Real-Time Full-Duplex Speech Translation on Apple Silicon
+ts=2026-03-05T13:58:54Z
+
+Integrate Nvidia PersonaPlex 7B with Swift to enable seamless full-duplex speech-to-speech translation on Apple Silicon devices, enhancing multilingual communication in OpenClaw Factory apps.
