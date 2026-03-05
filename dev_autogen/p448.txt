@@ -1,0 +1,2 @@
+Admin Account Security Monitor
+Develop a real-time security monitoring tool for admin accounts to detect and prevent mass compromises, ensuring system integrity and enabling quick response to suspicious activities.
