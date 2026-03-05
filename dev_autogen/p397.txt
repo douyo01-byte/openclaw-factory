@@ -1,0 +1,2 @@
+OpenClaw Workspace CLI
+Develop a command-line interface tool for OpenClaw Factory to manage projects, tasks, and collaboration directly from the terminal, enhancing developer productivity.
