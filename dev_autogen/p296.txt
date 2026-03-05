@@ -1,5 +1,5 @@
 id=296
-title=auto
-ts=2026-03-03T04:55:17Z
+title=OpenClaw Laptop Hack Mode
+ts=2026-03-05T13:43:44Z
 
-テスト通知
+Develop a toggle feature in OpenClaw Factory that optimizes laptop performance and security for hacker workflows, inspired by the MacBook Neo concept.
