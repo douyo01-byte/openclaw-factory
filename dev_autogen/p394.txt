@@ -1,0 +1,5 @@
+id=394
+title=High-Speed Laser Communication Simulation for Aerospace
+ts=2026-03-05T14:21:54Z
+
+Develop a realistic simulation module to model gigabit laser links between aircraft and geostationary satellites, enabling developers to test and optimize laser-based communication protocols within OpenClaw Factory.
