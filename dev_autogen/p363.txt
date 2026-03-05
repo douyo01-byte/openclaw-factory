@@ -1,0 +1,5 @@
+id=363
+title=OpenClaw Connect: Intentional Relationship Tracker
+ts=2026-03-05T13:55:16Z
+
+A minimalist app integrated with OpenClaw Factory to help developers build features that promote intentional relationship management by tracking interactions, setting reminders, and reflecting on personal connections.
