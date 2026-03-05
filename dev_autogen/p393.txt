@@ -1,0 +1,5 @@
+id=393
+title=AI-Powered License Rewrite Assistant
+ts=2026-03-05T14:16:19Z
+
+Integrate an AI tool into OpenClaw Factory that suggests relicensing options and automatically rewrites license texts to ensure compliance and clarity.
