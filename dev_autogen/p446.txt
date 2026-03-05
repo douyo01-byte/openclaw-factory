@@ -1,0 +1,2 @@
+Admin Account Security Monitor
+Develop a real-time security monitoring tool for admin accounts that detects unusual activities and automatically enforces read-only mode to prevent large-scale compromises.
