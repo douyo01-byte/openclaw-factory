@@ -1,1 +1,2 @@
-テスト通知
+Interactive Factory Floor Map
+Develop an interactive map of OpenClaw Factory's machinery and stations, allowing real-time monitoring and control of robotic arms and production lines for improved workflow management.
