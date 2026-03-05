@@ -1,5 +1,2 @@
-id=264
-title=auto
-ts=2026-03-03T04:44:37Z
-
-テスト通知
+Interactive Flock Cam Map Module
+Develop an interactive map feature for OpenClaw Factory that integrates live Flock Cam feeds, allowing users to monitor and analyze real-time camera data across multiple locations.
