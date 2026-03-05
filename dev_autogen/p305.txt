@@ -1,5 +1,5 @@
 id=305
-title=auto
-ts=2026-03-03T04:58:48Z
+title=OpenClaw MacBook Dashboard
+ts=2026-03-05T13:45:08Z
 
-テスト通知
+Create a sleek MacBook-styled dashboard for OpenClaw Factory to monitor build pipelines, system metrics, and project statuses with a Neo-modern UI.
