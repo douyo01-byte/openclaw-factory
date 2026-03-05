@@ -1,5 +1,2 @@
-id=267
-title=auto
-ts=2026-03-03T04:45:04Z
-
-テスト通知
+OpenClaw Factory MacBook Neo Edition
+Design and build a modular, upgradeable MacBook-inspired laptop chassis and hardware components using OpenClaw Factory's open-source manufacturing process.
