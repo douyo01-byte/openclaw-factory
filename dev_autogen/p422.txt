@@ -1,0 +1,5 @@
+id=422
+title=Enhanced Phishing Site Detection with OpenClaw
+ts=2026-03-05T16:28:25Z
+
+Develop a module for OpenClaw Factory that improves phishing site detection by integrating real-time data and advanced heuristics to catch phishing URLs missed by major services like Google Safe Browsing.
