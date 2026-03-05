@@ -1,0 +1,2 @@
+OpenClaw GPT-5.4 Thinking System Module
+Develop an integrated GPT-5.4 inspired thinking system card for OpenClaw Factory that enhances AI reasoning and decision-making capabilities within embedded devices.
