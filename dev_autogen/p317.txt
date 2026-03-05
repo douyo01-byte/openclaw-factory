@@ -1,1 +1,5 @@
-pipeline test
+id=317
+title=OpenClaw Workspace CLI
+ts=2026-03-05T13:47:13Z
+
+Develop a command-line interface for OpenClaw Factory to manage projects, workflows, and deployments seamlessly within developer terminals.
