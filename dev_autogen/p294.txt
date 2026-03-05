@@ -1,5 +1,1 @@
-id=294
-title=auto
-ts=2026-03-03T04:54:58Z
-
-テスト通知
+Create CLI tool for interacting with OpenClaw services
