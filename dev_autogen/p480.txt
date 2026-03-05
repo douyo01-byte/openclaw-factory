@@ -1,0 +1,2 @@
+GPT-5.4 Integrated Thinking Module
+Develop an OpenClaw Factory module that integrates GPT-5.4 for enhanced contextual thinking and decision-making to power AI-driven applications.
