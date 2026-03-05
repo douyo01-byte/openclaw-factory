@@ -1,5 +1,5 @@
 id=291
-title=auto
-ts=2026-03-03T04:53:30Z
+title=OpenClaw MacBook Neo Integration
+ts=2026-03-05T13:43:03Z
 
-テスト通知
+Develop a plugin that optimizes OpenClaw Factory performance and build processes specifically for the new MacBook Neo hardware architecture, leveraging its unique capabilities.
