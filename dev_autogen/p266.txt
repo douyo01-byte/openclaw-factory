@@ -1,5 +1,2 @@
-id=266
-title=auto
-ts=2026-03-03T04:44:55Z
-
-テスト通知
+Interactive Flock Cams Map Integration
+Develop an interactive map feature within OpenClaw Factory to visualize and monitor Flock Cam feeds, enhancing real-time surveillance and bird activity tracking.
