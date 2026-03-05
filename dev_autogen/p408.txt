@@ -1,0 +1,2 @@
+OpenClaw CLI for Workspace Automation
+Develop a command-line interface for OpenClaw Factory to automate workspace management, project setup, and deployment tasks, improving developer productivity and streamlining workflows.
