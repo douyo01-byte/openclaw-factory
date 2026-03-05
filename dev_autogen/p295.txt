@@ -1,5 +1,5 @@
 id=295
-title=auto
-ts=2026-03-03T04:55:07Z
+title=OpenClaw MacBook Neo Integration
+ts=2026-03-05T13:43:34Z
 
-テスト通知
+Develop OpenClaw Factory support for MacBook Neo hardware to enable seamless development and testing on the latest Apple silicon architecture.
