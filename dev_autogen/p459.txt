@@ -1,0 +1,2 @@
+Admin Account Security Module
+Develop a security module for OpenClaw Factory to monitor and protect admin accounts from compromise, enabling real-time alerts and automatic read-only lockdown in case of suspicious activity.
