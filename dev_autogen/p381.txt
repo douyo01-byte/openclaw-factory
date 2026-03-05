@@ -1,0 +1,5 @@
+id=381
+title=OpenClaw Swift Speech-to-Speech Module
+ts=2026-03-05T13:58:23Z
+
+Develop a full-duplex speech-to-speech communication module in Swift for Apple Silicon, leveraging Nvidia PersonaPlex 7B models to enable real-time, high-quality voice interactions.
