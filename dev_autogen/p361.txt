@@ -1,0 +1,5 @@
+id=361
+title=Transparency Tracker for AI Military Partnerships
+ts=2026-03-05T13:54:54Z
+
+Develop a tool that analyzes and verifies public statements and claims made by AI companies about their military collaborations to promote transparency and accountability.
