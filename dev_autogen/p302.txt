@@ -1,5 +1,1 @@
-id=302
-title=auto
-ts=2026-03-03T04:58:17Z
-
-テスト通知
+Auto build: idea->spec->code->PR->merge; controlled via Telegram
