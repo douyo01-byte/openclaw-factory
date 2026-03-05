@@ -1,0 +1,2 @@
+Enhanced Phishing Detection Module
+Develop an advanced phishing site detection tool leveraging community-reported data and real-time scanning to complement and improve upon existing services like Google Safe Browsing.
