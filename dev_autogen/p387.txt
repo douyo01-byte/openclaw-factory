@@ -1,0 +1,5 @@
+id=387
+title=Real-Time Speech-to-Speech Translation on Apple Silicon
+ts=2026-03-05T13:59:26Z
+
+Develop a full-duplex speech-to-speech translation module utilizing Nvidia PersonaPlex 7B optimized for Apple Silicon, enabling seamless multilingual conversations in Swift applications.
