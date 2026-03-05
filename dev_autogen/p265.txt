@@ -1,5 +1,2 @@
-id=265
-title=auto
-ts=2026-03-03T04:44:46Z
-
-テスト通知
+Interactive Map for OpenClaw Units
+Develop an interactive, real-time map visualization for OpenClaw Factory units, enabling users to monitor unit status, location, and activity directly on a dynamic map interface.
