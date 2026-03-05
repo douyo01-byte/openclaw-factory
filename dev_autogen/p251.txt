@@ -1,1 +1,2 @@
-テスト通知
+Interactive Factory Floor Map
+Develop an interactive map interface showing real-time camera feeds across the OpenClaw Factory production lines to enhance monitoring and quick issue detection.
