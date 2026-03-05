@@ -1,5 +1,5 @@
 id=309
-title=auto
-ts=2026-03-03T10:45:37Z
+title=OpenClaw Workspace CLI
+ts=2026-03-05T13:45:50Z
 
-テスト通知
+Develop a command-line tool for OpenClaw Factory allowing users to manage projects, deployments, and integrations seamlessly from their terminal.
