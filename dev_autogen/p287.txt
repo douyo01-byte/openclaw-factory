@@ -1,5 +1,5 @@
 id=287
-title=auto
-ts=2026-03-03T04:52:47Z
+title=MacBook Neo Integration Module
+ts=2026-03-05T13:42:21Z
 
-テスト通知
+Develop a module for OpenClaw Factory that optimizes development and deployment workflows specifically for MacBook Neo devices, ensuring seamless compatibility and performance enhancements.
