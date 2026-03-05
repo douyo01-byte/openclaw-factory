@@ -1,0 +1,5 @@
+id=335
+title=OpenClaw CLI for Workspace Automation
+ts=2026-03-05T13:50:22Z
+
+Develop a CLI tool within OpenClaw Factory that streamlines automation and management of Google Workspace tasks, empowering developers to integrate and control workspace services efficiently from the command line.
