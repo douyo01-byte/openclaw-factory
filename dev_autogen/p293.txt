@@ -1,5 +1,5 @@
 id=293
-title=auto
-ts=2026-03-03T04:54:47Z
+title=OpenClaw MacBook Neo Setup
+ts=2026-03-05T13:43:23Z
 
-テスト通知
+Create a streamlined configuration tool within OpenClaw Factory that mimics the MacBook Neo environment, enabling developers to easily prototype and test macOS-like workflows and UI features.
