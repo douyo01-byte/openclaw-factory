@@ -1,1 +1,2 @@
-テスト通知
+Interactive Map for OpenClaw Factory Devices
+Develop an interactive, real-time map displaying the location and status of all OpenClaw Factory devices, enabling better monitoring and management.
