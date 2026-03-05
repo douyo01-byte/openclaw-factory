@@ -1,5 +1,2 @@
-id=269
-title=auto
-ts=2026-03-03T04:46:14Z
-
-テスト通知
+OpenClaw MacBook Neo Integration
+Develop a customizable MacBook Neo skin and accessory line using OpenClaw Factory's advanced manufacturing techniques to blend sleek design with personalized functionality.
