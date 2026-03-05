@@ -1,0 +1,2 @@
+Admin Account Security Monitor for OpenClaw Factory
+Develop a real-time security monitoring and alert system to detect and prevent unauthorized access to admin accounts, ensuring the platform remains operational and secure against mass account compromises.
