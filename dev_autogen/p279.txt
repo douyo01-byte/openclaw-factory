@@ -1,5 +1,1 @@
-id=279
-title=auto
-ts=2026-03-03T04:49:34Z
-
-テスト通知
+Develop a sleek, modular laptop design inspired by the MacBook Neo concept, optimized for upgradeability and repair within OpenClaw Factory projects.
