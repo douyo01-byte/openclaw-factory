@@ -124,6 +124,17 @@ CEO（社長）:
 def run_once():
     done=0
     with dconn() as c:
+        c.execute("""CREATE TABLE IF NOT EXISTS ceo_hub_events(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source TEXT NOT NULL,
+            source_key TEXT NOT NULL,
+            title TEXT NOT NULL,
+            body TEXT NOT NULL,
+            level TEXT NOT NULL DEFAULT 'info',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            sent_at TEXT
+        )""")
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_ceo_hub_source_key ON ceo_hub_events(source,source_key)")
         rows=c.execute(
             """
             select id,chat_id,text
@@ -141,6 +152,10 @@ def run_once():
                 prompt=build_context(topic)
                 out=ask_llm(prompt)
                 tg_send(r["chat_id"], out)
+                c.execute(
+                    "insert or ignore into ceo_hub_events(source,source_key,title,body,level,created_at) values(?,?,?,?,?,?)",
+                    ("meeting_orchestrator_v1", f"meeting:{int(r['id'])}", "AI会議結果", out, "info", now())
+                )
                 c.execute(
                     "update inbox_commands set processed=1,status='meeting_done',applied_at=? where id=?",
                     (now(), int(r["id"]))
