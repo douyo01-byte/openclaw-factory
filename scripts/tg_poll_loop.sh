@@ -7,7 +7,11 @@ export DB_PATH="$HOME/AI/openclaw-factory-daemon/data/openclaw.db"
 export FACTORY_DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 mkdir -p logs
 while true; do
-  set -a; source env/telegram_replies.env; source env/telegram_report.env 2>/dev/null || true; source "$HOME/AI/openclaw-factory/env/openai.env" 2>/dev/null || true; set +a
+  set -a
+  source env/telegram_replies.env
+  source env/telegram_report.env 2>/dev/null || true
+  source "$HOME/AI/openclaw-factory/env/openai.env" 2>/dev/null || true
+  set +a
   python -u bots/ingest_telegram_replies_v1.py >> logs/tg_poll.log 2>&1 || true
   .venv/bin/python -u bots/ingest_spec_answers_v1.py >> logs/tg_poll.log 2>&1 || true
   .venv/bin/python -u bots/meeting_orchestrator_v1.py >> logs/tg_poll.log 2>&1 || true
