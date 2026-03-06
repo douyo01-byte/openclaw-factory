@@ -50,7 +50,7 @@ def main():
             timeout=20,
         )
         resp.raise_for_status()
-        time.sleep(0.5)
+        time.sleep(1)
         c.execute("update ceo_hub_events set sent_at=? where id=?",(now(),int(r["id"])))
         c.commit()
         sent+=1
