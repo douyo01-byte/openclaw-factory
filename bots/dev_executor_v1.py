@@ -99,7 +99,7 @@ AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
         LIMIT 1
     """).fetchone()
     if not row:
-        raise SystemExit("no approved proposals")
+        print("no approved proposals", flush=True)
         return 0
     pid = int(row["id"])
     kai(
