@@ -1,1 +1,5 @@
-テスト通知
+id=250
+title=OpenClaw Interactive Fleet Map
+ts=2026-03-06T13:37:39Z
+
+Develop an interactive map feature for OpenClaw Factory that visualizes real-time locations and statuses of deployed OpenClaw units, similar to Flock Cams, enhancing monitoring and management capabilities.
