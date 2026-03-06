@@ -59,6 +59,17 @@ def ensure(c):
     c.execute("PRAGMA journal_mode=WAL;")
     c.execute("PRAGMA busy_timeout=5000;")
     c.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
+    c.execute("""CREATE TABLE IF NOT EXISTS tg_prompt_map(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  chat_id TEXT NOT NULL,
+  message_id INTEGER NOT NULL,
+  proposal_id INTEGER NOT NULL,
+  kind TEXT NOT NULL DEFAULT 'spec_question',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+)""")
+    c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_tg_prompt_map_chat_msg ON tg_prompt_map(chat_id,message_id)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_tg_prompt_map_proposal ON tg_prompt_map(proposal_id)")
+
     c.execute("""CREATE TABLE IF NOT EXISTS inbox_commands(
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   chat_id TEXT,
@@ -83,6 +94,15 @@ def ensure(c):
     if "meta_json" not in dc:
         c.execute("ALTER TABLE decisions ADD COLUMN meta_json TEXT")
 
+
+def map_reply_to_proposal(c, chat_id, reply_to_message_id):
+    if not chat_id or not reply_to_message_id:
+        return None
+    r = c.execute(
+        "SELECT proposal_id FROM tg_prompt_map WHERE chat_id=? AND message_id=? ORDER BY id DESC LIMIT 1",
+        (str(chat_id), int(reply_to_message_id)),
+    ).fetchone()
+    return int(r[0]) if r else None
 
 def http_get(url, params):
     r = requests.get(url, params=params, timeout=20)
@@ -123,6 +143,11 @@ def main():
         p = parse_text(text)
         if p:
             decision, target, reason = p
+            if (not target) and reply_id:
+                pid = map_reply_to_proposal(c, chat_id, reply_id)
+                if pid is not None:
+                    target = str(pid)
+
             meta = {
                 "chat_id": chat.get("id"),
                 "message_id": msg.get("message_id"),
