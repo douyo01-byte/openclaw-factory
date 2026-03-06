@@ -1,0 +1,5 @@
+id=331
+title=OpenClaw Workspace CLI
+ts=2026-03-05T13:49:41Z
+
+Create a command-line interface tool for OpenClaw Factory that allows users to manage projects, deployments, and configurations seamlessly from the terminal.
