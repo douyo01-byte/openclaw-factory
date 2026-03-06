@@ -109,14 +109,16 @@ latest_proposal_states:
 {chr(10).join(stxt)}
 
 task:
-Hold a short internal AI meeting for OpenClaw Factory.
+OpenClaw Factory の社内AI会議を短く行ってください。
 Output:
-CEO:
-Scout:
-Research:
-Judge:
-Dev:
-NextAction:
+CEO（社長）:
+秘書（ひしょりん）:
+スカウトマン（さがすけ）:
+調査員（しらべえ）:
+企画担当（かんがえもん）:
+設計士（きめたろう）:
+エンジニア（つくるぞう）:
+次アクション:
 """.strip()
 
 def run_once():
