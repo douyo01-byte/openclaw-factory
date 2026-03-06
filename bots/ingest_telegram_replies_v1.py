@@ -101,13 +101,11 @@ def main():
         params["offset"] = int(offset)
     data = http_get(API, params)
     updates = data.get("result") or []
-    max_uid = None
     for upd in updates:
         uid = upd.get("update_id")
         msg = upd.get("message") or {}
         if uid is None:
             continue
-        max_uid = uid if max_uid is None else max(max_uid, uid)
         chat = msg.get("chat") or {}
         frm = msg.get("from") or {}
         text = msg.get("text") or ""
@@ -120,9 +118,13 @@ def main():
             "INSERT OR IGNORE INTO inbox_commands(chat_id, message_id, reply_to_message_id, from_username, from_name, text, received_at, update_id) VALUES(?,?,?,?,?,?,?,?)",
             (chat_id, message_id, reply_id, from_username, from_name, text, now(), uid),
         )
-        p = parse_text(text)
-        if p:
-            decision, target, reason = p
+        p2 = parse_text(text)
+        if p2:
+            decision, target, reason = p2
+            if (not target) and reply_id:
+                pid = map_reply_to_proposal(c, chat_id, reply_id)
+                if pid is not None:
+                    target = str(pid)
             meta = {
                 "chat_id": chat.get("id"),
                 "message_id": msg.get("message_id"),
@@ -140,11 +142,9 @@ def main():
                     now(),
                 ),
             )
-    if max_uid is not None:
-        kv_set(c, "tg_offset", int(max_uid) + 1)
-    c.commit()
+        kv_set(c, "tg_offset", int(uid) + 1)
+        c.commit()
     c.close()
-
 
 if __name__ == "__main__":
     main()
