@@ -17,7 +17,7 @@ while true; do
   .venv/bin/python -u bots/report_orchestrator_v1.py >> logs/tg_poll.log 2>&1 || true
   .venv/bin/python -u bots/explain_orchestrator_v1.py >> logs/tg_poll.log 2>&1 || true
   .venv/bin/python -u bots/ceo_hub_sender_v1.py >> logs/tg_poll.log 2>&1 || true
-.venv/bin/python -u $HOME/AI/openclaw-factory/bots/spec_refiner_v2.py >> logs/refiner.log 2>&1 || true
+  .venv/bin/python -u $HOME/AI/openclaw-factory/bots/spec_refiner_v2.py >> logs/refiner.log 2>&1 || true
 
   sleep 2
 done

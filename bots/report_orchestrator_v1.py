@@ -1,5 +1,4 @@
 import os,sqlite3,datetime
-
 DB=os.environ.get("DB_PATH") or "data/openclaw.db"
 FACTORY_DB=os.environ.get("FACTORY_DB_PATH") or os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db")
 
@@ -44,8 +43,7 @@ def ensure(c):
     c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_ceo_hub_source_key ON ceo_hub_events(source,source_key)")
 
 def already_sent(c,k):
-    r=c.execute("select 1 from report_sent where k=?",(k,)).fetchone()
-    return bool(r)
+    return bool(c.execute("select 1 from report_sent where k=?",(k,)).fetchone())
 
 def mark_sent(c,k):
     c.execute("insert or replace into report_sent(k,sent_at) values(?,?)",(k,now()))
@@ -54,39 +52,39 @@ def stage_text(status,spec_stage,dev_stage):
     if status=="merged" or dev_stage=="merged":
         return "統合完了"
     if status in ("pr_created","open") or dev_stage in ("pr_created","open","executed"):
-        return "実装進行"
+        return "開発進行中"
     if spec_stage=="refined":
         return "仕様整理完了"
     if status=="approved":
         return "承認済み"
     return "進行中"
 
-def next_action(status,spec_stage,dev_stage):
-    if status=="merged" or dev_stage=="merged":
-        return "次の改善案または次案件へ進めます"
-    if status in ("pr_created","open"):
-        return "PR確認と統合待ちです"
-    if dev_stage=="executed":
-        return "PR生成または監査待ちです"
-    if spec_stage=="refined":
-        return "開発着手待ちです"
-    if status=="approved":
-        return "仕様整理へ進めます"
-    return "継続監視します"
-
 def change_summary(status,spec_stage,dev_stage,pr_number):
     xs=[]
     if spec_stage=="refined":
-        xs.append("仕様書を整理しました")
+        xs.append("仕様整理完了")
     if dev_stage in ("executed","pr_created","open","merged"):
-        xs.append("実装処理が進みました")
+        xs.append("実装前進")
     if pr_number:
-        xs.append(f"PR #{pr_number} を追跡中です")
+        xs.append(f"PR #{pr_number}")
     if status=="merged" or dev_stage=="merged":
-        xs.append("main統合まで完了しました")
+        xs.append("main統合完了")
     if not xs:
-        xs.append("進行状態を更新しました")
+        xs.append("状態更新")
     return " / ".join(xs)
+
+def next_action(status,spec_stage,dev_stage):
+    if status=="merged" or dev_stage=="merged":
+        return "次の改善候補へ進みます。"
+    if status in ("pr_created","open"):
+        return "PR確認と統合待ちです。"
+    if dev_stage=="executed":
+        return "PR作成またはレビュー待ちです。"
+    if spec_stage=="refined":
+        return "開発着手待ちです。"
+    if status=="approved":
+        return "仕様整理へ進みます。"
+    return "継続監視します。"
 
 def build_text(r):
     pid=int(r["id"])
@@ -95,35 +93,19 @@ def build_text(r):
     spec_stage=(r["spec_stage"] or "").strip()
     dev_stage=(r["dev_stage"] or "").strip()
     pr_number=r["pr_number"] or ""
-    pr_url=(r["pr_url"] or "").strip()
-    spec_len=r["spec_len"] or 0
-
-    lines=[
-        "報告係（しらせるん）",
+    return "\n".join([
+        "【案件】",
+        f"{title} / #{pid}",
         "",
-        f"案件名: {title}",
-        f"提案ID: {pid}",
-        f"現在地: {stage_text(status,spec_stage,dev_stage)}",
+        "【現在地】",
+        stage_text(status,spec_stage,dev_stage),
         "",
-        f"今回やったこと: {change_summary(status,spec_stage,dev_stage,pr_number)}",
-        f"次にやること: {next_action(status,spec_stage,dev_stage)}",
+        "【今回の変化】",
+        change_summary(status,spec_stage,dev_stage,pr_number),
         "",
-        f"設計士（きめたろう）: 仕様段階 = {spec_stage or '未着手'}",
-        f"エンジニア（つくるぞう）: 開発段階 = {dev_stage or '未着手'}",
-    ]
-    if spec_len:
-        lines.append(f"設計士（きめたろう）: 仕様書文字数 = {spec_len}")
-    if pr_number:
-        lines.append(f"監査係（みはるん）: PR番号 = {pr_number}")
-    if pr_url:
-        lines.append(f"監査係（みはるん）: {pr_url}")
-    if status=="merged" or dev_stage=="merged":
-        lines.append("統合係（くっつけ丸）: main への統合まで完了しました")
-    elif status in ("pr_created","open") or dev_stage in ("pr_created","open","executed"):
-        lines.append("統合係（くっつけ丸）: 統合待ちです")
-    lines.append("")
-    lines.append(f"報告係（しらせるん）: ステータス = {status or '未設定'}")
-    return "\n".join(lines)
+        "【次アクション】",
+        next_action(status,spec_stage,dev_stage),
+    ])
 
 def run_once():
     done=0
@@ -134,9 +116,7 @@ def run_once():
                    coalesce(status,'') as status,
                    coalesce(spec_stage,'') as spec_stage,
                    coalesce(dev_stage,'') as dev_stage,
-                   pr_number,
-                   coalesce(pr_url,'') as pr_url,
-                   length(coalesce(spec,'')) as spec_len
+                   pr_number
             from dev_proposals
             where coalesce(status,'') in ('approved','pr_created','open','merged')
                or coalesce(dev_stage,'') in ('executed','pr_created','open','merged')
@@ -144,7 +124,6 @@ def run_once():
             order by id desc
             limit 30
         """).fetchall()
-
         for r in rows:
             pid=int(r["id"])
             key="proposal:{id}:status:{status}:spec:{spec}:dev:{dev}:pr:{pr}".format(
@@ -156,10 +135,9 @@ def run_once():
             )
             if already_sent(d,key):
                 continue
-            text=build_text(r)
             d.execute(
                 "insert or ignore into ceo_hub_events(source,source_key,title,body,level,created_at) values(?,?,?,?,?,?)",
-                ("report_orchestrator_v1", key, f"案件報告 #{pid}", text, "info", now())
+                ("report_orchestrator_v1", key, f"案件報告 #{pid}", build_text(r), "info", now())
             )
             mark_sent(d,key)
             d.commit()
