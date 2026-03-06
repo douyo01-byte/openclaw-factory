@@ -1,5 +1,5 @@
 id=198
-title=auto
-ts=2026-03-03T04:27:29Z
+title=Qwen Anomaly Detection Module
+ts=2026-03-06T02:40:44Z
 
-テスト通知
+Develop an AI-powered feature in OpenClaw Factory to monitor and detect unusual patterns or anomalies in Qwen model outputs, enhancing model reliability and security.
