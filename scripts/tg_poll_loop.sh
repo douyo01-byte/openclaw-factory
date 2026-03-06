@@ -11,6 +11,9 @@ while true; do
   python -u bots/ingest_telegram_replies_v1.py >> logs/tg_poll.log 2>&1 || true
   .venv/bin/python -u bots/ingest_spec_answers_v1.py >> logs/tg_poll.log 2>&1 || true
   .venv/bin/python -u bots/meeting_orchestrator_v1.py >> logs/tg_poll.log 2>&1 || true
+  .venv/bin/python -u bots/company_dashboard_v1.py >> logs/tg_poll.log 2>&1 || true
+  .venv/bin/python -u bots/ceo_help_v1.py >> logs/tg_poll.log 2>&1 || true
+  .venv/bin/python -u bots/ceo_noise_cleanup_v1.py >> logs/tg_poll.log 2>&1 || true
   .venv/bin/python -u bots/report_orchestrator_v1.py >> logs/tg_poll.log 2>&1 || true
   .venv/bin/python -u bots/explain_orchestrator_v1.py >> logs/tg_poll.log 2>&1 || true
   .venv/bin/python -u bots/ceo_hub_sender_v1.py >> logs/tg_poll.log 2>&1 || true
