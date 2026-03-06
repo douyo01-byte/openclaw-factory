@@ -5,7 +5,7 @@ import datetime
 import sqlite3
 from dotenv import load_dotenv
 
-load_dotenv("env/telegram_daemon.env", override=True)
+load_dotenv("env/telegram_replies.env", override=True)
 DB_PATH = os.environ.get("DB_PATH", "data/openclaw.db")
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 API = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
@@ -96,7 +96,7 @@ def main():
     c = sqlite3.connect(DB_PATH)
     ensure(c)
     offset = kv_get(c, "tg_offset")
-    params = {"timeout": 0, "allowed_updates": '["message"]'}
+    params = {"timeout": 0}
     if offset is not None:
         params["offset"] = int(offset)
     data = http_get(API, params)
@@ -117,8 +117,8 @@ def main():
         from_username = str(frm.get("username") or "")
         from_name = str(frm.get("first_name") or "")
         c.execute(
-            "INSERT OR IGNORE INTO inbox_commands(chat_id, message_id, reply_to_message_id, from_username, from_name, text, received_at) VALUES(?,?,?,?,?,?,?)",
-            (chat_id, message_id, reply_id, from_username, from_name, text, now()),
+            "INSERT OR IGNORE INTO inbox_commands(chat_id, message_id, reply_to_message_id, from_username, from_name, text, received_at, update_id) VALUES(?,?,?,?,?,?,?,?)",
+            (chat_id, message_id, reply_id, from_username, from_name, text, now(), uid),
         )
         p = parse_text(text)
         if p:
