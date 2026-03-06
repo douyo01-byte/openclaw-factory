@@ -1,4 +1,4 @@
-import os,sqlite3,datetime,requests
+import os,sqlite3,datetime,requests,time
 
 DB=os.environ.get("DB_PATH") or "data/openclaw.db"
 TOKEN=(os.environ.get("TELEGRAM_REPORT_BOT_TOKEN") or "").strip()
@@ -50,6 +50,7 @@ def main():
             timeout=20,
         )
         resp.raise_for_status()
+        time.sleep(0.5)
         c.execute("update ceo_hub_events set sent_at=? where id=?",(now(),int(r["id"])))
         c.commit()
         sent+=1
