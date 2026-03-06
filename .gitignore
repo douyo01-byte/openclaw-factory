@@ -18,3 +18,5 @@ configs/*.bak.*
 /env/
 .env
 .env.*
+
+nohup.out
