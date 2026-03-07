@@ -170,6 +170,19 @@ AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
     """,
         (pr_num, pr_url, pid),
     )
+    conn.execute(
+        """
+        insert into ceo_hub_events(event_type,title,body,proposal_id,pr_url)
+        values(?,?,?,?,?)
+        """,
+        (
+            'pr_created',
+            f'PR作成: {title}',
+            f'proposal_id={pid} / PR={pr_url}',
+            pid,
+            pr_url,
+        ),
+    )
     kai(conn, pid, "db_updated", pr_url=pr_url, pr_number=pr_num)
     conn.commit()
     print(
