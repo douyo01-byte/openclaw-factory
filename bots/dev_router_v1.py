@@ -4,18 +4,22 @@ from bots.dev_gatekeeper import evaluate_risk
 
 DB_PATH = "data/openclaw.db"
 
-
 def create_proposal(title, description, branch_name=None):
     risk = evaluate_risk()
-    branch_name = branch_name or "dev/proposal-temp"
     apply_dev_schema(DB_PATH)
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute(
         "INSERT INTO dev_proposals (title, description, branch_name, risk_level) VALUES (?, ?, ?, ?)",
-        (title, description, branch_name, risk),
+        (title, description, "__tmp__", risk),
     )
     proposal_id = cur.lastrowid
+    if not branch_name:
+        branch_name = f"dev/proposal-{proposal_id}"
+    cur.execute(
+        "UPDATE dev_proposals SET branch_name=? WHERE id=?",
+        (branch_name, proposal_id),
+    )
     cur.execute(
         "INSERT INTO dev_events (proposal_id, event_type, payload) VALUES (?, ?, ?)",
         (proposal_id, "created", "{}"),
