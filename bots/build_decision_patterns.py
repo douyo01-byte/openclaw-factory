@@ -6,6 +6,19 @@ import collections
 
 DB = os.environ.get("DB_PATH", "data/openclaw.db")
 
+BAD = {
+    "http","https","www","openclaw","system","latest","window","actions",
+    "decision","reason","score","adopted","held","dropped","item",
+    "reflection_worker_v1","db_updated","git_push","git_base","picked",
+    "dev","cli","workspace","main","branch","proposal","open","merged",
+    "2026","2025","10z"
+}
+
+ALLOW_HINT = {
+    "pipeline","speed","logging","merge","executor","automation","safety","security",
+    "optimize","costs","improve","research","quality"
+}
+
 def tok(s):
     s = (s or "").lower()
     out = []
@@ -14,8 +27,17 @@ def tok(s):
     out += re.findall(r"[ァ-ヴー]{2,}", s)
     out += re.findall(r"[一-龥]{2,}", s)
     out += re.findall(r"[ぁ-ん]{3,}", s)
-    bad = {"http", "https", "www", "openclaw", "system", "latest", "window", "actions"}
-    return [x.strip("._- ") for x in out if x and x.strip("._- ") and x.strip("._- ") not in bad]
+    cleaned = []
+    for x in out:
+        x = x.strip("._- ")
+        if not x or x in BAD:
+            continue
+        if re.fullmatch(r"\d+", x):
+            continue
+        if re.search(r"\d{4}", x):
+            continue
+        cleaned.append(x)
+    return cleaned
 
 def main():
     conn = sqlite3.connect(DB)
@@ -62,12 +84,16 @@ def main():
         p = pos[w]
         n = neg[w]
         s = math.log(1 + p) - math.log(1 + n)
-        if abs(s) < 0.01:
+
+        if abs(s) < 0.2:
             continue
+        if w not in ALLOW_HINT and (p + n) < 2:
+            continue
+
         scored.append((w, s))
 
     scored.sort(key=lambda x: abs(x[1]), reverse=True)
-    top = scored[:120]
+    top = scored[:60]
 
     conn.execute("delete from decision_patterns")
     conn.executemany(
