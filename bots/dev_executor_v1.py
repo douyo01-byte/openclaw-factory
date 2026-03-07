@@ -156,7 +156,7 @@ AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
     )
     pr_url = prj.strip().splitlines()[-1].strip()
     pr_num = None
-    m = re.search(r"/pull/(\\d+)", pr_url)
+    m = re.search(r"/pull/(\d+)", pr_url)
     if m:
         pr_num = int(m.group(1))
     conn.execute(
