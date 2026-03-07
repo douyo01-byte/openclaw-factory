@@ -11,7 +11,7 @@ while True:
     try:
         with conn() as c:
             rows=c.execute(
-                "select id from dev_proposals where status='approved' and (dev_stage is null or dev_stage='' or dev_stage='approved') limit 5"
+                "select id from dev_proposals where status='approved' and coalesce(quality_score,0) >= 60 and (dev_stage is null or dev_stage='' or dev_stage='approved') order by quality_score desc, id asc limit 5"
             ).fetchall()
 
             for r in rows:
