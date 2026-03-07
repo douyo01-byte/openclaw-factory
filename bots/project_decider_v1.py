@@ -15,17 +15,19 @@ KEYWORDS_EXECUTE = [
 
 def score(title: str, desc: str) -> tuple[str, float]:
     text = f"{title} {desc}".lower()
-    s = 0.0
+    priority = 0.0
     for k in KEYWORDS_EXECUTE:
         if k in text:
-            s += 1.5
+            priority += 1.0
     if "improve" in text or "optimize" in text:
-        s += 0.5
-    if s >= 2.0:
-        return "execute_now", s
-    if s >= 0.5:
-        return "backlog", s
-    return "archive", s
+        priority += 0.5
+    if priority > 0.7:
+        decision = "execute_now"
+    elif priority > 0.4:
+        decision = "backlog"
+    else:
+        decision = "archive"
+    return decision, priority
 
 def main():
     conn = sqlite3.connect(DB)
