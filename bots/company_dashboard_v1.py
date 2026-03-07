@@ -172,120 +172,316 @@ def build_consult_section(waiting_answer, answer_received, executing, pr_open):
 
     return lines
 
+
+
+
+
 def build_text():
-    with dconn() as d, fconn() as f:
-        emp_rows = d.execute(
-            """
-            select display_name, role_name
-            from ai_employees
-            where is_enabled=1
-            order by id asc
-            """
-        ).fetchall()
+    import os, sqlite3, subprocess, datetime
 
-        total_props = one(f, "select count(*) from dev_proposals")
-        approved = one(f, "select count(*) from dev_proposals where coalesce(status,'')='approved'")
-        refined = one(f, "select count(*) from dev_proposals where coalesce(spec_stage,'')='refined'")
-        executing = one(f, "select count(*) from dev_proposals where coalesce(dev_stage,'') in ('executed','pr_created','open')")
-        merged = one(f, "select count(*) from dev_proposals where coalesce(status,'')='merged' or coalesce(dev_stage,'')='merged'")
-        waiting_answer = one(f, "select count(*) from proposal_state where coalesce(stage,'')='waiting_answer'")
-        answer_received = one(f, "select count(*) from proposal_state where coalesce(stage,'')='answer_received'")
-        pr_open = one(f, "select count(*) from dev_proposals where coalesce(pr_status,'')='open'")
-        pr_merged = one(f, "select count(*) from dev_proposals where coalesce(pr_status,'')='merged'")
+    DB = os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "data/openclaw_real.db"
 
-        recent = f.execute(
-            """
-            select id, title, coalesce(status,''), coalesce(spec_stage,''), coalesce(dev_stage,'')
-            from dev_proposals
-            order by id desc
-            limit 5
-            """
-        ).fetchall()
+    conn = sqlite3.connect(DB)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
 
-        hub_recent = d.execute(
-            """
-            select title
-            from ceo_hub_events
-            order by id desc
-            limit 5
-            """
-        ).fetchall()
+    total = c.execute("select count(*) from dev_proposals").fetchone()[0]
+    merged = c.execute("select count(*) from dev_proposals where coalesce(status,'')='merged' or coalesce(pr_status,'')='merged' or coalesce(dev_stage,'')='merged'").fetchone()[0]
+    open_pr = c.execute("select count(*) from dev_proposals where coalesce(pr_status,'')='open'").fetchone()[0]
+    approved = c.execute("select count(*) from dev_proposals where coalesce(status,'')='approved'").fetchone()[0]
+    pending = c.execute("select count(*) from dev_proposals where coalesce(status,'')='pending'").fetchone()[0]
 
-    trade = []
-    dev = []
-    execs = []
+    waiting_answer = c.execute("select count(*) from proposal_state where coalesce(stage,'')='waiting_answer'").fetchone()[0]
+    answer_received = c.execute("select count(*) from proposal_state where coalesce(stage,'')='answer_received'").fetchone()[0]
 
-    for r in emp_rows:
-        team, bot = team_name(r["display_name"])
-        line = f"- {r['display_name']} / {r['role_name']}"
-        if team == "海外貿易事業チーム":
-            trade.append(line)
-        elif team == "開発チーム":
-            dev.append(line)
+    executor_queue = approved
+    executor_state = "idle" if approved == 0 else "稼働待ちあり"
+
+    latest_merged = c.execute("""
+    select id, coalesce(title,'(no title)') as title
+    from dev_proposals
+    where coalesce(status,'')='merged' or coalesce(pr_status,'')='merged' or coalesce(dev_stage,'')='merged'
+    order by id desc
+    limit 1
+    """).fetchone()
+
+    latest_proposal = c.execute("""
+    select id, coalesce(title,'(no title)') as title, coalesce(source_ai, brain_type, decided_by, '不明') as src
+    from dev_proposals
+    order by id desc
+    limit 1
+    """).fetchone()
+
+    top_rows = c.execute("""
+    select
+      id,
+      coalesce(title,'(no title)') as title,
+      coalesce(priority,0) as priority,
+      coalesce(project_decision,'pending') as decision,
+      coalesce(source_ai, brain_type, decided_by, '不明') as src
+    from dev_proposals
+    where coalesce(status,'')='approved'
+    order by
+      case coalesce(project_decision,'')
+        when 'execute_now' then 0
+        when 'review' then 1
+        else 2
+      end,
+      coalesce(priority,0) desc,
+      id desc
+    limit 3
+    """).fetchall()
+
+    decision_map = {
+        "execute_now": "今すぐ実行",
+        "review": "要確認",
+        "backlog": "保留 / バックログ",
+        "pending": "未判定"
+    }
+
+    top_lines = []
+    for r in top_rows:
+        top_lines.append(
+            f"#{r['id']} {r['title']}\n"
+            f"優先度: {r['priority']}\n"
+            f"判断: {decision_map.get(r['decision'], r['decision'])}\n"
+            f"発案AI: {r['src']}"
+        )
+    if not top_lines:
+        top_lines = ["現在、優先表示する承認済み案件はありません"]
+
+    recent_rows = c.execute("""
+    select
+      id,
+      coalesce(title,'(no title)') as title,
+      coalesce(status,'') as status,
+      coalesce(spec_stage,'') as spec_stage,
+      coalesce(dev_stage,'') as dev_stage
+    from dev_proposals
+    order by id desc
+    limit 3
+    """).fetchall()
+
+    def state_label(status, spec_stage, dev_stage):
+        if status == "merged" or dev_stage == "merged":
+            return "統合完了"
+        if status in ("open", "pr_created") or dev_stage in ("open", "pr_created", "executed"):
+            return "開発中"
+        if spec_stage == "refined":
+            return "仕様整理済み"
+        if status == "approved":
+            return "承認済み"
+        if status == "pending":
+            return "未承認案件"
+        return "進行中"
+
+    recent_lines = []
+    for r in recent_rows:
+        recent_lines.append(f"#{r['id']} {r['title']} / {state_label(r['status'], r['spec_stage'], r['dev_stage'])}")
+    if not recent_lines:
+        recent_lines = ["直近案件はありません"]
+
+    result_rows = c.execute("""
+    select
+      id,
+      coalesce(result_type,'pending') as result_type,
+      result_score
+    from dev_proposals
+    where result_type is not null
+    order by id desc
+    limit 4
+    """).fetchall()
+
+    decision_lines = []
+    for r in result_rows:
+        score = "" if r["result_score"] is None else f"\nスコア: {r['result_score']}"
+        decision_lines.append(f"#{r['id']} 評価: {r['result_type']}{score}")
+    if not decision_lines:
+        decision_lines = ["最近の評価記録はありません"]
+
+    try:
+        hub_rows = c.execute("""
+        select coalesce(title,'') as title
+        from ceo_hub_events
+        order by id desc
+        limit 5
+        """).fetchall()
+    except Exception:
+        hub_rows = []
+
+    meeting_count = 0
+    report_count = 0
+    explain_count = 0
+    other_count = 0
+    for r in hub_rows:
+        t = r["title"]
+        if "AI会議" in t:
+            meeting_count += 1
+        elif "案件報告" in t:
+            report_count += 1
+        elif "詳しい解説" in t or "自動解説" in t:
+            explain_count += 1
         else:
-            execs.append(line)
+            other_count += 1
 
-    lines = [
-        "【OpenClaw経営ダッシュボード】",
-        f"時刻: {now()}",
-        "",
-        "【海外貿易事業チーム】SekawakuClaw_bot",
+    today_lines = []
+    if latest_proposal:
+        today_lines.append(f"最新提案: #{latest_proposal['id']} {latest_proposal['title']}")
+        today_lines.append(f"発案AI: {latest_proposal['src']}")
+    else:
+        today_lines.append("最新提案: なし")
+
+    today_summary = []
+    if meeting_count:
+        today_summary.append(f"AI会議 {meeting_count}件")
+    if report_count:
+        today_summary.append(f"進捗共有 {report_count}件")
+    if explain_count:
+        today_summary.append(f"詳報 {explain_count}件")
+    if other_count:
+        today_summary.append(f"その他 {other_count}件")
+    if not today_summary:
+        today_summary.append("大きな更新なし")
+
+    consult_lines = []
+    if waiting_answer > 0:
+        consult_lines.append(f"- 仕様確認の返答待ちが {waiting_answer}件あります")
+    if answer_received > 0:
+        consult_lines.append(f"- 返答受領後の後続処理が {answer_received}件あります")
+    if approved > 0:
+        consult_lines.append(f"- 承認済み案件が {approved}件あり、優先順位の監視が必要です")
+    if not consult_lines:
+        consult_lines.append("- 現時点で緊急の社長判断事項はありません")
+
+    def is_running(label):
+        try:
+            out = subprocess.check_output(
+                ["launchctl", "print", f"gui/{os.getuid()}/{label}"],
+                text=True,
+                stderr=subprocess.DEVNULL
+            )
+            return "state = running" in out or "pid =" in out
+        except Exception:
+            return False
+
+    core = [
+        ("supervisor", "jp.openclaw.supervisor"),
+        ("project_brain_v4", "jp.openclaw.project_brain_v4"),
+        ("self_healing_v2", "jp.openclaw.self_healing_v2"),
     ]
-    lines.extend(trade or ["- まだ未設定"])
+    dev = [
+        ("spec_refiner_v2", "jp.openclaw.spec_refiner_v2"),
+        ("dev_pr_watcher_v1", "jp.openclaw.dev_pr_watcher_v1"),
+        ("dev_command_executor_v1", "jp.openclaw.dev_command_executor_v1"),
+    ]
+    tg = [
+        ("tg_poll_loop", "jp.openclaw.tg_poll_loop"),
+        ("tg_private_ingest_v1", "jp.openclaw.tg_private_ingest_v1"),
+        ("spec_notify_v1", "jp.openclaw.spec_notify_v1"),
+    ]
 
-    lines.extend([
-        "",
-        "【開発チーム】Kaikun01_bot",
-    ])
-    lines.extend(dev or ["- まだ未設定"])
+    def fmt_bot(items):
+        lines = []
+        for name, label in items:
+            lines.append(f"{name}: {'稼働中' if is_running(label) else '停止'}")
+        return "\n".join(lines)
 
-    lines.extend([
-        "",
-        "【経営共有チーム】Kaikun02_bot",
-    ])
-    lines.extend(execs or ["- まだ未設定"])
+    last_merge_line = "最新マージ: なし"
+    if latest_merged:
+        last_merge_line = f"最新マージ: #{latest_merged['id']} {latest_merged['title']}"
 
-    lines.extend([
-        "",
-        "【案件の全体像】",
-        f"- これまでの総案件数: {total_props}",
-        f"- 承認済みで次工程待ち: {approved}",
-        f"- 仕様が固まり開発へ渡せる案件: {refined}",
-        f"- 今まさに開発やPR確認が進んでいる案件: {executing}",
-        f"- 統合まで完了した案件: {merged}",
-        "",
-        "【社長の返答が関係する項目】",
-        f"- いま返答待ちの仕様確認: {waiting_answer}",
-        f"- 返答は受け取ったが後続処理中: {answer_received}",
-        "",
-        "【GitHubの状況】",
-        f"- まだ開いているPR: {pr_open}",
-        f"- マージ済みPR: {pr_merged}",
-        "",
-    ])
+    text = f"""OpenClaw CEOダッシュボード
+（AI経営管理システム）
 
-    lines.extend(build_today_section(hub_recent))
-    lines.extend([
-        "",
-        "【直近の案件】",
-    ])
+━━━━━━━━━━━━━━━━━━
+【今日の主な動き】
 
-    for r in recent:
-        lines.append(f"- #{r['id']} {r['title']} / {latest_state_label(r[2], r[3], r[4])}")
-        lines.append(f"  {title_summary(r['title'])}")
+概要: {' / '.join(today_summary)}
+{chr(10).join(today_lines)}
 
-    lines.extend([""])
-    lines.extend(build_consult_section(waiting_answer, answer_received, executing, pr_open))
-    lines.extend([
-        "",
-        "【使えるCEOコマンド】",
-        "/company",
-        "/meeting <議題>",
-        "/help",
-    ])
+━━━━━━━━━━━━━━━━━━
+【社長の返答待ち項目】
 
-    return "\n".join(lines)
+現在 {waiting_answer}件
 
+※ 社長判断が必要な案件がここに表示されます
+
+━━━━━━━━━━━━━━━━━━
+【直近の案件（優先順）】
+
+{chr(10).join(top_lines)}
+
+━━━━━━━━━━━━━━━━━━
+【専務・幹部から社長への相談 / 共有】
+
+{chr(10).join(consult_lines)}
+
+━━━━━━━━━━━━━━━━━━
+【会社状態】
+
+総提案件数: {total}
+マージ済み: {merged}
+Open PR: {open_pr}
+実行待ち案件: {approved}
+未承認案件: {pending}
+Executor状態: {executor_state}
+Executor Queue: {executor_queue}
+{last_merge_line}
+
+━━━━━━━━━━━━━━━━━━
+【最近の意思決定】
+
+{chr(10).join(decision_lines)}
+
+━━━━━━━━━━━━━━━━━━
+【AI社員構成】
+
+■ 海外事業
+SekawakuClaw_bot
+・さがすけ（探索）
+・しらべえ（調査）
+・かんがえもん（企画）
+
+■ 開発
+Kaikun01_bot
+・きめたろう（設計）
+・つくるぞう（実装）
+・みはるん（監査）
+・くっつけ丸（統合）
+
+■ 経営共有
+Kaikun02_bot
+・ひしょりん（秘書）
+・しらせるん（報告）
+
+■ 自動実行
+Kaikun03_bot
+・とどけるん（通知）
+・まわすけ（実行管理）
+・なおし丸（自己修復）
+・みはりん（監視）
+
+━━━━━━━━━━━━━━━━━━
+【BOT状態】
+
+Core
+{fmt_bot(core)}
+
+開発
+{fmt_bot(dev)}
+
+Telegram
+{fmt_bot(tg)}
+
+━━━━━━━━━━━━━━━━━━
+【次の一手】
+
+・Project Brain v4 継続運用
+・Learning Brain v2 検討
+・実行待ち案件の監視
+"""
+    conn.close()
+    return text[:3500]
 def run_once():
     if not TOKEN:
         raise SystemExit("TELEGRAM_BOT_TOKEN empty")
@@ -297,7 +493,41 @@ def run_once():
             select id, chat_id, text
             from inbox_commands
             where coalesce(processed,0)=0
-              and trim(coalesce(text,''))='/company'
+              and (
+                trim(coalesce(text,''))='/company'
+                or instr(
+                  replace(replace(replace(replace(replace(replace(replace(lower(coalesce(text,'')),' ',''),'　',''),'?',''),'？',''),'。',''),'!',''),'！',''),
+                  '進捗'
+                ) > 0
+                or instr(
+                  replace(replace(replace(replace(replace(replace(replace(lower(coalesce(text,'')),' ',''),'　',''),'?',''),'？',''),'。',''),'!',''),'！',''),
+                  '状況'
+                ) > 0
+                or instr(
+                  replace(replace(replace(replace(replace(replace(replace(lower(coalesce(text,'')),' ',''),'　',''),'?',''),'？',''),'。',''),'!',''),'！',''),
+                  'ボード'
+                ) > 0
+                or instr(
+                  replace(replace(replace(replace(replace(replace(replace(lower(coalesce(text,'')),' ',''),'　',''),'?',''),'？',''),'。',''),'!',''),'！',''),
+                  'ダッシュボード'
+                ) > 0
+                or instr(
+                  replace(replace(replace(replace(replace(replace(replace(lower(coalesce(text,'')),' ',''),'　',''),'?',''),'？',''),'。',''),'!',''),'！',''),
+                  '会社'
+                ) > 0
+                or instr(
+                  replace(replace(replace(replace(replace(replace(replace(lower(coalesce(text,'')),' ',''),'　',''),'?',''),'？',''),'。',''),'!',''),'！',''),
+                  '全体'
+                ) > 0
+                or instr(
+                  replace(replace(replace(replace(replace(replace(replace(lower(coalesce(text,'')),' ',''),'　',''),'?',''),'？',''),'。',''),'!',''),'！',''),
+                  '詳しく'
+                ) > 0
+                or instr(
+                  replace(replace(replace(replace(replace(replace(replace(lower(coalesce(text,'')),' ',''),'　',''),'?',''),'？',''),'。',''),'!',''),'！',''),
+                  '詳細'
+                ) > 0
+              )
             order by id asc
             limit 5
             """
