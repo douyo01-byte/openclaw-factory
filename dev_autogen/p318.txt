@@ -1,1 +1,5 @@
-full autonomous pipeline
+id=318
+title=OpenClaw CLI for Workspace Automation
+ts=2026-03-05T13:47:24Z
+
+Develop a command-line interface tool for OpenClaw Factory that integrates seamlessly with Google Workspace, enabling developers to automate and manage document workflows, collaboration, and project tracking from the terminal.
