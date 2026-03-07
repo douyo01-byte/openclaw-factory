@@ -4,17 +4,9 @@ import sqlite3
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH", "data/openclaw.db")
 
-
 def run():
     conn = sqlite3.connect(DB)
     conn.row_factory = sqlite3.Row
-
-    cols = [
-        r["name"] for r in conn.execute("pragma table_info(inbox_commands)").fetchall()
-    ]
-    has_status = "status" in cols
-    has_applied = "applied_at" in cols
-    has_error = "error" in cols
 
     rows = conn.execute(
         "select id,from_username,from_name,text from inbox_commands where status='new' order by id asc limit 200"
@@ -22,22 +14,19 @@ def run():
 
     for r in rows:
         txt = (r["text"] or "").strip()
-        txt = re.sub(r"^\s*開発提案\s*:\s*", "提案: ", txt)
-
+        txt = re.sub(r"^\s*開\s*発\s*提\s*案\s*:\s*", "提案: ", txt)
+        txt_nospace = re.sub(r"\s+", "", txt)
         who = r["from_username"] or r["from_name"] or ""
 
         m = re.match(r"^提案:\s*(.+)$", txt, re.S)
         if m:
             body = m.group(1).strip()
             title = (body.splitlines()[0].strip() if body else "proposal")[:80]
-            base = (
-                re.sub(r"[^a-z0-9]+", "-", (who or "user").lower()).strip("-")[:24]
-                or "user"
-            )
+            base = re.sub(r"[^a-z0-9]+", "-", (who or "user").lower()).strip("-")[:24] or "user"
             branch = f"dev/{base}-proposal-{r['id']}"
             conn.execute(
-                "insert into dev_proposals(title,description,branch_name,status,risk_level,created_at) values(?,?,?,?,?,datetime('now'))",
-                (title, body, branch, "proposed", "medium"),
+                "insert into dev_proposals(title,description,branch_name,status,created_at) values(?,?,?,?,datetime('now'))",
+                (title, body, branch, "proposed"),
             )
             conn.execute(
                 "update inbox_commands set status='applied', applied_at=datetime('now'), error=null where id=?",
@@ -50,12 +39,9 @@ def run():
             cmd = m.group(1).lower()
             pid = int(m.group(2))
             st = "approved" if cmd == "ok" else "hold"
+            conn.execute("update dev_proposals set status=? where id=?", (st, pid))
             conn.execute(
-                "update dev_proposals set status=?, decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
-                (st, who, pid),
-            )
-            conn.execute(
-                "update inbox_commands set status='applied', applied_at=datetime('now') where id=?",
+                "update inbox_commands set status='applied', applied_at=datetime('now'), error=null where id=?",
                 (r["id"],),
             )
             continue
@@ -63,82 +49,60 @@ def run():
         m = re.match(r"^req\s+(\d+)\s+(.+)$", txt, re.I | re.S)
         if m:
             pid = int(m.group(1))
-            note = m.group(2).strip()
+            conn.execute("update dev_proposals set status='req' where id=?", (pid,))
             conn.execute(
-                "update dev_proposals set status='req', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=? where id=?",
-                (who, note, pid),
-            )
-            conn.execute(
-                "update inbox_commands set status='applied', applied_at=datetime('now') where id=?",
+                "update inbox_commands set status='applied', applied_at=datetime('now'), error=null where id=?",
                 (r["id"],),
             )
             continue
 
-        m = re.match(r"^承認します\s*#(\d+)\s*$", txt)
+        m = re.match(r"^承認します#?(\d+)$", txt_nospace)
         if m:
             pid = int(m.group(1))
+            conn.execute("update dev_proposals set status='approved' where id=?", (pid,))
             conn.execute(
-                "update dev_proposals set status='approved', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
-                (who, pid),
-            )
-            conn.execute(
-                "update inbox_commands set status='applied', applied_at=datetime('now') where id=?",
+                "update inbox_commands set status='applied', applied_at=datetime('now'), error=null where id=?",
                 (r["id"],),
             )
             continue
 
-        m = re.match(r"^承認\s*#(\d+)\s*$", txt)
+        m = re.match(r"^承認#?(\d+)$", txt_nospace)
         if m:
             pid = int(m.group(1))
+            conn.execute("update dev_proposals set status='approved' where id=?", (pid,))
             conn.execute(
-                "update dev_proposals set status='approved', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
-                (who, pid),
-            )
-            conn.execute(
-                "update inbox_commands set status='applied', applied_at=datetime('now') where id=?",
+                "update inbox_commands set status='applied', applied_at=datetime('now'), error=null where id=?",
                 (r["id"],),
             )
             continue
 
-        m = re.match(r"^保留\s*#(\d+)\s*$", txt)
+        m = re.match(r"^保留#?(\d+)$", txt_nospace)
         if m:
             pid = int(m.group(1))
+            conn.execute("update dev_proposals set status='hold' where id=?", (pid,))
             conn.execute(
-                "update dev_proposals set status='hold', decided_at=datetime('now'), decided_by=coalesce(?,''), decision_note=coalesce(decision_note,'') where id=?",
-                (who, pid),
-            )
-            conn.execute(
-                "update inbox_commands set status='applied', applied_at=datetime('now') where id=?",
+                "update inbox_commands set status='applied', applied_at=datetime('now'), error=null where id=?",
                 (r["id"],),
             )
             continue
 
-        m = re.match(r"^質問\s*#(\d+)\s+(.+)$", txt, re.S)
+        m = re.match(r"^質問#?(\d+)(.+)$", txt_nospace, re.S)
         if m:
             pid = int(m.group(1))
-            q = m.group(2).strip()
+            conn.execute("update dev_proposals set status='needs_info' where id=?", (pid,))
             conn.execute(
-                "update dev_proposals set status='needs_info', last_question=?, decided_at=datetime('now'), decided_by=coalesce(?,'') where id=?",
-                (q, who, pid),
-            )
-            conn.execute(
-                "update inbox_commands set status='applied', applied_at=datetime('now') where id=?",
+                "update inbox_commands set status='applied', applied_at=datetime('now'), error=null where id=?",
                 (r["id"],),
             )
             continue
 
-        if has_error:
-            conn.execute(
-                "update inbox_commands set error=? where id=?",
-                ("unrecognized", r["id"]),
-            )
         conn.execute(
-            "update inbox_commands set status='ignored', applied_at=datetime('now') where id=?",
-            (r["id"],),
+            "update inbox_commands set status='ignored', applied_at=datetime('now'), error=? where id=?",
+            ("unrecognized", r["id"]),
         )
 
     conn.commit()
-
+    conn.close()
 
 if __name__ == "__main__":
     run()
