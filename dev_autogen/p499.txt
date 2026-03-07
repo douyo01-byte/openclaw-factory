@@ -1,0 +1,12 @@
+id=499
+title=MotherShip: Daemon Health Dashboard
+ts=2026-03-07T01:51:42Z
+
+
+Create a small CLI dashboard to show OpenClaw daemon health.
+
+Features:
+- show executor / watcher / refiner status
+- show approved proposal count
+- show last dev_event timestamp
+- show daemon log freshness
