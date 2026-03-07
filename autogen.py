@@ -1,13 +1,7 @@
 ```python
-<<<<<<< HEAD
-# t999.py
-
 def main():
+    # Your production code here
     pass
-=======
-def main():
-    print("test")
->>>>>>> origin/main
 
 if __name__ == "__main__":
     main()
