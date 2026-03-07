@@ -94,15 +94,9 @@ def main():
         FROM dev_proposals
         WHERE status='approved'
           AND coalesce(spec,'')!=''
-          AND (
-            coalesce(project_decision,'')='execute_now'
-            OR coalesce(project_decision,'')='backlog'
-            OR coalesce(project_decision,'')='archive'
-            OR coalesce(project_decision,'')=''
-          )
+          AND coalesce(project_decision,'')='execute_now'
           AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
         ORDER BY
-          case when coalesce(project_decision,'')='execute_now' then 0 else 1 end,
           coalesce(priority,0) desc,
           id asc
         LIMIT 1
