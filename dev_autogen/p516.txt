@@ -1,0 +1,5 @@
+id=516
+title=Merge safety guard
+ts=2026-03-07T13:42:12Z
+
+Add merge safety validation
