@@ -1,5 +1,5 @@
 id=310
-title=auto
-ts=2026-03-03T10:47:50Z
+title=Workspace CLI Integration for OpenClaw Factory
+ts=2026-03-05T13:46:00Z
 
-テスト通知
+Develop a command-line interface tool to manage OpenClaw Factory projects and workflows, inspired by Google Workspace CLI, enabling streamlined automation and remote project control.
