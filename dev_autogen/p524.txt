@@ -1,0 +1,5 @@
+id=524
+title=Logging improvement
+ts=2026-03-07T14:28:38Z
+
+Improve daemon logging
