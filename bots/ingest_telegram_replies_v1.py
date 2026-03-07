@@ -5,10 +5,13 @@ import datetime
 import sqlite3
 from dotenv import load_dotenv
 
-load_dotenv("env/telegram_replies.env", override=True)
+load_dotenv("env/telegram_replies.env", override=False)
 
 DB_PATH = os.environ.get("DB_PATH", "data/openclaw.db")
-TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+TOKEN = (
+    os.environ.get("TELEGRAM_REPORT_BOT_TOKEN")
+    or os.environ.get("TELEGRAM_BOT_TOKEN", "")
+).strip()
 API = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
 
 def now():
@@ -55,6 +58,20 @@ def ensure(c):
     c.execute("PRAGMA journal_mode=WAL;")
     c.execute("PRAGMA busy_timeout=5000;")
     c.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
+    c.execute("""CREATE TABLE IF NOT EXISTS proposal_state(
+  proposal_id INTEGER PRIMARY KEY,
+  stage TEXT,
+  pending_questions TEXT,
+  updated_at TEXT DEFAULT (datetime('now')),
+  pending_question TEXT
+)""")
+    c.execute("""CREATE TABLE IF NOT EXISTS proposal_conversation(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  proposal_id INTEGER,
+  role TEXT,
+  message TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+)""")
     c.execute("""CREATE TABLE IF NOT EXISTS tg_prompt_map(
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   chat_id TEXT NOT NULL,
@@ -101,6 +118,17 @@ def http_get(url, params):
     r = requests.get(url, params=params, timeout=20)
     r.raise_for_status()
     return r.json()
+def parse_spec_reply(text):
+    t = (text or "").strip()
+    if not t.startswith("ID:"):
+        return None, None
+    parts = t.split(None, 1)
+    try:
+        pid = int(parts[0].replace("ID:", "").strip())
+    except:
+        return None, None
+    body = parts[1].strip() if len(parts) > 1 else ""
+    return pid, body
 
 def main():
     if not TOKEN:
@@ -139,6 +167,25 @@ def main():
             ) VALUES(?,?,?,?,?,?,?,?)""",
             (chat_id, message_id, reply_id, from_username, from_name, text, now(), uid),
         )
+
+        spec_pid, spec_body = parse_spec_reply(text)
+        if spec_pid:
+            c.execute(
+                "INSERT INTO proposal_conversation(proposal_id,role,message,created_at) VALUES(?,?,?,?)",
+                (spec_pid, "human", spec_body, now()),
+            )
+            c.execute(
+                """INSERT INTO proposal_state(proposal_id,stage,updated_at)
+                VALUES(?, 'answer_received', ?)
+                ON CONFLICT(proposal_id) DO UPDATE SET
+                  stage='answer_received',
+                  updated_at=excluded.updated_at""",
+                (spec_pid, now()),
+            )
+            c.execute(
+                "UPDATE dev_proposals SET spec_stage='answer_received' WHERE id=?",
+                (spec_pid,),
+            )
 
         p = parse_text(text)
         if p:
