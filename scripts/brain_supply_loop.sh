@@ -20,8 +20,10 @@ do
   run_if_exists bots/revenue_brain_v1.py && ran=1 || true
   run_if_exists bots/self_improve_v1.py && ran=1 || true
   run_if_exists bots/dev_proposal_generator_v1.py && ran=1 || true
+  run_if_exists bots/spec_refiner_v2.py && ran=1 || true
+  run_if_exists bots/explain_generator_v1.py && ran=1 || true
   if [ "$ran" = "0" ]; then
     echo "[brain_supply_loop] no supplier found $(date '+%F %T')" >> logs/brain_supply.err
   fi
-  sleep 120
+  sleep 20
 done

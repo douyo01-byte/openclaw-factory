@@ -14,20 +14,17 @@ def main():
             continue
         h = hashlib.sha1(text.encode()).hexdigest()[:10]
         exists = conn.execute(
-            "select 1 from dev_proposals where description=?",
-            (text,),
+            "select 1 from dev_proposals where branch_name=?",
+            ("dev/auto-chat-" + h,),
         ).fetchone()
         if exists:
             continue
-        cur = conn.execute(
-            "insert into dev_proposals(title,description,branch_name,status) values(?,?,?,?)",
-            (text[:80], text, "__tmp__", "approved"),
-        )
-        pid = cur.lastrowid
         conn.execute(
-            "update dev_proposals set branch_name=? where id=?",
-            (f"dev/auto-chat-{h}-{pid}", pid),
+            "insert into dev_proposals(title,description,branch_name,status,category,target_system,improvement_type,quality_score) values(?,?,?,?,?,?,?,?)",
+            (text[:80], text, "dev/auto-chat-" + h, "approved", "automation", "executor", "stabilize", 60),
         )
     conn.commit()
+    conn.close()
+
 if __name__ == "__main__":
     main()
