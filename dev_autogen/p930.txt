@@ -1,0 +1,5 @@
+id=930
+title=LLM Operator Console
+ts=2026-03-08T15:01:18Z
+
+Operator console for AI-driven workflows
