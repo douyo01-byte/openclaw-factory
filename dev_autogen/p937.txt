@@ -1,5 +1,5 @@
 id=937
-title=Migration Safety Layer
-ts=2026-03-08T15:12:25Z
+title=Trace Viewer
+ts=2026-03-08T16:28:14Z
 
-Safer migrations for runtime infrastructure
+Trace viewer for proposal pipeline activity
