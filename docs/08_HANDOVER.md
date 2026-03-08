@@ -76,3 +76,43 @@ cd ~/AI/openclaw-factory || exit 1
 - 主要 LaunchAgent は running
 - DB 実測値は docs 概算より現在低い
 - docs 一式は Git 管理下に入った
+
+
+## 2026-03-09 handover: proposal loop stabilized
+
+### 今回の到達点
+- proposal 系の `approved -> refined -> pr_created -> merged` を連続確認
+- 927〜942 まで merged 到達を確認
+- `proposal_state` の中間残件は解消済み
+
+### 修正した主対象
+- `bots/spec_refiner_v2.py`
+- `bots/spec_notify_v1.py`
+- `bots/dev_executor_v1.py`
+- `bots/dev_pr_automerge_v1.py`
+- `bots/dev_pr_watcher_v1.py`
+- `bots/auto_pr_v1.py`
+- `scripts/run_dev_pr_automerge_v1.sh`
+
+### 重要変更
+- refiner が approved proposal を拾えるよう修正
+- notify の通知経路修正
+- automerge の env / runner 修正
+- generator に sanitize を追加し、fenced code と conflict marker による CI failure を防止
+- watcher が `proposal_state.stage` を merged/closed に同期するよう修正
+- 壊れた tracked `autogen.py` は main から削除済み（hotfix PR #885）
+
+### 現在の見方
+- proposal loop は通ったと判断してよい
+- 次フェーズは proposal 疎通確認の反復ではなく、
+  - docs 整理
+  - 運用ルール反映
+  - 未整理変更の切り分け
+  - mother report 更新
+ へ移る
+
+### 注意
+- executor は 600 秒間隔制御あり
+- sqlite readonly 参照で lock が出る場合あり
+- ただし proposal loop の成立自体は確認済み
+
