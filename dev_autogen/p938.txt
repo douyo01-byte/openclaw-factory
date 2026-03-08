@@ -1,0 +1,5 @@
+id=938
+title=Security Signal Monitor
+ts=2026-03-08T15:15:22Z
+
+Detect suspicious operational patterns
