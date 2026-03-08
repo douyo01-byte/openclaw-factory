@@ -1,23 +1,32 @@
-import sqlite3,os,time,random
-DB=os.environ["DB_PATH"]
+import sqlite3, os, time, random
+from proposal_diversity_v1 import backlog_count, pick_first_allowed, insert_proposal
 
-BUSINESS_IDEAS=[
-("AI CLI dashboard","Developer productivity dashboard","dev/biz-cli-dashboard"),
-("AI automation tool","Automation for developer workflow","dev/biz-ai-cli"),
-("OpenClaw workspace","Virtual development workspace","dev/biz-workspace"),
+DB = os.environ["DB_PATH"]
+
+IDEAS = [
+    ("OpenClaw Workflow Automation", "Workflow automation for dev operations", "dev/biz-workflow-auto", "automation", "automation workflow spec", 0.74),
+    ("OpenClaw CLI Workspace", "Developer workspace tooling improvements", "dev/biz-cli-workspace", "dev_experience", "developer workspace spec", 0.72),
+    ("AI Proposal Assistant", "AI-assisted proposal drafting flow", "dev/biz-ai-proposal", "AI capability", "ai capability spec", 0.76),
+    ("OpenClaw Task Orchestrator", "Task orchestration for multi-step operations", "dev/biz-task-orch", "automation", "task orchestration spec", 0.73),
+    ("Developer Debug Toolkit", "Debug toolkit for internal developers", "dev/biz-debug-toolkit", "dev_experience", "developer debug spec", 0.71),
+    ("LLM Operator Console", "Operator console for AI-driven workflows", "dev/biz-llm-console", "AI capability", "llm operator spec", 0.77),
 ]
 
 while True:
-    conn=sqlite3.connect(DB)
-    backlog=conn.execute("select count(*) from dev_proposals where status='approved'").fetchone()[0]
-    if backlog<2:
-        t,d,b=random.choice(BUSINESS_IDEAS)
-        conn.execute("""
-insert into dev_proposals
-(title,description,branch_name,status,spec,source_ai,brain_type,confidence,category)
-values (?,?,?,?,?,?,?,?,?)
-""",(t,d,b,"approved","auto generated spec","business_brain","business",0.7,"feature"))
-        conn.commit()
-        print("business idea generated",flush=True)
-    conn.close()
+    try:
+        conn = sqlite3.connect(DB)
+        if backlog_count(conn) < 2:
+            pool = IDEAS[:]
+            random.shuffle(pool)
+            picked, reason = pick_first_allowed(conn, pool, "business_brain")
+            if picked:
+                t, d, b, c, s, conf = picked
+                insert_proposal(conn, t, d, b, s, "business_brain", "business", conf, c)
+                conn.commit()
+                print(f"business generated: {t} [{c}]", flush=True)
+            else:
+                print(f"business skipped: {reason}", flush=True)
+        conn.close()
+    except Exception as e:
+        print(f"business error: {e}", flush=True)
     time.sleep(300)

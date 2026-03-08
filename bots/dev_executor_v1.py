@@ -10,7 +10,6 @@ DB_PATH = os.environ.get("OCLAW_DB_PATH", "/Users/doyopc/AI/openclaw-factory/dat
 BASE_BRANCH = "main"
 REPO = "/Users/doyopc/AI/openclaw-factory"
 KAI_LOG = os.path.join(REPO, "logs", "kai_actions.log")
-
 MAX_OPEN_PRS = int(os.environ.get("EXECUTOR_MAX_OPEN_PRS", "5"))
 MIN_PR_INTERVAL_SEC = int(os.environ.get("EXECUTOR_MIN_PR_INTERVAL_SEC", "600"))
 
@@ -94,6 +93,8 @@ def pick_proposal(conn):
         SELECT id,title,description,branch_name,pr_number,pr_url,dev_stage,dev_attempts,spec
         FROM dev_proposals
         WHERE status='approved'
+          AND coalesce(project_decision,'')='execute_now'
+          AND coalesce(guard_status,'')='safe'
           AND coalesce(spec,'')!=''
           AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
         ORDER BY id ASC
@@ -119,7 +120,7 @@ def main():
 
     row = pick_proposal(conn)
     if not row:
-        print("no approved proposals", flush=True)
+        print("no executable proposals", flush=True)
         return 0
 
     pid = int(row["id"])
@@ -131,7 +132,6 @@ def main():
 
     sh(["/usr/bin/git", "checkout", BASE_BRANCH])
     kai(conn, pid, "git_base", base=BASE_BRANCH)
-
     sh(["/usr/bin/git", "fetch", "origin", BASE_BRANCH])
     sh(["/usr/bin/git", "reset", "--hard", "origin/" + BASE_BRANCH])
     sh(["/usr/bin/git", "clean", "-fd"])

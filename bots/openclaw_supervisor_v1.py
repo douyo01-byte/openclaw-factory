@@ -5,7 +5,7 @@ PROCESSES={
 "business_brain":"bots/business_brain_v1.py",
 "market_brain":"bots/market_brain_v1.py",
 "revenue_brain":"bots/revenue_brain_v1.py",
-"project_brain":"bots/project_brain_v3.py",
+"project_brain":"bots/project_brain_v4.py",
 "llm_decider":"bots/llm_decider_v1.py",
 "executor_guard":"bots/executor_guard_v2.py",
 "learning_brain":"bots/learning_brain_v1.py",
