@@ -1,0 +1,5 @@
+id=630
+title=Speed Pipeline
+ts=2026-03-07T18:26:15Z
+
+Parallelize jobs
