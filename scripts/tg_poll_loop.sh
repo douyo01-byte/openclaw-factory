@@ -22,6 +22,10 @@ while true; do
   echo "[$(date '+%F %T')] bots/ingest_telegram_replies_v1.py"
   python -u bots/ingest_telegram_replies_v1.py || true
 
+  echo "[$(date '+%F %T')] bots/ingest_private_replies_v1.py"
+  TELEGRAM_BOT_TOKEN="${TELEGRAM_CEO_BOT_TOKEN:-}" python -u bots/ingest_private_replies_v1.py || true
+  echo "[$(date '+%F %T')] bots/chat_to_dev/ingest_private_chat_v1.py"
+  python -u bots/chat_to_dev/ingest_private_chat_v1.py || true
   echo "[$(date '+%F %T')] bots/ingest_spec_answers_v1.py"
   python -u bots/ingest_spec_answers_v1.py || true
 
@@ -32,10 +36,10 @@ while true; do
   python -u bots/ceo_explain_trigger_v1.py || true
 
   echo "[$(date '+%F %T')] bots/company_dashboard_v1.py"
-  python -u bots/company_dashboard_v1.py || true
+  TELEGRAM_BOT_TOKEN="${TELEGRAM_CEO_BOT_TOKEN:-}" python -u bots/company_dashboard_v1.py || true
 
   echo "[$(date '+%F %T')] bots/ceo_help_v1.py"
-  python -u bots/ceo_help_v1.py || true
+  TELEGRAM_BOT_TOKEN="${TELEGRAM_CEO_BOT_TOKEN:-}" python -u bots/ceo_help_v1.py || true
 
   echo "[$(date '+%F %T')] bots/ceo_noise_cleanup_v1.py"
   python -u bots/ceo_noise_cleanup_v1.py || true

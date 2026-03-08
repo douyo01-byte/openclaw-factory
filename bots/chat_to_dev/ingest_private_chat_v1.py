@@ -1,26 +1,38 @@
 import os
 import sqlite3
-import requests
 
 DB=os.environ.get("DB_PATH","data/openclaw.db")
-TOKEN=os.environ["TELEGRAM_BOT_TOKEN"]
 
 def ensure(conn):
     conn.execute("create table if not exists tg_kv(k text primary key, v text)")
+    conn.execute("""
+    create table if not exists inbox_commands(
+      id integer primary key autoincrement,
+      chat_id integer,
+      text text,
+      status text,
+      processed integer default 0,
+      created_at text default (datetime('now')),
+      applied_at text,
+      error text
+    )
+    """)
     conn.execute("""
     create table if not exists tg_private_chat_log(
       id integer primary key autoincrement,
       update_id integer unique,
       message_id integer,
+      chat_id integer,
       text text,
       created_at text default (datetime('now'))
     )
     """)
     cols={r[1] for r in conn.execute("pragma table_info(tg_private_chat_log)")}
-    if "update_id" not in cols:
-        conn.execute("alter table tg_private_chat_log add column update_id integer")
-    if "created_at" not in cols:
-        conn.execute("alter table tg_private_chat_log add column created_at text")
+    if "chat_id" not in cols:
+        conn.execute("alter table tg_private_chat_log add column chat_id integer")
+    cols={r[1] for r in conn.execute("pragma table_info(inbox_commands)")}
+    if "chat_id" not in cols:
+        conn.execute("alter table inbox_commands add column chat_id integer")
 
 def kv_get(conn,k):
     r=conn.execute("select v from tg_kv where k=?", (k,)).fetchone()
@@ -33,50 +45,53 @@ def kv_set(conn,k,v):
     )
 
 def main():
-    conn=sqlite3.connect(DB)
+    conn=sqlite3.connect(DB, timeout=30)
     conn.row_factory=sqlite3.Row
+    conn.execute("PRAGMA busy_timeout=30000")
     ensure(conn)
 
-    offset=kv_get(conn,"tg_private_update_offset")
-    params={"timeout":0}
-    if offset is not None:
-        params["offset"]=int(offset)+1
+    last_id=int(kv_get(conn,"tg_private_chat_last_id") or 0)
 
-    r=requests.get(
-        f"https://api.telegram.org/bot{TOKEN}/getUpdates",
-        params=params,
-        timeout=60
-    )
-    r.raise_for_status()
-    data=r.json()
+    rows=conn.execute("""
+        select id, chat_id, trim(coalesce(text,'')) as text
+        from tg_private_chat_log
+        where id > ?
+        order by id asc
+        limit 100
+    """,(last_id,)).fetchall()
 
-    seen=0
-    last_uid=None
-    for u in data.get("result",[]):
-        uid=u.get("update_id")
-        m=u.get("message")
-        if uid is None:
-            continue
-        last_uid=uid
-        if not m:
-            continue
-        if m.get("chat",{}).get("type")!="private":
+    queued=0
+    max_id=last_id
+
+    for r in rows:
+        rid=int(r["id"])
+        chat_id=r["chat_id"]
+        text=(r["text"] or "").strip()
+        if rid > max_id:
+            max_id=rid
+        if not text:
             continue
 
-        mid=m.get("message_id")
-        text=m.get("text","")
-        conn.execute(
-            "insert or ignore into tg_private_chat_log(update_id,message_id,text,created_at) values(?,?,?,datetime('now'))",
-            (uid,mid,text)
-        )
-        seen+=1
+        exists=conn.execute("""
+            select 1
+            from inbox_commands
+            where chat_id=?
+              and text=?
+              and created_at > datetime('now','-30 minutes')
+            limit 1
+        """,(chat_id,text)).fetchone()
 
-    if last_uid is not None:
-        kv_set(conn,"tg_private_update_offset",last_uid)
+        if not exists:
+            conn.execute("""
+                insert into inbox_commands(chat_id,text,status,processed,created_at)
+                values(?,?,?,0,datetime('now'))
+            """,(chat_id,text,"pending"))
+            queued+=1
 
+    kv_set(conn,"tg_private_chat_last_id",max_id)
     conn.commit()
     conn.close()
-    print(f"seen={seen}", flush=True)
+    print(f"queued={queued} last_id={max_id}", flush=True)
 
 if __name__=="__main__":
     main()
