@@ -75,7 +75,6 @@ DB 実測:
 - proposal_state: refined=11 / merged=2 / executed=1 / pr_created=1
 - ceo_hub_events: merged=50 / learning_result=4 / pr_created=3
 
-運用:
 
 ## 6分割時点から解消済み
 
