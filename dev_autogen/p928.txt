@@ -1,0 +1,5 @@
+id=928
+title=Watcher Recovery Guard
+ts=2026-03-08T10:37:47Z
+
+Improve watcher recovery and restart behavior
