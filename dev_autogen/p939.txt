@@ -1,0 +1,5 @@
+id=939
+title=AI Proposal Assistant
+ts=2026-03-08T16:48:40Z
+
+AI-assisted proposal drafting flow
