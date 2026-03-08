@@ -1,5 +1,5 @@
 id=938
-title=Security Signal Monitor
-ts=2026-03-08T15:15:22Z
+title=OpenClaw Task Orchestrator
+ts=2026-03-08T16:38:26Z
 
-Detect suspicious operational patterns
+Task orchestration for multi-step operations
