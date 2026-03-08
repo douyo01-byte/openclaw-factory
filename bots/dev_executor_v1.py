@@ -188,6 +188,23 @@ def main():
         WHERE id=?
     """, (pr_num, pr_url, pid))
 
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS ceo_hub_events(
+          id integer primary key,
+          event_type text,
+          title text,
+          body text,
+          proposal_id integer,
+          pr_url text,
+          created_at text default (datetime('now')),
+          sent_at text
+        )
+    """)
+    conn.execute("""
+        INSERT INTO ceo_hub_events(event_type,title,body,proposal_id,pr_url)
+        VALUES(?,?,?,?,?)
+    """, ("pr_created", f"PR作 成 : {title}", f"branch: {branch}", pid, pr_url))
+
     kv_set(conn, "executor_last_pr_created_at", now())
     kai(conn, pid, "db_updated", pr_url=pr_url, pr_number=pr_num)
     conn.commit()
