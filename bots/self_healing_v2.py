@@ -61,9 +61,6 @@ while True:
         if not agent_ok(lb):
             restart_agent(lb)
             restarted=1
-    if not tg_poll_ok():
-        restart_tg_poll()
-        restarted=1
     for lb in INGEST_AGENTS:
         if not agent_ok(lb):
             restart_agent(lb)

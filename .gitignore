@@ -20,3 +20,28 @@ configs/*.bak.*
 .env.*
 
 nohup.out
+
+# local backups / scratch
+audit/
+env_backup_20260308/
+
+# parked experiments
+bots/ai_employee_manager_v1.py
+bots/ai_employee_ranking_v1.py
+bots/executor_guard_v1.py
+bots/infra_brain_v1.py
+bots/ingest_spec_reply_v1.py
+bots/mothership_brain_v1.py
+bots/mothership_status_v1.py
+bots/openclaw_dashboard_v1.py
+bots/project_brain_v1.py
+bots/project_brain_v2.py
+bots/proposal_auto_approve_v1.py
+bots/proposal_builder_loop_v1.py
+bots/self_healing_v1.py
+bots/spec_autogen_v1.py
+bots/tg_poll_loop_v2.py
+
+scripts/run_spec_notify_v1.sh
+scripts/self_healing_loop.sh
+scripts/spec_reply_loop.sh
