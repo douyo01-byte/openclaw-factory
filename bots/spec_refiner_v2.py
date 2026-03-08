@@ -79,7 +79,14 @@ def pick_rows(c):
         left join proposal_state ps on ps.proposal_id=d.id
         where d.status='approved'
           and (
-            (coalesce(d.spec,'')='' and coalesce(ps.stage,'') in ('','approved','refined','waiting_answer'))
+            (
+              (
+                coalesce(d.spec_stage,'')=''
+                or coalesce(d.spec_stage,'') in ('approved','raw')
+                or coalesce(d.spec,'')=''
+              )
+              and coalesce(ps.stage,'') in ('','approved','refined','waiting_answer')
+            )
             or coalesce(ps.stage,'')='answer_received'
           )
         order by

@@ -26,9 +26,9 @@ def main():
 
     rows = conn.execute(
         "select id, pr_number from dev_proposals "
-        "where status in ('approved','pr_created') "
+        "where status in ('approved','pr_created','open') "
         "and pr_number is not null and pr_number!=0 "
-        "and coalesce(pr_status,'')!='merged' "
+        "and coalesce(pr_status,'') not in ('merged','closed') "
         "order by id desc limit 20"
     ).fetchall()
 

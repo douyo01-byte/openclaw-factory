@@ -1,4 +1,23 @@
 import os
+def sanitize_generated_code(s: str) -> str:
+    s = (s or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    if s.startswith("```"):
+        lines = s.split("\n")
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        s = "\n".join(lines).strip()
+    out = []
+    for line in s.split("\n"):
+        t = line.strip()
+        if t.startswith("```"):
+            continue
+        if t.startswith("<<<<<<< ") or t.startswith("=======") or t.startswith(">>>>>>> "):
+            continue
+        out.append(line)
+    s = "\n".join(out).strip() + "\n"
+    return s
 import sqlite3
 import subprocess
 import requests
@@ -42,7 +61,7 @@ def main():
     code = llm(target)
 
     subprocess.check_call(["git", "checkout", "-b", branch])
-    open("autogen.py", "w").write(code)
+    open("autogen.py", "w").write(sanitize_generated_code(code))
     subprocess.check_call(["git", "add", "-A"])
     subprocess.check_call(["git", "commit", "-m", f"auto: {branch}"])
     subprocess.check_call(["git", "push", "-u", "origin", branch])

@@ -86,6 +86,33 @@ def extract_pr_number(pr_url: str) -> int | None:
     except Exception:
         return None
 
+
+def hub_event(conn, event_type, title, body, proposal_id, pr_url):
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS ceo_hub_events(
+          id integer primary key,
+          event_type text,
+          title text,
+          body text,
+          proposal_id integer,
+          pr_url text,
+          created_at text default (datetime('now')),
+          sent_at text
+        )
+    """)
+    exists = conn.execute("""
+        select 1 from ceo_hub_events
+        where event_type=?
+          and proposal_id=?
+          and coalesce(pr_url,'')=coalesce(?, '')
+        limit 1
+    """, (event_type, proposal_id, pr_url)).fetchone()
+    if not exists:
+        conn.execute("""
+            insert into ceo_hub_events(event_type,title,body,proposal_id,pr_url)
+            values(?,?,?,?,?)
+        """, (event_type, title, body, proposal_id, pr_url))
+
 def tick_once(conn: sqlite3.Connection):
     dirty_head=False
     conn.execute("update dev_proposals set dev_stage='merged' where status='merged' and coalesce(pr_status,'')='merged' and coalesce(dev_stage,'')=''")
@@ -93,6 +120,8 @@ def tick_once(conn: sqlite3.Connection):
     conn.execute("update dev_proposals set status='merged' where pr_number is not null and coalesce(pr_status,'')='merged' and coalesce(status,'')!='merged'")
     dirty_head=True
     conn.execute("update dev_proposals set dev_stage='merged' where pr_number is not null and coalesce(pr_status,'')='merged' and coalesce(dev_stage,'')!='merged'")
+    dirty_head=True
+    conn.execute("update proposal_state set stage='merged', updated_at=datetime('now') where proposal_id in (select id from dev_proposals where pr_number is not null and coalesce(pr_status,'')='merged') and coalesce(stage,'')!='merged'")
     dirty_head=True
     conn.execute("update dev_proposals set status='closed' where pr_number is not null and coalesce(pr_status,'')='closed' and coalesce(status,'')!='closed'")
     dirty_head=True
@@ -105,6 +134,15 @@ def tick_once(conn: sqlite3.Connection):
     conn.commit()
     if dirty_head:
         conn.commit()
+
+    merged_rows = conn.execute(
+        "select id, coalesce(title,''), coalesce(pr_url,'') "
+        "from dev_proposals where coalesce(pr_status,'')='merged' and coalesce(status,'')='merged' and coalesce(dev_stage,'')='merged' "
+        "order by id desc limit 50"
+    ).fetchall()
+    for r in merged_rows:
+        hub_event(conn, "merged", f"統 合 完 了 : {r[1]}", "PRが mainへ 統 合 さ れ ま し た ", int(r[0]), r[2])
+
 
     rows = conn.execute(
         "select id, pr_number, pr_url, coalesce(pr_status,'') pr_status, coalesce(status,'') status, coalesce(dev_stage,'') dev_stage "
@@ -149,6 +187,15 @@ def tick_once(conn: sqlite3.Connection):
 
         conn.execute("update dev_proposals set pr_status=? where id=?", (new, pid))
         dirty = True
+        if new == "merged":
+            conn.execute("update proposal_state set stage='merged', updated_at=datetime('now') where proposal_id=? and coalesce(stage,'')!='merged'", (pid,))
+            dirty = True
+        elif new == "closed":
+            conn.execute("update proposal_state set stage='closed', updated_at=datetime('now') where proposal_id=? and coalesce(stage,'') not in ('closed','merged')", (pid,))
+            dirty = True
+        elif new == "open":
+            conn.execute("update proposal_state set stage='pr_created', updated_at=datetime('now') where proposal_id=? and coalesce(stage,'') not in ('merged','closed','pr_created')", (pid,))
+            dirty = True
 
         if new == "merged":
             conn.execute("update dev_proposals set status='merged' where id=? and coalesce(status,'')!='merged'", (pid,))
