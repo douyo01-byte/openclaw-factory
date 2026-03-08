@@ -1,0 +1,5 @@
+id=923
+title=Pattern Learning Refresh
+ts=2026-03-08T09:28:35Z
+
+Refresh learning patterns from recent results
