@@ -17,7 +17,6 @@ Lv5.4〜Lv5.5
 - daily operation 試走が通過
 - docs 運用基盤を整備
 - docs/README.md / docs/00_INDEX.md / docs/04_ARCHITECTURE.md を整備
-- spacing 修正フローを導入
 - dev_proposals は現在 808 を確認
 
 ただし未完成寄り:
@@ -51,7 +50,6 @@ AI社員会社構想:
 - 開発部門はかなり進んでいる
 - 事業部門は構造あり・供給不足
 - AI社員は設計済み・基盤構築中
-- docs が母艦運用可能な状態まで整った
 
 思想としては Lv6発想まで到達しているが、実装成熟度はまだ Lv6未満。
 
@@ -78,8 +76,6 @@ DB 実測:
 - ceo_hub_events: merged=50 / learning_result=4 / pr_created=3
 
 運用:
-- daily operation 試走通過
-- scripts/fix_docs_spacing.py 導入済み
 
 ## 6分割時点から解消済み
 
@@ -88,4 +84,3 @@ DB 実測:
 - PR詰まり: conflict PR 整理済み
 - proposal diversity 実装済み
 - OPS BOT未接続: Kaikun03接続済み
-- docs 母艦運用基盤: 整備済み

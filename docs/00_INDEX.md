@@ -41,16 +41,6 @@
 
 - scripts/fix_docs_spacing.py
 
----
-
-# 原則
-
-OpenClaw は以下を優先します。
-
-- 実ファイル
-- 実DB
-- 実ログ
-- 実プロセス
 
 ---
 
