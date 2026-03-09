@@ -1,0 +1,9 @@
+id=992
+title=PR5 ORDER TEST
+batch=992-992
+ts=2026-03-09T13:26:10Z
+
+Goal:
+PR5 ordering check
+Acceptance:
+- keep ordering correct
