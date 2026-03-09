@@ -1,0 +1,11 @@
+id=1008
+title=Reduce duplicate PR creation risk
+batch=1008-1009
+ts=2026-03-09T16:16:05Z
+
+Goal:
+Implement: Reduce duplicate PR creation risk
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
