@@ -3,7 +3,7 @@ import re
 import time
 import sqlite3
 
-DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or os.path.expanduser("~/AI/openclaw-factory//Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db")
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or os.path.expanduser("/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db")
 
 def connect():
     conn = sqlite3.connect(DB, timeout=30)

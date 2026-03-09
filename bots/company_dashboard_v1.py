@@ -8,7 +8,7 @@ from datetime import datetime
 DB = (
     os.environ.get("OCLAW_DB_PATH")
     or os.environ.get("DB_PATH")
-    or os.path.expanduser("~/AI/openclaw-factory//Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db")
+    or os.path.expanduser("/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db")
 )
 
 TOKEN = (os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("TELEGRAM_CEO_BOT_TOKEN") or "").strip()
