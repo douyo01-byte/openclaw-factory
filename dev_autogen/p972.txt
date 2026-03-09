@@ -1,0 +1,5 @@
+id=972
+title=Add auto retry for GitHub API E2E TEST
+ts=2026-03-09T04:54:02Z
+
+E2E pipeline test. Refine spec, decide execute_now, guard safe, create PR, merge, and record learning_result. Touch only dev_autogen test artifact.
