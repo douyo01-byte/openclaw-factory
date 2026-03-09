@@ -308,6 +308,47 @@ def recent_learning(c):
         out.append((r["proposal_id"], result, score))
     return out
 
+
+def mainstream_approved(c):
+    return one(c, """
+    select count(*)
+    from dev_proposals
+    where status='approved'
+      and coalesce(project_decision,'')='execute_now'
+      and coalesce(guard_status,'')='safe'
+    """) or 0
+
+def backlog_approved(c):
+    return one(c, """
+    select count(*)
+    from dev_proposals
+    where status='approved'
+      and (
+        coalesce(project_decision,'')='backlog'
+        or (coalesce(guard_status,'')!='' and coalesce(guard_status,'')!='safe')
+      )
+    """) or 0
+
+def backlog_breakdown(c):
+    rows = c.execute("""
+    select coalesce(category,'(blank)'), count(*)
+    from dev_proposals
+    where status='approved'
+      and (
+        coalesce(project_decision,'')='backlog'
+        or (coalesce(guard_status,'')!='' and coalesce(guard_status,'')!='safe')
+      )
+    group by coalesce(category,'(blank)')
+    order by count(*) desc, 1 asc
+    limit 5
+    """).fetchall()
+    if not rows:
+        return "none"
+    return " / ".join(f"{r[0]}={r[1]}" for r in rows)
+
+def company_health_summary(c):
+    return f"supply={proposal_rate(c):.2f}/h backlog={backlog_approved(c)} open_pr={open_prs(c)} queue={approved_queue(c)}"
+
 def total_proposals(c):
     return c.execute("select count(*) from dev_proposals").fetchone()[0]
 

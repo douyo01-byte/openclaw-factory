@@ -44,4 +44,50 @@ def compute_ranking(row):
 
     score = quality + cat_bonus + target_bonus + imp_bonus
     reason = f"quality={quality},category={cat_bonus},target={target_bonus},improvement={imp_bonus}"
+    title = (row["title"] or "").lower()
+    category = (row["category"] or "").lower()
+    target = (row["target_system"] or "").lower()
+    impact = "medium"
+    complexity = "medium"
+    risk = "medium"
+    system_importance = "medium"
+
+    if category in ("automation", "reliability", "performance") or target in ("core", "codebase", "dev_pr_watcher", "learning", "executor"):
+        score += 6
+        impact = "high"
+
+    if "safety" in title or "guard" in title or "stability" in title or "retry" in title or "recovery" in title:
+        score += 6
+        system_importance = "high"
+
+    if "refactor" in title or "logging" in title:
+        complexity = "low"
+
+    if "revenue" in title or category == "revenue":
+        risk = "high"
+
+    reason = f"{reason},impact={impact},complexity={complexity},risk={risk},system={system_importance}"
+    title = (row["title"] or "").lower()
+    category = (row["category"] or "").lower()
+    target = (row["target_system"] or "").lower()
+    impact = "medium"
+    complexity = "medium"
+    risk = "medium"
+    system_importance = "medium"
+
+    if category in ("automation", "reliability", "performance") or target in ("core", "codebase", "dev_pr_watcher", "learning", "executor"):
+        score += 6
+        impact = "high"
+
+    if "safety" in title or "guard" in title or "stability" in title or "retry" in title or "recovery" in title:
+        score += 6
+        system_importance = "high"
+
+    if "refactor" in title or "logging" in title:
+        complexity = "low"
+
+    if "revenue" in title or category == "revenue":
+        risk = "high"
+
+    reason = f"{reason},impact={impact},complexity={complexity},risk={risk},system={system_importance}"
     return score, reason
