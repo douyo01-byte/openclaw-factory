@@ -12,7 +12,7 @@ def _revenue_body(title: str) -> str:
         t = t.split(":", 1)[1]
     return _norm_title(t)
 
-def should_skip(conn, title: str, category: str, target_system: str, improvement_type: str, lookback: int = 120, signature_limit: int = 8):
+def should_skip(conn, title: str, category: str, target_system: str, improvement_type: str, lookback: int = 120, signature_limit: int = 16):
     nt = _norm_title(title)
     sig = (category or "", target_system or "", improvement_type or "")
 

@@ -16,6 +16,15 @@ ideas = [
     "Improve CI feedback parser",
     "Add auto retry for GitHub API",
     "Improve proposal ranking logic",
+    "Improve executor stability guard",
+    "Strengthen watcher recovery flow",
+    "Reduce duplicate lifecycle events",
+    "Improve learning result ordering",
+    "Harden dashboard DB path handling",
+    "Improve PR batching selection",
+    "Stabilize mainstream proposal supply",
+    "Improve backlog visibility in dashboard",
+    "Reduce ceo_hub_events duplication",
 ]
 
 CATEGORY = "automation"

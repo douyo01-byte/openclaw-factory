@@ -43,10 +43,17 @@ if approved_idea_cap(conn, 300):
     raise SystemExit(0)
 
 files = subprocess.check_output(["git", "-C", REPO, "ls-files"], text=True).splitlines()
+files = [
+    x for x in files
+    if not x.startswith("dev_autogen/")
+    and not x.endswith(".bak")
+    and ".bak_" not in x
+    and "__pycache__" not in x
+]
 random.shuffle(files)
 
 proposal = None
-for target in files[:300]:
+for target in files[:1200]:
     cand = f"{random.choice(checks)} in {target}"
     skip, reason = should_skip(conn, cand, CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE)
     if skip:
