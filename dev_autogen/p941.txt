@@ -1,5 +1,4 @@
 id=941
-title=OpenClaw Cache Optimizer
-ts=2026-03-08T15:22:55Z
+title=Reduce executor latency
+ts=2026-03-09T03:22:44Z
 
-Improve execution speed with caching strategy
