@@ -1,0 +1,11 @@
+id=1018
+title=Improve retry logic in bots/dev_auto_execute_v1.py
+batch=1019-1018
+ts=2026-03-09T16:47:03Z
+
+Goal:
+Implement: Improve retry logic in bots/dev_auto_execute_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
