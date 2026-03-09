@@ -1,0 +1,11 @@
+id=1000
+title=Improve PR batching selection
+batch=1000-1001
+ts=2026-03-09T16:04:55Z
+
+Goal:
+Implement: Improve PR batching selection
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
