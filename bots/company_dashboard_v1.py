@@ -49,6 +49,99 @@ def conn():
 
 def now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+def get_company_kpi(conn):
+    def one(q):
+        r = conn.execute(q).fetchone()
+        if not r:
+            return 0
+        v = r[0]
+        return 0 if v is None else v
+
+    pr_per_h = one("""
+    select count(*) * 3600.0 /
+    nullif(strftime('%s','now') - strftime('%s',min(created_at)), 0)
+    from ceo_hub_events
+    where event_type='pr_created'
+    """)
+
+    merge_per_h = one("""
+    select count(*) * 3600.0 /
+    nullif(strftime('%s','now') - strftime('%s',min(created_at)), 0)
+    from ceo_hub_events
+    where event_type='merged'
+    """)
+
+    learning_per_h = one("""
+    select count(*) * 3600.0 /
+    nullif(strftime('%s','now') - strftime('%s',min(created_at)), 0)
+    from ceo_hub_events
+    where event_type='learning_result'
+    """)
+
+    proposal_per_h = one("""
+    select count(*) * 3600.0 /
+    nullif(strftime('%s','now') - strftime('%s',min(created_at)), 0)
+    from dev_proposals
+    """)
+
+    adoption_rate = one("""
+    select sum(case when status='approved' then 1 else 0 end) * 1.0 / nullif(count(*),0)
+    from dev_proposals
+    """)
+
+    revenue_count = one("""
+    select count(*)
+    from dev_proposals
+    where category='revenue'
+    """)
+
+    row = conn.execute("""
+    with ev as (
+      select
+        proposal_id,
+        max(case when event_type='pr_created' then created_at end) as pr_created_at,
+        max(case when event_type='merged' then created_at end) as merged_at,
+        max(case when event_type='learning_result' then created_at end) as learning_at
+      from ceo_hub_events
+      where event_type in ('pr_created','merged','learning_result')
+        and proposal_id is not null
+      group by proposal_id
+    ),
+    lifecycle as (
+      select
+        round((julianday(merged_at) - julianday(pr_created_at)) * 86400.0, 1) as pr_to_merge_sec,
+        round((julianday(learning_at) - julianday(merged_at)) * 86400.0, 1) as merge_to_learning_sec,
+        round((julianday(learning_at) - julianday(pr_created_at)) * 86400.0, 1) as pr_to_learning_sec
+      from ev
+      where pr_created_at is not null
+        and merged_at is not null
+        and learning_at is not null
+        and julianday(merged_at) >= julianday(pr_created_at)
+        and julianday(learning_at) >= julianday(merged_at)
+    )
+    select
+      round(avg(pr_to_merge_sec),1),
+      round(avg(merge_to_learning_sec),1),
+      round(avg(pr_to_learning_sec),1)
+    from lifecycle
+    """).fetchone()
+
+    avg_pr_to_merge = row[0] if row and row[0] is not None else 0
+    avg_merge_to_learning = row[1] if row and row[1] is not None else 0
+    avg_pr_to_learning = row[2] if row and row[2] is not None else 0
+
+    return {
+        "pr_per_h": pr_per_h,
+        "merge_per_h": merge_per_h,
+        "learning_per_h": learning_per_h,
+        "proposal_per_h": proposal_per_h,
+        "adoption_rate": adoption_rate,
+        "revenue_count": revenue_count,
+        "avg_pr_to_merge": avg_pr_to_merge,
+        "avg_merge_to_learning": avg_merge_to_learning,
+        "avg_pr_to_learning": avg_pr_to_learning,
+    }
 def norm_text(x):
     s = str(x or "")
     s = re.sub(r'(?<=[一-龥ぁ-んァ-ヴー])\s+(?=[一-龥ぁ-んァ-ヴー])', '', s)
@@ -240,6 +333,18 @@ def build_dashboard_text(c):
     lines.append("OpenClaw CEOダッシュボード")
     lines.append("（AI経営管理システム）")
     lines.append("")
+    kpi = get_company_kpi(conn)
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("【 OpenClaw KPI 】")
+    lines.append(f"PR/h : {kpi['pr_per_h']:.2f}")
+    lines.append(f"merge/h : {kpi['merge_per_h']:.2f}")
+    lines.append(f"learning/h : {kpi['learning_per_h']:.2f}")
+    lines.append(f"proposal/h : {kpi['proposal_per_h']:.2f}")
+    lines.append(f"avg PR→merge : {kpi['avg_pr_to_merge']:.1f} sec")
+    lines.append(f"avg merge→learning : {kpi['avg_merge_to_learning']:.1f} sec")
+    lines.append(f"avg PR→learning : {kpi['avg_pr_to_learning']:.1f} sec")
+    lines.append(f"proposal adoption : {kpi['adoption_rate']:.4f}")
+    lines.append(f"revenue proposals : {int(kpi['revenue_count'])}")
     lines.append("━━━━━━━━━━━━━━━━━━")
     lines.append("【今日の主な動き】")
     lines.append("")
