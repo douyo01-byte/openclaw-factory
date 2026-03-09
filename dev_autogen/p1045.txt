@@ -1,0 +1,11 @@
+id=1045
+title=Improve lifecycle event safety in scripts/dev_auto_execute_v1.sh
+batch=1046-1045
+ts=2026-03-09T20:02:11Z
+
+Goal:
+Implement: Improve lifecycle event safety in scripts/dev_auto_execute_v1.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
