@@ -1,0 +1,11 @@
+id=1040
+title=Reduce API latency in scripts/meet_close.sh
+batch=1041-1040
+ts=2026-03-09T19:32:11Z
+
+Goal:
+Implement: Reduce API latency in scripts/meet_close.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
