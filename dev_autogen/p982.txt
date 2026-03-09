@@ -1,0 +1,17 @@
+id=982
+title=Improve retry logic in dev_autogen/p596.txt
+ts=2026-03-09T10:43:48Z
+
+Goal:
+Implement targeted code improvement: Improve retry logic in dev_autogen/p596.txt
+
+Scope:
+- edit only directly related file(s)
+- keep PR minimal
+- preserve current behavior except target fix
+- avoid repo-wide refactor
+
+Acceptance:
+- affected code compiles
+- targeted improvement is visible
+- current pipeline keeps working
