@@ -1,0 +1,11 @@
+id=1057
+title=Improve proposal filtering in bots/reflection_worker_v1.py
+batch=1058-1057
+ts=2026-03-09T21:32:15Z
+
+Goal:
+Implement: Improve proposal filtering in bots/reflection_worker_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
