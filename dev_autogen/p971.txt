@@ -1,0 +1,17 @@
+id=971
+title=CI optimization service
+ts=2026-03-09T08:53:28Z
+
+Goal:
+Implement proposal: CI optimization service
+
+Scope:
+- minimal isolated change
+- keep current Lv6/Lv7 automation stable
+- avoid destructive edits
+- auto-PR compatible
+
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
