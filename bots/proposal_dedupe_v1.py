@@ -51,8 +51,15 @@ def should_skip(conn, title: str, category: str, target_system: str, improvement
     if category == "revenue" and revenue_dup:
         return True, "duplicate_revenue_body"
 
-    if same_sig >= signature_limit:
-        return True, "duplicate_signature"
+    if category == "automation" and target_system == "codebase":
+        if same_sig >= max(signature_limit * 2, 40):
+            return True, "duplicate_signature"
+    elif category == "automation":
+        if same_sig >= signature_limit:
+            return True, "duplicate_signature"
+    else:
+        if same_sig >= max(signature_limit - 8, 8):
+            return True, "duplicate_signature"
 
     return False, ""
 
