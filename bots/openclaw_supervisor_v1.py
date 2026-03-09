@@ -1,3 +1,10 @@
+# OpenClaw supervisor
+# Brain系プロセス専用:
+# self_improve / business_brain / market_brain / revenue_brain /
+# project_brain / llm_decider / executor_guard / learning_brain /
+# infra_brain / mothership
+# 外部I/O系・通知系・Telegram系・watcher系は LaunchAgent 側で管理する
+
 import subprocess,time,os
 
 PROCESSES={
@@ -17,7 +24,10 @@ running={}
 
 def start(name,script):
     print("starting",name,flush=True)
-    p=subprocess.Popen(["python",script],env=os.environ)
+    env=dict(os.environ)
+    env["DB_PATH"]="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+    env["OCLAW_DB_PATH"]="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+    p=subprocess.Popen(["python",script],env=env)
     running[name]=p
 
 while True:

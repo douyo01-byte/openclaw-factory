@@ -43,14 +43,43 @@ def tg_send(text):
     chat = os.environ.get("TELEGRAM_DEV_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID")
     if not tok or not chat:
         return "skip"
-    r = requests.post(
-        f"https://api.telegram.org/bot{tok}/sendMessage",
-        data={"chat_id": chat, "text": text},
-        timeout=20,
-    )
-    if r.status_code == 429:
-        return "rate_limited"
-    r.raise_for_status()
+
+    chunk_size = 3500
+    parts = []
+    buf = ""
+    for line in text.split("\n"):
+        candidate = line if not buf else buf + "\n" + line
+        if len(candidate) <= chunk_size:
+            buf = candidate
+        else:
+            if buf:
+                parts.append(buf)
+            if len(line) <= chunk_size:
+                buf = line
+            else:
+                while len(line) > chunk_size:
+                    parts.append(line[:chunk_size])
+                    line = line[chunk_size:]
+                buf = line
+    if buf:
+        parts.append(buf)
+
+    total = len(parts) if parts else 1
+    if not parts:
+        parts = [text]
+
+    for i, part in enumerate(parts, 1):
+        body = part
+        if total > 1:
+            body = f"【{i}/{total}】\n" + part
+        r = requests.post(
+            f"https://api.telegram.org/bot{tok}/sendMessage",
+            data={"chat_id": chat, "text": body},
+            timeout=20,
+        )
+        if r.status_code == 429:
+            return "rate_limited"
+        r.raise_for_status()
     return "sent"
 
 def build_ai_comment(c, since):

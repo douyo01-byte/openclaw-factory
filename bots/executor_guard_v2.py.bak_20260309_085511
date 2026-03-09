@@ -18,6 +18,8 @@ def pr_rate_ok(conn):
 def judge(title, branch_name):
     t = (title or "").lower()
     b = (branch_name or "").lower()
+    if not branch_name:
+        return "hold", "missing_branch"
     if "danger" in t or "drop" in t or "delete" in t:
         return "hold", "danger_keyword"
     if "security" in t:
@@ -42,45 +44,31 @@ def run_once():
     conn = sqlite3.connect(DB, timeout=30)
     cur = conn.cursor()
     print("=== Executor Guard v3 ===", flush=True)
+
     if not pr_rate_ok(conn):
         print("PR rate limit reached", flush=True)
         conn.close()
         return
 
     cur.execute("""
-        select id, title, coalesce(branch_name,''), coalesce(spec,'')
+        select id, title, branch_name
         from dev_proposals
         where coalesce(status,'')='approved'
           and coalesce(project_decision,'')='execute_now'
-          and coalesce(guard_status,'pending') in ('pending','hold')
+          and coalesce(guard_status,'pending')='pending'
         order by id asc
         limit 20
     """)
     rows = cur.fetchall()
 
-    for pid, title, branch_name, spec in rows:
-        branch_name = (branch_name or "").strip()
-        spec = (spec or "").strip()
-
-        if not branch_name and spec:
-            branch_name = f"dev/proposal-{pid}"
-            cur.execute(
-                "update dev_proposals set branch_name=? where id=? and coalesce(branch_name,'')=''",
-                (branch_name, pid),
-            )
-
+    for pid, title, branch_name in rows:
         status, reason = judge(title, branch_name)
-
-        if not spec:
-            status, reason = "hold", "missing_spec"
-
         cur.execute("""
             update dev_proposals
             set guard_status=?,
                 guard_reason=?
             where id=?
         """, (status, reason, pid))
-
         print((pid, title, branch_name, status, reason), flush=True)
 
     conn.commit()

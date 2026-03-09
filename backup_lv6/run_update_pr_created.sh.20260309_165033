@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+cd "$(dirname "$0")/.." || exit 1
+while true; do
+  scripts/update_pr_created.sh >> logs/update_pr_created.log 2>&1 || true
+  sleep 3600
+done
