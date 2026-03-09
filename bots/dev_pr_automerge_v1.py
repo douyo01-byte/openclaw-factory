@@ -50,17 +50,17 @@ query {{
         data = q(gql)
         prn = (data.get("data", {}) or {}).get("repository", {}).get("pullRequest")
         if not prn:
-            print("pr_not_found", pr, flush=True)
+            print(f"[automerge] skip pr={pr} reason=pr_not_found", flush=True)
             continue
         if prn["state"] != "OPEN" or prn["isDraft"]:
             continue
         ms = prn["mergeStateStatus"]
         if ms != "CLEAN":
             if ms == "UNKNOWN":
-                print("wait_merge_state", pr, ms, flush=True)
+                print(f"[automerge] skip pr={pr} reason=wait_merge_state:{ms}", flush=True)
                 time.sleep(6)
                 continue
-            print("skip_not_clean", pr, ms, flush=True)
+            print(f"[automerge] skip pr={pr} reason=not_clean:{ms}", flush=True)
             continue
 
         mg = f"""
@@ -74,7 +74,7 @@ mutation {{
         errs = out.get("errors") or []
         if errs:
             msg = str(errs[0].get("message", "error"))
-            print("merge_error", pr, msg[:200], flush=True)
+            print(f"[automerge] merge failed pr={pr} reason={msg[:200]}", flush=True)
             low = msg.lower()
             if "secondary rate limit" in low or "abuse" in low or "rate limit" in low:
                 time.sleep(90)
@@ -83,7 +83,7 @@ mutation {{
 
         merged = (((out.get("data") or {}).get("mergePullRequest") or {}).get("pullRequest") or {}).get("merged")
         if not merged:
-            print("merge_not_done", pr, flush=True)
+            print(f"[automerge] merge failed pr={pr} reason=merge_not_done", flush=True)
             continue
 
         conn.execute(
@@ -91,7 +91,7 @@ mutation {{
             (row["id"],),
         )
         conn.commit()
-        print("merged", pr, flush=True)
+        print(f"[automerge] merge success pr={pr}", flush=True)
 
 if __name__ == "__main__":
     main()
