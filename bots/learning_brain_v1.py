@@ -1,4 +1,7 @@
-import sqlite3, os, time
+import os
+import sqlite3
+import time
+
 DB = os.environ["DB_PATH"]
 
 def evaluate(row):
@@ -10,6 +13,31 @@ def evaluate(row):
     if "rollback" in title or "revert" in title:
         return "bad", 0.2, "rollback detected"
     return "success", 0.8, "normal merged change"
+
+def can_record_learning(conn, proposal_id):
+    merged = conn.execute("""
+    select 1
+    from ceo_hub_events
+    where event_type='merged'
+      and proposal_id=?
+    limit 1
+    """, (proposal_id,)).fetchone()
+    if not merged:
+        print(f"[learning] skip proposal={proposal_id} reason=not_merged_yet", flush=True)
+        return False
+
+    exists = conn.execute("""
+    select 1
+    from ceo_hub_events
+    where event_type='learning_result'
+      and proposal_id=?
+    limit 1
+    """, (proposal_id,)).fetchone()
+    if exists:
+        print(f"[learning] skip proposal={proposal_id} reason=already_recorded", flush=True)
+        return False
+
+    return True
 
 while True:
     conn = sqlite3.connect(DB)
@@ -26,14 +54,17 @@ while True:
       sent_at text
     )
     """)
+
     rows = conn.execute("""
     select *
     from dev_proposals
     where pr_status='merged'
-    and result_type is null
+      and result_type is null
     """).fetchall()
+
     for r in rows:
         rtype, score, note = evaluate(r)
+
         conn.execute("""
         update dev_proposals
         set result_type=?,
@@ -41,27 +72,27 @@ while True:
             result_note=?
         where id=?
         """, (rtype, score, note, r["id"]))
+
         conn.execute("""
         insert or ignore into decision_patterns(token,weight)
         values (?,?)
         """, (rtype, score))
-        conn.execute("""
-        insert into ceo_hub_events(event_type,title,body,proposal_id,pr_url)
-        select ?,?,?,?,?
-        where not exists(
-          select 1 from ceo_hub_events
-          where event_type='learning_result'
-            and proposal_id=?
-        )
-        """, (
-            "learning_result",
-            f"学 習 反 映 : {r['title']}",
-            f"result={rtype} score={score}",
-            r["id"],
-            r["pr_url"],
-            r["id"],
-        ))
+
+        if can_record_learning(conn, r["id"]):
+            conn.execute("""
+            insert into ceo_hub_events(event_type,title,body,proposal_id,pr_url)
+            values(?,?,?,?,?)
+            """, (
+                "learning_result",
+                f"学  習  反  映  : {r['title']}",
+                f"result={rtype} score={score}",
+                r["id"],
+                r["pr_url"],
+            ))
+            print(f"[learning] recorded proposal={r['id']}", flush=True)
+
     conn.commit()
+
     top = conn.execute("""
     select id,title,result_type,result_score
     from dev_proposals
@@ -69,8 +100,10 @@ while True:
     order by id desc
     limit 10
     """).fetchall()
+
     print("\n=== Learning Brain v1 ===\n", flush=True)
     for t in top:
         print(tuple(t), flush=True)
+
     conn.close()
     time.sleep(120)

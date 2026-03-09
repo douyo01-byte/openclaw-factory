@@ -141,7 +141,18 @@ def tick_once(conn: sqlite3.Connection):
         "order by id desc limit 50"
     ).fetchall()
     for r in merged_rows:
-        hub_event(conn, "merged", f"統 合 完 了 : {r[1]}", "PRが mainへ 統 合 さ れ ま し た ", int(r[0]), r[2])
+        exists = conn.execute(
+            """
+            select 1
+            from ceo_hub_events
+            where event_type='merged'
+              and proposal_id=?
+            limit 1
+            """,
+            (int(r[0]),)
+        ).fetchone()
+        if not exists:
+            hub_event(conn, "merged", f"統 合 完 了 : {r[1]}", "PRが mainへ 統 合 さ れ ま し た ", int(r[0]), r[2])
 
 
     rows = conn.execute(
