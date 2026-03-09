@@ -1,6 +1,6 @@
 id=985
 title=BATCH TEST B
 batch=984-986
-ts=2026-03-09T12:37:52Z
+ts=2026-03-09T12:40:13Z
 
-batch executor test B
+BATCH TEST B batch executor verification spec
