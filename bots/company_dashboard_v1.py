@@ -370,7 +370,6 @@ def build_dashboard_text(c):
     lines.append(f"提案採用率 : {kpi['adoption_rate']:.4f}")
     lines.append(f"収益提案数 : {int(kpi['revenue_count'])}")
     lines.append("━━━━━━━━━━━━━━━━━━")
-    lines.append("━━━━━━━━━━━━━━━━━━")
     lines.append("【今日の主な動き】")
     lines.append("")
     lines.append(f"概要: {today_summary(c)}")
