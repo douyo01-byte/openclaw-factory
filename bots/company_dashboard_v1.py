@@ -49,6 +49,11 @@ def conn():
 
 def now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def norm_text(x):
+    s = str(x or "")
+    s = re.sub(r'(?<=[一-龥ぁ-んァ-ヴー])\s+(?=[一-龥ぁ-んァ-ヴー])', '', s)
+    s = re.sub(r'\s{2,}', ' ', s)
+    return s.strip()
 
 def one(c, sql, args=()):
     r = c.execute(sql, args).fetchone()
@@ -111,7 +116,7 @@ def latest_merge(c):
     pid = r["proposal_id"]
     title = r["title"] or ""
     if pid:
-        return f"#{pid} {title}"
+        return f"#{pid} {norm_text(title)}"
     return title or "なし"
 
 def latest_proposal(c):
@@ -180,7 +185,7 @@ def decision_jp(v):
 
 def source_jp(row):
     s = (row["source_ai"] or row["brain_type"] or "").strip()
-    return s if s else "不明"
+    return norm_text(s) if s else "不明"
 
 def consult_lines(c):
     lines = []
@@ -239,8 +244,8 @@ def build_dashboard_text(c):
     lines.append("【今日の主な動き】")
     lines.append("")
     lines.append(f"概要: {today_summary(c)}")
-    lines.append(f"最新提案: #{latest_id} {latest_title}" if latest_id else "最新提案: なし")
-    lines.append(f"発案AI: {latest_source}")
+    lines.append(f"最新提案: #{latest_id} {norm_text(latest_title)}" if latest_id else "最新提案: なし")
+    lines.append(f"発案AI: {norm_text(latest_source)}")
     lines.append("")
     lines.append("━━━━━━━━━━━━━━━━━━")
     lines.append("【社長の返答待ち項目】")
@@ -255,7 +260,7 @@ def build_dashboard_text(c):
     lines.append("")
     items = priority_items(c)
     for r in items:
-        lines.append(f"#{r['id']} {r['title']}")
+        lines.append(f"#{r['id']} {norm_text(r['title'])}")
         lines.append(f"優先度: {r['priority']}")
         lines.append(f"判断: {decision_jp(r['project_decision'])}")
         lines.append(f"監査: {r['guard_status'] or 'pending'}")
@@ -277,7 +282,7 @@ def build_dashboard_text(c):
     lines.append(f"未承認案件: {pending_unapproved(c)}")
     lines.append(f"Executor状態: {'消化フェーズ' if executable_queue(c) > 0 else '稼働待ちあり'}")
     lines.append(f"Executor Queue: {executable_queue(c)}")
-    lines.append(f"最新マージ: {latest_merge(c)}")
+    lines.append(f"最新マージ: {norm_text(latest_merge(c))}")
     lines.append("")
     lines.append("━━━━━━━━━━━━━━━━━━")
     lines.append("【最近の意思決定】")
@@ -285,7 +290,7 @@ def build_dashboard_text(c):
     rl = recent_learning(c)
     if rl:
         for pid, result, score in rl:
-            lines.append(f"#{pid} 評価: {result}")
+            lines.append(f"#{pid} 評価: {norm_text(result)}")
             lines.append(f"スコア: {score}")
     else:
         lines.append("記録なし")

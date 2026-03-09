@@ -5,74 +5,66 @@ from datetime import datetime
 
 DB_DEFAULT = "data/openclaw.db"
 
-
 def connect_db(path: str) -> sqlite3.Connection:
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(path, timeout=30)
     conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout=30000;")
     return conn
-
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=DB_DEFAULT)
     ap.add_argument("--limit", type=int, default=20)
-    ap.add_argument("--chat-id", default="system")
     args = ap.parse_args()
 
     conn = connect_db(args.db)
-
     rows = conn.execute(
         """
-        SELECT item_id, decision, score, reason, decided_at, decided_by, source
-        FROM decision_events
-        ORDER BY id DESC
-        LIMIT ?
+        select proposal_id, title, body, created_at
+        from ceo_hub_events
+        where event_type='learning_result'
+        order by id desc
+        limit ?
         """,
         (args.limit,),
     ).fetchall()
 
     if not rows:
-        print("Done. reflections=0 (no decision_events)")
+        print("Done. reflections=0 (no learning_result)")
         return
 
-    # v1: ルールベース反省（LLM未接続）
-    adopted = sum(1 for r in rows if r[1] in ("採用", "approved") or r[2] > 0)
-    held = sum(1 for r in rows if r[1] in ("保留", "hold") or r[2] == 0)
-    dropped = sum(1 for r in rows if r[1] in ("見送り", "drop", "rejected") or r[2] < 0)
+    success = sum(1 for r in rows if "result=success" in (r[2] or ""))
+    neutral = sum(1 for r in rows if "result=neutral" in (r[2] or ""))
+    fail = sum(1 for r in rows if "result=fail" in (r[2] or "") or "result=error" in (r[2] or ""))
 
     top = rows[0]
-    latest = f"latest: item={top[0]} decision={top[1]} score={top[2]} reason={top[3]} at={top[4]}"
+    latest = f"latest: proposal={top[0]} title={top[1]} body={top[2]} at={top[3]}"
 
-    # 最小の改善提案
     actions = []
-    if held > 0:
-        actions.append("保留がある: 保留理由を分類して『追加調査タスク』に分解")
-    if dropped > 0 and adopted == 0:
-        actions.append("見送り偏重: 取得ソース/フィルタ条件を見直し（候補の質改善）")
-    if adopted > 0 and dropped == 0:
-        actions.append("採用偏重: 反証観点チェック（競合/実現性/法務）を追加")
+    if fail > 0:
+        actions.append("失敗案件を優先監視し、壊さない方針へ寄せる")
+    if success > 0:
+        actions.append("success案件の target_system / improvement_type を優先候補として再利用")
+    if neutral > success:
+        actions.append("中立評価が多いため、採用条件を明確化して learning_result を sharpen")
     if not actions:
-        actions.append("判断分布は正常: 次はTAM推定/スコアリング項目拡張")
+        actions.append("学習分布は安定。運用改善寄りの成功パターンを継続")
 
     text = "\n".join(
         [
             f"[reflection_v1] {datetime.now().isoformat()}",
-            f"window={args.limit} adopted={adopted} held={held} dropped={dropped}",
+            f"window={args.limit} success={success} neutral={neutral} fail={fail}",
             latest,
             "actions:",
             *[f"- {a}" for a in actions],
         ]
     )
 
-    conn.execute(
-        "INSERT INTO reflection_requests(window_n,status) VALUES(?,?)",
-        (args.limit, "new"),
-    )
+    conn.execute("create table if not exists reflection_requests(id integer primary key autoincrement, window_n integer, status text, result text, error text, processed_at text)")
+    conn.execute("insert into reflection_requests(window_n,status,result) values(?,?,?)", (args.limit, "done", text))
     conn.commit()
     conn.close()
-
     print("Done. enqueued=1")
-
 
 if __name__ == "__main__":
     main()
