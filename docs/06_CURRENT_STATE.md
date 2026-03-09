@@ -198,3 +198,167 @@ DB 実測:
 - PR詰まり: conflict PR 整理済み
 - proposal diversity 実装済み
 - OPS BOT未接続: Kaikun03接続済み
+
+---
+
+## 2026-03-09 02:00〜 開発進捗
+
+### spec_refiner_v2 修復
+
+問題  
+spec_refiner_v2 が以下エラーで停止
+
+OperationalError: unable to open database file
+
+原因  
+daemon 側 DB_PATH が factory DB を参照していなかった
+
+修正  
+
+run_spec_refiner_v2.sh
+
+export DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"  
+export FACTORY_DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"
+
+結果  
+
+refined proposals  
+
+959  
+960  
+961  
+962  
+963  
+964  
+965  
+966  
+
+---
+
+### executor_guard_v2 確認
+
+guard_status
+
+safe  
+
+959  
+961  
+963  
+965  
+966  
+
+guard_reason  
+
+ok
+
+---
+
+### executor 実行
+
+proposal 959  
+
+merged  
+
+merged_count  
+
+414 → 416
+
+---
+
+### executor rate control
+
+デフォルト
+
+MIN_PR_INTERVAL_SEC = 600
+
+暴走防止レート制御
+
+テストとして  
+
+600 → 120  
+
+変更
+
+---
+
+### executor PR作成確認
+
+proposal 961  
+
+branch  
+
+dev/proposal-961  
+
+PR  
+
+https://github.com/douyo01-byte/openclaw-factory/pull/916  
+
+status  
+
+pr_created
+
+---
+
+### executor 常用設定
+
+コードは600秒維持  
+
+LaunchAgent plist  
+
+EnvironmentVariables  
+
+EXECUTOR_MIN_PR_INTERVAL_SEC=120
+
+executor 実行間隔  
+
+120秒
+
+---
+
+### 現在の状態
+
+merged_count  
+
+416  
+
+executor_queue  
+
+2  
+
+残 proposal  
+
+965  
+966  
+
+状態  
+
+965  
+
+approved  
+
+966  
+
+approved  
+
+---
+
+### 自動開発ライン
+
+OpenClaw 自動開発 pipeline
+
+proposal  
+↓  
+spec_refiner  
+↓  
+executor_guard  
+↓  
+executor  
+↓  
+PR作成  
+↓  
+merge  
+
+状態  
+
+正常稼働
+

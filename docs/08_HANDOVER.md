@@ -76,3 +76,27 @@ cd ~/AI/openclaw-factory || exit 1
 - 主要 LaunchAgent は running
 - DB 実測値は docs 概算より現在低い
 - docs 一式は Git 管理下に入った
+
+---
+
+## 2026-03-09 引き継ぎ
+
+本日02:00以降の重要進捗
+
+- spec_refiner_v2 DB参照修正
+- proposals 959〜966 refined
+- executor_guard safe 確認
+- proposal 959 merged
+- proposal 961 PR作成 (#916)
+- executor interval 600→120 (plist env)
+- merged_count 416
+- executor_queue 残り 2
+
+OpenClaw 自動開発ライン
+
+spec_refiner  
+executor_guard  
+executor  
+
+すべて正常稼働
+
