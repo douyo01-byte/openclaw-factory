@@ -1,0 +1,11 @@
+id=995
+title=Refactor duplicated logic in dev_autogen/p985.txt
+batch=995-995
+ts=2026-03-09T15:57:00Z
+
+Goal:
+Implement: Refactor duplicated logic in dev_autogen/p985.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
