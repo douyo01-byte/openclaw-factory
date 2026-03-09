@@ -171,8 +171,10 @@ def tick_once(conn: sqlite3.Connection):
 
         pr = gh_api(f"/repos/{REPO}/pulls/{prn}")
         if not pr:
+            print(f"[watcher] PR skipped proposal={pid} reason=gh_api_none", flush=True)
             continue
 
+        print(f"[watcher] PR detected proposal={pid} pr={prn}", flush=True)
         merged = bool(pr.get("merged_at"))
         state = (pr.get("state") or "").lower()
         if merged:
@@ -183,11 +185,13 @@ def tick_once(conn: sqlite3.Connection):
             new = "open"
 
         if new == (r["pr_status"] or ""):
+            print(f"[watcher] PR skipped proposal={pid} reason=no_status_change", flush=True)
             continue
 
         conn.execute("update dev_proposals set pr_status=? where id=?", (new, pid))
         dirty = True
         if new == "merged":
+            print(f"[watcher] PR merged proposal={pid} pr={prn}", flush=True)
             conn.execute("update proposal_state set stage='merged', updated_at=datetime('now') where proposal_id=? and coalesce(stage,'')!='merged'", (pid,))
             dirty = True
         elif new == "closed":
