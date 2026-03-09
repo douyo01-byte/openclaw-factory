@@ -1,0 +1,11 @@
+id=1015
+title=Reduce API latency in scripts/fix_print_in_branch.sh
+batch=1016-1015
+ts=2026-03-09T16:32:03Z
+
+Goal:
+Implement: Reduce API latency in scripts/fix_print_in_branch.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
