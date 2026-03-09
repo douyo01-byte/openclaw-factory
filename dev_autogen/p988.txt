@@ -1,0 +1,11 @@
+id=988
+title=Optimize database queries in dev_autogen/p402.txt
+batch=988-988
+ts=2026-03-09T12:54:51Z
+
+Goal:
+Implement: Optimize database queries in dev_autogen/p402.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
