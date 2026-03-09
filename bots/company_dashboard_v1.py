@@ -333,7 +333,7 @@ def build_dashboard_text(c):
     lines.append("OpenClaw CEOダッシュボード")
     lines.append("（AI経営管理システム）")
     lines.append("")
-    kpi = get_company_kpi(conn)
+    kpi = get_company_kpi(c)
     lines.append("━━━━━━━━━━━━━━━━━━")
     lines.append("【 OpenClaw 会社KPI 】")
     lines.append(f"開発速度(PR/時間) : {kpi['pr_per_h']:.2f}")
