@@ -1,0 +1,11 @@
+id=1002
+title=Improve executor stability guard
+batch=1004-1003
+ts=2026-03-09T16:13:09Z
+
+Goal:
+Implement: Improve executor stability guard
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
