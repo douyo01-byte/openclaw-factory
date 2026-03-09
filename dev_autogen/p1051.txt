@@ -1,0 +1,11 @@
+id=1051
+title=Improve proposal filtering in scripts/env_check.sh
+batch=1052-1051
+ts=2026-03-09T20:47:10Z
+
+Goal:
+Implement: Improve proposal filtering in scripts/env_check.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
