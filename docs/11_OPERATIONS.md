@@ -2,8 +2,9 @@
 
 自動生成。手修正しない。
 
+- generated_at: `2026-03-10 00:01:41`
 - branch: `dev/self-watch-recovery`
-- head: `c2cbf3e`
+- head: `03c4733`
 
 ## launchagents
 - jp.openclaw.ai_ceo_engine
@@ -17,6 +18,7 @@
 - jp.openclaw.dev_pr_automerge_v1
 - jp.openclaw.dev_pr_watcher_v1
 - jp.openclaw.docs_auto_snapshot
+- jp.openclaw.docs_sync_v1
 - jp.openclaw.event_notify_v1
 - jp.openclaw.innovation_engine
 - jp.openclaw.log_rotate_safe_v1
@@ -31,11 +33,18 @@
 - jp.openclaw.update_pr_created
 
 ## active docs policy
-- manual: 00_INDEX.md
-- manual: 06_CURRENT_STATE.md
-- manual: 08_HANDOVER.md
 - manual: README.md
-- auto: docs/_auto_progress.md
+- manual: docs/00_INDEX.md
+- manual: docs/01_SYSTEM_PROMPT.md
+- manual: docs/02_MASTER_PLAN.md
+- manual: docs/03_MOTHERSHIP_ROLE.md
+- manual: docs/05_DEV_RULES.md
+- manual: docs/07_ROADMAP.md
+- manual: docs/12_AI_COMPANY.md
+- manual: docs/17_EFFICIENCY_RULES.md
+- auto: docs/06_CURRENT_STATE.md
+- auto: docs/08_HANDOVER.md
 - auto: docs/09_BOT_CATALOG.md
 - auto: docs/10_DB_SCHEMA.md
 - auto: docs/11_OPERATIONS.md
+- auto: docs/_auto_progress.md

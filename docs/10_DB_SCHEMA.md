@@ -2,6 +2,7 @@
 
 自動生成。手修正しない。
 
+- generated_at: `2026-03-10 00:01:41`
 - branch: `dev/self-watch-recovery`
 - db: `/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db`
 

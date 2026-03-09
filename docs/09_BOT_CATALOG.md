@@ -36,7 +36,8 @@
 - dev_reviewer_v1.py
 - dev_router_v1.py
 - dev_schema_apply.py
-- docs_sync_v1.py
+- docs_compiler_v1.py
+- docs_guard_v1.py
 - employee_registry_v1.py
 - enrich_contacts_v1.py
 - explain_orchestrator_v1.py
