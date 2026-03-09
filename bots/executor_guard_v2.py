@@ -1,6 +1,6 @@
 import os, sqlite3, time
 
-DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db"
 PR_RATE_LIMIT = 10
 
 def pr_rate_ok(conn):
