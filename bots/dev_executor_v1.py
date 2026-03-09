@@ -5,6 +5,10 @@ import os
 import re
 import sqlite3
 import subprocess
+try:
+    from bots.proposal_ranking_v1 import compute_ranking
+except ModuleNotFoundError:
+    from proposal_ranking_v1 import compute_ranking
 
 DB_PATH = os.environ.get("OCLAW_DB_PATH", "/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
 BASE_BRANCH = "main"
@@ -90,17 +94,30 @@ def extract_pr_number(pr_url: str):
     return int(m.group(1)) if m else None
 
 def pick_proposals(conn):
-    return conn.execute("""
-        SELECT id,title,description,branch_name,pr_number,pr_url,dev_stage,dev_attempts,spec
+    rows = conn.execute("""
+        SELECT
+          id,title,description,branch_name,pr_number,pr_url,dev_stage,dev_attempts,spec,
+          coalesce(category,'') as category,
+          coalesce(target_system,'') as target_system,
+          coalesce(improvement_type,'') as improvement_type,
+          coalesce(quality_score,0) as quality_score
         FROM dev_proposals
         WHERE status='approved'
           AND coalesce(project_decision,'')='execute_now'
           AND coalesce(guard_status,'')='safe'
           AND coalesce(spec,'')!=''
           AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
-        ORDER BY id ASC
-        LIMIT ?
-    """, (BATCH_SIZE,)).fetchall()
+    """).fetchall()
+    ranked = []
+    for row in rows:
+        score, reason = compute_ranking(row)
+        print(f"[ranking] proposal={row['id']} score={score} reason={reason}", flush=True)
+        ranked.append((score, int(row["id"]), row))
+    ranked.sort(key=lambda x: (-x[0], x[1]))
+    selected = [x[2] for x in ranked[:BATCH_SIZE]]
+    if selected:
+        print(f"[ranking] selected_batch={[int(r['id']) for r in selected]}", flush=True)
+    return selected
 
 def main():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
