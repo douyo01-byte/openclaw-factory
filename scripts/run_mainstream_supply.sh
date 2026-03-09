@@ -24,7 +24,19 @@ while true; do
   run_one bots/code_review_engine_v1.py
   run_one bots/revenue_engine_v1.py
 
-  if [ "$consecutive_no_new" -ge 3 ]; then
+  active=$(sqlite3 "$DB_PATH" "
+  select count(*)
+  from dev_proposals
+  where status='approved'
+    and coalesce(project_decision,'')='execute_now'
+    and coalesce(guard_status,'')='safe';
+  " 2>/dev/null || echo 0)
+
+  echo "[supply] active_execute_now_safe=$active consecutive_no_new=$consecutive_no_new"
+
+  if [ "${active:-0}" -lt 3 ]; then
+    python bots/mainstream_fallback_supply_v1.py || true
+  elif [ "$consecutive_no_new" -ge 3 ]; then
     python bots/mainstream_fallback_supply_v1.py || true
     consecutive_no_new=0
   fi

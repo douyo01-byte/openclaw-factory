@@ -1,15 +1,16 @@
-import datetime
 import os
 import sqlite3
+from datetime import datetime
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH", "data/openclaw.db")
 
-titles = [
-    "Executor stability fallback",
-    "Watcher stability fallback",
-    "Lifecycle cleanup fallback",
-    "Batch selection fallback",
-    "Dashboard resilience fallback",
+FALLBACK_TITLES = [
+    "Executor stability sweep",
+    "Watcher recovery sweep",
+    "Lifecycle event integrity sweep",
+    "Mainstream supply resilience sweep",
+    "Approved queue visibility sweep",
+    "Batch anchor selection sweep",
 ]
 
 def build_spec(title):
@@ -25,32 +26,34 @@ conn = sqlite3.connect(DB, timeout=30)
 conn.execute("PRAGMA busy_timeout=30000")
 c = conn.cursor()
 
-row = c.execute("""
+active = c.execute("""
 select count(*)
 from dev_proposals
 where status='approved'
   and coalesce(project_decision,'')='execute_now'
   and coalesce(guard_status,'')='safe'
-  and (coalesce(dev_stage,'')='' or coalesce(dev_stage,'')='approved')
-""").fetchone()
+""").fetchone()[0]
 
-if int(row[0] or 0) > 0:
+if int(active or 0) >= 3:
     print("skip=already_has_executable")
     conn.close()
     raise SystemExit(0)
 
-base = titles[int(datetime.datetime.now().strftime("%M")) % len(titles)]
-title = f"{base} {datetime.datetime.now().strftime('%H%M')}"
+title = None
+for base in FALLBACK_TITLES:
+    cand = f"{base} {datetime.now().strftime('%H%M')}"
+    dup = c.execute("""
+    select 1
+    from dev_proposals
+    where lower(trim(title)) = lower(trim(?))
+    limit 1
+    """, (cand,)).fetchone()
+    if not dup:
+        title = cand
+        break
 
-dup = c.execute("""
-select 1
-from dev_proposals
-where lower(trim(title)) = lower(trim(?))
-limit 1
-""", (title,)).fetchone()
-
-if dup:
-    print("skip=duplicate_title")
+if not title:
+    print("skip=no_fallback_title")
     conn.close()
     raise SystemExit(0)
 

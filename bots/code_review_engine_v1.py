@@ -17,6 +17,15 @@ checks = [
     "Improve logging coverage",
     "Reduce API latency",
     "Improve retry logic",
+    "Harden DB path handling",
+    "Improve lifecycle event safety",
+    "Reduce duplicate writes",
+    "Improve queue handling",
+    "Strengthen launchd recovery",
+    "Improve proposal filtering",
+    "Harden watcher state sync",
+    "Improve executor stability",
+    "Reduce event summary drift",
 ]
 
 CATEGORY = "automation"
@@ -46,14 +55,29 @@ files = subprocess.check_output(["git", "-C", REPO, "ls-files"], text=True).spli
 files = [
     x for x in files
     if not x.startswith("dev_autogen/")
+    and not x.startswith("logs/")
     and not x.endswith(".bak")
     and ".bak_" not in x
     and "__pycache__" not in x
+    and ".pyc" not in x
 ]
+preferred = []
+secondary = []
+for x in files:
+    if (
+        x.startswith("bots/")
+        or x.startswith("scripts/")
+        or x.startswith("docs/")
+        or x.startswith("config/")
+    ):
+        preferred.append(x)
+    else:
+        secondary.append(x)
+files = preferred + secondary
 random.shuffle(files)
 
 proposal = None
-for target in files[:1200]:
+for target in files[:2400]:
     cand = f"{random.choice(checks)} in {target}"
     skip, reason = should_skip(conn, cand, CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE)
     if skip:

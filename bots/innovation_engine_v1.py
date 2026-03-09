@@ -25,6 +25,22 @@ ideas = [
     "Stabilize mainstream proposal supply",
     "Improve backlog visibility in dashboard",
     "Reduce ceo_hub_events duplication",
+    "Strengthen executor retry safety",
+    "Improve open PR tracking accuracy",
+    "Reduce watcher merge lag",
+    "Harden automerge recovery flow",
+    "Improve proposal supply diversity",
+    "Improve batch anchor selection",
+    "Reduce duplicate PR creation risk",
+    "Improve lifecycle metrics accuracy",
+    "Harden dashboard event summary",
+    "Improve approved queue visibility",
+    "Stabilize proposal generation loop",
+    "Improve executor DB path safety",
+    "Reduce supply loop dead time",
+    "Improve core automation resilience",
+    "Strengthen learning pipeline handoff",
+    "Improve queue drain visibility",
 ]
 
 CATEGORY = "automation"
