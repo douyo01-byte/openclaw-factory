@@ -1,0 +1,11 @@
+id=1047
+title=Improve proposal filtering in bots/report_orchestrator_v1.py
+batch=1048-1047
+ts=2026-03-09T20:17:10Z
+
+Goal:
+Implement: Improve proposal filtering in bots/report_orchestrator_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
