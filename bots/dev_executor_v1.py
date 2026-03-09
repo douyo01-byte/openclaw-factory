@@ -11,7 +11,7 @@ BASE_BRANCH = "main"
 REPO = "/Users/doyopc/AI/openclaw-factory"
 KAI_LOG = os.path.join(REPO, "logs", "kai_actions.log")
 MAX_OPEN_PRS = int(os.environ.get("EXECUTOR_MAX_OPEN_PRS", "5"))
-MIN_PR_INTERVAL_SEC = int(os.environ.get("EXECUTOR_MIN_PR_INTERVAL_SEC", "600"))
+MIN_PR_INTERVAL_SEC = int(os.environ.get("EXECUTOR_MIN_PR_INTERVAL_SEC", "30"))
 
 def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

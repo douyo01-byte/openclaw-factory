@@ -1,34 +1,56 @@
-import sqlite3,subprocess,random
+import os, sqlite3, subprocess, random
 
-DB="data/openclaw.db"
-
-checks=[
-"Improve error handling",
-"Refactor duplicated logic",
-"Optimize database queries",
-"Improve logging coverage",
-"Reduce API latency",
-"Improve retry logic"
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db")
+REPO = "/Users/doyopc/AI/openclaw-factory"
+checks = [
+    "Improve error handling",
+    "Refactor duplicated logic",
+    "Optimize database queries",
+    "Improve logging coverage",
+    "Reduce API latency",
+    "Improve retry logic",
 ]
 
-repo="/Users/doyopc/AI/openclaw-factory"
+conn = sqlite3.connect(DB, timeout=30)
+conn.execute("PRAGMA busy_timeout=30000")
+c = conn.cursor()
 
-files=subprocess.check_output(
-["git","-C",repo,"ls-files"]
-).decode().splitlines()
+cap = c.execute("""
+select count(*)
+from dev_proposals
+where status in ('approved','idea')
+""").fetchone()[0]
+if cap >= 300:
+    print("skip=cap")
+    conn.close()
+    raise SystemExit(0)
 
-target=random.choice(files)
+files = subprocess.check_output(["git", "-C", REPO, "ls-files"], text=True).splitlines()
+random.shuffle(files)
 
-proposal=f"{random.choice(checks)} in {target}"
+proposal = None
+for target in files[:300]:
+    cand = f"{random.choice(checks)} in {target}"
+    dup = c.execute("""
+    select 1
+    from dev_proposals
+    where lower(title)=lower(?)
+    order by id desc
+    limit 1
+    """, (cand,)).fetchone()
+    if not dup:
+        proposal = cand
+        break
 
-conn=sqlite3.connect(DB)
-c=conn.cursor()
+if not proposal:
+    print("skip=no_new_code_review")
+    conn.close()
+    raise SystemExit(0)
 
 c.execute("""
-insert into dev_proposals
-(title,status)
-values(?,?)
-""",(proposal,"approved"))
-
+insert into dev_proposals(title,status,created_at,category,target_system,improvement_type,quality_score)
+values(?,?,datetime('now'),?,?,?,?)
+""", (proposal, "approved", "automation", "codebase", "refactor", 72))
 conn.commit()
+print("inserted", proposal)
 conn.close()
