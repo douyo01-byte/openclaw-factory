@@ -1,0 +1,11 @@
+id=1061
+title=Harden watcher state sync in scripts/no.sh
+batch=1062-1061
+ts=2026-03-09T22:02:19Z
+
+Goal:
+Implement: Harden watcher state sync in scripts/no.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
