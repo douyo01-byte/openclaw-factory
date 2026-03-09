@@ -1,0 +1,11 @@
+id=1011
+title=Improve proposal filtering in config/personas/aya.txt
+batch=1012-1011
+ts=2026-03-09T16:17:00Z
+
+Goal:
+Implement: Improve proposal filtering in config/personas/aya.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
