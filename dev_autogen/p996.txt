@@ -1,0 +1,11 @@
+id=996
+title=Refactor duplicated logic in dev_autogen/p963.txt
+batch=996-996
+ts=2026-03-09T15:57:41Z
+
+Goal:
+Implement: Refactor duplicated logic in dev_autogen/p963.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
