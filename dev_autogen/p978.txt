@@ -1,0 +1,17 @@
+id=978
+title=Improve error handling in dev_autogen/p640.txt
+ts=2026-03-09T08:56:45Z
+
+Goal:
+Implement proposal: Improve error handling in dev_autogen/p640.txt
+
+Scope:
+- minimal isolated change
+- keep current Lv6/Lv7 automation stable
+- avoid destructive edits
+- auto-PR compatible
+
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
