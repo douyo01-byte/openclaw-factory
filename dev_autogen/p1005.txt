@@ -1,0 +1,11 @@
+id=1005
+title=Harden dashboard DB path handling
+batch=1007-1006
+ts=2026-03-09T16:13:50Z
+
+Goal:
+Implement: Harden dashboard DB path handling
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
