@@ -1,0 +1,11 @@
+id=999
+title=Improve retry logic in config/feeds/daiki.txt
+batch=998-999
+ts=2026-03-09T16:04:14Z
+
+Goal:
+Implement: Improve retry logic in config/feeds/daiki.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
