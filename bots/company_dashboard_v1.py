@@ -227,6 +227,12 @@ def latest_proposal(c):
         return None, None, None
     source = (r["source_ai"] or r["brain_type"] or "不明").strip()
     return r["id"], r["title"], source
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("【  本  流  / バ  ッ  ク  ロ  グ  可  視  化  】")
+    lines.append(f"本 流 approved : {mainstream_approved(c)}")
+    lines.append(f"backlog approved : {backlog_approved(c)}")
+    lines.append(f"backlog内訳 : {backlog_breakdown(c)}")
+
 
 def today_summary(c):
     rs = c.execute("""
