@@ -363,7 +363,11 @@ def build_dashboard_text(c):
     if ids:
         lines.append(f"・#{' / #'.join(ids)} のPR化確認")
     lines.append("・Kaikun02要約が ceo_hub_events の merged / pr_created / learning_result を確実に拾っているか監視")
-    return "\n".join(lines)
+    text = "\n".join(lines)
+    text = norm_text(text)
+    text = text.replace("━━━━━━━━━━━━━━━━━━", "\n━━━━━━━━━━━━━━━━━━")
+    text = text.replace("\n\n\n", "\n\n")
+    return text
 
 def tg_send(chat_id, text):
     if not TOKEN or not chat_id:
