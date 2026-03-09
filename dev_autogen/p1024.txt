@@ -1,0 +1,11 @@
+id=1024
+title=Reduce duplicate writes in scripts/meet_close.sh
+batch=1025-1024
+ts=2026-03-09T17:32:04Z
+
+Goal:
+Implement: Reduce duplicate writes in scripts/meet_close.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
