@@ -1,0 +1,11 @@
+id=1022
+title=Improve lifecycle event safety in bots/build_decision_patterns.py
+batch=1023-1022
+ts=2026-03-09T17:17:03Z
+
+Goal:
+Implement: Improve lifecycle event safety in bots/build_decision_patterns.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
