@@ -1,0 +1,17 @@
+id=975
+title=Reduce API latency in dev_autogen/p255.txt
+ts=2026-03-09T08:55:26Z
+
+Goal:
+Implement proposal: Reduce API latency in dev_autogen/p255.txt
+
+Scope:
+- minimal isolated change
+- keep current Lv6/Lv7 automation stable
+- avoid destructive edits
+- auto-PR compatible
+
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
