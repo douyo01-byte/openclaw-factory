@@ -1,0 +1,11 @@
+id=1003
+title=Optimize database queries in tmp_merge_notify_test.txt
+batch=1004-1003
+ts=2026-03-09T16:13:09Z
+
+Goal:
+Implement: Optimize database queries in tmp_merge_notify_test.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
