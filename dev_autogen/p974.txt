@@ -1,0 +1,17 @@
+id=974
+title=Enhance PR watcher resilience
+ts=2026-03-09T08:54:47Z
+
+Goal:
+Implement proposal: Enhance PR watcher resilience
+
+Scope:
+- minimal isolated change
+- keep current Lv6/Lv7 automation stable
+- avoid destructive edits
+- auto-PR compatible
+
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
