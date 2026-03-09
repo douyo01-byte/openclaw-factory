@@ -1,0 +1,11 @@
+id=1043
+title=Improve proposal filtering in scripts/fix_print_in_branch.sh
+batch=1044-1043
+ts=2026-03-09T19:47:08Z
+
+Goal:
+Implement: Improve proposal filtering in scripts/fix_print_in_branch.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
