@@ -12,6 +12,7 @@ REPO = "/Users/doyopc/AI/openclaw-factory"
 KAI_LOG = os.path.join(REPO, "logs", "kai_actions.log")
 MAX_OPEN_PRS = int(os.environ.get("EXECUTOR_MAX_OPEN_PRS", "5"))
 MIN_PR_INTERVAL_SEC = int(os.environ.get("EXECUTOR_MIN_PR_INTERVAL_SEC", "30"))
+BATCH_SIZE = int(os.environ.get("EXECUTOR_BATCH_SIZE", "3"))
 
 def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -88,8 +89,8 @@ def extract_pr_number(pr_url: str):
     m = re.search(r"/pull/(\d+)", pr_url)
     return int(m.group(1)) if m else None
 
-def pick_proposal(conn):
-    row = conn.execute("""
+def pick_proposals(conn):
+    return conn.execute("""
         SELECT id,title,description,branch_name,pr_number,pr_url,dev_stage,dev_attempts,spec
         FROM dev_proposals
         WHERE status='approved'
@@ -98,9 +99,8 @@ def pick_proposal(conn):
           AND coalesce(spec,'')!=''
           AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
         ORDER BY id ASC
-        LIMIT 1
-    """).fetchone()
-    return row
+        LIMIT ?
+    """, (BATCH_SIZE,)).fetchall()
 
 def main():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -118,20 +118,19 @@ def main():
         print(f"pr_rate_skip=interval:{MIN_PR_INTERVAL_SEC}s", flush=True)
         return 0
 
-    row = pick_proposal(conn)
-    if not row:
+    rows = pick_proposals(conn)
+    if not rows:
         print("no executable proposals", flush=True)
         return 0
 
-    pid = int(row["id"])
-    title = (row["title"] or f"proposal {pid}").strip()
-    branch = row["branch_name"] or f"dev/proposal-{pid}"
-    description = row["description"] or ""
-
-    kai(conn, pid, "picked", branch_name=branch, title=title)
+    pids = [int(r["id"]) for r in rows]
+    first_pid = pids[0]
+    last_pid = pids[-1]
+    branch = f"dev/batch-{first_pid}-{last_pid}"
+    batch_title = f"batch improvements {first_pid}-{last_pid}"
 
     sh(["/usr/bin/git", "checkout", BASE_BRANCH])
-    kai(conn, pid, "git_base", base=BASE_BRANCH)
+    kai(conn, first_pid, "git_base", base=BASE_BRANCH)
     sh(["/usr/bin/git", "fetch", "origin", BASE_BRANCH])
     sh(["/usr/bin/git", "reset", "--hard", "origin/" + BASE_BRANCH])
     sh(["/usr/bin/git", "clean", "-fd"])
@@ -146,17 +145,26 @@ def main():
         sh(["/usr/bin/git", "checkout", "-B", branch])
 
     os.makedirs(os.path.join(REPO, "dev_autogen"), exist_ok=True)
-    fpath = os.path.join(REPO, "dev_autogen", f"p{pid}.txt")
-    with open(fpath, "w", encoding="utf-8") as f:
-        f.write(f"id={pid}\n")
-        f.write(f"title={title}\n")
-        f.write(f"ts={now()}\n\n")
-        f.write(description[:4000])
 
-    sh(["/usr/bin/git", "add", fpath])
-    sh(["/usr/bin/git", "commit", "-m", f"dev: proposal #{pid} bootstrap PR"])
+    body_parts = []
+    for row in rows:
+        pid = int(row["id"])
+        title = (row["title"] or f"proposal {pid}").strip()
+        description = row["description"] or row["spec"] or ""
+        kai(conn, pid, "picked", branch_name=branch, title=title)
+        fpath = os.path.join(REPO, "dev_autogen", f"p{pid}.txt")
+        with open(fpath, "w", encoding="utf-8") as f:
+            f.write(f"id={pid}\n")
+            f.write(f"title={title}\n")
+            f.write(f"batch={first_pid}-{last_pid}\n")
+            f.write(f"ts={now()}\n\n")
+            f.write(description[:4000])
+        body_parts.append(f"proposal_id: {pid}\ntitle: {title}\n\n{description[:1200]}")
+
+    sh(["/usr/bin/git", "add", "dev_autogen"])
+    sh(["/usr/bin/git", "commit", "-m", f"dev: batch proposals #{first_pid}-#{last_pid} bootstrap PR"])
     sh(["/usr/bin/git", "push", "-u", "origin", branch])
-    kai(conn, pid, "git_push", branch=branch)
+    kai(conn, first_pid, "git_push", branch=branch)
 
     prj = sh(
         [
@@ -168,25 +176,15 @@ def main():
             "--head",
             branch,
             "--title",
-            f"[dev] {title} (#{pid})",
+            f"[dev] {batch_title}",
             "--body",
-            f"proposal_id: {pid}\nbranch: {branch}\n\n{description}",
+            "\n\n---\n\n".join(body_parts),
         ],
         capture=True,
     )
 
     pr_url = prj.strip().splitlines()[-1].strip()
     pr_num = extract_pr_number(pr_url)
-
-    conn.execute("""
-        UPDATE dev_proposals
-        SET status='pr_created',
-            dev_stage='pr_created',
-            pr_number=COALESCE(?,pr_number),
-            pr_url=COALESCE(?,pr_url),
-            dev_attempts=COALESCE(dev_attempts,0)+1
-        WHERE id=?
-    """, (pr_num, pr_url, pid))
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS ceo_hub_events(
@@ -200,23 +198,46 @@ def main():
           sent_at text
         )
     """)
-    conn.execute("""
-        INSERT INTO ceo_hub_events(event_type,title,body,proposal_id,pr_url)
-        VALUES(?,?,?,?,?)
-    """, ("pr_created", f"PR作 成 : {title}", f"branch: {branch}", pid, pr_url))
+
+    for row in rows:
+        pid = int(row["id"])
+        title = (row["title"] or f"proposal {pid}").strip()
+        conn.execute("""
+            UPDATE dev_proposals
+            SET status='pr_created',
+                dev_stage='pr_created',
+                pr_number=COALESCE(?,pr_number),
+                pr_url=COALESCE(?,pr_url),
+                branch_name=?,
+                dev_attempts=COALESCE(dev_attempts,0)+1
+            WHERE id=?
+        """, (pr_num, pr_url, branch, pid))
+        conn.execute("""
+            INSERT INTO ceo_hub_events(event_type,title,body,proposal_id,pr_url)
+            VALUES(?,?,?,?,?)
+        """, (
+            "pr_created",
+            f"PR作 成 : {title}",
+            f"branch: {branch} batch={first_pid}-{last_pid}",
+            pid,
+            pr_url,
+        ))
 
     kv_set(conn, "executor_last_pr_created_at", now())
-    kai(conn, pid, "db_updated", pr_url=pr_url, pr_number=pr_num)
     conn.commit()
 
-    print(json.dumps({
-        "proposal_id": pid,
+    payload = {
+        "proposal_ids": pids,
         "branch": branch,
         "pr_number": pr_num,
         "pr_url": pr_url,
+        "batch_size": len(pids),
         "max_open_prs": MAX_OPEN_PRS,
         "min_interval_sec": MIN_PR_INTERVAL_SEC,
-    }, ensure_ascii=False), flush=True)
+    }
+    print(json.dumps(payload, ensure_ascii=False), flush=True)
+
+    conn.close()
     return 0
 
 if __name__ == "__main__":
