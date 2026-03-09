@@ -1,111 +1,74 @@
 # OpenClaw Bot Catalog
 
-## 現行運用 LaunchAgent
+自動生成。手修正しない。
 
-- jp.openclaw.supervisor
-- jp.openclaw.dev_command_executor_v1
-- jp.openclaw.dev_pr_watcher_v1
-- jp.openclaw.tg_poll_loop
-- jp.openclaw.self_healing_v2
-- jp.openclaw.spec_refiner_v2
-- jp.openclaw.spec_reply_v1
-- jp.openclaw.spec_notify_v1
-- jp.openclaw.dev_proposal_notify_daemon_v1
-- jp.openclaw.log_rotate_safe_v1
-- jp.openclaw.ai_employee_manager_v1
-
-## disable / 削除済み
-
-- jp.openclaw.ingest_private_replies_v1
-- jp.openclaw.dev_executor_daemon_v1
-- jp.openclaw.auto_pr
-- jp.openclaw.auto_pr_v2
-- jp.openclaw.spec_executor_min_v1
-- jp.openclaw.tg_private_ingest_v1
-
-## broken退避対象
-
-- jp.openclaw.ai_idea_generator_v1
-- jp.openclaw.idea_promoter_v1
-- jp.openclaw.project_decider
-- jp.openclaw.project_decider_v2
-- jp.openclaw.self_learning
-
-## 実コード / 実ロジックあり
-
-### factory主幹
-- project_brain_v4
-- llm_decider_v1
-- learning_brain_v1
-- executor_guard
-- infra_brain
-- business_brain
-- market_brain
-- revenue_brain
-- self_improve
-
-### daemon / I/O
-- dev_command_executor_v1
-- dev_pr_watcher_v1
-- tg_poll_loop
-- report_orchestrator_v1
-- company_dashboard_v1
-- ceo_help_v1
-- spec_refiner_v2
-- spec_reply_v1
-- spec_notify_v1
-- ai_employee_manager_v1
-
-### 実コード確認済みファイル
-- dev_executor_v1.py
-- spec_refiner_v2.py
+- __init__.py
+- auto_merge_v1.py
+- auto_plan_v1.py
+- auto_pr_v1.py
+- backfill_decisions_from_inbox_v1.py
+- browser_smoke.py
+- build_decision_patterns.py
+- ceo_help_v1.py
+- ceo_hub_schema_v1.py
+- ceo_hub_sender_v1.py
+- ceo_noise_cleanup_v1.py
 - chat_research_v1.py
+- chat_router_daemon_v1.py
+- chat_router_v1.py
+- command_apply_daemon_v1.py
+- command_apply_v1.py
+- company_dashboard_v1.py
+- daily_cycle_v1.py
+- dev_approval_parser.py
+- dev_auto_execute_v1.py
+- dev_command_executor_v1.py
+- dev_executor_v1.py
+- dev_gatekeeper.py
+- dev_guardrails_v1.py
+- dev_pr_automerge_v1.py
+- dev_pr_creator_v1.py
+- dev_pr_sync_v1.py
+- dev_pr_watcher_v1.py
+- dev_proposal_generator_v1.py
+- dev_proposal_notify_daemon_v1.py
+- dev_proposal_notify_v1.py
+- dev_reviewer_v1.py
+- dev_router_v1.py
+- dev_schema_apply.py
+- docs_sync_v1.py
+- employee_registry_v1.py
+- enrich_contacts_v1.py
+- explain_orchestrator_v1.py
+- healthcheck_v1.py
+- ingest_private_replies_v1.py
+- ingest_spec_answers_v1.py
+- ingest_telegram_replies_v1.py
+- meeting_from_db_v1.py
+- meeting_hn_v1.py
+- meeting_orchestrator_v1.py
+- openai_smoke.py
+- ops_brain_v1.py
+- ops_brain_v2.py
+- ops_brain_v3.py
+- parse_dev_reply_v1.py
+- persona_reply_v1.py
+- persona_reply_v2.py
+- persona_reply_v3.py
+- pipeline_hn_to_outreach.py
+- project_decider_v1.py
+- reflection_v1.py
+- reflection_worker_v1.py
+- report_orchestrator_v1.py
+- role_training_v1.py
 - scout_market_v1.py
 - scout_market_v2.py
-- company_dashboard_v1.py
-- ceo_help_v1.py
-- meeting_orchestrator_v1.py
-- employee_registry_v1.py
-- dev_pr_watcher_v1.py
-- bots/report_orchestrator_v1.py
-- team/sakura_scout.py
-- team/kenji_researcher.py
-
-## 実稼働BOT
-
-- Kaikun01
-- Kaikun02
-- Kaikun03
-- SekawakuClaw
-
-## 要確認 / 未完成
-
-- watcher 全体の統合整理
-- learning の評価軸
-- self-healing の精度
-- proposal供給ループ
-- bots/research_brain
-- bots/spec_engine
-- bots/dev_engine
-
-## 構想のみ / UI人格
-
-- しらべえ
-- さがすけ
-- かんがえもん
-- きめたろう
-- つくるぞう
-- みはるん
-- くっつけ丸
-- ひしょりん
-- しらせるん
-- とどけるん
-- まわすけ
-- なおし丸
-- みはりん
-
-## 補足
-
-- 実在 = 完成ではない
-- pycのみ確認のものは再構築候補として扱う
-- UI人格は実コードBOTと分けて管理する
+- scout_playwright.py
+- self_healing_v2.py
+- send_spec_questions_v1.py
+- spec_notify_v1.py
+- spec_refiner_v2.py
+- tg_inbox_poll_daemon_v1.py
+- tg_inbox_poll_v1.py
+- tg_send_reflection_v1.py
+- web_enrich_v1.py

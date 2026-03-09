@@ -1,50 +1,44 @@
-## 2026-03-09 12:29:09 自動進捗スナップショット
+# OpenClaw Auto Progress
 
-### proposal status
-- approved: 11
+- branch: `dev/self-watch-recovery`
+- head: `c2cbf3e`
+- db: `/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db`
+
+## dev_proposals status
+- approved: 4
 - archived: 152
 - closed: 198
 - hold: 61
 - idea: 1
-- merged: 423
+- merged: 455
 - open: 1
 
-### proposal_state
+## proposal_state
 - closed: 2
-- merged: 41
+- merged: 61
 - pr_created: 1
-- refined: 10
+- refined: 4
 
-### executor summary
-- executor_queue: 8
-- merged_count: 423
-- pr_created_count: 0
-- open_count: 1
+## ceo_hub_events
+- ai_employee: 6
+- learning_result: 79
+- merged: 125
+- pr_created: 75
+- revenue: 5
 
-### launchagents
-- jp.openclaw.dev_command_executor_v1: active pid=96240
-- jp.openclaw.dev_pr_watcher_v1: active pid=10800
-- jp.openclaw.spec_refiner_v2: active pid=93225
-- jp.openclaw.self_healing_v2: active pid=66626
-- jp.openclaw.supervisor: active pid=26843
-
-### latest proposals
-- 968 | Enhance PR watcher resilience | approved
-- 967 | Improve logging coverage in dev_autogen/p656.txt | merged
-- 966 | AI log analytics SaaS | merged
-- 965 | Improve log rotation | merged
-- 964 | REVENUE:Sell OpenClaw automation toolkit | approved
-- 963 | Improve logging coverage in dev_autogen/p449.txt | merged
-- 962 | Reduce executor latency | approved
-- 961 | AI log analytics SaaS | merged
-- 960 | Add auto retry for GitHub API | approved
-- 959 | Refactor duplicated logic in dev_autogen/p310.txt | merged
-
-### ceo_hub_events
-- ai_employee: 3
-- learning_result: 47
-- merged: 92
-- pr_created: 36
-- revenue: 2
-
----
+## latest proposals
+- 993 | Improve logging coverage in dev_autogen/p52.txt | merged | 2026-03-09 13:43:44
+- 992 | PR5 ORDER TEST | merged | 2026-03-09 13:26:06
+- 991 | RANK TEST HIGH | merged | 2026-03-09 13:04:22
+- 990 | RANK TEST MID | merged | 2026-03-09 13:04:22
+- 989 | RANK TEST LOW | merged | 2026-03-09 13:04:22
+- 988 | Optimize database queries in dev_autogen/p402.txt | merged | 2026-03-09 12:54:45
+- 987 | Improve logging coverage in dev_autogen/p134.txt | merged | 2026-03-09 12:47:49
+- 986 | BATCH TEST C | merged | 2026-03-09 12:40:06
+- 985 | BATCH TEST B | merged | 2026-03-09 12:40:06
+- 984 | BATCH TEST A | merged | 2026-03-09 12:40:06
+- 983 | REVENUE:AI DevOps monitoring SaaS | merged | 2026-03-09 11:04:21
+- 982 | Improve retry logic in dev_autogen/p596.txt | merged | 2026-03-09 10:43:43
+- 981 | AI debugging assistant | approved | 2026-03-09 08:45:18
+- 980 | Improve proposal ranking logic | merged | 2026-03-09 08:40:01
+- 979 | REVENUE:Developer productivity SaaS | merged | 2026-03-09 08:24:15
