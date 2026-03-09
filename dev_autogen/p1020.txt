@@ -1,0 +1,11 @@
+id=1020
+title=Optimize database queries in scripts/review_run_one.sh
+batch=1021-1020
+ts=2026-03-09T17:02:04Z
+
+Goal:
+Implement: Optimize database queries in scripts/review_run_one.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
