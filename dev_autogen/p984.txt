@@ -1,6 +1,6 @@
 id=984
 title=BATCH TEST A
 batch=984-986
-ts=2026-03-09T12:40:13Z
+ts=2026-03-09T12:40:25Z
 
 BATCH TEST A batch executor verification spec
