@@ -309,6 +309,30 @@ def recent_learning(c):
     return out
 
 def total_proposals(c):
+    return c.execute("select count(*) from dev_proposals").fetchone()[0]
+
+def merged_proposals(c):
+    return c.execute("select count(*) from dev_proposals where status='merged'").fetchone()[0]
+
+def open_pr_count(c):
+    return c.execute("select count(*) from proposal_state where stage='pr_created'").fetchone()[0]
+
+def executor_queue_count(c):
+    return c.execute("select count(*) from dev_proposals where status='approved'").fetchone()[0]
+
+def unapproved_count(c):
+    return c.execute("select count(*) from dev_proposals where status='open'").fetchone()[0]
+
+def latest_merged_row(c):
+    return c.execute("""
+        select id,title
+        from dev_proposals
+        where status='merged'
+        order by id desc
+        limit 1
+    """).fetchone()
+
+def total_proposals(c):
     return one(c, "select count(*) from dev_proposals") or 0
 
 def open_prs(c):
@@ -393,7 +417,7 @@ def build_dashboard_text(c):
     lines.append("")
     lines.append(f"総提案件数: {total_proposals(c)}")
     lines.append(f"マージ済み: {count_status(c,'merged')}")
-    lines.append(f"Open PR: {open_prs(c)}")
+    lines.append(f"Open PR: {open_pr_count(c)}")
     lines.append(f"実行待ち案件: {executable_queue(c)}")
     lines.append(f"未承認案件: {pending_unapproved(c)}")
     lines.append(f"Executor状態: {'消化フェーズ' if executable_queue(c) > 0 else '稼働待ちあり'}")
