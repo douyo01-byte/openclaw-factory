@@ -2,13 +2,17 @@ import os
 import re
 import sqlite3
 import subprocess
-from datetime import datetime, timedelta
+import requests
+from datetime import datetime
 
 DB = (
     os.environ.get("OCLAW_DB_PATH")
     or os.environ.get("DB_PATH")
-    or os.path.expanduser("~/AI/openclaw-factory-daemon/data/openclaw_real.db")
+    or os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db")
 )
+
+TOKEN = (os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("TELEGRAM_CEO_BOT_TOKEN") or "").strip()
+DEFAULT_CHAT_ID = (os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CEO_CHAT_ID") or "").strip()
 
 BOT_LABELS = {
     "supervisor": "jp.openclaw.supervisor",
@@ -37,18 +41,20 @@ def conn():
         c.execute("PRAGMA busy_timeout=30000")
     except Exception:
         pass
+    try:
+        c.execute("PRAGMA journal_mode=WAL")
+    except Exception:
+        pass
     return c
+
+def now():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def one(c, sql, args=()):
     r = c.execute(sql, args).fetchone()
     if r is None:
         return None
-    if isinstance(r, sqlite3.Row):
-        return list(r)[0]
     return r[0]
-
-def rows(c, sql, args=()):
-    return c.execute(sql, args).fetchall()
 
 def label_state(label):
     uid = os.getuid()
@@ -61,18 +67,16 @@ def label_state(label):
     except Exception:
         return "停止"
     state = ""
-    pid = ""
     for line in out.splitlines():
         s = line.strip()
         if s.startswith("state ="):
             state = s.split("=", 1)[1].strip()
-        elif s.startswith("pid ="):
-            pid = s.split("=", 1)[1].strip()
-    if state in ("running", "active"):
+            break
+    if state in ("running", "active", "spawn scheduled"):
         return "稼働中"
     if state == "not running":
         return "停止"
-    return "不明" if not state else state
+    return state or "不明"
 
 def count_status(c, status):
     return one(c, "select count(*) from dev_proposals where coalesce(status,'')=?", (status,)) or 0
@@ -103,9 +107,9 @@ def latest_merge(c):
     limit 1
     """).fetchone()
     if not r:
-        return None
-    pid = r["proposal_id"] if "proposal_id" in r.keys() else None
-    title = r["title"] if "title" in r.keys() else ""
+        return "なし"
+    pid = r["proposal_id"]
+    title = r["title"] or ""
     if pid:
         return f"#{pid} {title}"
     return title or "なし"
@@ -127,16 +131,16 @@ def latest_proposal(c):
     return r["id"], r["title"], source
 
 def today_summary(c):
-    r = c.execute("""
+    rs = c.execute("""
     select coalesce(event_type,'') as event_type, count(*) as n
     from ceo_hub_events
     where datetime(created_at) >= datetime('now','localtime','start of day')
     group by coalesce(event_type,'')
     order by n desc, event_type asc
     """).fetchall()
-    if not r:
+    if not rs:
         return "イベント 0件"
-    return " / ".join([f"{x['event_type']} {x['n']}件" for x in r[:5]])
+    return " / ".join([f"{r['event_type']} {r['n']}件" for r in rs[:5]])
 
 def priority_items(c):
     return c.execute("""
@@ -225,135 +229,217 @@ def pending_unapproved(c):
     where coalesce(status,'') in ('pending','proposed','req','needs_info')
     """) or 0
 
-def render():
-    with conn() as c:
-        latest_id, latest_title, latest_source = latest_proposal(c)
-        lines = []
-        lines.append("OpenClaw CEOダッシュボード")
-        lines.append("（AI経営管理システム）")
+def build_dashboard_text(c):
+    latest_id, latest_title, latest_source = latest_proposal(c)
+    lines = []
+    lines.append("OpenClaw CEOダッシュボード")
+    lines.append("（AI経営管理システム）")
+    lines.append("")
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("【今日の主な動き】")
+    lines.append("")
+    lines.append(f"概要: {today_summary(c)}")
+    lines.append(f"最新提案: #{latest_id} {latest_title}" if latest_id else "最新提案: なし")
+    lines.append(f"発案AI: {latest_source}")
+    lines.append("")
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("【社長の返答待ち項目】")
+    lines.append("")
+    wa = waiting_answer_count(c)
+    lines.append(f"現在 {wa}件")
+    lines.append("")
+    lines.append("※ 社長判断が必要な案件がここに表示されます")
+    lines.append("")
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("【直近の案件（優先順）】")
+    lines.append("")
+    items = priority_items(c)
+    for r in items:
+        lines.append(f"#{r['id']} {r['title']}")
+        lines.append(f"優先度: {r['priority']}")
+        lines.append(f"判断: {decision_jp(r['project_decision'])}")
+        lines.append(f"監査: {r['guard_status'] or 'pending'}")
+        lines.append(f"発案AI: {source_jp(r)}")
         lines.append("")
-        lines.append("━━━━━━━━━━━━━━━━━━")
-        lines.append("【今日の主な動き】")
-        lines.append("")
-        lines.append(f"概要: {today_summary(c)}")
-        lines.append(f"最新提案: #{latest_id} {latest_title}" if latest_id else "最新提案: なし")
-        lines.append(f"発案AI: {latest_source}")
-        lines.append("")
-        lines.append("━━━━━━━━━━━━━━━━━━")
-        lines.append("【社長の返答待ち項目】")
-        lines.append("")
-        wa = waiting_answer_count(c)
-        lines.append(f"現在 {wa}件")
-        lines.append("")
-        lines.append("※ 社長判断が必要な案件がここに表示されます")
-        lines.append("")
-        lines.append("━━━━━━━━━━━━━━━━━━")
-        lines.append("【直近の案件（優先順）】")
-        lines.append("")
-        for r in priority_items(c):
-            lines.append(f"#{r['id']} {r['title']}")
-            lines.append(f"優先度: {r['priority']}")
-            lines.append(f"判断: {decision_jp(r['project_decision'])}")
-            lines.append(f"監査: {r['guard_status'] or 'pending'}")
-            lines.append(f"発案AI: {source_jp(r)}")
-            lines.append("")
-        lines.append("━━━━━━━━━━━━━━━━━━")
-        lines.append("【専務・幹部から社長への相談 / 共有】")
-        lines.append("")
-        for x in consult_lines(c):
-            lines.append(x)
-        lines.append("")
-        lines.append("━━━━━━━━━━━━━━━━━━")
-        lines.append("【会社状態】")
-        lines.append("")
-        lines.append(f"総提案件数: {total_proposals(c)}")
-        lines.append(f"マージ済み: {count_status(c,'merged')}")
-        lines.append(f"Open PR: {open_prs(c)}")
-        lines.append(f"実行待ち案件: {executable_queue(c)}")
-        lines.append(f"未承認案件: {pending_unapproved(c)}")
-        lines.append(f"Executor状態: {'消化フェーズ' if executable_queue(c) > 0 else '稼働待ちあり'}")
-        lines.append(f"Executor Queue: {executable_queue(c)}")
-        lines.append(f"最新マージ: {latest_merge(c) or 'なし'}")
-        lines.append("")
-        lines.append("━━━━━━━━━━━━━━━━━━")
-        lines.append("【最近の意思決定】")
-        lines.append("")
-        for pid, result, score in recent_learning(c):
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("【専務・幹部から社長への相談 / 共有】")
+    lines.append("")
+    for x in consult_lines(c):
+        lines.append(x)
+    lines.append("")
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("【会社状態】")
+    lines.append("")
+    lines.append(f"総提案件数: {total_proposals(c)}")
+    lines.append(f"マージ済み: {count_status(c,'merged')}")
+    lines.append(f"Open PR: {open_prs(c)}")
+    lines.append(f"実行待ち案件: {executable_queue(c)}")
+    lines.append(f"未承認案件: {pending_unapproved(c)}")
+    lines.append(f"Executor状態: {'消化フェーズ' if executable_queue(c) > 0 else '稼働待ちあり'}")
+    lines.append(f"Executor Queue: {executable_queue(c)}")
+    lines.append(f"最新マージ: {latest_merge(c)}")
+    lines.append("")
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("【最近の意思決定】")
+    lines.append("")
+    rl = recent_learning(c)
+    if rl:
+        for pid, result, score in rl:
             lines.append(f"#{pid} 評価: {result}")
             lines.append(f"スコア: {score}")
-        if not recent_learning(c):
-            lines.append("記録なし")
-        lines.append("")
-        lines.append("━━━━━━━━━━━━━━━━━━")
-        lines.append("【AI社員構成】")
-        lines.append("")
-        lines.append("■ 海外事業")
-        lines.append("SekawakuClaw_bot")
-        lines.append("・さがすけ（探索）")
-        lines.append("・しらべえ（調査）")
-        lines.append("・かんがえもん（企画）")
-        lines.append("")
-        lines.append("■ 開発")
-        lines.append("Kaikun01_bot")
-        lines.append("・きめたろう（設計）")
-        lines.append("・つくるぞう（実装）")
-        lines.append("・みはるん（監査）")
-        lines.append("・くっつけ丸（統合）")
-        lines.append("")
-        lines.append("■ 経営共有")
-        lines.append("Kaikun02_bot")
-        lines.append("・ひしょりん（秘書）")
-        lines.append("・しらせるん（報告）")
-        lines.append("")
-        lines.append("■ 自動実行")
-        lines.append("Kaikun03_bot")
-        lines.append("・とどけるん（通知）")
-        lines.append("・まわすけ（実行管理）")
-        lines.append("・なおし丸（自己修復）")
-        lines.append("・みはりん（監視）")
-        lines.append("")
-        lines.append("━━━━━━━━━━━━━━━━━━")
-        lines.append("【BOT状態】")
-        lines.append("")
-        lines.append("Core")
-        lines.append(f"supervisor: {label_state(BOT_LABELS['supervisor'])}")
-        lines.append(f"self_healing_v2: {label_state(BOT_LABELS['self_healing_v2'])}")
-        lines.append(f"ceo_dashboard: {label_state(BOT_LABELS['ceo_dashboard'])}")
-        lines.append("")
-        lines.append("開発")
-        lines.append(f"spec_refiner_v2: {label_state(BOT_LABELS['spec_refiner_v2'])}")
-        lines.append(f"dev_pr_watcher_v1: {label_state(BOT_LABELS['dev_pr_watcher_v1'])}")
-        lines.append(f"dev_command_executor_v1: {label_state(BOT_LABELS['dev_command_executor_v1'])}")
-        lines.append(f"dev_pr_automerge_v1: {label_state(BOT_LABELS['dev_pr_automerge_v1'])}")
-        lines.append("")
-        lines.append("提案生成")
-        lines.append(f"innovation_engine: {label_state(BOT_LABELS['innovation_engine'])}")
-        lines.append(f"code_review_engine: {label_state(BOT_LABELS['code_review_engine'])}")
-        lines.append(f"business_engine: {label_state(BOT_LABELS['business_engine'])}")
-        lines.append(f"revenue_engine: {label_state(BOT_LABELS['revenue_engine'])}")
-        lines.append("")
-        lines.append("経営補助")
-        lines.append(f"ai_employee_factory: {label_state(BOT_LABELS['ai_employee_factory'])}")
-        lines.append(f"ai_meeting_engine: {label_state(BOT_LABELS['ai_meeting_engine'])}")
-        lines.append(f"ai_ceo_engine: {label_state(BOT_LABELS['ai_ceo_engine'])}")
-        lines.append("")
-        lines.append("補助")
-        lines.append(f"spec_reply_v1: {label_state(BOT_LABELS['spec_reply_v1'])}")
-        lines.append(f"tg_poll_loop: {label_state(BOT_LABELS['tg_poll_loop'])}")
-        lines.append(f"update_pr_created: {label_state(BOT_LABELS['update_pr_created'])}")
-        lines.append("")
-        lines.append("━━━━━━━━━━━━━━━━━━")
-        lines.append("【次の一手】")
-        lines.append("")
-        q = executable_queue(c)
-        if q > 0:
-            lines.append(f"・Executor Queue {q}件の消化監視")
-        latest = priority_items(c)
-        ids = [str(r["id"]) for r in latest if r["project_decision"] == "execute_now"][:3]
-        if ids:
-            lines.append(f"・#{' / #'.join(ids)} のPR化確認")
-        lines.append("・Kaikun02要約が ceo_hub_events の merged / pr_created / learning_result を確実に拾っているか監視")
-        return "\n".join(lines)
+    else:
+        lines.append("記録なし")
+    lines.append("")
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("【AI社員構成】")
+    lines.append("")
+    lines.append("■ 海外事業")
+    lines.append("SekawakuClaw_bot")
+    lines.append("・さがすけ（探索）")
+    lines.append("・しらべえ（調査）")
+    lines.append("・かんがえもん（企画）")
+    lines.append("")
+    lines.append("■ 開発")
+    lines.append("Kaikun01_bot")
+    lines.append("・きめたろう（設計）")
+    lines.append("・つくるぞう（実装）")
+    lines.append("・みはるん（監査）")
+    lines.append("・くっつけ丸（統合）")
+    lines.append("")
+    lines.append("■ 経営共有")
+    lines.append("Kaikun02_bot")
+    lines.append("・ひしょりん（秘書）")
+    lines.append("・しらせるん（報告）")
+    lines.append("")
+    lines.append("■ 自動実行")
+    lines.append("Kaikun03_bot")
+    lines.append("・とどけるん（通知）")
+    lines.append("・まわすけ（実行管理）")
+    lines.append("・なおし丸（自己修復）")
+    lines.append("・みはりん（監視）")
+    lines.append("")
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("【BOT状態】")
+    lines.append("")
+    lines.append("Core")
+    lines.append(f"supervisor: {label_state(BOT_LABELS['supervisor'])}")
+    lines.append(f"self_healing_v2: {label_state(BOT_LABELS['self_healing_v2'])}")
+    lines.append(f"ceo_dashboard: {label_state(BOT_LABELS['ceo_dashboard'])}")
+    lines.append("")
+    lines.append("開発")
+    lines.append(f"spec_refiner_v2: {label_state(BOT_LABELS['spec_refiner_v2'])}")
+    lines.append(f"dev_pr_watcher_v1: {label_state(BOT_LABELS['dev_pr_watcher_v1'])}")
+    lines.append(f"dev_command_executor_v1: {label_state(BOT_LABELS['dev_command_executor_v1'])}")
+    lines.append(f"dev_pr_automerge_v1: {label_state(BOT_LABELS['dev_pr_automerge_v1'])}")
+    lines.append("")
+    lines.append("提案生成")
+    lines.append(f"innovation_engine: {label_state(BOT_LABELS['innovation_engine'])}")
+    lines.append(f"code_review_engine: {label_state(BOT_LABELS['code_review_engine'])}")
+    lines.append(f"business_engine: {label_state(BOT_LABELS['business_engine'])}")
+    lines.append(f"revenue_engine: {label_state(BOT_LABELS['revenue_engine'])}")
+    lines.append("")
+    lines.append("経営補助")
+    lines.append(f"ai_employee_factory: {label_state(BOT_LABELS['ai_employee_factory'])}")
+    lines.append(f"ai_meeting_engine: {label_state(BOT_LABELS['ai_meeting_engine'])}")
+    lines.append(f"ai_ceo_engine: {label_state(BOT_LABELS['ai_ceo_engine'])}")
+    lines.append("")
+    lines.append("補助")
+    lines.append(f"spec_reply_v1: {label_state(BOT_LABELS['spec_reply_v1'])}")
+    lines.append(f"tg_poll_loop: {label_state(BOT_LABELS['tg_poll_loop'])}")
+    lines.append(f"update_pr_created: {label_state(BOT_LABELS['update_pr_created'])}")
+    lines.append("")
+    lines.append("━━━━━━━━━━━━━━━━━━")
+    lines.append("【次の一手】")
+    lines.append("")
+    q = executable_queue(c)
+    if q > 0:
+        lines.append(f"・Executor Queue {q}件の消化監視")
+    ids = [str(r["id"]) for r in items if r["project_decision"] == "execute_now"][:3]
+    if ids:
+        lines.append(f"・#{' / #'.join(ids)} のPR化確認")
+    lines.append("・Kaikun02要約が ceo_hub_events の merged / pr_created / learning_result を確実に拾っているか監視")
+    return "\n".join(lines)
+
+def tg_send(chat_id, text):
+    if not TOKEN or not chat_id:
+        return False, "missing_token_or_chat"
+    try:
+        r = requests.post(
+            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+            data={"chat_id": str(chat_id), "text": text},
+            timeout=20,
+        )
+        r.raise_for_status()
+        return True, ""
+    except Exception as e:
+        return False, repr(e)
+
+def ensure_inbox_cols(c):
+    cols = {r[1] for r in c.execute("pragma table_info(inbox_commands)")}
+    if "processed" not in cols:
+        c.execute("alter table inbox_commands add column processed integer default 0")
+    if "applied_at" not in cols:
+        c.execute("alter table inbox_commands add column applied_at text")
+    if "error" not in cols:
+        c.execute("alter table inbox_commands add column error text")
+    if "chat_id" not in cols:
+        c.execute("alter table inbox_commands add column chat_id integer")
+    if "status" not in cols:
+        c.execute("alter table inbox_commands add column status text default 'new'")
+
+def is_progress_query(text):
+    t = re.sub(r"\s+", "", (text or "").lower())
+    keys = [
+        "進捗", "進ちは", "状況", "現在地", "ダッシュボード", "report", "status",
+        "progress", "kaikun02", "ceo"
+    ]
+    return any(k in t for k in keys)
+
+def process_inbox(c, dashboard_text):
+    try:
+        ensure_inbox_cols(c)
+    except Exception:
+        pass
+    rs = c.execute("""
+        select
+          id,
+          coalesce(chat_id,'') as chat_id,
+          coalesce(text,'') as text,
+          coalesce(status,'new') as status
+        from inbox_commands
+        where coalesce(status,'new') in ('new','pending')
+        order by id asc
+        limit 20
+    """).fetchall()
+    done = 0
+    for r in rs:
+        msg_id = r["id"]
+        chat_id = str(r["chat_id"] or DEFAULT_CHAT_ID).strip()
+        text = r["text"] or ""
+        status = r["status"] or "new"
+        if not is_progress_query(text):
+            continue
+        ok, err = tg_send(chat_id, dashboard_text)
+        if ok:
+            c.execute(
+                "update inbox_commands set processed=1,status='company_done',applied_at=?,error=null where id=?",
+                (now(), msg_id),
+            )
+            done += 1
+        else:
+            c.execute(
+                "update inbox_commands set processed=1,status='company_error',applied_at=?,error=? where id=?",
+                (now(), err[:500], msg_id),
+            )
+    c.commit()
+    return done
+
+def main():
+    with conn() as c:
+        dashboard_text = build_dashboard_text(c)
+        done = process_inbox(c, dashboard_text)
+        print(dashboard_text, flush=True)
+        print(f"company_done={done}", flush=True)
 
 if __name__ == "__main__":
-    print(render())
+    main()
