@@ -1,0 +1,18 @@
+id=981
+title=AI debugging assistant
+batch=947-981
+ts=2026-03-09T23:53:17Z
+
+Goal:
+Implement proposal: AI debugging assistant
+
+Scope:
+- minimal isolated change
+- keep current Lv6/Lv7 automation stable
+- avoid destructive edits
+- auto-PR compatible
+
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
