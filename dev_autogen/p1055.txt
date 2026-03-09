@@ -1,0 +1,11 @@
+id=1055
+title=Reduce event summary drift in oclibs/telegram.py
+batch=1056-1055
+ts=2026-03-09T21:17:13Z
+
+Goal:
+Implement: Reduce event summary drift in oclibs/telegram.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
