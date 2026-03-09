@@ -1,6 +1,13 @@
-import os, sqlite3, random
+import os
+import random
+import sqlite3
+try:
+    from bots.proposal_dedupe_v1 import should_skip, approved_idea_cap
+except ModuleNotFoundError:
+    from proposal_dedupe_v1 import should_skip, approved_idea_cap
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db")
+
 ideas = [
     "Optimize query performance",
     "Improve log rotation",
@@ -11,45 +18,36 @@ ideas = [
     "Improve proposal ranking logic",
 ]
 
+CATEGORY = "automation"
+TARGET_SYSTEM = "core"
+IMPROVEMENT_TYPE = "stabilize"
+QUALITY_SCORE = 70
+
 def build_spec(title):
     return f"""Goal:
-Implement proposal: {title}
-
-Scope:
-- change only minimal related files
-- preserve current Lv6/Lv7 core loop
-- avoid broad refactor
-- keep PR small and reviewable
-
+Implement: {title}
 Acceptance:
 - code compiles
-- no regression in current pipeline
-- change is limited to target concern
+- current pipeline remains operational
+- change is limited and reviewable
 """
 
 conn = sqlite3.connect(DB, timeout=30)
 conn.execute("PRAGMA busy_timeout=30000")
 c = conn.cursor()
 
-cap = c.execute("""
-select count(*)
-from dev_proposals
-where status in ('approved','idea')
-""").fetchone()[0]
-if cap >= 300:
-    print("skip=cap")
+if approved_idea_cap(conn, 300):
+    print("skip=cap_reached")
     conn.close()
     raise SystemExit(0)
 
 pool = []
-for idea in ideas:
-    dup = c.execute("""
-    select 1 from dev_proposals
-    where lower(title)=lower(?)
-    order by id desc limit 1
-    """, (idea,)).fetchone()
-    if not dup:
-        pool.append(idea)
+for title in ideas:
+    skip, reason = should_skip(conn, title, CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE)
+    if skip:
+        print(f"[dedupe] skip title={title} reason={reason}")
+        continue
+    pool.append(title)
 
 if not pool:
     print("skip=no_new_idea")
@@ -66,7 +64,7 @@ insert into dev_proposals(
 ) values(
   ?,?,?,?,'refined','execute_now','safe','bootstrap_spec',datetime('now'),?,?,?,?
 )
-""", (title, spec, spec, "approved", "automation", "core", "stabilize", 70))
+""", (title, spec, spec, "approved", CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE, QUALITY_SCORE))
 
 conn.commit()
 print("inserted", title)
