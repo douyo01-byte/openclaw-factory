@@ -6,7 +6,7 @@ try:
 except ModuleNotFoundError:
     from proposal_dedupe_v1 import should_skip, approved_idea_cap
 
-DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db")
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or os.path.expanduser("~/AI/openclaw-factory//Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db")
 
 ideas = [
     "Optimize query performance",

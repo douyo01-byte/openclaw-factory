@@ -1,7 +1,7 @@
 import os, json, sqlite3, requests, datetime
 
-DAEMON_DB = os.environ.get("DB_PATH", "data/openclaw.db")
-FACTORY_DB = os.environ.get("FACTORY_DB_PATH", os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db"))
+DAEMON_DB = os.environ.get("DB_PATH", "/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db")
+FACTORY_DB = os.environ.get("FACTORY_DB_PATH", os.path.expanduser("~/AI/openclaw-factory//Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db"))
 TOKEN = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
 API = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 

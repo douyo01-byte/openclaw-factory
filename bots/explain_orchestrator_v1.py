@@ -1,6 +1,6 @@
 import os, sqlite3
 
-FACTORY_DB = os.environ.get("FACTORY_DB_PATH") or os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db")
+FACTORY_DB = os.environ.get("FACTORY_DB_PATH") or os.path.expanduser("~/AI/openclaw-factory//Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db")
 
 def fconn():
     c = sqlite3.connect(FACTORY_DB, timeout=30)

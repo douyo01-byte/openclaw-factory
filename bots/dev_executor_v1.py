@@ -10,7 +10,7 @@ try:
 except ModuleNotFoundError:
     from proposal_ranking_v1 import compute_ranking
 
-DB_PATH = os.environ.get("OCLAW_DB_PATH", "/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
+DB_PATH = os.environ.get("OCLAW_DB_PATH", "/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db")
 BASE_BRANCH = "main"
 REPO = "/Users/doyopc/AI/openclaw-factory"
 KAI_LOG = os.path.join(REPO, "logs", "kai_actions.log")

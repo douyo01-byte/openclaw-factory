@@ -5,9 +5,9 @@ set -a
 for f in "$HOME/AI/openclaw-factory/env/"*.env "$HOME/AI/openclaw-factory-daemon/env/"*.env; do
   [ -f "$f" ] && source "$f"
 done
-export DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"
-export FACTORY_DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"
-export OCLAW_DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"
+export DB_PATH="$HOME/AI/openclaw-factory//Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db"
+export FACTORY_DB_PATH="$HOME/AI/openclaw-factory//Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db"
+export OCLAW_DB_PATH="$HOME/AI/openclaw-factory//Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db"
 export PYTHONPATH="$HOME/AI/openclaw-factory-daemon"
 set +a
 exec python -u bots/spec_notify_v1.py

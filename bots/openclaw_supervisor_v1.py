@@ -25,8 +25,8 @@ running={}
 def start(name,script):
     print("starting",name,flush=True)
     env=dict(os.environ)
-    env["DB_PATH"]="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
-    env["OCLAW_DB_PATH"]="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+    env["DB_PATH"]="/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db"
+    env["OCLAW_DB_PATH"]="/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db"
     p=subprocess.Popen(["python",script],env=env)
     running[name]=p
 
