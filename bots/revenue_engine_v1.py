@@ -9,6 +9,22 @@ ideas = [
     "Developer productivity SaaS",
 ]
 
+def build_spec(title):
+    return f"""Goal:
+Implement revenue-oriented proposal: {title}
+
+Scope:
+- small, isolated implementation only
+- keep current automation stable
+- no broad architectural rewrite
+- prepare auto-PR compatible change
+
+Acceptance:
+- executable by current dev_executor
+- minimal PR footprint
+- no breakage to Lv6/Lv7 loop
+"""
+
 conn = sqlite3.connect(DB, timeout=30)
 conn.execute("PRAGMA busy_timeout=30000")
 c = conn.cursor()
@@ -25,14 +41,12 @@ if cap >= 300:
 
 pool = []
 for idea in ideas:
-    title = f"REVENUE:{idea}"
+    t = f"REVENUE:{idea}"
     dup = c.execute("""
-    select 1
-    from dev_proposals
+    select 1 from dev_proposals
     where lower(title)=lower(?)
-    order by id desc
-    limit 1
-    """, (title,)).fetchone()
+    order by id desc limit 1
+    """, (t,)).fetchone()
     if not dup:
         pool.append(idea)
 
@@ -43,11 +57,16 @@ if not pool:
 
 idea = random.choice(pool)
 title = f"REVENUE:{idea}"
+spec = build_spec(title)
 
 c.execute("""
-insert into dev_proposals(title,status,created_at,category,target_system,improvement_type,quality_score)
-values(?,?,datetime('now'),?,?,?,?)
-""", (title, "approved", "revenue", "product", "monetize", 78))
+insert into dev_proposals(
+  title,description,spec,status,spec_stage,project_decision,guard_status,guard_reason,
+  created_at,category,target_system,improvement_type,quality_score
+) values(
+  ?,?,?,?,'refined','execute_now','safe','bootstrap_spec',datetime('now'),?,?,?,?
+)
+""", (title, spec, spec, "approved", "revenue", "product", "monetize", 78))
 
 c.execute("""
 insert into ceo_hub_events(event_type,title,body,created_at)

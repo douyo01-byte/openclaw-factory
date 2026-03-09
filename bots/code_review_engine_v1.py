@@ -11,6 +11,22 @@ checks = [
     "Improve retry logic",
 ]
 
+def build_spec(title):
+    return f"""Goal:
+Implement targeted code improvement: {title}
+
+Scope:
+- edit only directly related file(s)
+- keep PR minimal
+- preserve current behavior except target fix
+- avoid repo-wide refactor
+
+Acceptance:
+- affected code compiles
+- targeted improvement is visible
+- current pipeline keeps working
+"""
+
 conn = sqlite3.connect(DB, timeout=30)
 conn.execute("PRAGMA busy_timeout=30000")
 c = conn.cursor()
@@ -28,29 +44,34 @@ if cap >= 300:
 files = subprocess.check_output(["git", "-C", REPO, "ls-files"], text=True).splitlines()
 random.shuffle(files)
 
-proposal = None
+title = None
 for target in files[:300]:
     cand = f"{random.choice(checks)} in {target}"
     dup = c.execute("""
-    select 1
-    from dev_proposals
+    select 1 from dev_proposals
     where lower(title)=lower(?)
-    order by id desc
-    limit 1
+    order by id desc limit 1
     """, (cand,)).fetchone()
     if not dup:
-        proposal = cand
+        title = cand
         break
 
-if not proposal:
+if not title:
     print("skip=no_new_code_review")
     conn.close()
     raise SystemExit(0)
 
+spec = build_spec(title)
+
 c.execute("""
-insert into dev_proposals(title,status,created_at,category,target_system,improvement_type,quality_score)
-values(?,?,datetime('now'),?,?,?,?)
-""", (proposal, "approved", "automation", "codebase", "refactor", 72))
+insert into dev_proposals(
+  title,description,spec,status,spec_stage,project_decision,guard_status,guard_reason,
+  created_at,category,target_system,improvement_type,quality_score
+) values(
+  ?,?,?,?,'refined','execute_now','safe','bootstrap_spec',datetime('now'),?,?,?,?
+)
+""", (title, spec, spec, "approved", "automation", "codebase", "refactor", 72))
+
 conn.commit()
-print("inserted", proposal)
+print("inserted", title)
 conn.close()

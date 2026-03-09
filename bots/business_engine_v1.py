@@ -9,6 +9,22 @@ ideas = [
     "AI debugging assistant",
 ]
 
+def build_spec(title):
+    return f"""Goal:
+Prototype business/dev product proposal: {title}
+
+Scope:
+- create minimal implementation scaffold only
+- keep change isolated
+- prefer low-risk files
+- no destructive migration
+
+Acceptance:
+- PR can be created automatically
+- code path is small and reviewable
+- current automation remains intact
+"""
+
 conn = sqlite3.connect(DB, timeout=30)
 conn.execute("PRAGMA busy_timeout=30000")
 c = conn.cursor()
@@ -26,11 +42,9 @@ if cap >= 300:
 pool = []
 for idea in ideas:
     dup = c.execute("""
-    select 1
-    from dev_proposals
+    select 1 from dev_proposals
     where lower(title)=lower(?)
-    order by id desc
-    limit 1
+    order by id desc limit 1
     """, (idea,)).fetchone()
     if not dup:
         pool.append(idea)
@@ -40,11 +54,18 @@ if not pool:
     conn.close()
     raise SystemExit(0)
 
-idea = random.choice(pool)
+title = random.choice(pool)
+spec = build_spec(title)
+
 c.execute("""
-insert into dev_proposals(title,status,created_at,category,target_system,improvement_type,quality_score)
-values(?,?,datetime('now'),?,?,?,?)
-""", (idea, "approved", "business", "product", "expansion", 75))
+insert into dev_proposals(
+  title,description,spec,status,spec_stage,project_decision,guard_status,guard_reason,
+  created_at,category,target_system,improvement_type,quality_score
+) values(
+  ?,?,?,?,'refined','execute_now','safe','bootstrap_spec',datetime('now'),?,?,?,?
+)
+""", (title, spec, spec, "approved", "business", "product", "expansion", 75))
+
 conn.commit()
-print("inserted", idea)
+print("inserted", title)
 conn.close()
