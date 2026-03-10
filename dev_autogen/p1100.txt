@@ -1,0 +1,11 @@
+id=1100
+title=Refactor duplicated logic in test_rule.txt
+batch=1101-1100
+ts=2026-03-10T04:09:31Z
+
+Goal:
+Implement: Refactor duplicated logic in test_rule.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
