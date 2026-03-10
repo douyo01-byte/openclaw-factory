@@ -1,0 +1,11 @@
+id=1163
+title=Improve retry logic in config/personas/miho.txt
+batch=1164-1163
+ts=2026-03-10T08:09:42Z
+
+Goal:
+Implement: Improve retry logic in config/personas/miho.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
