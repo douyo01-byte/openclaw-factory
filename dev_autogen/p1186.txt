@@ -1,10 +1,10 @@
 id=1186
-title=Reduce event summary drift in bots/dev_pr_automerge_v1.py
-batch=1187-1186
-ts=2026-03-10T09:39:45Z
+title=Reduce event summary drift in bots/ceo_hub_sender_v1.py
+batch=1186-1186
+ts=2026-03-10T22:43:56Z
 
 Goal:
-Implement: Reduce event summary drift in bots/dev_pr_automerge_v1.py
+Implement: Reduce event summary drift in bots/ceo_hub_sender_v1.py
 Acceptance:
 - code compiles
 - current pipeline remains operational
