@@ -41,6 +41,9 @@ ideas = [
     "Improve core automation resilience",
     "Strengthen learning pipeline handoff",
     "Improve queue drain visibility",
+    "Improve discussion-driven proposal quality",
+    "Improve meeting refinement handoff",
+    "Strengthen executor audit coverage",
 ]
 
 CATEGORY = "automation"
@@ -57,41 +60,46 @@ Acceptance:
 - change is limited and reviewable
 """
 
-conn = sqlite3.connect(DB, timeout=30)
-conn.execute("PRAGMA busy_timeout=30000")
-c = conn.cursor()
+def main():
+    conn = sqlite3.connect(DB, timeout=30)
+    conn.execute("PRAGMA busy_timeout=30000")
+    c = conn.cursor()
 
-if approved_idea_cap(conn, 300):
-    print("skip=cap_reached")
+    if approved_idea_cap(conn, 300):
+        print("skip=cap_reached")
+        conn.close()
+        raise SystemExit(0)
+
+    pool = []
+    for title in ideas:
+        skip, reason = should_skip(conn, title, CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE)
+        if skip:
+            print(f"[dedupe] skip title={title} reason={reason}")
+            continue
+        pool.append(title)
+
+    if not pool:
+        print("skip=no_new_idea")
+        conn.close()
+        raise SystemExit(0)
+
+    pick_n = 2 if len(pool) >= 2 else 1
+    picked = random.sample(pool, pick_n)
+
+    for title in picked:
+        spec = build_spec(title)
+        c.execute("""
+        insert into dev_proposals(
+          title,description,spec,status,spec_stage,project_decision,guard_status,guard_reason,
+          created_at,category,target_system,improvement_type,quality_score
+        ) values(
+          ?,?,?,?,'refined','execute_now','safe','bootstrap_spec',datetime('now'),?,?,?,?
+        )
+        """, (title, spec, spec, "approved", CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE, QUALITY_SCORE))
+        print("inserted", title)
+
+    conn.commit()
     conn.close()
-    raise SystemExit(0)
 
-pool = []
-for title in ideas:
-    skip, reason = should_skip(conn, title, CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE)
-    if skip:
-        print(f"[dedupe] skip title={title} reason={reason}")
-        continue
-    pool.append(title)
-
-if not pool:
-    print("skip=no_new_idea")
-    conn.close()
-    raise SystemExit(0)
-
-picked = pool[:]
-random.shuffle(picked)
-picked = picked[:2]
-for title in picked:
-    spec = build_spec(title)
-    c.execute("""
-insert into dev_proposals(
-  title,description,spec,status,spec_stage,project_decision,guard_status,guard_reason,
-  created_at,category,target_system,improvement_type,quality_score
-) values(
-  ?,?,?,?,'refined','execute_now','safe','bootstrap_spec',datetime('now'),?,?,?,?
-)
-""", (title, spec, spec, "approved", CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE, QUALITY_SCORE))
-    print("inserted", title)
-conn.commit()
-conn.close()
+if __name__ == "__main__":
+    main()
