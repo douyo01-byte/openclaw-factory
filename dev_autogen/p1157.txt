@@ -1,10 +1,10 @@
-id=1155
-title=Improve queue handling in bots/dev_gatekeeper.py
+id=1157
+title=Improve proposal filtering in bots/team/miho_finder.py
 batch=1155-1158
 ts=2026-03-10T11:35:37Z
 
 Goal:
-Implement: Improve queue handling in bots/dev_gatekeeper.py
+Implement: Improve proposal filtering in bots/team/miho_finder.py
 Acceptance:
 - code compiles
 - current pipeline remains operational

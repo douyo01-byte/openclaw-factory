@@ -1,10 +1,10 @@
 id=1156
-title=Reduce event summary drift in bots/dev_gatekeeper.py
-batch=1156-1156
-ts=2026-03-10T07:43:55Z
+title=Improve lifecycle event safety in bots/__init__.py
+batch=1155-1158
+ts=2026-03-10T11:35:37Z
 
 Goal:
-Implement: Reduce event summary drift in bots/dev_gatekeeper.py
+Implement: Improve lifecycle event safety in bots/__init__.py
 Acceptance:
 - code compiles
 - current pipeline remains operational
