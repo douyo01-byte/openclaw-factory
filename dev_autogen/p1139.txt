@@ -1,0 +1,11 @@
+id=1139
+title=Improve retry logic in scripts/db_init.py
+batch=1140-1139
+ts=2026-03-10T06:39:36Z
+
+Goal:
+Implement: Improve retry logic in scripts/db_init.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
