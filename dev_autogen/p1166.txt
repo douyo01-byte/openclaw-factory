@@ -1,10 +1,10 @@
-id=1167
-title=Executor stability sweep 2124
+id=1166
+title=Strengthen launchd recovery in .dev_agent_test.txt
 batch=1167-1166
 ts=2026-03-10T12:24:52Z
 
 Goal:
-Implement: Executor stability sweep 2124
+Implement: Strengthen launchd recovery in .dev_agent_test.txt
 Acceptance:
 - code compiles
 - current pipeline remains operational
