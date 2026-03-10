@@ -1,0 +1,11 @@
+id=1154
+title=Improve lifecycle event safety in scripts/dev_stage_sync_from_github.sh
+batch=1155-1154
+ts=2026-03-10T07:39:41Z
+
+Goal:
+Implement: Improve lifecycle event safety in scripts/dev_stage_sync_from_github.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
