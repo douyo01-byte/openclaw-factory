@@ -1,0 +1,11 @@
+id=1104
+title=Improve logging coverage in scripts/spec_notify_loop.sh
+batch=1105-1104
+ts=2026-03-10T04:24:33Z
+
+Goal:
+Implement: Improve logging coverage in scripts/spec_notify_loop.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
