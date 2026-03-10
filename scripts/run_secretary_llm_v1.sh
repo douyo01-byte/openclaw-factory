@@ -1,0 +1,12 @@
+#!/bin/bash
+cd /Users/doyopc/AI/openclaw-factory-daemon || exit 1
+set -a
+[ -f env/telegram.env ] && source env/telegram.env
+[ -f env/telegram_ceo.env ] && source env/telegram_ceo.env
+[ -f env/telegram_daemon.env ] && source env/telegram_daemon.env
+[ -f env/telegram_routing.env ] && source env/telegram_routing.env
+export DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+export FACTORY_DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+export TELEGRAM_BOT_TOKEN="${TELEGRAM_CEO_BOT_TOKEN:-$TELEGRAM_BOT_TOKEN}"
+set +a
+exec /Users/doyopc/AI/openclaw-factory-daemon/.venv/bin/python bots/secretary_llm_v1.py >> logs/secretary_llm_v1.launchd.out 2>> logs/secretary_llm_v1.launchd.err

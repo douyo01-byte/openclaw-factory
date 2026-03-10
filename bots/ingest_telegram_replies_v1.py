@@ -137,7 +137,8 @@ def main():
     c = sqlite3.connect(DB_PATH)
     ensure(c)
 
-    offset = kv_get(c, "tg_offset")
+    offset_key = "tg_offset_ceo" if (os.environ.get("TELEGRAM_CEO_BOT_TOKEN") or "").strip() and TOKEN == (os.environ.get("TELEGRAM_CEO_BOT_TOKEN") or "").strip() else "tg_offset"
+    offset = kv_get(c, offset_key)
     params = {"timeout": 0}
     if offset is not None:
         params["offset"] = int(offset) + 1
@@ -212,7 +213,7 @@ def main():
                 ),
             )
 
-        kv_set(c, "tg_offset", int(uid) + 1)
+        kv_set(c, offset_key, int(uid) + 1)
         c.commit()
         seen += 1
 
