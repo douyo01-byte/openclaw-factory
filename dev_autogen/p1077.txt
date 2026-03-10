@@ -1,0 +1,11 @@
+id=1077
+title=Executor stability sweep 0939
+batch=1077-1077
+ts=2026-03-10T00:39:23Z
+
+Goal:
+Implement: Executor stability sweep 0939
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
