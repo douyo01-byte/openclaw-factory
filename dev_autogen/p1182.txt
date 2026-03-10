@@ -1,0 +1,11 @@
+id=1182
+title=Improve executor stability in bots/team/kenji_researcher.py
+batch=1183-1182
+ts=2026-03-10T09:24:45Z
+
+Goal:
+Implement: Improve executor stability in bots/team/kenji_researcher.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
