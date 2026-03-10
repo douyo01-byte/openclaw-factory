@@ -1,9 +1,9 @@
 # OpenClaw Handover
 
-generated_at: 2026-03-10 12:36:18.465889
+generated_at: 2026-03-10 12:41:35.042580
 
-branch: dev/batch-1167-1166
-head: bf78b92
+branch: 
+head: 
 
 ## LaunchAgents
 
@@ -19,6 +19,7 @@ head: bf78b92
 - jp.openclaw.spec_reply_v1
 - jp.openclaw.supply_adoption_metrics_v1
 - jp.openclaw.ai_employee_factory
+- jp.openclaw.docs_compiler_v2
 - jp.openclaw.db_integrity_watchdog_v1
 - jp.openclaw.code_supply_engine_v1
 - jp.openclaw.mainstream_supply_v1
