@@ -1,10 +1,10 @@
-id=1160
-title=Executor stability sweep 2039
+id=1159
+title=Harden DB path handling in bots/healthcheck_v1.py
 batch=1160-1159
 ts=2026-03-10T11:39:47Z
 
 Goal:
-Implement: Executor stability sweep 2039
+Implement: Harden DB path handling in bots/healthcheck_v1.py
 Acceptance:
 - code compiles
 - current pipeline remains operational
