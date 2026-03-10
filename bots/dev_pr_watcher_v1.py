@@ -223,8 +223,8 @@ def tick_once(conn: sqlite3.Connection):
         conn.commit()
 
     for pid, prn, new in notify:
-        msg = "DEV PROPOSAL\nid: %s\npr_number: %s\npr_status: %s\n\nreply:\nok %s\nhold %s\nreq %s <text>" % (pid, prn, new, pid, pid, pid)
-        tg_send(msg)
+        msg = "DEV_PROPOSAL_DISABLED\nid: %s\npr_number: %s\npr_status: %s\n\nreply:\nok %s\nhold %s\nreq %s <text>" % (pid, prn, new, pid, pid, pid)
+        pass
 
 def main():
     os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
