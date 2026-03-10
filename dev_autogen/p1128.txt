@@ -1,0 +1,11 @@
+id=1128
+title=Improve proposal filtering in bots/meeting_orchestrator_v1.py
+batch=1129-1128
+ts=2026-03-10T05:54:34Z
+
+Goal:
+Implement: Improve proposal filtering in bots/meeting_orchestrator_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
