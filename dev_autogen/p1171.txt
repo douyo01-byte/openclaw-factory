@@ -1,0 +1,11 @@
+id=1171
+title=Improve logging coverage in bots/spec_notify_v1.py
+batch=1172-1171
+ts=2026-03-10T08:39:43Z
+
+Goal:
+Implement: Improve logging coverage in bots/spec_notify_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
