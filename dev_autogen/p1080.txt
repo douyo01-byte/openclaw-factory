@@ -1,0 +1,11 @@
+id=1080
+title=Executor stability sweep 1024
+batch=1080-1080
+ts=2026-03-10T01:24:25Z
+
+Goal:
+Implement: Executor stability sweep 1024
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
