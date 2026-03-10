@@ -1,10 +1,10 @@
 id=1175
-title=Improve lifecycle event safety in oclibs/brain.py
+title=Improve queue handling in scripts/tg_test.py
 batch=1176-1175
-ts=2026-03-10T08:54:44Z
+ts=2026-03-10T13:11:09Z
 
 Goal:
-Implement: Improve lifecycle event safety in oclibs/brain.py
+Implement: Improve queue handling in scripts/tg_test.py
 Acceptance:
 - code compiles
 - current pipeline remains operational
