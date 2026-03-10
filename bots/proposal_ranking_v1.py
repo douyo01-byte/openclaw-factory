@@ -1,93 +1,79 @@
 from __future__ import annotations
+import os
+import sqlite3
+import time
 
-def _norm(x):
-    return (x or "").strip().lower()
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "data/openclaw.db"
 
-CATEGORY_BONUS = {
-    "automation": 8,
-    "infra": 7,
-    "infrastructure": 7,
-    "revenue": 6,
-    "business": 5,
-}
+IMPACT_W = {"high": 24, "medium": 14, "low": 6, "": 0}
+RISK_W = {"low": 10, "medium": 4, "high": -8, "": 0}
+COMPLEXITY_W = {"low": 8, "medium": 3, "high": -6, "": 0}
+SYS_W = {"core": 18, "business": 10, "codebase": 8, "learning": 8, "product": 6, "": 0}
 
-TARGET_BONUS = {
-    "dev_executor": 5,
-    "executor": 5,
-    "dev_pr_watcher": 5,
-    "watcher": 5,
-    "company_dashboard": 4,
-    "dashboard": 4,
-    "learning": 4,
-}
+def parse_discussion(msg: str):
+    d = {}
+    for line in (msg or "").splitlines():
+        if "=" in line:
+            k, v = line.split("=", 1)
+            d[k.strip().lower()] = v.strip().lower()
+    return d
 
-IMPROVEMENT_BONUS = {
-    "reliability": 6,
-    "stabilize": 6,
-    "observability": 5,
-    "monitor": 5,
-    "performance": 4,
-    "optimize": 4,
-    "revenue": 3,
-    "monetize": 3,
-}
+def compute_score(row, convo):
+    base = int(row["quality_score"] or 0)
+    info = {}
+    for r in convo:
+        if (r["role"] or "") == "discussion":
+            info = parse_discussion(r["message"] or "")
+    impact = info.get("impact", "")
+    risk = info.get("risk", "")
+    complexity = info.get("complexity", "")
+    system_importance = info.get("system_importance", row["target_system"] or "")
+    score = (
+        base
+        + IMPACT_W.get(impact, 0)
+        + RISK_W.get(risk, 0)
+        + COMPLEXITY_W.get(complexity, 0)
+        + SYS_W.get(system_importance, 0)
+    )
+    detail = f"impact={impact or '-'} risk={risk or '-'} complexity={complexity or '-'} system={system_importance or '-'}"
+    return score, detail
 
-def compute_ranking(row):
-    quality = int(row["quality_score"] or 0)
-    category = _norm(row["category"])
-    target = _norm(row["target_system"])
-    improvement = _norm(row["improvement_type"])
+def main():
+    conn = sqlite3.connect(DB, timeout=30)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA busy_timeout=30000")
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+    except Exception:
+        pass
 
-    cat_bonus = CATEGORY_BONUS.get(category, 0)
-    target_bonus = TARGET_BONUS.get(target, 0)
-    imp_bonus = IMPROVEMENT_BONUS.get(improvement, 0)
+    rows = conn.execute("""
+    select id, title, category, target_system, improvement_type, quality_score, status
+    from dev_proposals
+    where coalesce(status,'') in ('idea','approved')
+    order by id desc
+    limit 300
+    """).fetchall()
 
-    score = quality + cat_bonus + target_bonus + imp_bonus
-    reason = f"quality={quality},category={cat_bonus},target={target_bonus},improvement={imp_bonus}"
-    title = (row["title"] or "").lower()
-    category = (row["category"] or "").lower()
-    target = (row["target_system"] or "").lower()
-    impact = "medium"
-    complexity = "medium"
-    risk = "medium"
-    system_importance = "medium"
+    for r in rows:
+        convo = conn.execute("""
+        select role, message
+        from proposal_conversation
+        where proposal_id=?
+        order by id asc
+        """, (r["id"],)).fetchall()
+        score, detail = compute_score(r, convo)
+        conn.execute("""
+        update dev_proposals
+        set priority=?
+        where id=?
+        """, (score, r["id"]))
+        print(f"[ranking] proposal={r['id']} score={score} {detail}", flush=True)
 
-    if category in ("automation", "reliability", "performance") or target in ("core", "codebase", "dev_pr_watcher", "learning", "executor"):
-        score += 6
-        impact = "high"
+    conn.commit()
+    conn.close()
 
-    if "safety" in title or "guard" in title or "stability" in title or "retry" in title or "recovery" in title:
-        score += 6
-        system_importance = "high"
-
-    if "refactor" in title or "logging" in title:
-        complexity = "low"
-
-    if "revenue" in title or category == "revenue":
-        risk = "high"
-
-    reason = f"{reason},impact={impact},complexity={complexity},risk={risk},system={system_importance}"
-    title = (row["title"] or "").lower()
-    category = (row["category"] or "").lower()
-    target = (row["target_system"] or "").lower()
-    impact = "medium"
-    complexity = "medium"
-    risk = "medium"
-    system_importance = "medium"
-
-    if category in ("automation", "reliability", "performance") or target in ("core", "codebase", "dev_pr_watcher", "learning", "executor"):
-        score += 6
-        impact = "high"
-
-    if "safety" in title or "guard" in title or "stability" in title or "retry" in title or "recovery" in title:
-        score += 6
-        system_importance = "high"
-
-    if "refactor" in title or "logging" in title:
-        complexity = "low"
-
-    if "revenue" in title or category == "revenue":
-        risk = "high"
-
-    reason = f"{reason},impact={impact},complexity={complexity},risk={risk},system={system_importance}"
-    return score, reason
+if __name__ == "__main__":
+    while True:
+        main()
+        time.sleep(60)
