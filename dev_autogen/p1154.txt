@@ -1,10 +1,10 @@
 id=1154
-title=Improve lifecycle event safety in scripts/dev_stage_sync_from_github.sh
-batch=1155-1154
-ts=2026-03-10T07:39:41Z
+title=Improve retry logic in bots/explain_orchestrator_v1.py
+batch=1152-1154
+ts=2026-03-10T11:32:16Z
 
 Goal:
-Implement: Improve lifecycle event safety in scripts/dev_stage_sync_from_github.sh
+Implement: Improve retry logic in bots/explain_orchestrator_v1.py
 Acceptance:
 - code compiles
 - current pipeline remains operational

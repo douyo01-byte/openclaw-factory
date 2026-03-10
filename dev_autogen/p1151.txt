@@ -1,10 +1,10 @@
 id=1151
-title=Executor stability sweep 1624
-batch=1151-1150
-ts=2026-03-10T07:24:40Z
+title=Improve logging coverage in bots/tg_send_reflection_v1.py
+batch=1152-1154
+ts=2026-03-10T11:32:16Z
 
 Goal:
-Implement: Executor stability sweep 1624
+Implement: Improve logging coverage in bots/tg_send_reflection_v1.py
 Acceptance:
 - code compiles
 - current pipeline remains operational
