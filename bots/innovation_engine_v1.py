@@ -79,10 +79,12 @@ if not pool:
     conn.close()
     raise SystemExit(0)
 
-title = random.choice(pool)
-spec = build_spec(title)
-
-c.execute("""
+picked = pool[:]
+random.shuffle(picked)
+picked = picked[:2]
+for title in picked:
+    spec = build_spec(title)
+    c.execute("""
 insert into dev_proposals(
   title,description,spec,status,spec_stage,project_decision,guard_status,guard_reason,
   created_at,category,target_system,improvement_type,quality_score
@@ -90,7 +92,6 @@ insert into dev_proposals(
   ?,?,?,?,'refined','execute_now','safe','bootstrap_spec',datetime('now'),?,?,?,?
 )
 """, (title, spec, spec, "approved", CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE, QUALITY_SCORE))
-
+    print("inserted", title)
 conn.commit()
-print("inserted", title)
 conn.close()
