@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$HOME/AI/openclaw-factory-daemon"
-db="$HOME/AI/openclaw-factory-daemon/data/openclaw_real.db"
+db="$HOME/AI/openclaw-factory/data/openclaw.db"
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 export PYTHONPATH="$HOME/AI/openclaw-factory-daemon"
 export DB_PATH="$db"
