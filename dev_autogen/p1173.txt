@@ -1,0 +1,11 @@
+id=1173
+title=Harden DB path handling in bots/scout_market_v1.py
+batch=1174-1173
+ts=2026-03-10T12:56:08Z
+
+Goal:
+Implement: Harden DB path handling in bots/scout_market_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
