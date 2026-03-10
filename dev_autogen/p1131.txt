@@ -1,0 +1,11 @@
+id=1131
+title=Improve error handling in bots/role_training_v1.py
+batch=1132-1131
+ts=2026-03-10T06:09:35Z
+
+Goal:
+Implement: Improve error handling in bots/role_training_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
