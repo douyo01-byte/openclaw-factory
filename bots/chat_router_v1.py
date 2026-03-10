@@ -6,6 +6,23 @@ import re
 import sqlite3
 
 
+
+def _oc_health_text(conn):
+    q = conn.execute("""
+    select
+      sum(case when status='approved' and coalesce(project_decision,'')='execute_now' and coalesce(guard_status,'')='safe' then 1 else 0 end),
+      sum(case when status='approved' and (coalesce(project_decision,'')='backlog' or (coalesce(guard_status,'')!='' and coalesce(guard_status,'')!='safe')) then 1 else 0 end),
+      sum(case when status='open' or coalesce(pr_status,'')='open' or coalesce(dev_stage,'')='open' then 1 else 0 end),
+      sum(case when status='merged' then 1 else 0 end)
+    from dev_proposals
+    """).fetchone()
+    p = conn.execute("""
+    select count(*)
+    from ceo_hub_events
+    where event_type='learning_pattern'
+    """).fetchone()[0]
+    return f"OpenClaw Company Health\nmainstream={q[0] or 0}\nbacklog={q[1] or 0}\nopen_pr={q[2] or 0}\nmerged={q[3] or 0}\nlearning_pattern={p or 0}"
+
 def _normalize_text(s: str) -> str:
     if s is None:
         return ""
@@ -219,6 +236,9 @@ def handle_chat(
 
     if not text:
         return ("ignored", None)
+
+    if text.strip() in ("/company", "/status"):
+        return _oc_health_text(conn)
     if text.startswith("/"):
         return ("ignored", None)
     d = parse_decision(text)

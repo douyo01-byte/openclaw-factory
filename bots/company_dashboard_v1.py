@@ -398,6 +398,25 @@ def pending_unapproved(c):
     where coalesce(status,'') in ('pending','proposed','req','needs_info')
     """) or 0
 
+
+def learning_pattern_count(c):
+    r = c.execute("""
+    select count(*)
+    from ceo_hub_events
+    where event_type='learning_pattern'
+    """).fetchone()
+    return int((r[0] or 0) if r else 0)
+
+def latest_learning_pattern(c):
+    r = c.execute("""
+    select coalesce(title,'')
+    from ceo_hub_events
+    where event_type='learning_pattern'
+    order by id desc
+    limit 1
+    """).fetchone()
+    return (r[0] or "な し") if r else "な し"
+
 def build_dashboard_text(c):
     latest_id, latest_title, latest_source = latest_proposal(c)
     lines = []
