@@ -34,7 +34,7 @@ client = OpenAI()
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
 HEADERS = {"User-Agent": "openclaw-factory/0.1 (+contact: douyo01-byte)"}
-DB_PATH = "data/openclaw.db"
+DB_PATH = '/Users/doyopc/AI/openclaw-factory/data/openclaw.db'
 
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 

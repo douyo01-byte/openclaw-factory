@@ -3,7 +3,7 @@ import sqlite3
 import subprocess
 from bots.dev_schema_apply import apply as apply_dev_schema
 
-DB_PATH = "data/openclaw.db"
+DB_PATH = '/Users/doyopc/AI/openclaw-factory/data/openclaw.db'
 
 
 def _run(cmd):

@@ -10,13 +10,13 @@ try:
 except ModuleNotFoundError:
     from proposal_ranking_v1 import compute_ranking
 
-DB_PATH = os.environ.get("OCLAW_DB_PATH", "/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db")
+DB_PATH = os.environ.get("OCLAW_DB_PATH", "/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
 BASE_BRANCH = "main"
 REPO = "/Users/doyopc/AI/openclaw-factory"
 KAI_LOG = os.path.join(REPO, "logs", "kai_actions.log")
 MAX_OPEN_PRS = int(os.environ.get("EXECUTOR_MAX_OPEN_PRS", "5"))
 MIN_PR_INTERVAL_SEC = int(os.environ.get("EXECUTOR_MIN_PR_INTERVAL_SEC", "30"))
-BATCH_SIZE = int(os.environ.get("EXECUTOR_BATCH_SIZE", "3"))
+BATCH_SIZE = int(os.environ.get("EXECUTOR_BATCH_SIZE", "5"))
 
 def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -114,9 +114,60 @@ def pick_proposals(conn):
         print(f"[ranking] proposal={row['id']} score={score} reason={reason}", flush=True)
         ranked.append((score, int(row["id"]), row))
     ranked.sort(key=lambda x: (-x[0], x[1]))
-    selected = [x[2] for x in ranked[:BATCH_SIZE]]
-    if selected:
-        print(f"[ranking] selected_batch={[int(r['id']) for r in selected]}", flush=True)
+    if not ranked:
+        return []
+    anchor = ranked[0][2]
+    anchor_id = int(anchor["id"])
+    anchor_category = (anchor["category"] or "").strip()
+    anchor_target = (anchor["target_system"] or "").strip()
+    print(f"[batch] anchor proposal={anchor_id} category={anchor_category or '-'} target={anchor_target or '-'}", flush=True)
+
+    def is_same_group(row):
+        cat = (row["category"] or "").strip()
+        tgt = (row["target_system"] or "").strip()
+        return (anchor_category and cat == anchor_category) or (anchor_target and tgt == anchor_target)
+
+    primary = []
+    fallback = []
+    for _, _, row in ranked:
+        if int(row["id"]) == anchor_id:
+            primary.append(row)
+            continue
+        if is_same_group(row):
+            primary.append(row)
+        else:
+            fallback.append(row)
+
+    selected = []
+    seen = set()
+    for row in primary:
+        pid = int(row["id"])
+        if pid in seen:
+            continue
+        selected.append(row)
+        seen.add(pid)
+        if len(selected) >= BATCH_SIZE:
+            break
+
+    mixed = False
+    fallback_reason = ""
+    for row in fallback:
+        if len(selected) >= BATCH_SIZE:
+            break
+        pid = int(row["id"])
+        if pid in seen:
+            continue
+        current_targets = {((x["target_system"] or "").strip()) for x in selected if (x["target_system"] or "").strip()}
+        row_target = (row["target_system"] or "").strip()
+        if row_target and row_target not in current_targets and len(current_targets) >= 2:
+            continue
+        selected.append(row)
+        seen.add(pid)
+        mixed = True
+        fallback_reason = "fallback_fill"
+
+    print(f"[batch] selected proposals={[int(r['id']) for r in selected]}", flush=True)
+    print(f"[batch] mixed={'true' if mixed else 'false'}" + (f" reason={fallback_reason}" if mixed else ""), flush=True)
     return selected
 
 def main():
