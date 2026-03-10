@@ -1,0 +1,11 @@
+id=1108
+title=Reduce duplicate writes in bots/dev_schema_apply.py
+batch=1108-1108
+ts=2026-03-10T04:39:31Z
+
+Goal:
+Implement: Reduce duplicate writes in bots/dev_schema_apply.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
