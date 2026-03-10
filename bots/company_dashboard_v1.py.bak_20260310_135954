@@ -1,5 +1,4 @@
 import os
-import json
 import re
 import sqlite3
 import subprocess
@@ -353,93 +352,6 @@ def backlog_breakdown(c):
         return "none"
     return " / ".join(f"{r[0]}={r[1]}" for r in rows)
 
-
-def read_json_file(path):
-    try:
-        return json.loads(Path(path).read_text(encoding="utf-8"))
-    except Exception:
-        return {}
-
-def get_maturity_percent():
-    d = read_json_file(ROOT / "obs" / "company_health_score.json")
-    return d.get("maturity_percent")
-
-def get_integrity_summary():
-    p = ROOT / "logs" / "db_integrity_check_v1.log"
-    if not p.exists():
-        return {}
-    try:
-        line = p.read_text(encoding="utf-8").strip().splitlines()[-1]
-    except Exception:
-        return {}
-    out = {}
-    for token in line.replace("[db_integrity]", "").strip().split():
-        if "=" in token:
-            k, v = token.split("=", 1)
-            try:
-                out[k] = int(v)
-            except Exception:
-                out[k] = v
-    return out
-
-def get_supply_adoption_summary():
-    d = read_json_file(ROOT / "obs" / "supply_adoption_metrics.json")
-    rows = d.get("rows") or []
-    if not rows:
-        return None
-    rows = sorted(rows, key=lambda x: (-(x.get("mergeds") or 0), -(x.get("proposals") or 0), str(x.get("source") or "")))
-    r = rows[0]
-    return {
-        "source": r.get("source"),
-        "proposals": r.get("proposals") or 0,
-        "mergeds": r.get("mergeds") or 0,
-        "merge_rate": r.get("merge_rate") or 0,
-    }
-
-def build_secretary_brief(c):
-    maturity = get_maturity_percent()
-    integ = get_integrity_summary()
-    supply = get_supply_adoption_summary()
-    merged = count_merged(c)
-    approved = count_approved(c)
-    open_pr = count_open_pr(c)
-    backlog = count_backlog(c)
-
-    lines = ["OpenClaw 秘書報告"]
-    if maturity is not None:
-        lines.append(f"maturity: {maturity}%")
-    lines.append(f"merged: {merged}")
-    lines.append(f"approved: {approved}")
-    lines.append(f"open_pr: {open_pr}")
-    lines.append(f"backlog: {backlog}")
-
-    blockers = []
-    if integ.get("pr_created_without_merged", 0):
-        blockers.append(f"未merge {integ['pr_created_without_merged']}")
-    if integ.get("merged_without_learning_result", 0):
-        blockers.append(f"未learning {integ['merged_without_learning_result']}")
-    if integ.get("lifecycle_anomaly_count", 0):
-        blockers.append(f"lifecycle異常 {integ['lifecycle_anomaly_count']}")
-    if integ.get("missing_source_category_target_system", 0):
-        blockers.append(f"属性欠損 {integ['missing_source_category_target_system']}")
-
-    if supply:
-        lines.append(f"top_source: {supply['source']} proposals={supply['proposals']} merged={supply['mergeds']} rate={supply['merge_rate']}%")
-
-    if blockers:
-        lines.append("詰まり: " + " / ".join(blockers[:4]))
-    else:
-        lines.append("詰まり: 大きな異常なし")
-
-    if open_pr > 0:
-        lines.append("次アクション: open PRの消化を優先")
-    elif backlog > 0:
-        lines.append("次アクション: backlog整理を優先")
-    else:
-        lines.append("次アクション: 72h burn-in 継続監視")
-
-    return "\n".join(lines)
-
 def company_health_summary(c):
     return f"supply={proposal_rate(c):.2f}/h backlog={backlog_approved(c)} open_pr={open_prs(c)} queue={approved_queue(c)}"
 
@@ -485,25 +397,6 @@ def pending_unapproved(c):
     from dev_proposals
     where coalesce(status,'') in ('pending','proposed','req','needs_info')
     """) or 0
-
-
-def learning_pattern_count(c):
-    r = c.execute("""
-    select count(*)
-    from ceo_hub_events
-    where event_type='learning_pattern'
-    """).fetchone()
-    return int((r[0] or 0) if r else 0)
-
-def latest_learning_pattern(c):
-    r = c.execute("""
-    select coalesce(title,'')
-    from ceo_hub_events
-    where event_type='learning_pattern'
-    order by id desc
-    limit 1
-    """).fetchone()
-    return (r[0] or "な し") if r else "な し"
 
 def build_dashboard_text(c):
     latest_id, latest_title, latest_source = latest_proposal(c)
@@ -698,24 +591,6 @@ def is_progress_query(text):
     ]
     return any(k in t for k in keys)
 
-def normalize_chat_text(text):
-    t = (text or "").lower()
-    for x in [" ", "　", "\n", "\r", "\t"]:
-        t = t.replace(x, "")
-    return t
-
-def is_secretary_query(text):
-    t = normalize_chat_text(text)
-    keys = [
-        "/company", "/status",
-        "進捗", "状況", "現在地", "ダッシュボード", "report", "status",
-        "今どう", "今の状態",
-        "maturity", "成熟度",
-        "何が詰まってる", "何を優先",
-        "72h", "72時間", "開始できる"
-    ]
-    return any(k in t for k in keys)
-
 def process_inbox(c, dashboard_text):
     try:
         ensure_inbox_cols(c)
@@ -740,8 +615,7 @@ def process_inbox(c, dashboard_text):
         status = r["status"] or "new"
         if not is_progress_query(text):
             continue
-        reply_text = build_secretary_brief(c) if is_secretary_query(text) and normalize_chat_text(text) not in ('/company','/status','進捗は？') else dashboard_text
-        ok, err = tg_send(chat_id, reply_text)
+        ok, err = tg_send(chat_id, dashboard_text)
         if ok:
             c.execute(
                 "update inbox_commands set processed=1,status='company_done',applied_at=?,error=null where id=?",
