@@ -2,7 +2,7 @@
 cd "$HOME/AI/openclaw-factory-daemon" || exit 1
 source .venv/bin/activate || exit 1
 export PYTHONPATH="$HOME/AI/openclaw-factory-daemon"
-export DB_PATH="$HOME/AI/openclaw-factory-daemon/data/openclaw_real.db"
+export DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"
 set -a
 if [ -f env/telegram_daemon.env ]; then
   source env/telegram_daemon.env
