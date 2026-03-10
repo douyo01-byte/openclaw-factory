@@ -1,0 +1,20 @@
+{
+  "generated_at": 1773133186,
+  "db_path": "/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db",
+  "source_base_table": "inbox_commands",
+  "source_column": "source",
+  "reason": "",
+  "rows": [
+    {
+      "source": "telegram",
+      "proposals": 10,
+      "approveds": 0,
+      "mergeds": 0,
+      "avg_lifecycle_sec": null,
+      "learning_success": 0,
+      "merge_rate": 0.0,
+      "approval_rate": 0.0,
+      "learning_success_rate": 0.0
+    }
+  ]
+}

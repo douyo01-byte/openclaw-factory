@@ -1,0 +1,47 @@
+{
+  "generated_at": 1773133310,
+  "db_path": "/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db",
+  "maturity_percent": 85,
+  "detail": {
+    "autonomous_dev_loop": {
+      "max": 20,
+      "score": 20
+    },
+    "batch_executor_stability": {
+      "max": 10,
+      "score": 0
+    },
+    "ranking_discussion_refinement": {
+      "max": 10,
+      "score": 10
+    },
+    "learning_pattern": {
+      "max": 10,
+      "score": 7
+    },
+    "kpi_company_health": {
+      "max": 10,
+      "score": 10
+    },
+    "docs_automation": {
+      "max": 10,
+      "score": 10
+    },
+    "supply_separation": {
+      "max": 10,
+      "score": 8
+    },
+    "notification_cleanup": {
+      "max": 5,
+      "score": 5
+    },
+    "kaikun02_conversation": {
+      "max": 5,
+      "score": 5
+    },
+    "burnin_72h": {
+      "max": 10,
+      "score": 10
+    }
+  }
+}
