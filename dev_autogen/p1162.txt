@@ -1,0 +1,11 @@
+id=1162
+title=Improve error handling in scripts/set_telegram_token_launchctl.sh
+batch=1163-1162
+ts=2026-03-10T11:54:49Z
+
+Goal:
+Implement: Improve error handling in scripts/set_telegram_token_launchctl.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
