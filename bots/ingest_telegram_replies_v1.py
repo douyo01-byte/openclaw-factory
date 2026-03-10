@@ -97,6 +97,15 @@ def ensure(c):
   update_id INTEGER
 )""")
     c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_inbox_chat_msg ON inbox_commands(chat_id,message_id)")
+    c.execute("""CREATE TABLE IF NOT EXISTS decisions(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  run_id TEXT,
+  target TEXT,
+  decision TEXT,
+  reason TEXT,
+  meta_json TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+)""")
     dc = {r[1] for r in c.execute("PRAGMA table_info(decisions)")}
     if "run_id" not in dc:
         c.execute("ALTER TABLE decisions ADD COLUMN run_id TEXT")
