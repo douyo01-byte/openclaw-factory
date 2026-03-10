@@ -1,0 +1,11 @@
+id=1160
+title=Reduce event summary drift in migrations/2026-02-27_add_inbox_and_meta.sql
+batch=1161-1160
+ts=2026-03-10T07:54:42Z
+
+Goal:
+Implement: Reduce event summary drift in migrations/2026-02-27_add_inbox_and_meta.sql
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
