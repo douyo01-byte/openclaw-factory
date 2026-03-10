@@ -1,7 +1,7 @@
 #!/bin/bash
 cd /Users/doyopc/AI/openclaw-factory-daemon
 
-export DB_PATH=/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db
+export DB_PATH=/Users/doyopc/AI/openclaw-factory/data/openclaw.db
 
 source .venv/bin/activate
 

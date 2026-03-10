@@ -8,8 +8,8 @@ exec </dev/null >> /Users/doyopc/AI/openclaw-factory-daemon/logs/tg_poll.log 2>>
 source /Users/doyopc/AI/openclaw-factory-daemon/.venv/bin/activate || exit 1
 export PYTHONUNBUFFERED=1
 export PYTHONPATH=/Users/doyopc/AI/openclaw-factory-daemon
-export DB_PATH=/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db
-export FACTORY_DB_PATH=/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db
+export DB_PATH=/Users/doyopc/AI/openclaw-factory/data/openclaw.db
+export FACTORY_DB_PATH=/Users/doyopc/AI/openclaw-factory/data/openclaw.db
 
 while true; do
   set -a

@@ -26,7 +26,7 @@ def detect_db():
     cands += [
         ROOT / "data" / "openclaw.db",
         ROOT / "data" / "openclaw_daemon.db",
-        ROOT / "data" / "openclaw_real.db",
+        Path("/Users/doyopc/AI/openclaw-factory/data/openclaw.db"),
         ROOT / "data" / "openclaw",
     ]
     for p in cands:
