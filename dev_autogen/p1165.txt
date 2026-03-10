@@ -1,10 +1,10 @@
-id=1164
-title=Harden DB path handling in bots/ops_brain_v2.py
+id=1165
+title=Executor stability sweep 2109
 batch=1165-1164
 ts=2026-03-10T12:09:51Z
 
 Goal:
-Implement: Harden DB path handling in bots/ops_brain_v2.py
+Implement: Executor stability sweep 2109
 Acceptance:
 - code compiles
 - current pipeline remains operational
