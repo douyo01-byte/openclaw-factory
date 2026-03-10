@@ -1,0 +1,11 @@
+id=1184
+title=Improve retry logic in oclibs/tg_api.py
+batch=1184-1184
+ts=2026-03-10T16:43:55Z
+
+Goal:
+Implement: Improve retry logic in oclibs/tg_api.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
