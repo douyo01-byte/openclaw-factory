@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/chat_to_dev/ingest_private_chat_v1.py. category=performance. improve ingest_private_chat_v1.py with a concrete, low-risk change.
