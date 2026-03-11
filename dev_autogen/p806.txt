@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/web_enrich_v1.py. category=self_healing. improve web_enrich_v1.py with a concrete, low-risk change.
