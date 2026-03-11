@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/dev_proposal_notify_v1.py. category=reliability. improve dev_proposal_notify_v1.py with a concrete, low-risk change.
