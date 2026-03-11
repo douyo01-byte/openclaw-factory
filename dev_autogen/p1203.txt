@@ -1,0 +1,11 @@
+id=1203
+title=Executor stability sweep 1047
+batch=1203-1203
+ts=2026-03-11T01:47:32Z
+
+Goal:
+Implement: Executor stability sweep 1047
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
