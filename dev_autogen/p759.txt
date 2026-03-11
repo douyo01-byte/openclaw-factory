@@ -1,5 +1,1 @@
-id=759
-title=Speed Pipeline
-ts=2026-03-07T20:40:27Z
-
-Parallelize jobs
+AI generated proposal targeting bots/meeting_orchestrator_v1.py. category=self_healing. improve meeting_orchestrator_v1.py with a concrete, low-risk change.
