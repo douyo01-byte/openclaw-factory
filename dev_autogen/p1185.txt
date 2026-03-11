@@ -1,0 +1,11 @@
+id=1185
+title=Optimize database queries in bots/self_healing_v2.py
+batch=1185-1185
+ts=2026-03-10T19:43:55Z
+
+Goal:
+Implement: Optimize database queries in bots/self_healing_v2.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
