@@ -1,0 +1,11 @@
+id=1193
+title=Executor stability sweep 1002
+batch=1193-1193
+ts=2026-03-11T01:02:26Z
+
+Goal:
+Implement: Executor stability sweep 1002
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
