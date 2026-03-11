@@ -1,0 +1,6 @@
+id=32009
+title=MotherShip: log cleanup
+batch=32009-32009
+ts=2026-03-11T11:10:48Z
+
+Add daemon log rotation
