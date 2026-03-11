@@ -1,0 +1,11 @@
+id=32084
+title=Reduce event summary drift in scripts/launch_router.sh
+batch=32084-32084
+ts=2026-03-11T12:18:39Z
+
+Goal:
+Implement: Reduce event summary drift in scripts/launch_router.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
