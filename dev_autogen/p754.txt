@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/browser_smoke.py. category=analysis. improve browser_smoke.py with a concrete, low-risk change.
