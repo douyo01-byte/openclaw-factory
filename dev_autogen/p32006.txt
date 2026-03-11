@@ -1,0 +1,11 @@
+id=32006
+title=Improve queue handling in bots/explain_orchestrator_v1.py
+batch=32006-32006
+ts=2026-03-11T09:18:40Z
+
+Goal:
+Implement: Improve queue handling in bots/explain_orchestrator_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
