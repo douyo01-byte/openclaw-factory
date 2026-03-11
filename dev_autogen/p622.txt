@@ -1,5 +1,1 @@
-id=622
-title=Improve Research Quality
-ts=2026-03-07T18:10:03Z
-
-Add better search sources
+AI generated proposal targeting bots/dev_executor_v1.py. category=analysis. improve dev_executor_v1.py with a concrete, low-risk change.
