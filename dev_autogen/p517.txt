@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/dev_pr_creator_v1.py. category=self_healing. improve dev_pr_creator_v1.py with a concrete, low-risk change.
