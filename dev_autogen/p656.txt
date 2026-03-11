@@ -1,5 +1,1 @@
-id=656
-title=Speed Pipeline
-ts=2026-03-07T19:14:18Z
-
-Parallelize jobs
+AI generated proposal targeting scripts/db_init.py. category=performance. improve db_init.py with a concrete, low-risk change.
