@@ -1,5 +1,1 @@
-id=1
-title=Dev Agent smoke test
-ts=2026-02-28T20:20:44Z
-
-Create PR from proposal
+Add daemon log rotation
