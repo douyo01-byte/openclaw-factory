@@ -1,5 +1,1 @@
-id=663
-title=Improve Research Quality
-ts=2026-03-07T19:19:23Z
-
-Add better search sources
+AI generated proposal targeting bots/persona_reply_v1.py. category=observability. improve persona_reply_v1.py with a concrete, low-risk change.
