@@ -1,17 +1,1 @@
-id=980
-title=Improve proposal ranking logic
-ts=2026-03-09T08:58:04Z
-
-Goal:
-Implement proposal: Improve proposal ranking logic
-
-Scope:
-- minimal isolated change
-- keep current Lv6/Lv7 automation stable
-- avoid destructive edits
-- auto-PR compatible
-
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/dev_schema_apply.py. category=analysis. improve dev_schema_apply.py with a concrete, low-risk change.
