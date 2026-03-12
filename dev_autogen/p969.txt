@@ -1,4 +1,1 @@
-id=969
-title=Add auto retry for GitHub API
-ts=2026-03-09T04:51:53Z
-
+Add a guard that raises a clear error at startup if OPENAI_API_KEY is not set, and harden the llm() network call by setting a requests timeout, calling raise_for_status(), and including response text when the expected JSON "output" field is missing. Concretely: after OPENAI = os.getenv(...) add if not OPENAI: raise EnvironmentError('OPENAI_API_KEY not set'); in llm() add a timeout parameter (e.g. timeout=10) to requests.post, call r.raise_for_status() before parsing JSON, and if the JSON doesn't contain "output" raise an Exception that includes r.status_code and r.text. Expected effect: the bot will fail fast with a clear error if the API key is absent, avoid hanging indefinitely on slow network calls, and provide much more actionable error messages for API/response problems, reducing debugging time and accidental long-running hangs.
