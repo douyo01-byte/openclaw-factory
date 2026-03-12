@@ -1,0 +1,6 @@
+id=1148
+title=Improve diagnostics for ingest_private_chat_v1.py
+batch=1148-110
+ts=2026-03-12T04:14:53Z
+
+AI generated proposal targeting bots/chat_to_dev/ingest_private_chat_v1.py. category=analysis. improve ingest_private_chat_v1.py with a concrete, low-risk change.
