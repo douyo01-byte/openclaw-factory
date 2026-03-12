@@ -1,11 +1,1 @@
-id=1094
-title=Executor stability sweep 1239
-batch=1094-1094
-ts=2026-03-10T03:39:31Z
-
-Goal:
-Implement: Executor stability sweep 1239
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/meeting_orchestrator_v1.py. category=observability. improve meeting_orchestrator_v1.py with a concrete, low-risk change.
