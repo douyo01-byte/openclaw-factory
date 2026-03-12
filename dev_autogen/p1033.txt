@@ -1,11 +1,1 @@
-id=1033
-title=Executor stability sweep 0331
-batch=1033-1032
-ts=2026-03-09T18:32:10Z
-
-Goal:
-Implement: Executor stability sweep 0331
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+In bots/company_dashboard_v1.py, add an early check at the start of tg_send to fail fast when TOKEN is empty (e.g. if not TOKEN: raise RuntimeError('TELEGRAM_BOT_TOKEN not configured') or log and return). This prevents issuing HTTP requests to https://api.telegram.org/bot/ with an empty token (which produce confusing 401/400 errors), reduces noisy network calls, and makes misconfiguration immediately visible in logs. Change is a single-line guard inside tg_send and is low-risk.
