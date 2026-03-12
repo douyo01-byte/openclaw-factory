@@ -1,0 +1,6 @@
+id=1362
+title=Handle network/JSON errors in q() to avoid crashing on transient GitHub API failures
+batch=1362-1362
+ts=2026-03-12T22:03:10Z
+
+Wrap the requests.post and r.json() calls inside q() with try/except to catch requests.exceptions.RequestException and JSON decode errors. On error, print a short diagnostic (e.g. 'api_request_error' or 'api_decode_error' with the exception message), sleep for a small backoff (e.g. 5-10s) and return an empty dict so main() can continue processing other rows instead of crashing. Expected effect: prevents the whole bot from crashing on transient network/HTTP/JSON errors, provides a clear log line for operators, and allows safe retrying of other PRs without losing state.
