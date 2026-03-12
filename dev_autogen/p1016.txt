@@ -1,11 +1,1 @@
-id=1016
-title=Executor stability sweep 0131
-batch=1016-1015
-ts=2026-03-09T16:32:03Z
-
-Goal:
-Implement: Executor stability sweep 0131
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/pipeline_hn_to_outreach.py. category=self_healing. improve pipeline_hn_to_outreach.py with a concrete, low-risk change.
