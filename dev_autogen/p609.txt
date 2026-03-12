@@ -1,5 +1,6 @@
 id=609
-title=Improve Research Quality
-ts=2026-03-07T17:43:59Z
+title=Add structured logging to ops_brain_v2.py
+batch=1142-812
+ts=2026-03-12T04:01:29Z
 
-Add better search sources
+AI generated proposal targeting bots/ops_brain_v2.py. category=observability. improve ops_brain_v2.py with a concrete, low-risk change.
