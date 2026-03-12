@@ -1,11 +1,1 @@
-id=1139
-title=Improve retry logic in scripts/db_init.py
-batch=1140-1139
-ts=2026-03-10T06:39:36Z
-
-Goal:
-Implement: Improve retry logic in scripts/db_init.py
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Replace the invalid datetime.UTC usage in main() (ts = int(datetime.datetime.now(datetime.UTC).timestamp() * 1000)) with a valid call such as datetime.timezone.utc (ts = int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000)) or datetime.datetime.utcnow(), preventing an AttributeError at runtime so the script can compute branch names and insert proposals reliably.
