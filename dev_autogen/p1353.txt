@@ -1,0 +1,6 @@
+id=1353
+title=Retry and handle Telegram send failures without marking DB rows sent
+batch=1352-1357
+ts=2026-03-12T21:53:00Z
+
+Wrap the requests.post call and resp.raise_for_status() in a short retry loop (e.g. up to 3 attempts with exponential backoff 1s,2s,4s). On persistent failure catch requests.RequestException (and general Exception for safety), log the error to stderr (or print) and skip updating sent_at so the row remains for a future run. Only mark sent_at after a successful HTTP response. This avoids crashing the script on transient network errors and prevents events being incorrectly marked as sent.

@@ -1,0 +1,6 @@
+id=1356
+title=datetime.UTCをdatetime.timezone.utcに修正してクラッシュを防ぐ
+batch=1352-1357
+ts=2026-03-12T21:53:00Z
+
+main()のbranch生成で使われている datetime.datetime.now(datetime.UTC) は存在しない属性で例外を発生させるため、datetime.datetime.now(datetime.timezone.utc)（または datetime.datetime.utcnow()）に置き換えてタイムスタンプ生成のクラッシュを防ぎ、プロポーザルのDB挿入が確実に行われるようにする。期待効果：スクリプト実行時の即時停止が解消され、branch名付きのレコード作成が安定する。

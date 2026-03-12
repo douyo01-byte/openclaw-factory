@@ -1,0 +1,6 @@
+id=1355
+title=Fix broken main() database connection call (use connect_db) and ensure connection closed
+batch=1352-1357
+ts=2026-03-12T21:53:00Z
+
+The file's main() ends with a truncated/incorrect line 'conn = connec' which raises NameError and prevents the CLI from running. Change that line to conn = connect_db(args.db). Also wrap usage in a try/finally (or context manager) so conn.close() is always called. Expected effect: removes immediate crash at startup, allows the script to open the SQLite DB and proceed, and prevents a file-handle leak when the process exits.

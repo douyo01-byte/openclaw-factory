@@ -1,0 +1,6 @@
+id=1352
+title=Guard against empty SELECT column list when inbox_commands lacks expected columns
+batch=1352-1357
+ts=2026-03-12T21:53:00Z
+
+Add a small guard immediately after building the sel list to handle the case where none of the expected columns (update_id, chat_id, user_id, text, received_at) exist in the inbox_commands table. If sel is empty, log/print a concise message and exit (or return) instead of constructing an invalid SQL string like "SELECT  FROM inbox_commands...". Expected effect: prevents a runtime SQL syntax error and crash when the schema is missing those columns, making the script fail-fast and easier to diagnose. Implementation is a single low-risk check (if not sel: print('No expected columns in inbox_commands; skipping backfill.') and exit(0) or return) right before q = "SELECT ......".
