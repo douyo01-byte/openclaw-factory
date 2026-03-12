@@ -1,11 +1,1 @@
-id=1052
-title=Executor stability sweep 0547
-batch=1052-1051
-ts=2026-03-09T20:47:10Z
-
-Goal:
-Implement: Executor stability sweep 0547
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/role_training_v1.py. category=analysis. improve role_training_v1.py with a concrete, low-risk change.
