@@ -1,11 +1,1 @@
-id=1200
-title=Executor stability sweep 1037
-batch=1200-1200
-ts=2026-03-11T01:37:32Z
-
-Goal:
-Implement: Executor stability sweep 1037
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/dev_approval_parser.py. category=analysis. improve dev_approval_parser.py with a concrete, low-risk change.
