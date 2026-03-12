@@ -1,11 +1,6 @@
 id=1023
-title=Executor stability sweep 0216
-batch=1023-1022
-ts=2026-03-09T17:17:03Z
+title=Add recovery path to project_decider_v1.py
+batch=1023-12
+ts=2026-03-12T04:12:52Z
 
-Goal:
-Implement: Executor stability sweep 0216
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/project_decider_v1.py. category=self_healing. improve project_decider_v1.py with a concrete, low-risk change.
