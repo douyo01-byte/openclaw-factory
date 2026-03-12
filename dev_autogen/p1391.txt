@@ -1,0 +1,6 @@
+id=1391
+title=Wrap Telegram API call and JSON parsing with explicit exception handling
+batch=1391-1391
+ts=2026-03-12T23:23:31Z
+
+In scripts/get_chat_id.py, wrap the requests.get(...) call, r.raise_for_status(), and r.json() in a try/except that catches requests.RequestException and JSON decode errors (json.JSONDecodeError or ValueError). On error, print a clear, actionable message (e.g. network error, HTTP error code, or malformed response) that suggests checking internet connectivity, TELEGRAM_BOT_TOKEN validity, and Telegram API availability, then exit with a non-zero status. Expected effect: the script will no longer emit an unhandled stack trace for transient network problems or invalid responses; users will get a clear reason and next steps, improving reliability and debuggability with a minimal, low-risk change.
