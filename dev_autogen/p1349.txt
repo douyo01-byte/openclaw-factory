@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/ops_brain_v2.py. category=observability. improve ops_brain_v2.py with a concrete, low-risk change.
