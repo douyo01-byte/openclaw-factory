@@ -1,5 +1,6 @@
 id=972
-title=Add auto retry for GitHub API E2E TEST
-ts=2026-03-09T04:54:02Z
+title=Improve diagnostics for dev_pr_watcher_v1.py
+batch=944-1015
+ts=2026-03-12T04:11:31Z
 
-E2E pipeline test. Refine spec, decide execute_now, guard safe, create PR, merge, and record learning_result. Touch only dev_autogen test artifact.
+AI generated proposal targeting bots/dev_pr_watcher_v1.py. category=analysis. improve dev_pr_watcher_v1.py with a concrete, low-risk change.

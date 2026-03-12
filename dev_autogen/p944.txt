@@ -1,4 +1,6 @@
 id=944
-title=Developer productivity dashboard
-ts=2026-03-09T00:10:09Z
+title=Improve diagnostics for dev_proposal_notify_v1.py
+batch=944-1015
+ts=2026-03-12T04:11:31Z
 
+AI generated proposal targeting bots/dev_proposal_notify_v1.py. category=analysis. improve dev_proposal_notify_v1.py with a concrete, low-risk change.
