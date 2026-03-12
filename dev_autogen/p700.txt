@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/enrich_contacts_v1.py. category=observability. improve enrich_contacts_v1.py with a concrete, low-risk change.
