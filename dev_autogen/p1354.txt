@@ -1,0 +1,6 @@
+id=1354
+title=Batch-update skipped inbox_commands and ensure DB closed on error
+batch=1354-1354
+ts=2026-03-12T21:53:43Z
+
+Collect IDs to skip during the loop and perform a single parameterized UPDATE (SET processed=1, status='skipped', applied_at=?) with a WHERE id IN (...) followed by one commit, and move connection close into a finally block (or use a context manager). This replaces per-row c.commit() calls and guarantees the DB connection is closed if an exception occurs. Expected effect: reduces number of transactions and WAL churn (lower DB lock contention and faster processing for batches up to 50), and improves reliability by ensuring the connection is always closed on error. Change is small and low-risk (uses existing IDs from the DB, parameterized query).
