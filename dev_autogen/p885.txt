@@ -1,5 +1,1 @@
-id=885
-title=executorの再試行処理の安定化
-ts=2026-03-07T20:55:15Z
-
-executorに対して再試行処理の安定化を行い、失敗時の復旧性を高める。
+AI generated proposal targeting bots/self_healing_v2.py. category=self_healing. improve self_healing_v2.py with a concrete, low-risk change.
