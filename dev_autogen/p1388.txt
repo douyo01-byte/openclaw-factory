@@ -1,0 +1,6 @@
+id=1388
+title=Create parent directory for DB file before sqlite3.connect
+batch=1388-1388
+ts=2026-03-12T23:17:27Z
+
+Before calling sqlite3.connect(DB) in main(), check whether DB is a file path (not ':memory:' and not empty) and ensure its parent directory exists (os.makedirs(parent, exist_ok=True)). Place this check immediately before the connect call so the database file can be created successfully if the configured path includes a non-existent directory. Expected effect: avoids runtime failure when the DB_PATH points to a file under a missing directory (e.g. default 'data/openclaw.db'), improving reliability with minimal risk.
