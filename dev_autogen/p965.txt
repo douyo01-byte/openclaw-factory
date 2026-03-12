@@ -1,4 +1,1 @@
-id=965
-title=Improve log rotation
-ts=2026-03-09T01:26:06Z
-
+AI generated proposal targeting bots/ops_brain_v3.py. category=safety. improve ops_brain_v3.py with a concrete, low-risk change.
