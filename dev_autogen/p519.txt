@@ -1,5 +1,1 @@
-id=519
-title=Executor safety
-ts=2026-03-07T13:46:16Z
-
-Improve executor safety
+AI generated proposal targeting bots/scout_playwright.py. category=automation. improve scout_playwright.py with a concrete, low-risk change.
