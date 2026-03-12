@@ -1,0 +1,6 @@
+id=549
+title=Add guard checks to browser_smoke.py
+batch=523-699
+ts=2026-03-12T04:02:09Z
+
+AI generated proposal targeting bots/browser_smoke.py. category=safety. improve browser_smoke.py with a concrete, low-risk change.
