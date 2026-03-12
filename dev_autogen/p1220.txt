@@ -1,11 +1,1 @@
-id=1220
-title=Executor stability sweep 1207
-batch=1220-1220
-ts=2026-03-11T03:07:43Z
-
-Goal:
-Implement: Executor stability sweep 1207
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/backfill_decisions_from_inbox_v1.py. category=analysis. improve backfill_decisions_from_inbox_v1.py with a concrete, low-risk change.
