@@ -1,5 +1,6 @@
 id=22
-title=Monitoring Dashboard
-ts=2026-03-01T01:15:54Z
+title=MotherShip: db check
+batch=1071-24
+ts=2026-03-12T04:14:13Z
 
-Create system status dashboard
+Add sqlite integrity_check
