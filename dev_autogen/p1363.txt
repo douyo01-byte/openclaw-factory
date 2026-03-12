@@ -1,0 +1,6 @@
+id=1363
+title=Truncate overly large HTML before running regex in extract_emails/extract_text_urls/extract_a_links
+batch=1363-1363
+ts=2026-03-12T22:03:53Z
+
+Add a small input-size guard (e.g. MAX_HTML_LEN = 200_000) and truncate the html argument at the start of extract_emails, extract_text_urls, and extract_a_links when len(html) exceeds that limit. This prevents pathological or very large pages from causing expensive, long-running regex scans or excessive memory/CPU usage. Expected effect: reduces risk of timeouts and CPU spikes when processing extremely large responses with minimal chance of missing common inline contacts/URLs near the start of the document.
