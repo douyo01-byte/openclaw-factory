@@ -1,0 +1,6 @@
+id=836
+title=Optimize polling behavior in miho_finder.py
+batch=706-836
+ts=2026-03-12T04:09:31Z
+
+AI generated proposal targeting bots/team/miho_finder.py. category=performance. improve miho_finder.py with a concrete, low-risk change.
