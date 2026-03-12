@@ -1,11 +1,19 @@
 id=1088
-title=Executor stability sweep 1154
-batch=1086-1088
-ts=2026-03-10T03:18:55Z
+title=Use sqlite3 connection context manager to ensure commit/close and automatic rollback on error
+batch=1028-1088
+ts=2026-03-12T04:13:32Z
 
-Goal:
-Implement: Executor stability sweep 1154
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Wrap the database connection in a with sqlite3.connect(...) as conn: block and create the cursor inside it instead of creating a top-level connection. Concretely, replace
+
+conn = sqlite3.connect("data/openclaw.db")
+c = conn.cursor()
+...
+conn.commit()
+
+with
+
+with sqlite3.connect("data/openclaw.db") as conn:
+    c = conn.cursor()
+    ...
+
+This ensures the transaction is committed on successful completion, automatically rolled back if an exception occurs, and the connection is always closed. Expected effect: reduces risk of leaving the DB locked after crashes, avoids resource leaks, and makes the script safer to run in CI or concurrent environments with minimal code change and no behavior change on success.

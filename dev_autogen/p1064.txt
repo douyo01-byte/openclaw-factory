@@ -1,11 +1,6 @@
 id=1064
-title=Executor stability sweep 0732
-batch=1064-1064
-ts=2026-03-09T22:32:19Z
+title=Improve error handling in command_apply_v1.py
+batch=1028-1088
+ts=2026-03-12T04:13:32Z
 
-Goal:
-Implement: Executor stability sweep 0732
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/command_apply_v1.py. category=reliability. improve command_apply_v1.py with a concrete, low-risk change.

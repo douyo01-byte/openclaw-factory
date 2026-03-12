@@ -1,11 +1,6 @@
 id=1037
-title=Executor stability sweep 0402
-batch=1037-1036
-ts=2026-03-09T19:02:06Z
+title=Improve error handling in daily_cycle_v1.py
+batch=1028-1088
+ts=2026-03-12T04:13:32Z
 
-Goal:
-Implement: Executor stability sweep 0402
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/daily_cycle_v1.py. category=reliability. improve daily_cycle_v1.py with a concrete, low-risk change.
