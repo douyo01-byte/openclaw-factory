@@ -1,0 +1,6 @@
+id=1385
+title=Catch and report exceptions from oclibs.telegram.send to avoid silent successes
+batch=1385-1385
+ts=2026-03-12T23:06:31Z
+
+Wrap the tg_send(text) call in a try/except that prints the exception (and optional traceback) and exits with a non-zero status. Currently if oclibs.telegram.send raises, the script may crash or callers may not get a clear failure signal; this change ensures failures are logged to stdout/stderr and the process returns a non-zero exit code so automation can detect send failures. Implementation: import sys and traceback at top, replace tg_send(text) with a try block that on exception prints "ERROR sending retrospective id=<id>: <exception>" (and traceback if available) and calls sys.exit(1). Expected effect: improved reliability and observability with minimal, low-risk change.
