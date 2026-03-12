@@ -1,11 +1,1 @@
-id=1108
-title=Reduce duplicate writes in bots/dev_schema_apply.py
-batch=1108-1108
-ts=2026-03-10T04:39:31Z
-
-Goal:
-Implement: Reduce duplicate writes in bots/dev_schema_apply.py
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/chat_to_dev/daemon_chat_to_dev_v1.py. category=safety. improve daemon_chat_to_dev_v1.py with a concrete, low-risk change.
