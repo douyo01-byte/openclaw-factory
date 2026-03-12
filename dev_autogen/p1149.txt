@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/spec_refiner_v2.py. category=self_healing. improve spec_refiner_v2.py with a concrete, low-risk change.
