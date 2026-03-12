@@ -1,5 +1,6 @@
 id=295
-title=OpenClaw MacBook Neo Integration
-ts=2026-03-05T13:43:34Z
+title=MotherShip: health CLI
+batch=131-295
+ts=2026-03-12T04:15:33Z
 
-Develop OpenClaw Factory support for MacBook Neo hardware to enable seamless development and testing on the latest Apple silicon architecture.
+Improve daemon health CLI
