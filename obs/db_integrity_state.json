@@ -1,0 +1,15 @@
+{
+  "last_daily_sent_date": "2026-03-13",
+  "last_result": {
+    "pr_created_without_merged": 123,
+    "merged_without_learning_result": 78,
+    "status_mismatch": 0,
+    "lifecycle_anomaly_count": 0,
+    "missing_source_category_target_system": 1770,
+    "checked_at": 1773352932,
+    "db_path": "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+  },
+  "last_changed": {
+    "checked_at": 1773352932
+  }
+}

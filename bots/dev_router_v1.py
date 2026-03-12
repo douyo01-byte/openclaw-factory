@@ -1,25 +1,39 @@
+import os
 import sqlite3
-from bots.dev_schema_apply import apply as apply_dev_schema
-from bots.dev_gatekeeper import evaluate_risk
+import time
 
-DB_PATH = "data/openclaw.db"
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 
+def route_once():
+    con = sqlite3.connect(DB, timeout=30)
+    con.execute("pragma busy_timeout=30000")
 
-def create_proposal(title, description, branch_name=None):
-    risk = evaluate_risk()
-    branch_name = branch_name or "dev/proposal-temp"
-    apply_dev_schema(DB_PATH)
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO dev_proposals (title, description, branch_name, risk_level) VALUES (?, ?, ?, ?)",
-        (title, description, branch_name, risk),
-    )
-    proposal_id = cur.lastrowid
-    cur.execute(
-        "INSERT INTO dev_events (proposal_id, event_type, payload) VALUES (?, ?, ?)",
-        (proposal_id, "created", "{}"),
-    )
-    conn.commit()
-    conn.close()
-    return proposal_id, risk
+    con.execute("""
+    update dev_proposals
+    set project_decision='execute_now'
+    where status='approved'
+      and coalesce(project_decision,'')=''
+    """)
+
+    con.execute("""
+    update dev_proposals
+    set dev_stage='execute_now'
+    where status='approved'
+      and coalesce(project_decision,'')='execute_now'
+      and coalesce(spec_stage,'')='decomposed'
+      and coalesce(dev_stage,'')=''
+    """)
+
+    con.commit()
+    con.close()
+
+def main():
+    while True:
+        try:
+            route_once()
+        except Exception as e:
+            print(repr(e), flush=True)
+        time.sleep(5)
+
+if __name__ == "__main__":
+    main()

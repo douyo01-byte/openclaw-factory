@@ -113,6 +113,29 @@ def hub_event(conn, event_type, title, body, proposal_id, pr_url):
             values(?,?,?,?,?)
         """, (event_type, title, body, proposal_id, pr_url))
 
+def ensure_aux_tables(conn):
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS proposal_state(
+          proposal_id integer primary key,
+          stage text,
+          pending_questions text,
+          updated_at datetime default current_timestamp,
+          pending_question text
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS ceo_hub_events(
+          id integer primary key,
+          event_type text,
+          title text,
+          body text,
+          proposal_id integer,
+          pr_url text,
+          created_at text default (datetime('now')),
+          sent_at text
+        )
+    """)
+
 def tick_once(conn: sqlite3.Connection):
     dirty_head=False
     conn.execute("update dev_proposals set dev_stage='merged' where status='merged' and coalesce(pr_status,'')='merged' and coalesce(dev_stage,'')=''")
@@ -242,6 +265,7 @@ def main():
                 pass
             conn.row_factory = sqlite3.Row
             print("[watcher] tick_once enter", flush=True)
+            ensure_aux_tables(conn)
             tick_once(conn)
             print("[watcher] tick_once exit", flush=True)
         finally:

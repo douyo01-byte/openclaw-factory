@@ -21,7 +21,8 @@ def main():
 
     owner, name = REPO.split("/", 1)
 
-    conn = sqlite3.connect(DB)
+    conn = sqlite3.connect(DB, timeout=30)
+    conn.execute('PRAGMA busy_timeout=30000')
     conn.row_factory = sqlite3.Row
 
     rows = conn.execute(
@@ -86,11 +87,23 @@ mutation {{
             print(f"[automerge] merge failed pr={pr} reason=merge_not_done", flush=True)
             continue
 
-        conn.execute(
-            "update dev_proposals set status='merged', dev_stage='merged', pr_status='merged' where id=?",
-            (row["id"],),
-        )
-        conn.commit()
+        done = False
+        for _ in range(10):
+            try:
+                conn.execute(
+                    "update dev_proposals set status='merged', dev_stage='merged', pr_status='merged' where id=?",
+                    (row["id"],),
+                )
+                conn.commit()
+                done = True
+                break
+            except sqlite3.OperationalError as e:
+                if "locked" not in str(e).lower():
+                    raise
+                time.sleep(1)
+        if not done:
+            print(f"[automerge] db_update_retry_exhausted pr={pr}", flush=True)
+            continue
         print(f"[automerge] merge success pr={pr}", flush=True)
 
 if __name__ == "__main__":

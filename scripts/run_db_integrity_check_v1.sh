@@ -1,5 +1,8 @@
 #!/bin/bash
 cd /Users/doyopc/AI/openclaw-factory-daemon || exit 1
+export DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+export FACTORY_DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+export OCLAW_DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 set -a
 [ -f env/telegram.env ] && source env/telegram.env
 [ -f env/telegram_ceo.env ] && source env/telegram_ceo.env

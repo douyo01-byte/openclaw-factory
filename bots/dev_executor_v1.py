@@ -14,7 +14,7 @@ DB_PATH = os.environ.get("OCLAW_DB_PATH", "/Users/doyopc/AI/openclaw-factory/dat
 BASE_BRANCH = "main"
 REPO = "/Users/doyopc/AI/openclaw-factory"
 KAI_LOG = os.path.join(REPO, "logs", "kai_actions.log")
-MAX_OPEN_PRS = int(os.environ.get("EXECUTOR_MAX_OPEN_PRS", "5"))
+MAX_OPEN_PRS = int(os.environ.get("EXECUTOR_MAX_OPEN_PRS", "300"))
 MIN_PR_INTERVAL_SEC = int(os.environ.get("EXECUTOR_MIN_PR_INTERVAL_SEC", "30"))
 BATCH_SIZE = int(os.environ.get("EXECUTOR_BATCH_SIZE", "5"))
 
@@ -104,9 +104,8 @@ def pick_proposals(conn):
         FROM dev_proposals
         WHERE status='approved'
           AND coalesce(project_decision,'')='execute_now'
-          AND coalesce(guard_status,'')='safe'
-          AND coalesce(spec,'')!=''
-          AND (dev_stage IS NULL OR dev_stage='' OR dev_stage='approved')
+          AND coalesce(pr_status,'') in ('', 'ready')
+          AND coalesce(dev_stage,'')='execute_now'
     """).fetchall()
     ranked = []
     for row in rows:
@@ -121,12 +120,10 @@ def pick_proposals(conn):
     anchor_category = (anchor["category"] or "").strip()
     anchor_target = (anchor["target_system"] or "").strip()
     print(f"[batch] anchor proposal={anchor_id} category={anchor_category or '-'} target={anchor_target or '-'}", flush=True)
-
     def is_same_group(row):
         cat = (row["category"] or "").strip()
         tgt = (row["target_system"] or "").strip()
         return (anchor_category and cat == anchor_category) or (anchor_target and tgt == anchor_target)
-
     primary = []
     fallback = []
     for _, _, row in ranked:
@@ -137,7 +134,6 @@ def pick_proposals(conn):
             primary.append(row)
         else:
             fallback.append(row)
-
     selected = []
     seen = set()
     for row in primary:
@@ -148,7 +144,6 @@ def pick_proposals(conn):
         seen.add(pid)
         if len(selected) >= BATCH_SIZE:
             break
-
     mixed = False
     fallback_reason = ""
     for row in fallback:
@@ -165,10 +160,10 @@ def pick_proposals(conn):
         seen.add(pid)
         mixed = True
         fallback_reason = "fallback_fill"
-
     print(f"[batch] selected proposals={[int(r['id']) for r in selected]}", flush=True)
     print(f"[batch] mixed={'true' if mixed else 'false'}" + (f" reason={fallback_reason}" if mixed else ""), flush=True)
     return selected
+
 
 def main():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)

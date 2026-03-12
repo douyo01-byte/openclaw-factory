@@ -90,32 +90,35 @@ def q2(conn):
     """).fetchone()[0]
 
 def q3(conn):
-    if not table_exists(conn, "dev_proposals") or not table_exists(conn, "ceo_hub_events"):
+    if not table_exists(conn, "dev_proposals"):
         return None
     dp = set(cols(conn, "dev_proposals"))
-    ev = set(cols(conn, "ceo_hub_events"))
-    if not {"id", "status"}.issubset(dp) or not {"proposal_id", "event_type"}.issubset(ev):
+    need = {"status", "dev_stage", "pr_status"}
+    if not need.issubset(dp):
         return None
     return conn.execute("""
-        with last_evt as (
-          select proposal_id, max(id) as max_id
-          from ceo_hub_events
-          group by proposal_id
-        ),
-        evt as (
-          select e.proposal_id, e.event_type
-          from ceo_hub_events e
-          join last_evt l
-            on e.proposal_id = l.proposal_id
-           and e.id = l.max_id
-        )
         select count(*)
-        from dev_proposals d
-        join evt e on d.id = e.proposal_id
+        from dev_proposals
         where
-          (d.status = 'merged' and e.event_type not in ('merged','pr_merged','merge','learning_result'))
+          (coalesce(pr_status,'')='open'   and coalesce(dev_stage,'')!='open')
           or
-          (d.status = 'approved' and e.event_type in ('rejected','closed'))
+          (coalesce(pr_status,'')='merged' and coalesce(dev_stage,'')!='merged')
+          or
+          (coalesce(pr_status,'')='closed' and coalesce(dev_stage,'')!='closed')
+          or
+          (coalesce(dev_stage,'')='open'   and coalesce(pr_status,'')!='open')
+          or
+          (coalesce(dev_stage,'')='merged' and coalesce(pr_status,'')!='merged')
+          or
+          (coalesce(dev_stage,'')='closed' and coalesce(pr_status,'')!='closed')
+          or
+          (coalesce(dev_stage,'')='merged' and coalesce(status,'')!='merged')
+          or
+          (coalesce(dev_stage,'')='closed' and coalesce(status,'')!='closed')
+          or
+          (coalesce(pr_status,'')='merged' and coalesce(status,'')!='merged')
+          or
+          (coalesce(pr_status,'')='closed' and coalesce(status,'')!='closed')
     """).fetchone()[0]
 
 def q4(conn):

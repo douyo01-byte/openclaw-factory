@@ -9,6 +9,7 @@ import requests
 DB = os.environ.get("DB_PATH", "/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
 BOT_TOKEN = (os.environ.get("TELEGRAM_CEO_BOT_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
 OPENAI_API_KEY = (os.environ.get("OPENAI_API_KEY") or "").strip()
+print(f"[secretary_boot] OPENAI_API_KEY_LEN={len(OPENAI_API_KEY)}", flush=True)
 OPENAI_MODEL = (os.environ.get("OPENAI_MODEL") or "gpt-4o-mini").strip()
 
 ROOT = Path(__file__).resolve().parent.parent
