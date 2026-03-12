@@ -1,0 +1,1 @@
+Wrap browser usage in a try/finally so await browser.close() always runs even if page.goto or page.title raises. Also set a sensible navigation timeout on goto to avoid indefinite hanging (e.g. timeout=10000 ms). Expected effect: prevents orphan Chromium processes and resource leaks on errors or timeouts, improving reliability with a minimal, low-risk change.
