@@ -1,11 +1,6 @@
 id=1128
-title=Improve proposal filtering in bots/meeting_orchestrator_v1.py
-batch=1129-1128
-ts=2026-03-10T05:54:34Z
+title=Automate routine work around dev_executor_v1.py
+batch=987-1135
+ts=2026-03-12T04:00:49Z
 
-Goal:
-Implement: Improve proposal filtering in bots/meeting_orchestrator_v1.py
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/dev_executor_v1.py. category=automation. improve dev_executor_v1.py with a concrete, low-risk change.
