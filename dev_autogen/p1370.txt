@@ -1,0 +1,6 @@
+id=1370
+title=Create DB parent directory if missing before sqlite3.connect
+batch=1370-1370
+ts=2026-03-12T22:25:24Z
+
+Before opening the SQLite file, ensure the parent directory of DB exists (e.g. create the data/ directory) so sqlite3.connect(DB) does not fail with "No such file or directory" on first run. Change location: add at top of main() before sqlite3.connect(DB): dirpath = os.path.dirname(DB); if dirpath: os.makedirs(dirpath, exist_ok=True). Expected effect: removes a common startup failure when DB_PATH points to a file in a non-existent directory, improving reliability on fresh deployments with minimal risk.
