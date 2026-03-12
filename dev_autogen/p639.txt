@@ -1,5 +1,1 @@
-id=639
-title=Improve Research Quality
-ts=2026-03-07T18:44:09Z
-
-Add better search sources
+AI generated proposal targeting bots/enrich_contacts_v1.py. category=reliability. improve enrich_contacts_v1.py with a concrete, low-risk change.
