@@ -1,11 +1,6 @@
 id=1120
-title=Executor stability sweep 1424
-batch=1120-1119
-ts=2026-03-10T05:24:33Z
+title=Improve diagnostics for dev_command_executor_v1.py
+batch=1071-24
+ts=2026-03-12T04:14:13Z
 
-Goal:
-Implement: Executor stability sweep 1424
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/dev_command_executor_v1.py. category=analysis. improve dev_command_executor_v1.py with a concrete, low-risk change.
