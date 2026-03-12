@@ -1,11 +1,1 @@
-id=1152
-title=Executor stability sweep 1909
-batch=1152-1154
-ts=2026-03-10T11:34:58Z
-
-Goal:
-Implement: Executor stability sweep 1909
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+In create_proposal(), replace the manual sqlite3.connect(...)/close() usage with a context manager (with sqlite3.connect(DB_PATH) as conn:) and enable referential integrity with conn.execute('PRAGMA foreign_keys = ON') immediately after opening. This ensures the DB connection is always closed on exceptions, leverages automatic commit/rollback semantics, reduces chance of leaving the DB locked if an error occurs between open and close, and enforces foreign key constraints for the inserted rows. Change is minimal and limited to connection setup and teardown.
