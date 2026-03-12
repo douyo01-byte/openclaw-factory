@@ -1,0 +1,6 @@
+id=1364
+title=Report sqlite3.connect errors instead of crashing healthcheck
+batch=1364-1364
+ts=2026-03-12T22:08:41Z
+
+Wrap sqlite3.connect(DB_PATH) in a try/except catching sqlite3.Error (or Exception) and, on failure, append a db_open_error line with the exception text to the healthcheck message and send it. This prevents the script from crashing when the DB file is corrupt/unreadable/locked during connect, and ensures the Telegram healthcheck shows the DB open error (e.g. 'db_open_error: OperationalError: database disk image is malformed') so on-call engineers get actionable diagnostics.
