@@ -1,0 +1,6 @@
+id=1386
+title=Ensure logs directory exists before appending to logs/self_healing_v2.log
+batch=1386-1386
+ts=2026-03-12T23:11:14Z
+
+Modify the log() function in bots/self_healing_v2.py to create the logs directory if it does not exist before opening the log file. Concretely, call os.makedirs(os.path.dirname(LOG) or '.', exist_ok=True) (wrap in try/except to ignore race conditions) immediately before with open(LOG, 'a'). Expected effect: prevents the script from crashing with FileNotFoundError when the logs/ directory is missing (e.g., on first run or after cleanup), ensuring self-healing actions and status messages are recorded. This is a minimal, low-risk change limited to the log helper.
