@@ -1,5 +1,6 @@
 id=688
-title=Executor safety
-ts=2026-03-07T19:43:57Z
+title=Add recovery path to tg_inbox_poll_v1.py
+batch=688-850
+ts=2026-03-12T04:08:51Z
 
-Improve executor safety
+AI generated proposal targeting bots/tg_inbox_poll_v1.py. category=self_healing. improve tg_inbox_poll_v1.py with a concrete, low-risk change.
