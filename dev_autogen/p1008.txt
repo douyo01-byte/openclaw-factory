@@ -1,11 +1,1 @@
-id=1008
-title=Reduce duplicate PR creation risk
-batch=1008-1009
-ts=2026-03-09T16:16:17Z
-
-Goal:
-Implement: Reduce duplicate PR creation risk
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/persona_reply_v1.py. category=reliability. improve persona_reply_v1.py with a concrete, low-risk change.
