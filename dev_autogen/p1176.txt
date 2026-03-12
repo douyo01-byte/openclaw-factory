@@ -1,11 +1,1 @@
-id=1176
-title=Executor stability sweep 2211
-batch=1176-1175
-ts=2026-03-10T13:11:09Z
-
-Goal:
-Implement: Executor stability sweep 2211
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Change the regexes in parse_approval and parse_test_only to allow common separators (ASCII colon ':', Japanese fullwidth colon '：', hyphen '-') in addition to whitespace before the #ID. Concretely, replace patterns like r"承認します\s*#(\d+)" and r"テストだけ\s*#(\d+)" with r"承認します(?:\s|[:：\-])*#(\d+)" and r"テストだけ(?:\s|[:：\-])*#(\d+)" respectively. Expected effect: reduces false negatives for messages like "承認します: #123", "承認します：#123", "テストだけ- #456" while remaining backward-compatible with existing formats. This is a small, low-risk regex tweak limited to this file.
