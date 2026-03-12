@@ -1,11 +1,6 @@
 id=1020
-title=Optimize database queries in scripts/review_run_one.sh
-batch=1021-1020
-ts=2026-03-09T17:02:04Z
+title=Guard against missing TELEGRAM_BOT_TOKEN to avoid KeyError at import
+batch=529-1020
+ts=2026-03-12T04:05:29Z
 
-Goal:
-Implement: Optimize database queries in scripts/review_run_one.sh
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Replace the top-level TOKEN=os.environ["TELEGRAM_BOT_TOKEN"] (which raises KeyError during import) with a safe lookup and an explicit check in main(). Concretely: use TOKEN=os.environ.get("TELEGRAM_BOT_TOKEN") and in main() verify TOKEN is set (print a clear error and exit or raise SystemExit) before calling the Telegram API. Expected effect: deterministic, user-friendly failure when the env var is absent instead of an unhandled KeyError during import; easier debugging and safer program startup with no change to runtime behavior when the token is present.

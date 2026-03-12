@@ -1,0 +1,6 @@
+id=529
+title=Improve error handling in kenji_researcher.py
+batch=529-1020
+ts=2026-03-12T04:05:29Z
+
+AI generated proposal targeting bots/team/kenji_researcher.py. category=reliability. improve kenji_researcher.py with a concrete, low-risk change.

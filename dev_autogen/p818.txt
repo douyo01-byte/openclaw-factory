@@ -1,0 +1,6 @@
+id=818
+title=Improve error handling in send_spec_questions_v1.py
+batch=529-1020
+ts=2026-03-12T04:05:29Z
+
+AI generated proposal targeting bots/send_spec_questions_v1.py. category=reliability. improve send_spec_questions_v1.py with a concrete, low-risk change.
