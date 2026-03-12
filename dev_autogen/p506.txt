@@ -1,5 +1,1 @@
-id=506
-title=Watcher reliability
-ts=2026-03-07T02:10:38Z
-
-Improve PR watcher stability
+AI generated improvement targeting bots/ingest_spec_answers_v1.py
