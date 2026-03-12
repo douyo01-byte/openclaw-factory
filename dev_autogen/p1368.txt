@@ -1,0 +1,6 @@
+id=1368
+title=Add timeout and exception handling to notify() Telegram HTTP call
+batch=1368-1368
+ts=2026-03-12T22:20:01Z
+
+Wrap the requests.post in notify() with a try/except for requests.RequestException, add a short timeout (e.g. timeout=5), and check response.ok. On exception or non-OK response print a concise error to stderr (or stdout) including status code and response text. This change prevents the script from hanging on network issues, avoids unhandled exceptions crashing the process, and surfaces HTTP failures for easier debugging without changing existing behavior when notifications succeed.
