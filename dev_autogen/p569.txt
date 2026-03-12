@@ -1,5 +1,1 @@
-id=569
-title=Speed Pipeline
-ts=2026-03-07T16:21:11Z
-
-Parallelize jobs
+AI generated proposal targeting bots/role_training_v1.py. category=performance. improve role_training_v1.py with a concrete, low-risk change.
