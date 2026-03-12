@@ -1,0 +1,6 @@
+id=1394
+title=Guard missing TELEGRAM_BOT_TOKEN and mark /help rows as error in DB
+batch=1394-1394
+ts=2026-03-12T23:33:40Z
+
+Add a simple guard in run_once() to detect when TOKEN is empty before calling tg_send. When TOKEN is missing, update the selected inbox_commands rows to processed=1 (or processed=0?) and set status='help_error', error='missing TELEGRAM_BOT_TOKEN', applied_at=now(), then commit and skip calling the Telegram API. This avoids network exceptions and repeated failing retries when the TELEGRAM_BOT_TOKEN environment variable is not set, and leaves a clear error record in the database for operators to fix. The change is a small conditional around the existing loop and only updates rows already selected for processing.
