@@ -1,5 +1,1 @@
-id=955
-title=watcherのダイジェスト通知とバースト抑制の導入
-ts=2026-03-09T03:33:42Z
-
-短時間に多発するwatcherアラートをタグ・重要度・ソース別に5分単位で集約し1件要約で送信、重大度HIGHのみ即時送信する可変レート制御を追加して通知ノイズを削減します。
+Wrap subprocess.check_output + json.loads calls in get_open_auto_prs and ci_success with try/except to catch subprocess.CalledProcessError and json.JSONDecodeError. On failure, log a short error to stderr (or print) with the command and error, return safe defaults (get_open_auto_prs -> [] , ci_success -> False). This prevents the bot from crashing if the gh CLI times out, is not authenticated, or returns invalid output, causing the main loop to skip affected PRs instead of raising an exception. The change is small, low-risk, and improves reliability without altering normal success behavior.
