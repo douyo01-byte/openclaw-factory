@@ -1,5 +1,6 @@
 id=592
-title=Improve Research Quality
-ts=2026-03-07T17:10:13Z
+title=Automate routine work around db_init.py
+batch=592-692
+ts=2026-03-12T03:59:28Z
 
-Add better search sources
+AI generated proposal targeting scripts/db_init.py. category=automation. improve db_init.py with a concrete, low-risk change.
