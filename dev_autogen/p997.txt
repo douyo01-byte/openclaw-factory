@@ -1,11 +1,1 @@
-id=997
-title=Executor stability sweep 0059
-batch=997-997
-ts=2026-03-09T15:59:44Z
-
-Goal:
-Implement: Executor stability sweep 0059
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Wrap the requests.get call inside fetch(...) with a try/except for requests.RequestException (and optionally Exception) and return a safe tuple (0, "") on failure. Currently fetch(...) can raise on network/timeouts/connection errors which can bubble up and abort processing; returning (0,"") makes the rest of the bot treat the page as unavailable (status=0) and continue. Expected effect: fewer unhandled exceptions, more robust processing of chat_jobs (jobs will be marked with missing pages instead of crashing the process), minimal code change and low risk.
