@@ -1,0 +1,6 @@
+id=1375
+title=Normalize decision text and robustly parse score for safe categorization
+batch=1375-1375
+ts=2026-03-12T22:37:34Z
+
+Modify the counting logic so each row's decision string is normalized (strip() + lower()) and the score is parsed safely (handle None and non-numeric values) before comparisons. Concretely, replace the generator expressions that compute adopted/held/dropped with a small loop that for each row does: dec = (r[1] or '').strip().lower(); try to coerce score = float(r[2]) except (TypeError, ValueError): score = None. Then use conditions like (dec in ('採用','approved') or (score is not None and score > 0)) and similarly for held/dropped. Expected effect: avoids TypeError or ValueError when score is NULL or non-numeric, makes decision matching resilient to extra whitespace/case differences, and yields more accurate counts used to drive actions.
