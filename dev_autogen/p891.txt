@@ -1,5 +1,6 @@
 id=891
-title=telegramの送信順序制御の改善
-ts=2026-03-07T21:02:29Z
+title=Add recovery path to employee_registry_v1.py
+batch=872-1006
+ts=2026-03-12T04:10:11Z
 
-telegramに対して送信順序制御の改善を行い、通知を理解しやすくする。
+AI generated proposal targeting bots/employee_registry_v1.py. category=self_healing. improve employee_registry_v1.py with a concrete, low-risk change.

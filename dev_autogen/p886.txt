@@ -1,0 +1,6 @@
+id=886
+title=Add recovery path to dev_pr_sync_v1.py
+batch=872-1006
+ts=2026-03-12T04:10:11Z
+
+AI generated proposal targeting bots/dev_pr_sync_v1.py. category=self_healing. improve dev_pr_sync_v1.py with a concrete, low-risk change.

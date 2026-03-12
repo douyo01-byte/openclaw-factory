@@ -1,5 +1,6 @@
 id=951
-title=brainの 情 報 選 定 ロ ジ ッ ク の 改 善
-ts=2026-03-09T03:29:21Z
+title=Add recovery path to parse_dev_reply_v1.py
+batch=872-1006
+ts=2026-03-12T04:10:11Z
 
-brainに 対 し て 情 報 選 定 ロ ジ ッ ク の 改 善を 行 い 、 候 補 選 別 精 度 を 向 上 さ せ る 。 
+AI generated proposal targeting bots/parse_dev_reply_v1.py. category=self_healing. improve parse_dev_reply_v1.py with a concrete, low-risk change.

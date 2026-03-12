@@ -1,11 +1,6 @@
 id=1006
-title=Optimize database queries in config/feeds/aya.txt
-batch=1007-1006
-ts=2026-03-09T16:13:50Z
+title=Add recovery path to persona_reply_v2.py
+batch=872-1006
+ts=2026-03-12T04:10:11Z
 
-Goal:
-Implement: Optimize database queries in config/feeds/aya.txt
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/persona_reply_v2.py. category=self_healing. improve persona_reply_v2.py with a concrete, low-risk change.
