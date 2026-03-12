@@ -1,11 +1,1 @@
-id=1188
-title=Executor stability sweep 0942
-batch=1188-1188
-ts=2026-03-11T00:42:25Z
-
-Goal:
-Implement: Executor stability sweep 0942
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Wrap the DB work in a try/except/finally (or use `with sqlite3.connect(DB) as conn:`) and catch sqlite3.Error to print a short error message to stderr before exiting. Specifically: create the connection, run the query loop inside try, on sqlite3.Error print the exception and the DB path, and always close the connection in finally. Expected effect: prevents leaving the SQLite file locked or the connection open on unexpected runtime errors, makes failures visible in logs for faster diagnosis, and keeps behavior unchanged for the success path.
