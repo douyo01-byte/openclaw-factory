@@ -1,0 +1,6 @@
+id=830
+title=Add guard checks to get_chat_id.py
+batch=825-902
+ts=2026-03-12T04:02:49Z
+
+AI generated proposal targeting scripts/get_chat_id.py. category=safety. improve get_chat_id.py with a concrete, low-risk change.
