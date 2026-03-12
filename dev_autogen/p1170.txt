@@ -1,11 +1,1 @@
-id=1170
-title=Improve proposal filtering in oclibs/tg_api.py
-batch=1171-1170
-ts=2026-03-10T12:54:56Z
-
-Goal:
-Implement: Improve proposal filtering in oclibs/tg_api.py
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/dev_reviewer_v1.py. category=performance. improve dev_reviewer_v1.py with a concrete, low-risk change.
