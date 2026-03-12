@@ -1,11 +1,1 @@
-id=1144
-title=Executor stability sweep 1554
-batch=1144-1143
-ts=2026-03-10T06:54:36Z
-
-Goal:
-Implement: Executor stability sweep 1554
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting scripts/save_ks_session.py. category=automation. improve save_ks_session.py with a concrete, low-risk change.
