@@ -1,11 +1,1 @@
-id=1202
-title=Optimize database queries in scripts/daily_text_example.txt
-batch=1202-1202
-ts=2026-03-11T01:43:56Z
-
-Goal:
-Implement: Optimize database queries in scripts/daily_text_example.txt
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+In llm(), add a short requests timeout (e.g. timeout=15) to the requests.post call and call r.raise_for_status() before r.json(). This prevents the process from hanging indefinitely if the OpenAI API is slow or unresponsive and surfaces non-200 HTTP errors as exceptions immediately. Expected effect: reduces risk of stuck CI/agents, fails fast on upstream API errors so callers can handle/retry, and improves overall reliability with minimal code change.
