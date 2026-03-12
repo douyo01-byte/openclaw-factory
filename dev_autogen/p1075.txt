@@ -1,11 +1,1 @@
-id=1075
-title=Executor stability sweep 0909
-batch=1075-1075
-ts=2026-03-10T00:09:23Z
-
-Goal:
-Implement: Executor stability sweep 0909
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+In chat_router_daemon_v1.py the except branch sleeps time.sleep(max(INTERVAL, 5)) and then the loop always executes time.sleep(INTERVAL) after the try/except, causing a double wait on errors (effective wait ≈ INTERVAL + max(INTERVAL,5)). Add a single-line change: insert continue as the last statement in the except block (or move the final time.sleep into a try/else) so the post-except path does not execute the extra time.sleep. Expected effect: reduces unintended long delays after errors, so retries and failure notifications occur after a single INTERVAL instead of a doubled delay. This is a minimal, low-risk bugfix with no behavioral change on the success path.
