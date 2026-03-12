@@ -1,0 +1,6 @@
+id=1384
+title=Use context managers and handle read errors in _load_persona to avoid unclosed file descriptors
+batch=1384-1384
+ts=2026-03-12T23:05:49Z
+
+Replace the bare open(...).read() calls in _load_persona with with open(..., encoding='utf-8') as f: ... and wrap each file read in a small try/except that catches IO/Unicode errors. This ensures persona files are closed promptly (preventing file descriptor leaks and resource warnings) and avoids the module import from raising on transient file read issues. Expected effect: fewer leaked file descriptors, no resource warnings in long-running processes, and more robust startup when persona files are present but momentarily unreadable.
