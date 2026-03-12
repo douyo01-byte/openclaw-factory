@@ -1,0 +1,6 @@
+id=1381
+title=Add exponential-backoff retries and response validation in ask_llm to handle transient OpenAI API errors
+batch=1381-1381
+ts=2026-03-12T22:55:04Z
+
+Change ask_llm in bots/spec_refiner_v2.py to perform up to 3 POST attempts with exponential backoff (e.g., delays 1s, 2s, 4s) on network exceptions and on HTTP 429 or 5xx responses. After a successful HTTP response, validate the JSON structure (check that j.get('choices') is a non-empty list and that choices[0].get('message', {}).get('content') exists) before returning the content; raise a descriptive RuntimeError if the expected keys are missing. This is a small, low-risk change that reduces failures from transient API rate limits or network blips and avoids KeyError on malformed responses, resulting in fewer failed refine runs and clearer error logs.
