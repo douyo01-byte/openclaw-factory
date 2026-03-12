@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/employee_registry_v1.py. category=safety. improve employee_registry_v1.py with a concrete, low-risk change.
