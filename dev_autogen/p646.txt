@@ -1,5 +1,6 @@
 id=646
-title=Improve Research Quality
-ts=2026-03-07T18:58:01Z
+title=Add recovery path to explain_orchestrator_v1.py
+batch=556-680
+ts=2026-03-12T04:06:50Z
 
-Add better search sources
+AI generated proposal targeting bots/explain_orchestrator_v1.py. category=self_healing. improve explain_orchestrator_v1.py with a concrete, low-risk change.
