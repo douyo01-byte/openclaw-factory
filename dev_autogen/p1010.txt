@@ -1,11 +1,1 @@
-id=1010
-title=Strengthen executor retry safety
-batch=1012-1011
-ts=2026-03-09T16:17:00Z
-
-Goal:
-Implement: Strengthen executor retry safety
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+In bots/chat_to_dev/chat_to_proposal_v1.py the insert uses a hardcoded status value "approved" which immediately marks proposals as approved. Change the inserted status to a conservative pending value (e.g., "pending" or "pending_review") and centralize it as a constant (PROPOSAL_DEFAULT_STATUS) near the top of the file. Expected effect: prevents unvetted chat-derived proposals from being auto-approved, enabling human review and reducing risk of open/unsafe changes. This is a small, low-risk change (single literal replacement + optional constant) with no schema changes.
