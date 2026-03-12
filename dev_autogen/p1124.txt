@@ -1,11 +1,1 @@
-id=1124
-title=Executor stability sweep 1439
-batch=1124-1123
-ts=2026-03-10T05:39:34Z
-
-Goal:
-Implement: Executor stability sweep 1439
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Add explicit conn.commit() calls immediately after any conn.execute(...) that modifies the database in this file. Concretely, call conn.commit() after the INSERT/UPDATE in set_ctx_last_item, after the INSERT in enqueue_contact (inside the try block), after the INSERT/UPDATE in upsert_role_brief, and after the UPDATE statements in the main() job loop (the UPDATEs that set status='error'). This ensures those changes are flushed to the SQLite file instead of remaining uncommitted in the connection transaction (which currently risks losing state when the process ends). Expected effect: database inserts/updates become durable, job status and contact/role data will no longer be silently lost, improving reliability with a very small, low-risk change.
