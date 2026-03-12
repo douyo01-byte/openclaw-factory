@@ -1,11 +1,1 @@
-id=1215
-title=Executor stability sweep 1147
-batch=1215-1215
-ts=2026-03-11T02:47:40Z
-
-Goal:
-Implement: Executor stability sweep 1147
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Collect the prepared insert parameter tuples in a list and call cursor.executemany(...) once instead of executing c.execute(...) inside the loop. Also open the SQLite connection with a context manager (with sqlite3.connect(...) as conn:) so the connection is properly committed/closed even on error. Expected effect: reduces SQLite round-trips and transaction/lock overhead for many rows (better performance and lower risk of DB locking), and ensures the DB connection is always closed (improved resource cleanup). This is a small, low-risk change: replace the per-row c.execute() with building params = [] then c.executemany(insert_sql, params) and remove the explicit conn.commit(), or keep it if desired.
