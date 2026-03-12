@@ -1,0 +1,6 @@
+id=1389
+title=Commit DB transaction in enqueue_chat_job to persist new chat_jobs
+batch=1389-1389
+ts=2026-03-12T23:18:11Z
+
+In bots/chat_router_v1.py the function enqueue_chat_job(conn, ...) performs an INSERT into chat_jobs but does not call conn.commit(). Add conn.commit() immediately after the execute call so the newly enqueued chat job is persisted. Expected effect: reduces risk of lost jobs when the connection is closed or when other processes expect the job to be visible immediately; small, low-risk change limited to a single function.
