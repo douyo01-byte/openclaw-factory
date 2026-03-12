@@ -1,0 +1,6 @@
+id=1357
+title=Use a requests.Session with retries in tg_send to reduce transient Telegram failures
+batch=1352-1357
+ts=2026-03-12T21:53:00Z
+
+Create a module-level requests.Session configured with urllib3 Retry (e.g. total=3, backoff_factor=0.5, status_forcelist=[429,500,502,503,504]) and use it in tg_send instead of requests.post. Also add a small print log when response status != 200 or response JSON 'ok' is false. Expected effect: transient network/timeouts or brief Telegram 5xx/429 errors will be retried automatically, reducing missed/empty notified_msg_id updates and improving reliability of notifications with a minimal, low-risk change.
