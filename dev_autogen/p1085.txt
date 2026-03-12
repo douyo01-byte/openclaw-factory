@@ -1,0 +1,6 @@
+id=1085
+title=Improve error handling in tg_send_reflection_v1.py
+batch=1028-1088
+ts=2026-03-12T04:13:32Z
+
+AI generated proposal targeting bots/tg_send_reflection_v1.py. category=reliability. improve tg_send_reflection_v1.py with a concrete, low-risk change.

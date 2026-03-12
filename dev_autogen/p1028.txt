@@ -1,11 +1,6 @@
 id=1028
-title=Improve lifecycle event safety in config/feeds/core.txt
-batch=1029-1028
-ts=2026-03-09T18:02:05Z
+title=Improve error handling in dev_guardrails_v1.py
+batch=1028-1088
+ts=2026-03-12T04:13:32Z
 
-Goal:
-Implement: Improve lifecycle event safety in config/feeds/core.txt
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/dev_guardrails_v1.py. category=reliability. improve dev_guardrails_v1.py with a concrete, low-risk change.
