@@ -1,0 +1,6 @@
+id=1378
+title=Fail fast on git errors in changed_files by checking subprocess return code and stderr
+batch=1378-1378
+ts=2026-03-12T22:49:00Z
+
+Modify changed_files() to detect non-zero git exit status and raise a clear exception (or use subprocess.run(..., check=True)) including stderr. Currently the function silently returns an empty list if `git` fails or isn't available, causing evaluate_risk() to default to 'low' and potentially mask high-risk changes. This small guard makes failures visible in CI/logs and prevents incorrect risk classification.
