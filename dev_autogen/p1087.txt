@@ -1,11 +1,1 @@
-id=1087
-title=Executor stability sweep 1139
-batch=1086-1088
-ts=2026-03-10T03:18:55Z
-
-Goal:
-Implement: Executor stability sweep 1139
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Wrap subprocess.check_output calls in get_open_auto_prs and ci_success with try/except to catch subprocess.CalledProcessError and subprocess.TimeoutExpired (use a small timeout, e.g. 10-15s). On error, log a concise message to stderr and return a safe default: get_open_auto_prs -> [] (no PRs), ci_success -> False (do not merge). Also normalize gh output before using it (if bytes, decode; if ci response is an object with a 'checks' key, extract the list). Expected effect: the script will no longer crash or abort merging when the gh CLI fails or hangs; it will skip transient failures, continue processing other PRs, and make root causes easier to diagnose via the logged messages.
