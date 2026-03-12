@@ -1,11 +1,1 @@
-id=1221
-title=Executor stability sweep 1212
-batch=1221-1221
-ts=2026-03-11T03:12:43Z
-
-Goal:
-Implement: Executor stability sweep 1212
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/ceo_noise_cleanup_v1.py. category=self_healing. improve ceo_noise_cleanup_v1.py with a concrete, low-risk change.
