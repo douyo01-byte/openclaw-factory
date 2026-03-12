@@ -1,11 +1,1 @@
-id=1163
-title=Executor stability sweep 2054
-batch=1163-1162
-ts=2026-03-10T11:54:49Z
-
-Goal:
-Implement: Executor stability sweep 2054
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Call PRAGMA foreign_keys = ON on the sqlite3 connection before executing the DDL. The file declares a FOREIGN KEY from dev_events.proposal_id to dev_proposals(id) but SQLite does not enforce foreign keys by default. Adding a single line such as conn.execute('PRAGMA foreign_keys = ON') immediately after opening the connection ensures referential integrity (prevents inserting events referencing non-existent proposals) and avoids latent data-consistency bugs. This is a small, low-risk change confined to apply().
