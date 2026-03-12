@@ -1,11 +1,1 @@
-id=1150
-title=Harden DB path handling in bots/enrich_contacts_v1.py
-batch=1152-1154
-ts=2026-03-10T11:34:58Z
-
-Goal:
-Implement: Harden DB path handling in bots/enrich_contacts_v1.py
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/chat_to_dev/daemon_chat_to_dev_v1.py. category=observability. improve daemon_chat_to_dev_v1.py with a concrete, low-risk change.
