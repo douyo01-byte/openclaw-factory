@@ -1,11 +1,1 @@
-id=1216
-title=Executor stability sweep 1152
-batch=1216-1216
-ts=2026-03-11T02:52:42Z
-
-Goal:
-Implement: Executor stability sweep 1152
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Wrap the code after opening the SQLite connection in a try/finally so c.close() always runs even if an exception occurs while sending Telegram messages or updating rows. Concretely: after c=sqlite3.connect(...), put the subsequent logic (PRAGMA, CREATE TABLE, SELECT, send loop, commit, print) inside try: ... finally: c.close(). This is a minimal, low-risk change that prevents leaving the DB file handle open on unexpected exceptions (avoids locked DB files, resource leaks, and stale connections), without changing behavior when everything succeeds.
