@@ -1,11 +1,1 @@
-id=1001
-title=Improve logging coverage in config/personas/miho.txt
-batch=1000-1001
-ts=2026-03-09T16:04:55Z
-
-Goal:
-Implement: Improve logging coverage in config/personas/miho.txt
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/persona_reply_v3.py. category=observability. improve persona_reply_v3.py with a concrete, low-risk change.
