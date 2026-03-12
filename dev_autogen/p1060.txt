@@ -1,11 +1,1 @@
-id=1060
-title=Executor stability sweep 0647
-batch=1060-1059
-ts=2026-03-09T21:47:17Z
-
-Goal:
-Implement: Executor stability sweep 0647
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Modify changed_files() to pass a timeout (e.g. timeout=10) to subprocess.run, check the process returncode (or use check=True) and surface stderr when the git invocation fails. Also catch FileNotFoundError (git not installed) and subprocess.TimeoutExpired to return an explicit empty list or raise a clear RuntimeError with a descriptive message. Expected effect: avoids silently returning an empty file list when git fails or hangs, prevents indefinite blocking, and provides clear errors for CI/operator troubleshooting (improves reliability and observability with a minimal, low-risk change).
