@@ -1,0 +1,6 @@
+id=1377
+title=Handle requests/HTTP/JSON errors when sending Telegram messages to avoid process exit
+batch=1377-1377
+ts=2026-03-12T22:43:41Z
+
+Wrap the requests.post + resp.raise_for_status() + resp.json() logic in a try/except that catches requests.exceptions.RequestException and ValueError (JSON decode). On error, log a concise message including proposal_id and HTTP response text (or exception) to stderr and continue to the next row instead of raising SystemExit. Also treat a missing message_id as a non-fatal error (log and continue) rather than exiting. Expected effect: a transient network/Telegram error or malformed response for one proposal will not crash the whole script; other pending questions will still be processed and DB state will remain consistent so failed items can be retried later.
