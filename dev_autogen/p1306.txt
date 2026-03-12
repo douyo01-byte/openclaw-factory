@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/openai_smoke.py. category=analysis. improve openai_smoke.py with a concrete, low-risk change.
