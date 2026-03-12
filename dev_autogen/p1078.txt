@@ -1,11 +1,1 @@
-id=1078
-title=Executor stability sweep 0954
-batch=1078-1078
-ts=2026-03-10T00:54:25Z
-
-Goal:
-Implement: Executor stability sweep 0954
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/ceo_noise_cleanup_v1.py. category=reliability. improve ceo_noise_cleanup_v1.py with a concrete, low-risk change.
