@@ -1,0 +1,6 @@
+id=1392
+title=Make manual pause non-blocking by replacing input() with asyncio.to_thread in scripts/save_ks_session.py
+batch=1392-1392
+ts=2026-03-12T23:28:14Z
+
+Replace the synchronous input() call inside the async main() with an await asyncio.to_thread(input, ...) call (e.g. await asyncio.to_thread(input, "Cloudflare/同意などを手で通してください。終わったらEnter。")) so the blocking prompt runs in a thread instead of blocking the asyncio event loop. This is a minimal refactor limited to one line in scripts/save_ks_session.py. Expected effect: avoids blocking the event loop which can interfere with Playwright async internals or other concurrent async tasks, improving reliability of the script during the manual pause while preserving the same UX.
