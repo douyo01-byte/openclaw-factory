@@ -1,0 +1,6 @@
+id=915
+title=Add guard checks to reflection_worker_v1.py
+batch=915-1022
+ts=2026-03-12T04:03:29Z
+
+AI generated proposal targeting bots/reflection_worker_v1.py. category=safety. improve reflection_worker_v1.py with a concrete, low-risk change.

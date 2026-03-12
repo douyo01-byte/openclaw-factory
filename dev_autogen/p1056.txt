@@ -1,11 +1,6 @@
 id=1056
-title=Executor stability sweep 0617
-batch=1056-1055
-ts=2026-03-09T21:17:13Z
+title=Add guard checks to meeting_hn_v1.py
+batch=915-1022
+ts=2026-03-12T04:03:29Z
 
-Goal:
-Implement: Executor stability sweep 0617
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/meeting_hn_v1.py. category=safety. improve meeting_hn_v1.py with a concrete, low-risk change.

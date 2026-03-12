@@ -1,11 +1,6 @@
 id=1051
-title=Improve proposal filtering in scripts/env_check.sh
-batch=1052-1051
-ts=2026-03-09T20:47:10Z
+title=Add guard checks to meeting_from_db_v1.py
+batch=915-1022
+ts=2026-03-12T04:03:29Z
 
-Goal:
-Implement: Improve proposal filtering in scripts/env_check.sh
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/meeting_from_db_v1.py. category=safety. improve meeting_from_db_v1.py with a concrete, low-risk change.

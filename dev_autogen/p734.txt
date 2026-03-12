@@ -1,5 +1,6 @@
 id=734
-title=Improve Research Quality
-ts=2026-03-07T21:15:09Z
+title=Add structured logging to reflection_worker_v1.py
+batch=915-1022
+ts=2026-03-12T04:03:29Z
 
-Add better search sources
+AI generated proposal targeting bots/reflection_worker_v1.py. category=observability. improve reflection_worker_v1.py with a concrete, low-risk change.
