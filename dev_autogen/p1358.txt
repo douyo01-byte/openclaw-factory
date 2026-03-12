@@ -1,0 +1,6 @@
+id=1358
+title=Add per-row send error handling and ensure DB connection closed
+batch=1358-1359
+ts=2026-03-12T21:54:26Z
+
+Wrap each tg_send call in a try/except that logs the failure (to stderr via print) and continues processing remaining rows, and ensure the sqlite3 connection is closed in a finally block. Keep the existing behavior of only updating notified_at when tg_send succeeds. This prevents a single transient Telegram/network error from crashing the whole run and leaving the DB connection open, ensures other pending proposals are still processed, and avoids resource leaks. Minimal code changes: enclose the for-loop and update logic in try/finally to call conn.close(), and surround tg_send + update with try/except Exception as e: print(f"notify failed id={r['id']}: {e}") followed by continue.
