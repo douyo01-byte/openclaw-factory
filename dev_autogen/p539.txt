@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/team/__init__.py. category=observability. improve __init__.py with a concrete, low-risk change.
