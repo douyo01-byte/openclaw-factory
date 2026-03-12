@@ -1,17 +1,1 @@
-id=982
-title=Improve retry logic in dev_autogen/p596.txt
-ts=2026-03-09T10:43:48Z
-
-Goal:
-Implement targeted code improvement: Improve retry logic in dev_autogen/p596.txt
-
-Scope:
-- edit only directly related file(s)
-- keep PR minimal
-- preserve current behavior except target fix
-- avoid repo-wide refactor
-
-Acceptance:
-- affected code compiles
-- targeted improvement is visible
-- current pipeline keeps working
+Before connecting to the SQLite file (conn = sqlite3.connect(DB)) ensure the parent directory for DB exists. Add a small check such as: dir_path = os.path.dirname(DB); if dir_path: os.makedirs(dir_path, exist_ok=True). Place this immediately before the sqlite3.connect(DB) call in main(). This prevents startup failures when the configured DB_PATH contains a non-existent directory (e.g. default 'data/openclaw.db'), is safe for special paths like ':memory:' (dirname('') -> ''), and is a low-risk change that reduces crashes and improves reliability.
