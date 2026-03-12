@@ -1,0 +1,6 @@
+id=1383
+title=Add 2-retry with small exponential backoff for transient fetch failures in fetch_text
+batch=1383-1383
+ts=2026-03-12T23:00:30Z
+
+Modify fetch_text in bots/team/sakura_scout.py to perform up to 3 total attempts (initial + 2 retries) when fetching a feed. Retry on network exceptions and on transient HTTP statuses (at least 429, 502, 503, 504). Between retries sleep with a small exponential backoff (e.g. sleep 1s, then 2s) before the next attempt. Preserve the existing return shape (text, status, err) and return the last observed status/exception if all attempts fail. This change is a small, local addition inside fetch_text and does not alter calling code. Expected effect: reduces random/temporary fetch failures (rate limits, brief Cloudflare/502/503 windows), increasing successful parses and inserted briefs with minimal risk.
