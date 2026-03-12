@@ -1,0 +1,6 @@
+id=1390
+title=Enable WAL journal mode and increase SQLite connect timeout to reduce DB lock errors
+batch=1390-1390
+ts=2026-03-12T23:22:48Z
+
+Modify the sqlite3 connection in scripts/db_init.py to set a longer timeout and enable Write-Ahead Logging (WAL) immediately after opening the DB. Concretely: change sqlite3.connect(db) to sqlite3.connect(db, timeout=30) and add con.execute("PRAGMA journal_mode=WAL;") before creating tables. Expected effect: reduces transient "database is locked" errors during concurrent access (initialization/run race), allows concurrent readers while a writer is active, and makes the init script more robust in CI or multi-process environments with minimal risk and no schema changes.
