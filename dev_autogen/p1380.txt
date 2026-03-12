@@ -1,0 +1,6 @@
+id=1380
+title=Prevent double sleep after exception in bots/chat_router_daemon_v1.py
+batch=1380-1380
+ts=2026-03-12T22:54:24Z
+
+In the current loop, when chat_main() raises an exception the code calls time.sleep(max(INTERVAL, 5)) inside the except block and then unconditionally calls time.sleep(INTERVAL) after the try/except, causing a doubled sleep on errors. Change: add a 'continue' immediately after the sleep() in the except block (or set a single next_sleep variable and sleep once after the try/except). Expected effect: removes unintended extra delay after failures so retries and failure-notify timing behave as intended, improving responsiveness and reliability with a minimal, low-risk one-line change.
