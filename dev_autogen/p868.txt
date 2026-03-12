@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/ceo_noise_cleanup_v1.py. category=automation. improve ceo_noise_cleanup_v1.py with a concrete, low-risk change.
