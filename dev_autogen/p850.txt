@@ -1,0 +1,6 @@
+id=850
+title=Add recovery path to reflection_v1.py
+batch=688-850
+ts=2026-03-12T04:08:51Z
+
+AI generated proposal targeting bots/reflection_v1.py. category=self_healing. improve reflection_v1.py with a concrete, low-risk change.

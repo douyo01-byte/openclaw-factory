@@ -1,0 +1,6 @@
+id=712
+title=Add recovery path to persona_reply_v2.py
+batch=688-850
+ts=2026-03-12T04:08:51Z
+
+AI generated proposal targeting bots/persona_reply_v2.py. category=self_healing. improve persona_reply_v2.py with a concrete, low-risk change.
