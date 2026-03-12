@@ -1,0 +1,6 @@
+id=1366
+title=Persist SQLite writes: add explicit c.commit() after schema setup and per-update inserts
+batch=1366-1366
+ts=2026-03-12T22:14:41Z
+
+The script opens sqlite3 with sqlite3.connect(DB_PATH) but never calls commit(), so schema changes and inserted rows (inbox_commands, proposal_conversation, decisions, kv changes, etc.) may be lost if the process exits or crash occurs before connection close. Low-risk change: after ensure(c) returns in main(), call c.commit() to persist any created tables/PRAGMAs, and call c.commit() once at the end of each processed update iteration (i.e., after the INSERT/UPDATE statements inside the for upd in updates loop). Expected effect: database schema and new rows are reliably persisted immediately, reducing data loss risk and minimizing window for transaction locks; no behavioral changes to logic, only stronger durability.
