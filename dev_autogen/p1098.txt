@@ -1,11 +1,1 @@
-id=1098
-title=Executor stability sweep 1254
-batch=1098-1098
-ts=2026-03-10T03:54:31Z
-
-Goal:
-Implement: Executor stability sweep 1254
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+In this daemon the three exception handlers and the startup print use print(), which discards stack traces and is hard to aggregate. Make a minimal change: import the logging module, call logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s: %(message)s') near the top, replace print("daemon start: chat_to_dev") with logging.info(...), and replace the three except blocks' print(...) calls with logging.exception(...) (called inside the except blocks) so full stack traces are recorded. This is a low-risk, single-file change that preserves runtime flow while improving observability and debugging (better logs for root-cause analysis and easier ingestion by log collectors).
