@@ -1,5 +1,1 @@
-id=736
-title=Improve Research Quality
-ts=2026-03-07T21:15:19Z
-
-Add better search sources
+AI generated proposal targeting bots/auto_pr_v1.py. category=analysis. improve auto_pr_v1.py with a concrete, low-risk change.
