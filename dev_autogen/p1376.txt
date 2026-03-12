@@ -1,0 +1,6 @@
+id=1376
+title=parse_rss: use namespace-agnostic lookup for RSS item summaries (handle content:encoded)
+batch=1376-1376
+ts=2026-03-12T22:42:56Z
+
+Replace the fragile it.findtext("description")/it.findtext("content:encoded") lookup with a small namespace-agnostic scan of the item's child elements: pick the first child whose tag (lowercased) endswith 'description' or 'encoded' and use its text as the summary (fall back to empty string). Keep the existing clean_text(... )[:500] truncation. Expected effect: more RSS feeds that use namespaced tags (e.g. content:encoded, or other namespaces) will yield summaries instead of empty strings, increasing the number of inserted briefs and reducing false 'parse empty' outcomes. Low risk: purely local change within parse_rss, no API or schema changes.
