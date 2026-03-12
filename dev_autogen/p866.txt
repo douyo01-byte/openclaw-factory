@@ -1,0 +1,6 @@
+id=866
+title=Add guard checks to spec_notify_v1.py
+batch=825-902
+ts=2026-03-12T04:02:49Z
+
+AI generated proposal targeting bots/spec_notify_v1.py. category=safety. improve spec_notify_v1.py with a concrete, low-risk change.
