@@ -1,11 +1,1 @@
-id=1024
-title=Reduce duplicate writes in scripts/meet_close.sh
-batch=1025-1024
-ts=2026-03-09T17:32:04Z
-
-Goal:
-Implement: Reduce duplicate writes in scripts/meet_close.sh
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Add a 'continue' at the end of the except block so that after an exception the loop does not also execute the unconditional time.sleep(INTERVAL) at the bottom. Currently, when apply_main() raises, the code calls time.sleep(max(INTERVAL, 30)) inside except and then always executes time.sleep(INTERVAL) afterwards, causing an unintended double delay. Changing the except block to sleep once and then continue will make retries happen sooner after failures, improving responsiveness and ensuring the FAIL_NOTIFY_THRESHOLD cadence is respected.
