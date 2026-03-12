@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/team/kenji_researcher.py. category=safety. improve kenji_researcher.py with a concrete, low-risk change.
