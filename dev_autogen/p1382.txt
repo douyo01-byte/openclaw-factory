@@ -1,0 +1,6 @@
+id=1382
+title=Ensure persona files and SQLite connection are closed using context managers to avoid resource leaks
+batch=1382-1382
+ts=2026-03-12T22:59:50Z
+
+Replace bare open(...) calls in _load_persona with with open(..., encoding='utf-8') as f: ... so file descriptors are closed after reading. Also open the SQLite DB using a context manager (with sqlite3.connect('data/openclaw.db') as conn:) or explicitly call conn.close() after committing. Expected effect: prevents file descriptor leaks and dangling DB connections that can lead to file locks, resource exhaustion, or inconsistent state in long-running processes or repeated imports. This is a small, low-risk change that improves reliability without changing behavior.
