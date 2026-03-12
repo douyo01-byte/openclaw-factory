@@ -1,5 +1,1 @@
-id=957
-title=バックアップ自動リストア検証でデータ復旧耐性を強化
-ts=2026-03-09T03:35:54Z
-
-databaseの毎日バックアップを検証環境へ自動リストアし、スキーマ整合性・主要クエリ・起動ヘルスを自動チェックして結果を記録し、失敗時は即時通知することで復旧手順の信頼性を継続的に確保します。
+Change the top-level raw sqlite3.connect / manual commit to a safe context-managed pattern so the connection is always closed and partial writes are rolled back on error. Concretely: replace the module-level conn = sqlite3.connect(...) and final conn.commit() with a with sqlite3.connect('data/openclaw.db') as conn: block (or explicitly try/except/finally calling conn.rollback() on exception and conn.close() in finally). Keep the same parameterized INSERT but move the cursor and loop inside the context. Expected effect: ensures the DB is not left locked or leaking file handles if the script errors, avoids partial commits on failure, and improves reliability with no semantic change to inserted rows.
