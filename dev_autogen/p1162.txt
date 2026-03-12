@@ -1,11 +1,1 @@
-id=1162
-title=Improve error handling in scripts/set_telegram_token_launchctl.sh
-batch=1163-1162
-ts=2026-03-10T11:54:49Z
-
-Goal:
-Implement: Improve error handling in scripts/set_telegram_token_launchctl.sh
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+In bots/company_dashboard_v1.py, the tg_send() function always attempts an HTTP POST using TOKEN which may be empty. Add a small guard at the start of tg_send that checks if TOKEN is empty (or all-whitespace) and if so: (1) no-op (return early), and (2) emit a lightweight warning (print or logger.warning) indicating telegram notifications are disabled. This avoids making invalid network calls (InvalidURL/401) during tests or in environments without TELEGRAM_BOT_TOKEN, reduces noisy stack traces, and makes the function safe to call unconditionally from other code paths.
