@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/scout_playwright.py. category=reliability. improve scout_playwright.py with a concrete, low-risk change.
