@@ -1,0 +1,6 @@
+id=1387
+title=Handle network exceptions in fetch() to avoid crashing on transient HTTP errors
+batch=1387-1387
+ts=2026-03-12T23:11:55Z
+
+Modify the fetch(url) function to catch requests.exceptions.RequestException (and other network-related exceptions) and return an empty string instead of letting the exception propagate. This is a small, low-risk change: wrap the requests.get(...) call in a try/except and optionally log the exception to stderr (or to an existing logger) before returning ''. Expected effect: prevents the entire enrichment run from terminating when a single URL request fails (DNS timeout, connection error, etc.), increasing reliability and ensuring DB updates continue for other items.
