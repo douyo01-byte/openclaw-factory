@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/dev_pr_watcher_v1.py. category=automation. improve dev_pr_watcher_v1.py with a concrete, low-risk change.
