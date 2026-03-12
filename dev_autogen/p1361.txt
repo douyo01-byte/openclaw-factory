@@ -1,0 +1,6 @@
+id=1361
+title=Use context manager and enable foreign_keys pragma when opening SQLite DB in bots/dev_schema_apply.py
+batch=1361-1361
+ts=2026-03-12T21:57:33Z
+
+Wrap sqlite3.connect(...) in a context manager (with sqlite3.connect(db_path) as conn:) and set PRAGMA foreign_keys = ON before running the DDL. This ensures the connection is always committed/closed even if executescript raises (avoiding file/descriptor leaks and locked DBs) and turns on enforcement of the FOREIGN KEY constraint declared in dev_events. The change is a single-line structural change and one added PRAGMA command and is low-risk.
