@@ -1,5 +1,6 @@
 id=675
-title=Improve Research Quality
-ts=2026-03-07T19:36:02Z
+title=Improve diagnostics for tg_inbox_poll_daemon_v1.py
+batch=650-933
+ts=2026-03-12T04:08:10Z
 
-Add better search sources
+AI generated proposal targeting bots/tg_inbox_poll_daemon_v1.py. category=analysis. improve tg_inbox_poll_daemon_v1.py with a concrete, low-risk change.

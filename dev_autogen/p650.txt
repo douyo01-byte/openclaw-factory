@@ -1,5 +1,6 @@
 id=650
-title=Speed Pipeline
-ts=2026-03-07T19:06:08Z
+title=Improve diagnostics for ingest_spec_answers_v1.py
+batch=650-933
+ts=2026-03-12T04:08:10Z
 
-Parallelize jobs
+AI generated proposal targeting bots/ingest_spec_answers_v1.py. category=analysis. improve ingest_spec_answers_v1.py with a concrete, low-risk change.
