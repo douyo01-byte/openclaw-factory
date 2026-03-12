@@ -1,0 +1,6 @@
+id=1359
+title=Add timeout and TimeoutExpired handling to sh() to avoid hangs calling gh
+batch=1358-1359
+ts=2026-03-12T21:54:26Z
+
+In bots/dev_reviewer_v1.py, modify the sh(cmd, check=True) helper to pass a timeout (e.g., timeout=30) into subprocess.run and catch subprocess.TimeoutExpired. On timeout, write a clear message including the command to stderr and exit with a distinct code (e.g., SystemExit(124)). Expected effect: prevents the process from hanging indefinitely if an external gh/git command stalls (improves CI/agent reliability), fails fast with a clear error, and is a small, low-risk change limited to the single helper function.
