@@ -1,11 +1,6 @@
 id=1048
-title=Executor stability sweep 0517
-batch=1048-1047
-ts=2026-03-09T20:17:10Z
+title=Precompile regexes and accept full-width '＃' in approval/diff/test parsers
+batch=908-1048
+ts=2026-03-12T04:10:51Z
 
-Goal:
-Implement: Executor stability sweep 0517
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Replace inline re.search calls with module-level compiled patterns and update the three patterns to accept both ASCII '#' and full-width '＃' (e.g. r"[#＃](\d+)"). Change is small and low-risk: add constants like APPROVAL_RE = re.compile(r"承認します\s*[#＃](\d+)") (and analogous patterns for diff and テストだけ) and call .search(text or "") in each parse_* function. Expected effect: correct parsing when authors use the full-width number sign common in Japanese text, and a minor performance improvement by avoiding recompiling the same regex on every call.

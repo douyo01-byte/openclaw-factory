@@ -1,11 +1,6 @@
 id=996
-title=Refactor duplicated logic in dev_autogen/p963.txt
-batch=996-996
-ts=2026-03-09T15:57:41Z
+title=Batch commits: commit once after processing instead of per-row
+batch=908-1048
+ts=2026-03-12T04:10:51Z
 
-Goal:
-Implement: Refactor duplicated logic in dev_autogen/p963.txt
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Modify bots/ceo_noise_cleanup_v1.py to avoid calling c.commit() inside the per-row loop. Instead: (1) use a context manager (with sqlite3.connect(DB, timeout=30) as c:) or ensure a finally close to guarantee the connection is closed on error, and (2) remove the c.commit() inside the for-loop and call c.commit() once after the loop if any rows were updated (i.e., if done>0). Expected effect: reduces SQLite commit/WAL churn and busy locks, lowers IO and latency when skipping many noise commands, and slightly improves throughput and reliability with no behavioral change to which rows are marked processed.
