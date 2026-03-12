@@ -1,5 +1,6 @@
 id=728
-title=Improve Research Quality
-ts=2026-03-07T21:12:55Z
+title=Improve diagnostics for persona_reply_v1.py
+batch=650-933
+ts=2026-03-12T04:08:10Z
 
-Add better search sources
+AI generated proposal targeting bots/persona_reply_v1.py. category=analysis. improve persona_reply_v1.py with a concrete, low-risk change.
