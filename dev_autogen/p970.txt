@@ -1,4 +1,1 @@
-id=970
-title=Optimize database queries in dev_autogen/p205.txt
-ts=2026-03-09T04:49:32Z
-
+Replace the hardcoded ORDER BY id ASC with a small fallback that uses rowid when the inbox_commands table has no 'id' column. Concretely, compute order_col = 'id' if 'id' in cols(...) else 'rowid' and build the SELECT ... ORDER BY {order_col} ASC query. Expected effect: avoids a runtime SQL error on databases where inbox_commands lacks an explicit id column, preserving deterministic insertion order by using SQLite's rowid; no behavior change when id exists. Low-risk change limited to the query string.
