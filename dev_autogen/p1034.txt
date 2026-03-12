@@ -1,11 +1,1 @@
-id=1034
-title=Reduce duplicate writes in bots/ingest_spec_answers_v1.py
-batch=1035-1034
-ts=2026-03-09T18:47:07Z
-
-Goal:
-Implement: Reduce duplicate writes in bots/ingest_spec_answers_v1.py
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Modify the run() helper in bots/daily_cycle_v1.py to capture and print subprocess stdout/stderr and the exact command when a child process exits with a non-zero code. Concretely, call subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True) and if p.returncode != 0 print a single-line timestamped error containing the command, returncode, stdout (truncated to e.g. 1000 chars) and stderr (truncated similarly) before raising SystemExit(p.returncode). This keeps existing exit behavior but provides immediate, actionable diagnostics in the daily run logs so failures can be triaged without rerunning with additional flags.
