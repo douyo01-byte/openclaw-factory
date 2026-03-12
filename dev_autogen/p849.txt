@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/dev_schema_apply.py. category=observability. improve dev_schema_apply.py with a concrete, low-risk change.
