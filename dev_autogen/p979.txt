@@ -1,17 +1,6 @@
 id=979
-title=REVENUE:Developer productivity SaaS
-ts=2026-03-09T08:57:25Z
+title=Improve diagnostics for command_apply_v1.py
+batch=944-1015
+ts=2026-03-12T04:11:31Z
 
-Goal:
-Implement proposal: REVENUE:Developer productivity SaaS
-
-Scope:
-- minimal isolated change
-- keep current Lv6/Lv7 automation stable
-- avoid destructive edits
-- auto-PR compatible
-
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/command_apply_v1.py. category=analysis. improve command_apply_v1.py with a concrete, low-risk change.
