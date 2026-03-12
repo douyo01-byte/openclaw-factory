@@ -1,11 +1,1 @@
-id=1061
-title=Harden watcher state sync in scripts/no.sh
-batch=1062-1061
-ts=2026-03-09T22:02:19Z
-
-Goal:
-Implement: Harden watcher state sync in scripts/no.sh
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+In main(), add a small guard to validate and normalize the REPO environment variable before calling REPO.split("/", 1). Specifically: strip whitespace, ensure REPO contains a single '/' and both owner and name are non-empty; if the validation fails, print a clear error like "invalid env: GITHUB_REPO must be 'owner/name'" and return. This prevents a ValueError crash when REPO is malformed and produces a clearer log message for operators. Expected effect: avoids an uncaught exception when REPO is missing or malformed, improving reliability with a minimal, low-risk change.
