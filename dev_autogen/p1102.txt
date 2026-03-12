@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/__init__.py. category=reliability. improve __init__.py with a concrete, low-risk change.
