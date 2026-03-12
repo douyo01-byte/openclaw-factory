@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/spec_notify_v1.py. category=analysis. improve spec_notify_v1.py with a concrete, low-risk change.
