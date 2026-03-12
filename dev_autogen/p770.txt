@@ -1,0 +1,6 @@
+id=770
+title=Optimize polling behavior in web_enrich_v1.py
+batch=706-836
+ts=2026-03-12T04:09:31Z
+
+AI generated proposal targeting bots/web_enrich_v1.py. category=performance. improve web_enrich_v1.py with a concrete, low-risk change.
