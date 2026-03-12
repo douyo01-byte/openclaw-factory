@@ -1,0 +1,6 @@
+id=1373
+title=Add try/except/finally around DB work in main() to rollback and always close connection on error
+batch=1373-1373
+ts=2026-03-12T22:32:04Z
+
+Wrap the database work in main() with a try/except/finally so that any sqlite3.Error (or other exception) triggers conn.rollback(), prints a clear error message including the current proposal id when available, and always closes the connection in finally. Move conn.commit() into the successful-branch of the try so partial updates are not left committed on error. Expected effect: prevents leaving the DB transaction open or partially committed on runtime errors, improves reliability and observability by emitting an error message identifying the failure, and ensures the connection is always closed (reducing resource leaks). This is a small, low-risk change focused only on error handling in bots/project_decider_v1.py.
