@@ -1,0 +1,1 @@
+AI generated proposal targeting scripts/db_init.py. category=automation. improve db_init.py with a concrete, low-risk change.
