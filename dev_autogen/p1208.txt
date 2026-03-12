@@ -1,11 +1,1 @@
-id=1208
-title=Executor stability sweep 1112
-batch=1208-1208
-ts=2026-03-11T02:12:38Z
-
-Goal:
-Implement: Executor stability sweep 1112
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/chat_to_dev/chat_to_proposal_v1.py. category=reliability. improve chat_to_proposal_v1.py with a concrete, low-risk change.
