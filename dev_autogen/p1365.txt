@@ -1,0 +1,6 @@
+id=1365
+title=Wrap per-row processing in try/except and ensure DB connections are closed
+batch=1365-1365
+ts=2026-03-12T22:09:22Z
+
+Wrap the processing of each inbox_commands row in a try/except so that a single unexpected error does not abort the whole loop. On exception, mark the row processed with status='error' and applied_at=now() (so it won't be reprocessed) and continue to the next row. Also move creation of the DB connections into a try/finally and call d.close() and f.close() in the finally block so connections are always released. Expected effect: a malformed row or transient error will no longer stop processing other messages, resources are reliably released on exit, and failure modes are easier to detect (rows marked 'error' instead of leaving the service stalled). This is a small, low-risk change limited to error handling and cleanup.
