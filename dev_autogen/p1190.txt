@@ -1,11 +1,1 @@
-id=1190
-title=Executor stability sweep 0952
-batch=1190-1190
-ts=2026-03-11T00:52:23Z
-
-Goal:
-Implement: Executor stability sweep 0952
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+parse_product_id currently calls try_apply_intuitive(conn, s) and returns ("applied", None) when that succeeds. That return shape doesn't match the function's declared/expected return of (int|None, str) and can lead to the string 'applied' being treated as product_id by callers, causing SQL errors or incorrect behavior. Change: remove the try_apply_intuitive call (and its special return) from parse_product_id so the function only parses and returns a numeric product_id and tail or (None, s) on failure. The top-level callers (e.g. apply_one) already call try_apply_intuitive before command parsing, so behavior is preserved for intuitive inputs. Expected effect: consistent return types from parse_product_id, prevents accidental use of the string 'applied' as an id, reduces runtime TypeErrors/SQL errors, and is a small, low-risk change (single-line removal).
