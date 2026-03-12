@@ -1,4 +1,6 @@
 id=958
-title=Add auto retry for GitHub API
-ts=2026-03-09T03:38:03Z
+title=Add structured logging to meeting_orchestrator_v1.py
+batch=958-5
+ts=2026-03-12T04:12:12Z
 
+AI generated proposal targeting bots/meeting_orchestrator_v1.py. category=observability. improve meeting_orchestrator_v1.py with a concrete, low-risk change.
