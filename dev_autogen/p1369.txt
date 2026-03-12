@@ -1,0 +1,6 @@
+id=1369
+title=Avoid reprocessing tg_private_chat_log rows by tracking processed IDs in-memory
+batch=1369-1369
+ts=2026-03-12T22:20:44Z
+
+Add an in-memory set of processed message IDs and skip rows whose id has already been handled in this process. Concretely: create processed_ids = set() before the while True loop; in the for r in rows loop, if r['id'] in processed_ids: continue; after successfully handling a row add processed_ids.add(r['id']). Optionally prune the set when it grows beyond a safe limit (e.g. 10k) to bound memory. Expected effect: prevents repeated updates and duplicate proposal_conversation inserts from the same chat rows that are reselected on each loop, reducing duplicate DB writes and unintended duplicate data with a minimal, low-risk change.
