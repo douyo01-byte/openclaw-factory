@@ -1,0 +1,6 @@
+id=561
+title=Add recovery path to meeting_orchestrator_v1.py
+batch=538-638
+ts=2026-03-12T04:06:09Z
+
+AI generated proposal targeting bots/meeting_orchestrator_v1.py. category=self_healing. improve meeting_orchestrator_v1.py with a concrete, low-risk change.
