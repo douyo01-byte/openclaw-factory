@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/openai_smoke.py. category=self_healing. improve openai_smoke.py with a concrete, low-risk change.
