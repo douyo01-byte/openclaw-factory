@@ -1,0 +1,6 @@
+id=1379
+title=Add simple retry with exponential backoff to fetch_html to handle transient network errors
+batch=1379-1379
+ts=2026-03-12T22:49:43Z
+
+Modify the fetch_html(url) function to perform up to 3 attempts with exponential backoff (e.g., sleep 1s, 2s, 4s) when requests.get raises a network-related exception or returns an HTTP >=400. Keep the same return semantics (return r.text on success, None on persistent failure). Catch requests.exceptions.RequestException explicitly, log a brief message to stderr (or return None) between attempts, and avoid broad except: clauses. Expected effect: reduces missed fetches caused by transient network glitches/timeouts, improving overall scraping reliability with a very small, low-risk change.
