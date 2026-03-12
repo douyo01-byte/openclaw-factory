@@ -1,11 +1,1 @@
-id=1158
-title=Improve lifecycle event safety in scripts/review_pr.sh
-batch=1155-1158
-ts=2026-03-10T11:35:37Z
-
-Goal:
-Implement: Improve lifecycle event safety in scripts/review_pr.sh
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/tg_send_reflection_v1.py. category=automation. improve tg_send_reflection_v1.py with a concrete, low-risk change.
