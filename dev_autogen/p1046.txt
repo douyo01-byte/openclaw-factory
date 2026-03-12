@@ -1,11 +1,1 @@
-id=1046
-title=Executor stability sweep 0502
-batch=1046-1045
-ts=2026-03-09T20:02:11Z
-
-Goal:
-Implement: Executor stability sweep 0502
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Wrap the page navigation and title retrieval in a try/finally block inside main(). After launching the browser, run await page.goto(...) and print the title inside try, and call await browser.close() in finally. This ensures the Chromium process is closed even if page.goto or page.title() raises an exception (network error, timeout, JS error), preventing orphaned browser processes and improving reliability with a minimal change.
