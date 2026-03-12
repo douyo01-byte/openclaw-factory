@@ -1,11 +1,1 @@
-id=1065
-title=Executor stability sweep 0747
-batch=1065-1065
-ts=2026-03-09T22:47:20Z
-
-Goal:
-Implement: Executor stability sweep 0747
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/chat_to_dev/chat_to_proposal_v1.py. category=safety. improve chat_to_proposal_v1.py with a concrete, low-risk change.
