@@ -1,11 +1,1 @@
-id=1212
-title=Executor stability sweep 1132
-batch=1212-1212
-ts=2026-03-11T02:32:39Z
-
-Goal:
-Implement: Executor stability sweep 1132
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/reflection_v1.py. category=automation. improve reflection_v1.py with a concrete, low-risk change.
