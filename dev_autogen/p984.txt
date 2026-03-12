@@ -1,6 +1,1 @@
-id=984
-title=BATCH TEST A
-batch=984-986
-ts=2026-03-09T12:40:25Z
-
-BATCH TEST A batch executor verification spec
+In bots/ceo_hub_sender_v1.py, wrap the requests.post/resp.raise_for_status and the subsequent DB update/commit for each row in a try/except that catches requests.exceptions.RequestException (and optionally Exception for unexpected errors). On exception, print/log the error, include resp.text when available, do not update sent_at for that row, and continue to the next row. This keeps the DB connection open only for the loop's lifetime and prevents a single transient network/API failure from aborting the entire run. Expected effect: increases reliability (more events processed per run), improves observability by emitting the HTTP error/response, and keeps sent_at semantics unchanged (only set on successful sends).
