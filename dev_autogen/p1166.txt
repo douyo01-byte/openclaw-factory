@@ -1,11 +1,1 @@
-id=1166
-title=Strengthen launchd recovery in .dev_agent_test.txt
-batch=1167-1166
-ts=2026-03-10T12:24:52Z
-
-Goal:
-Implement: Strengthen launchd recovery in .dev_agent_test.txt
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/tg_inbox_poll_daemon_v1.py. category=safety. improve tg_inbox_poll_daemon_v1.py with a concrete, low-risk change.
