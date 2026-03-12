@@ -1,0 +1,6 @@
+id=1360
+title=Wrap sqlite3 operations in a transaction/context manager to ensure commit/rollback and proper close
+batch=1360-1360
+ts=2026-03-12T21:56:49Z
+
+Replace manual conn = sqlite3.connect(...) / conn.commit() / conn.close() with a with sqlite3.connect(DB_PATH) as conn: block (or explicit try/except with conn.rollback() in except and conn.close() in finally) and perform the INSERT, UPDATE and event insert inside that single transaction. This change ensures the connection is always closed and an incomplete sequence (e.g. insert of placeholder '__tmp__' without update) is rolled back on exceptions, reducing risk of DB locks or orphaned rows and improving reliability when create_proposal raises an error or is interrupted.
