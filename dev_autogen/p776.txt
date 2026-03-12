@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/build_decision_patterns.py. category=reliability. improve build_decision_patterns.py with a concrete, low-risk change.
