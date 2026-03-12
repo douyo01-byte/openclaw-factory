@@ -1,0 +1,6 @@
+id=1372
+title=Mark skipped 'ok ' inbox rows as replied to avoid reprocessing
+batch=1372-1372
+ts=2026-03-12T22:31:24Z
+
+In main(), rows whose text starts with "ok " are currently skipped with continue but are never updated in the database. That causes the same rows to be picked up repeatedly on every run. Change: before continue, execute an update to set status='replied' (or 'skipped') for that row id (conn.execute("update inbox_commands set status='replied' where id=?", (i,))). Expected effect: prevents infinite reprocessing of the same inbox items, reduces DB churn and duplicate handling, and makes processing idempotent with minimal, low-risk change.
