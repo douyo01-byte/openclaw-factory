@@ -1,5 +1,1 @@
-id=621
-title=Speed Pipeline
-ts=2026-03-07T18:08:01Z
-
-Parallelize jobs
+AI generated proposal targeting bots/project_decider_v1.py. category=performance. improve project_decider_v1.py with a concrete, low-risk change.
