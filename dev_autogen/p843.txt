@@ -1,5 +1,6 @@
 id=843
-title=executorの再試行処理の安定化
-ts=2026-03-07T21:18:51Z
+title=Add structured logging to save_ks_session.py
+batch=603-938
+ts=2026-03-12T04:07:30Z
 
-executorに対して再試行処理の安定化を行い、失敗時の復旧性を高め、開発実行の安定性を改善する。
+AI generated proposal targeting scripts/save_ks_session.py. category=observability. improve save_ks_session.py with a concrete, low-risk change.
