@@ -1,0 +1,6 @@
+id=1393
+title=Add timeout and exception handling around requests.post to avoid hangs
+batch=1393-1393
+ts=2026-03-12T23:28:55Z
+
+Wrap the requests.post call in a try/except that catches requests.exceptions.RequestException and prints a clear error message (including exception text) and exits non-zero. Add a short timeout argument (e.g. timeout=10) to requests.post and check res.ok after the call; if not ok, print status_code and response body and exit non-zero. Expected effect: prevents the script from hanging indefinitely on network issues, provides clearer error diagnostics for CI/cron runs, and returns non-zero exit codes on failure so monitoring systems can detect and act on send failures. This is a small, low-risk change confined to the few lines around the HTTP call.
