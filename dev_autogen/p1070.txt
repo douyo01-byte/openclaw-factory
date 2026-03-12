@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/auto_pr_v1.py. category=observability. improve auto_pr_v1.py with a concrete, low-risk change.
