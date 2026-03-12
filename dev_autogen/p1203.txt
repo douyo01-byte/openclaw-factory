@@ -1,11 +1,1 @@
-id=1203
-title=Executor stability sweep 1047
-batch=1203-1203
-ts=2026-03-11T01:47:32Z
-
-Goal:
-Implement: Executor stability sweep 1047
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Replace per-row c.execute(...); c.commit() inside the loop with collecting matching row ids and executing a single parameterized UPDATE that sets processed=1,status='skipped',applied_at=? WHERE id IN (?,?,...); then call c.commit() once. This keeps the existing behavior and limit(50) but reduces the number of transactions, WAL writes, and lock contention, improving throughput and lowering chance of busy/timeout errors. Implementation is low-risk: generate the IN-clause placeholders from the collected ids, skip doing an UPDATE if no ids matched, and reuse now() for the applied_at timestamp.
