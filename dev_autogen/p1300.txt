@@ -1,0 +1,1 @@
+AI generated proposal targeting bots/pipeline_hn_to_outreach.py. category=observability. improve pipeline_hn_to_outreach.py with a concrete, low-risk change.
