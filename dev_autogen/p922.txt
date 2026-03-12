@@ -1,5 +1,1 @@
-id=922
-title=OpenClaw CLI Workspace
-ts=2026-03-08T08:07:06Z
-
-Developer workspace tooling improvements
+AI generated proposal targeting bots/team/aya_judge.py. category=automation. improve aya_judge.py with a concrete, low-risk change.
