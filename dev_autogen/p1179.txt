@@ -1,11 +1,1 @@
-id=1179
-title=Harden watcher state sync in scripts/project_decider_loop.sh
-batch=1179-1179
-ts=2026-03-10T13:43:54Z
-
-Goal:
-Implement: Harden watcher state sync in scripts/project_decider_loop.sh
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/daily_cycle_v1.py. category=performance. improve daily_cycle_v1.py with a concrete, low-risk change.
