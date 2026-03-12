@@ -1,11 +1,1 @@
-id=1222
-title=Executor stability sweep 1217
-batch=1222-1222
-ts=2026-03-11T03:17:43Z
-
-Goal:
-Implement: Executor stability sweep 1217
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+AI generated proposal targeting bots/explain_orchestrator_v1.py. category=observability. improve explain_orchestrator_v1.py with a concrete, low-risk change.
