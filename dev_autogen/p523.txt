@@ -1,5 +1,6 @@
 id=523
-title=AI automation tool
-ts=2026-03-07T13:57:14Z
+title=Add guard checks to ingest_private_replies_v1.py
+batch=523-699
+ts=2026-03-12T04:02:09Z
 
-Automation for developer workflow
+AI generated proposal targeting bots/ingest_private_replies_v1.py. category=safety. improve ingest_private_replies_v1.py with a concrete, low-risk change.
