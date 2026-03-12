@@ -1,0 +1,6 @@
+id=1367
+title=Use context managers to close persona files in _load_persona_from_env
+batch=1367-1367
+ts=2026-03-12T22:15:24Z
+
+In _load_persona_from_env(), replace open(core, "r", encoding="utf-8").read().strip() and open(role, "r", encoding="utf-8").read().strip() with with open(core, "r", encoding="utf-8") as f: t.append(f.read().strip()) (and likewise for role). This ensures file descriptors are closed, avoids ResourceWarning/file-handle leaks in long-running or repeated runs, and improves reliability with no behavior change to returned persona text.
