@@ -1,5 +1,1 @@
-id=645
-title=Optimize Costs
-ts=2026-03-07T18:56:09Z
-
-Add cost estimator
+AI generated proposal targeting bots/enrich_contacts_v1.py. category=automation. improve enrich_contacts_v1.py with a concrete, low-risk change.
