@@ -1,11 +1,1 @@
-id=1175
-title=Improve queue handling in scripts/tg_test.py
-batch=1176-1175
-ts=2026-03-10T13:11:09Z
-
-Goal:
-Implement: Improve queue handling in scripts/tg_test.py
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+Wrap the browser usage in a try/finally so await browser.close() is always executed even if page.goto() or page.title() raises. Concretely, after launching the browser assign it to a variable and use try/finally (or ensure await browser.close() in a finally block) to guarantee cleanup. Expected effect: prevents orphaned Chromium processes when the script fails, improving reliability and resource usage with a minimal, low-risk change.
