@@ -1,11 +1,1 @@
-id=1009
-title=Improve proposal filtering in bots/dev_pr_watcher_v1.py
-batch=1008-1009
-ts=2026-03-09T16:16:17Z
-
-Goal:
-Implement: Improve proposal filtering in bots/dev_pr_watcher_v1.py
-Acceptance:
-- code compiles
-- current pipeline remains operational
-- change is limited and reviewable
+enqueue_chat_job currently calls conn.execute(...) to insert a new row into chat_jobs but does not call conn.commit(). If the caller does not manage transactions or relies on the function to persist the job, the new row can be lost when the connection is closed. Change: add conn.commit() after the insert. Expected effect: newly enqueued chat jobs will be reliably persisted immediately, reducing lost jobs and improving reliability with minimal, low-risk change.
