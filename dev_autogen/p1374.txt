@@ -1,0 +1,6 @@
+id=1374
+title=Log scanned row counts and pos/neg token counts before writing decision_patterns
+batch=1374-1374
+ts=2026-03-12T22:36:54Z
+
+Add a small, low-risk logging statement in bots/build_decision_patterns.py immediately before the delete/insert database section to print the number of decision rows scanned, retrospective rows scanned, and the sizes of the positive and negative token counters (len(pos), len(neg)). Concretely, insert: print(f"rows_scanned={len(rows)}, retros_scanned={len(retro_rows)}, pos_tokens={len(pos)}, neg_tokens={len(neg)}", flush=True) right before conn.execute("delete from decision_patterns"). Expected effect: better observability when running the script so engineers can quickly see whether insufficient input data (or unexpected token counts) explains an empty or small decision_patterns result. This is a non-invasive change that does not alter algorithm logic or database state.
