@@ -1,0 +1,6 @@
+id=1371
+title=Make send() robust and only mark DB rows replied when Telegram send succeeds; guard reply_logic against None texts
+batch=1371-1371
+ts=2026-03-12T22:26:08Z
+
+Change send() to return a boolean, add a requests timeout and exception handling (catch RequestException) so network failures do not raise and are reported as a False return. In main(), when reply_logic(text) returns a non-None reply, call send(r) and only update the inbox_commands row to status='replied' if send(...) returned True. If reply_logic returns None (no reply needed), continue to mark the row as replied. Also add a small guard at the start of reply_logic to return None if text is falsy or not a string to avoid crashes on NULL/None DB values. Expected effect: prevents losing messages by avoiding marking rows as replied when the Telegram API fails or times out, prevents crash on None texts, and keeps the loop resilient to transient network errors (messages will be retried later).
