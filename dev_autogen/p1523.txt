@@ -1,0 +1,6 @@
+id=1523
+title=Fix Japanese command regexes to match txt_nospace by removing spaces in patterns
+batch=1523-1523
+ts=2026-03-13T09:10:26Z
+
+The file computes txt_nospace = re.sub(r"\s+", "", txt) but then attempts to match Japanese commands using patterns that include spaces (e.g. r"^承 認 し ま す #?(\d+)$"). Those patterns will not match the space-stripped text. Change the regexes used against txt_nospace to the corresponding space-free forms (for example: r"^承認します#?(\d+)$", r"^承認#?(\d+)$", r"^保留#?(\d+)$", r"^質問#?(\d+)(.+)$"). Keep existing flags (re.S where used). This is a minimal, low-risk bugfix restricted to the four regex literals so commands sent with internal spaces are recognized correctly.
