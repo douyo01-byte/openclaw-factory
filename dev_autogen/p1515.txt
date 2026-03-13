@@ -1,0 +1,6 @@
+id=1515
+title=Throttle Telegram sends with small configurable delay to avoid rate limits
+batch=1515-1515
+ts=2026-03-13T08:56:45Z
+
+Introduce a short, configurable delay between consecutive tg_send calls in tick() to reduce the chance of hitting Telegram rate limits (HTTP 429) or transient throttling when processing batches. Concretely: read PROPOSAL_NOTIFY_DELAY (float seconds, default 0.35) from env at function start and call time.sleep(delay) after each attempt to send (after tg_send/exception handling) inside the for r in rows loop. This is a minimal change local to bots/dev_proposal_notify_daemon_v1.py and keeps existing behavior when PROPOSAL_NOTIFY_DELAY is unset.
