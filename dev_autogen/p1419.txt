@@ -1,0 +1,6 @@
+id=1419
+title=Add retry + safe fallback for OpenAI call in llm_score_and_email
+batch=1419-1419
+ts=2026-03-13T04:14:07Z
+
+Wrap the call to client.chat.completions.create in llm_score_and_email with a small retry loop (e.g. 3 attempts) using exponential backoff (sleep 1s, 2s, 4s). Validate the response object/fields before passing to json.loads and handle missing/invalid content by returning a safe default dict {"score": 0, "rationale_jp": "(scoring failed)", "email_en": ""}. Catch exceptions from the API call and from json parsing, and on final failure return the safe default rather than raising. This is a small, low-risk change that prevents a transient OpenAI outage or malformed response from crashing the whole pipeline and makes downstream code resilient.
