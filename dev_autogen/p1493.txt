@@ -1,0 +1,6 @@
+id=1493
+title=Isolate per-target failures with one-retry and continue loop
+batch=1493-1493
+ts=2026-03-13T08:08:35Z
+
+Wrap the per-target navigation + extraction in a short try/except block so a single failing target (timeout, network error, JS exception) does not abort the whole run. On first failure, wait 2s, try once more (page.reload() or re-goto) and if it still fails: log/print the error, skip that target and continue. Ensure the DB commit for saved items still runs per-target and that the main playwright/context/connection cleanup remains in outer scope. This is a minimal, low-risk guard: it prevents a transient navigation or extraction error from stopping processing of other targets without changing data schema or control flow elsewhere.
