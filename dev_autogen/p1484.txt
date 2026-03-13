@@ -1,0 +1,6 @@
+id=1484
+title=Normalize and deduplicate extracted emails case-insensitively
+batch=1484-1484
+ts=2026-03-13T07:34:29Z
+
+In extract_signals() the code currently collects emails via EMAIL_RE and deduplicates using a case-sensitive set. This can yield duplicate logical addresses with different casing (eg. Admin@Example.com vs admin@example.com). Make a minimal change: after finding matches, normalize each email to lower-case and strip surrounding whitespace, then deduplicate case-insensitively while preserving a stable order, and finally return up to 10 addresses. This is a low-risk, small refactor that improves data quality for downstream storage, matching, and display. Example change: replace the current sorted(set(...)) line with logic that builds a list of lowercased emails using an ordered-dedup technique (e.g. seen=set(), result=[] loop), then return result[:10].
