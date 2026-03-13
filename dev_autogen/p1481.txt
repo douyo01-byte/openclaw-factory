@@ -1,0 +1,6 @@
+id=1481
+title=Normalize and cap token strings before counting/inserting
+batch=1481-1482
+ts=2026-03-13T07:29:08Z
+
+In tok(), apply Unicode normalization (unicodedata.normalize('NFKC')) to each candidate token and enforce a maximum token length (truncate to 64 characters). Also drop tokens that contain control characters after normalization. This ensures tokens that differ only by Unicode variant forms are treated consistently, prevents very long/garbled tokens from polluting the counters and DB, and reduces accidental duplicate keys or oversized DB values.
