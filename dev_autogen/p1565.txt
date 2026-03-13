@@ -1,0 +1,6 @@
+id=1565
+title=Add recovery path to ingest_private_chat_v1.py
+batch=1565-1565
+ts=2026-03-13T10:11:57Z
+
+AI generated proposal targeting bots/chat_to_dev/ingest_private_chat_v1.py. category=self_healing. improve ingest_private_chat_v1.py with a concrete, low-risk change.
