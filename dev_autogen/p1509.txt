@@ -1,0 +1,6 @@
+id=1509
+title=Invoke executor with the current Python interpreter using sys.executable
+batch=1509-1509
+ts=2026-03-13T08:43:47Z
+
+Replace the hard-coded "python" command in subprocess.run with sys.executable. Concretely: add `import sys` at the top and change the call to subprocess.run([sys.executable, "-u", "bots/dev_executor_v1.py"], check=False). This small refactor ensures the same Python interpreter (virtualenv/conda) that runs dev_auto_execute_v1.py is used to run dev_executor_v1.py, avoiding interpreter mismatch and related environment issues with minimal risk and no behavioral change.
