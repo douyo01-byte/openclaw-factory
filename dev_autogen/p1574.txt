@@ -1,0 +1,6 @@
+id=1574
+title=Ensure DB directory exists before opening SQLite connections
+batch=1574-1574
+ts=2026-03-13T10:18:55Z
+
+Make dconn() and fconn() create the parent directory for DB and FACTORY_DB if it doesn't exist before calling sqlite3.connect. This prevents OperationalError when the configured DB path contains a non-existent directory (e.g. default 'data/openclaw.db'). Implement a small helper to mkdir parent dir if dirname is non-empty, and raise a clear RuntimeError if directory cannot be created or is not writable. This is a minimal, low-risk change limited to the two connection functions.
