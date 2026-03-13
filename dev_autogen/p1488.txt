@@ -1,0 +1,6 @@
+id=1488
+title=Commit DB changes per request to avoid losing processed updates on crash
+batch=1488-1488
+ts=2026-03-13T08:01:07Z
+
+After processing each reflection request, call conn.commit() inside both the try (success) and except (error) branches so the INSERT/UPDATE that marks requests as done/error is flushed to disk immediately. Concretely: add conn.commit() right after the conn.execute(...) that inserts into retrospectives and the subsequent UPDATE in the try block, and add conn.commit() after the UPDATE in the except block. This is a small, low-risk change that prevents losing processed-state when the process crashes before the final conn.commit() at the end of main().
