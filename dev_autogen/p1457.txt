@@ -1,0 +1,6 @@
+id=1457
+title=Avoid double-sleep on exception in tg_inbox_poll_daemon_v1.py
+batch=1457-1457
+ts=2026-03-13T05:26:26Z
+
+In the current loop an exception path calls time.sleep(max(SLEEP_SEC, 10)) inside the except block and then the loop always reaches the unconditional time.sleep(SLEEP_SEC) at the end of the iteration, causing a doubled delay after errors. Make a minimal change: after the except sleep add a 'continue' (or restructure to a single sleep location) so the end-of-loop sleep is not executed when the except path already waited. This preserves existing backoff behavior and failure-notify logic but prevents longer-than-intended pauses between polls.
