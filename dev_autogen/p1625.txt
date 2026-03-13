@@ -1,0 +1,6 @@
+id=1625
+title=Improve error handling in openai_smoke.py
+batch=1625-1625
+ts=2026-03-13T11:10:24Z
+
+AI generated proposal targeting bots/openai_smoke.py. category=reliability. improve openai_smoke.py with a concrete, low-risk change.
