@@ -426,7 +426,7 @@ def main():
             rows = conn.execute("""
                 select id, event_type, proposal_id, title, coalesce(pr_url,'') pr_url
                 from ceo_hub_events
-                where event_type='merged' and id>?
+                where event_type in ('merged','pr_created') and id>?
                 order by id asc
             """, (last_id,)).fetchall()
             new_last = last_id
@@ -456,6 +456,8 @@ def main():
                     continue
                 try:
                     msg = build_msg(r, dp)
+                    if (r["event_type"] or "") == "pr_created":
+                        msg = "🛠️ OpenClaw 自動開発\n" + msg
                 except Exception as e:
                     print(f"[merge_notify] build_error proposal_id={r['proposal_id']} {e!r}", flush=True)
                     msg = build_fallback(dp, {})
