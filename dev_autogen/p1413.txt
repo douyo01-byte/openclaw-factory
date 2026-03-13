@@ -1,0 +1,6 @@
+id=1413
+title=Reuse a single requests.Session for fetch to reduce connection overhead
+batch=1413-1413
+ts=2026-03-13T04:00:55Z
+
+Create a module-level requests.Session() (e.g. HTTP_SESSION) and set the User-Agent header on it, then modify fetch() to call HTTP_SESSION.get(...) instead of requests.get(...). This is a small, low-risk optimization: it reuses TCP/TLS connections across multiple fetches (reducing latency and CPU cost), preserves existing timeout and allow_redirects behavior, and requires only a couple lines of change in this file. The script appears to run many sequential web requests in main; switching to a session yields measurable perf gains while remaining safe for this single-process script.
