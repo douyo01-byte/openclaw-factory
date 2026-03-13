@@ -1,0 +1,6 @@
+id=1531
+title=Add gh CLI timeout and emit distinct pr_sync_timeout event
+batch=1531-1531
+ts=2026-03-13T09:28:43Z
+
+Set a timeout on gh subprocess calls and handle subprocess.TimeoutExpired separately. Change _run to call subprocess.run(..., timeout=20) so a hung/slow gh call raises subprocess.TimeoutExpired. In sync(), add an except subprocess.TimeoutExpired as te: branch (above the generic Exception handler) that inserts a dev_events row with event_type 'pr_sync_timeout' and payload json {"error":"timeout","target": target, "timeout":20, "details": str(te)[:500]} for the proposal, commits, and continues. This prevents the sync process from hanging indefinitely and provides a clear event for timeouts without changing existing error handling for other failures.
