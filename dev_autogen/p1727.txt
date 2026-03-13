@@ -1,0 +1,11 @@
+id=1727
+title=Strengthen launchd recovery in scripts/daily_text_example.txt
+batch=1725-1729
+ts=2026-03-13T23:24:54Z
+
+Goal:
+Implement: Strengthen launchd recovery in scripts/daily_text_example.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
