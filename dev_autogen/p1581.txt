@@ -1,0 +1,6 @@
+id=1581
+title=Improve diagnostics for send_spec_questions_v1.py
+batch=1581-1583
+ts=2026-03-13T10:26:35Z
+
+AI generated proposal targeting bots/send_spec_questions_v1.py. category=analysis. improve send_spec_questions_v1.py with a concrete, low-risk change.
