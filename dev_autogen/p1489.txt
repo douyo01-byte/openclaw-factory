@@ -1,0 +1,6 @@
+id=1489
+title=Install SIGTERM/SIGINT handlers to allow graceful shutdown of chat_router daemon
+batch=1489-1489
+ts=2026-03-13T08:01:46Z
+
+Add simple signal handling (SIGTERM and SIGINT) and a running flag so the daemon can exit cleanly when managed by init systems or container orchestrators. Concretely: import signal, create a module-level running=True flag (or threading.Event), register handlers that set running=False, and change the main loop to while running:. This is a small, low-risk change that prevents abrupt termination during shutdown, avoids leaving partial work in undefined state, and makes the process behave well under systemd/k8s shutdown sequences.
