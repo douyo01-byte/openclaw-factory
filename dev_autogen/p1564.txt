@@ -1,0 +1,6 @@
+id=1564
+title=Automate routine work around command_apply_v1.py
+batch=1564-1563
+ts=2026-03-13T10:11:14Z
+
+AI generated proposal targeting bots/command_apply_v1.py. category=automation. improve command_apply_v1.py with a concrete, low-risk change.
