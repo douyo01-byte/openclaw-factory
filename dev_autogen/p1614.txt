@@ -1,0 +1,6 @@
+id=1614
+title=Add structured logging to dev_pr_automerge_v1.py
+batch=1614-1615
+ts=2026-03-13T11:00:36Z
+
+AI generated proposal targeting bots/dev_pr_automerge_v1.py. category=observability. improve dev_pr_automerge_v1.py with a concrete, low-risk change.
