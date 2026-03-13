@@ -1,0 +1,6 @@
+id=1431
+title=Fix parse_item_id referencing undefined variables (remove accidental try_apply_intuitive call)
+batch=1431-1431
+ts=2026-03-13T04:34:19Z
+
+parse_item_id currently references undefined names 'conn' and 'text' (leftover from refactor) which can raise NameError and break command parsing. Change: remove the accidental if try_apply_intuitive(conn, text): return ("applied", None) block from parse_item_id so the function purely parses an item id and tail string. Keep behavior: strip input, match leading integer and return (int, tail) or (None, s) if no match. This is a single-line/small-block deletion with no behavioral change to higher-level logic and prevents runtime exceptions when parse_item_id is called.
