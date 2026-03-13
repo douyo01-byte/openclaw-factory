@@ -1,0 +1,6 @@
+id=1403
+title=Ensure DB directory exists before opening SQLite file
+batch=1403-1403
+ts=2026-03-13T03:31:36Z
+
+Before calling sqlite3.connect(DB, ...), create the parent directory for DB if it does not exist. This file currently calls sqlite3.connect(DB) and will fail if the DB path includes a non-existent directory. Add a small guard: if os.path.dirname(DB) is non-empty, call os.makedirs(dirname, exist_ok=True). This is a low-risk change, avoids runtime errors on fresh hosts or CI, requires no schema changes, and keeps behavior identical when the directory already exists.
