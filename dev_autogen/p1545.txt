@@ -1,0 +1,6 @@
+id=1545
+title=Enable and enforce foreign key constraint: reviews.url -> items.url
+batch=1545-1545
+ts=2026-03-13T09:58:27Z
+
+In scripts/db_init.py, enable SQLite foreign key enforcement (PRAGMA foreign_keys = ON) immediately after connecting and change the reviews table DDL to declare url as a foreign key referencing items(url) with ON DELETE CASCADE. Concretely: call con.execute("PRAGMA foreign_keys = ON;") right after sqlite3.connect(...), and replace the reviews CREATE TABLE block with one that includes: , FOREIGN KEY(url) REFERENCES items(url) ON DELETE CASCADE); This enforces referential integrity (no dangling reviews) and automatically removes reviews when an item is deleted. This is a small, low-risk change affecting new DBs created by db_init; existing databases keep their schema until a migration is run.
