@@ -1,0 +1,11 @@
+id=1715
+title=Improve executor stability in bots/ceo_hub_sender_v1.py
+batch=1716-1717
+ts=2026-03-13T23:15:15Z
+
+Goal:
+Implement: Improve executor stability in bots/ceo_hub_sender_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
