@@ -1,0 +1,6 @@
+id=1533
+title=Add timestamped logging and use logger.exception for error visibility
+batch=1533-1533
+ts=2026-03-13T09:34:11Z
+
+Replace the ad-hoc print/traceback usage with the logging module to provide consistent, timestamped logs. Concretely: import logging and call logging.basicConfig(fmt='%(asctime)s %(levelname)s %(message)s', level=logging.INFO) near the top, change the startup print to logging.info(...), and in the exception handler call logging.exception(f"command_apply failed (consecutive fails={fails}): {e}") (optionally also include traceback.format_exc(limit=8)). This preserves the existing Telegram notification behavior but ensures all exceptions and counts are recorded to stderr/aggregators for observability and post-mortem analysis. The change is minimal (few-line edits) and low risk.
