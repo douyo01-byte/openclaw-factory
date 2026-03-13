@@ -1,0 +1,6 @@
+id=1527
+title=Retry queries on transient 'database is locked' errors
+batch=1527-1527
+ts=2026-03-13T09:21:54Z
+
+Add a small helper wrapper around the existing one() query function that retries SELECT queries when sqlite3.OperationalError indicates a transient 'database is locked' condition. The wrapper should: import time, catch sqlite3.OperationalError, detect the 'database is locked' substring, retry up to 3 attempts with a short backoff (e.g. 0.1s, 0.2s, 0.4s), and fall back to returning 'n/a' if all attempts fail. Replace the three direct one(conn, sql) calls with the new resilient wrapper. This is a minimal, low-risk change that reduces flaky healthcheck failures when the DB is briefly locked by another writer.
