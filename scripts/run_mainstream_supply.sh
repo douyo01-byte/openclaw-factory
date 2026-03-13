@@ -20,9 +20,9 @@ run_one() {
 }
 
 while true; do
-  run_one bots/innovation_engine_v1.py
+  [ -f bots/innovation_llm_engine_v1.py ] && run_one bots/innovation_llm_engine_v1.py
   run_one bots/code_review_engine_v1.py
-  run_one bots/revenue_engine_v1.py
+  true
 
   active=$(sqlite3 "$DB_PATH" "
   select count(*)

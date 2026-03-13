@@ -100,7 +100,7 @@ insert into dev_proposals(
 ) values(
   ?,?,?,?,'refined','execute_now','safe','bootstrap_spec',datetime('now'),?,?,?,?
 )
-""", (proposal, spec, spec, "approved", CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE, QUALITY_SCORE))
+""", (proposal, spec, f"code-review/{int(time.time())}", spec, "approved", CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE, QUALITY_SCORE))
 
 conn.commit()
 print("inserted", proposal)

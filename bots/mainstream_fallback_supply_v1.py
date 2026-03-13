@@ -61,12 +61,12 @@ spec = build_spec(title)
 
 c.execute("""
 insert into dev_proposals(
-  title,description,spec,status,spec_stage,project_decision,guard_status,guard_reason,
+  title,description,branch_name,spec,status,spec_stage,project_decision,guard_status,guard_reason,
   created_at,category,target_system,improvement_type,quality_score
 ) values(
-  ?,?,?,?,'refined','execute_now','safe','mainstream_fallback',datetime('now'),?,?,?,?
+  ?,?,?,?,?,'refined','execute_now','safe','mainstream_fallback',datetime('now'),?,?,?,?
 )
-""", (title, spec, spec, "approved", "automation", "core", "stabilize", 73))
+""", (title, spec, f"fallback/{datetime.now().strftime('%Y%m%d_%H%M%S')}", spec, "approved", "automation", "core", "stabilize", 73))
 
 conn.commit()
 print("inserted", c.lastrowid, title)
