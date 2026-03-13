@@ -1,0 +1,6 @@
+id=1399
+title=Guard against empty column selection when building inbox_commands query
+batch=1399-1399
+ts=2026-03-13T03:27:15Z
+
+Add a simple guard after assembling sel to detect an empty column list and exit with an informative message (or fall back to SELECT *). This avoids constructing an invalid SQL statement like "SELECT  FROM inbox_commands ..." when the expected columns are missing or the table schema differs. Expected effect: script will no longer raise an obscure SQL syntax error in that case; it will fail fast with a clear message (or safely query all columns if you prefer), making backfills safer and easier to debug.
