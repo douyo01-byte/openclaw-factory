@@ -1,0 +1,6 @@
+id=1606
+title=Automate routine work around send_spec_questions_v1.py
+batch=1606-1607
+ts=2026-03-13T10:51:09Z
+
+AI generated proposal targeting bots/send_spec_questions_v1.py. category=automation. improve send_spec_questions_v1.py with a concrete, low-risk change.
