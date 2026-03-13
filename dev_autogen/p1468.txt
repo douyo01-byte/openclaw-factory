@@ -1,0 +1,6 @@
+id=1468
+title=Ensure consistent User-Agent header when fetching pages
+batch=1468-1468
+ts=2026-03-13T05:51:51Z
+
+In fetch(), explicitly send a stable User-Agent header (USER_AGENT constant) with requests to reduce likelihood of being blocked or served different content. Change: add headers={"User-Agent": USER_AGENT} to session.get(...) (or session.headers.setdefault before the request). This is a single-line, low-risk change local to fetch() and preserves existing behavior for timeouts/redirects while improving reliability when crawling sites that filter unknown/default clients.
