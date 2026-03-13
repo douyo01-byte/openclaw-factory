@@ -1,0 +1,6 @@
+id=1492
+title=Add timeout handling to sh() subprocess calls to prevent hangs
+batch=1492-1492
+ts=2026-03-13T08:07:56Z
+
+In bots/dev_executor_v1.py the sh() helper runs external commands with subprocess.run but does not set any timeout. If a git/gh process hangs (network/GH auth issues, interactive prompts) the executor can block indefinitely. Make a small, low-risk change inside sh(): add a timeout parameter (default e.g. 300 seconds) and pass it to subprocess.run for both capture and non-capture code paths. Catch subprocess.TimeoutExpired and raise a clear, actionable exception (or return a non-zero failure) that includes the command and timeout value so callers can surface the failure and the daemon won't hang. This change is limited to the sh() function, keeps the existing return values, and prevents long-lived blocking with minimal behavioral change.
