@@ -1,0 +1,6 @@
+id=1577
+title=Improve diagnostics for command_apply_daemon_v1.py
+batch=1577-1577
+ts=2026-03-13T10:21:13Z
+
+AI generated proposal targeting bots/command_apply_daemon_v1.py. category=analysis. improve command_apply_daemon_v1.py with a concrete, low-risk change.
