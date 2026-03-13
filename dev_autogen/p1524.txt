@@ -1,0 +1,6 @@
+id=1524
+title=Make STATE_PATH and headless mode configurable via environment variables
+batch=1524-1524
+ts=2026-03-13T09:15:47Z
+
+Allow overriding STATE_PATH and headless launch behavior without editing the script. Read KS_STATE_PATH (fallback: configs/ks_storage_state.json) and HEADLESS (values: '1','true','yes' -> True; otherwise False). Ensure the parent directory for the resolved STATE_PATH is created before saving, and print the chosen values at startup. This is a small, low-risk change limited to scripts/save_ks_session.py that increases automation and CI friendliness.
