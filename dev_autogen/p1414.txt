@@ -1,0 +1,6 @@
+id=1414
+title=Enable WAL journal mode and relaxed synchronous for better concurrent writes
+batch=1414-1414
+ts=2026-03-13T04:01:35Z
+
+When applying the DDL the code opens the SQLite DB with a plain connection. For developer environments that run multiple concurrent processes against the same DB this can cause write contention and slow schema operations. Change apply() to set PRAGMA journal_mode=WAL and PRAGMA synchronous=NORMAL immediately after connecting (and use a short timeout on connect). This is a small, low-risk change that improves write concurrency and reduces chance of blocking during schema application without changing schema or data. Implementation: after sqlite3.connect(db_path, timeout=5) run conn.execute('PRAGMA journal_mode=WAL;') and conn.execute('PRAGMA synchronous=NORMAL;') before executescript.
