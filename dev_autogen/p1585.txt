@@ -1,0 +1,6 @@
+id=1585
+title=Improve diagnostics for tg_inbox_poll_daemon_v1.py
+batch=1584-1585
+ts=2026-03-13T10:29:38Z
+
+AI generated proposal targeting bots/tg_inbox_poll_daemon_v1.py. category=analysis. improve tg_inbox_poll_daemon_v1.py with a concrete, low-risk change.
