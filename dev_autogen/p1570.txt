@@ -1,0 +1,6 @@
+id=1570
+title=Improve diagnostics for pipeline_hn_to_outreach.py
+batch=1570-1570
+ts=2026-03-13T10:15:01Z
+
+AI generated proposal targeting bots/pipeline_hn_to_outreach.py. category=analysis. improve pipeline_hn_to_outreach.py with a concrete, low-risk change.
