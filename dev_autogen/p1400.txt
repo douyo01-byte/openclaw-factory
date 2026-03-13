@@ -1,0 +1,6 @@
+id=1400
+title=Avoid deleting decision_patterns when no new patterns are generated
+batch=1400-1401
+ts=2026-03-13T03:27:56Z
+
+Currently the script unconditionally deletes all rows from decision_patterns before inserting new top patterns. If row selection or token scoring produces an empty `top` list (for example due to a transient DB issue or aggressive filtering), this will wipe the existing table. Change the logic to only run the DELETE and INSERT when `top` is non-empty; otherwise skip modification and log/print a message. Expected effect: prevents accidental loss of previously computed patterns when the current run yields no results, improving reliability and reducing downstream surprise.

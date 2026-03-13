@@ -1,0 +1,6 @@
+id=1401
+title=Print summary stats and top tokens before writing decision_patterns
+batch=1400-1401
+ts=2026-03-13T03:27:56Z
+
+Add lightweight stdout logging just before replacing the decision_patterns table: report number of decision_events rows read, retrospectives rows read, total positive/negative token counts, number of unique tokens, and the top ~10 tokens with their computed weights. Place the prints after `top = scored[:60]` and before `conn.execute("delete from decision_patterns")`. Expected effect: improves observability and makes it easy to verify tokenization, scoring heuristics, and dataset coverage without changing any computation or DB writes (low risk).
