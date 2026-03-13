@@ -1,0 +1,6 @@
+id=1420
+title=Load .env before reading persona files
+batch=1420-1420
+ts=2026-03-13T04:15:40Z
+
+Bugfix: move load_dotenv() so environment variables from the .env file are loaded before _load_persona_from_env() runs. In the current file PERSONA is initialized at import time before load_dotenv() is called, so CORE_PERSONA_FILE / PERSONA_FILE from a .env are ignored and persona content may be empty. Minimal change: call load_dotenv() at the top (before PERSONA = _load_persona_from_env()) or delay PERSONA initialization until after load_dotenv() is called. This is a low-risk one-line reorder that fixes incorrect behavior when using a .env file.
