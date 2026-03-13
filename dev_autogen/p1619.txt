@@ -1,0 +1,6 @@
+id=1619
+title=Automate routine work around ingest_spec_answers_v1.py
+batch=1619-1617
+ts=2026-03-13T11:03:39Z
+
+AI generated proposal targeting bots/ingest_spec_answers_v1.py. category=automation. improve ingest_spec_answers_v1.py with a concrete, low-risk change.
