@@ -1,0 +1,6 @@
+id=1466
+title=Create index on reviews.url to speed lookups
+batch=1466-1467
+ts=2026-03-13T05:46:36Z
+
+Add a small, low-risk SQL index on the reviews.url column (CREATE INDEX IF NOT EXISTS) immediately after creating the reviews table. The reviews table stores URL values that are likely used for joins/filtering against items or for lookups when de-duplicating or aggregating reviews; indexing this column reduces query latency for those operations with minimal disk/maintenance cost. Implementation: after the CREATE TABLE for reviews, execute: cur.execute("CREATE INDEX IF NOT EXISTS idx_reviews_url ON reviews(url);") and then commit. No schema changes to existing columns; safe to apply at startup.
