@@ -1,0 +1,6 @@
+id=1426
+title=Skip redundant updates: only update DB and emit event when decision or priority changes
+batch=1426-1426
+ts=2026-03-13T04:24:33Z
+
+Modify the main processing loop to fetch the existing priority along with project_decision, compute the new decision and priority, and skip the UPDATE/INSERT when both decision and priority are unchanged. This avoids unnecessary write churn and duplicate dev_events for unchanged proposals. Implementation details: change the SELECT to include priority, compare r['project_decision'] and float(r['priority'] or 0.0) to the newly computed values, and only run the UPDATE and dev_events INSERT when either differs. Keep the final commit/close behavior unchanged.
