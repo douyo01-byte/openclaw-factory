@@ -1,0 +1,6 @@
+id=1476
+title=Make random data generation optionally deterministic via AUTO_PLAN_SEED env var
+batch=1476-1476
+ts=2026-03-13T07:11:38Z
+
+Currently the script uses random.* to synthesize price/units which makes runs non-deterministic and harder to test. Add an optional, low-risk seeding step at top: read AUTO_PLAN_SEED from the environment and, if set, call random.seed(int(seed)). This is a minimal change (add import os and a couple lines) that preserves existing behavior when the env var is absent but enables reproducible runs for tests or CI. Keep all DB logic unchanged.
