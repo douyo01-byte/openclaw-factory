@@ -1,0 +1,6 @@
+id=1409
+title=summarize_event: fix duplicate condition and robustly extract case numbers
+batch=1409-1409
+ts=2026-03-13T03:54:51Z
+
+Bugfix: replace the redundant duplicate check for 'AI会議結果' and make event detection slightly more robust. Update explain/report parsing to extract a trailing '#<number>' when present (fall back to the full title if not) using a simple regex, and also recognize both Japanese 'AI会議' and English 'AI meeting' as meeting events. This is a small, local change to summarize_event() with no external dependencies and minimal risk.
