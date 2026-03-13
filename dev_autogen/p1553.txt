@@ -1,0 +1,6 @@
+id=1553
+title=Add guard checks to meeting_from_db_v1.py
+batch=1553-1553
+ts=2026-03-13T10:02:50Z
+
+AI generated proposal targeting bots/meeting_from_db_v1.py. category=safety. improve meeting_from_db_v1.py with a concrete, low-risk change.
