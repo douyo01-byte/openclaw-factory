@@ -1,0 +1,11 @@
+id=1726
+title=Reduce event summary drift in scripts/review_pr_once.sh
+batch=1725-1729
+ts=2026-03-13T23:24:54Z
+
+Goal:
+Implement: Reduce event summary drift in scripts/review_pr_once.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
