@@ -1,0 +1,6 @@
+id=1443
+title=Make send() resilient: catch Telegram errors and log failures
+batch=1443-1443
+ts=2026-03-13T04:59:36Z
+
+Wrap the requests.post call in send() with a try/except that catches requests.RequestException and any non-2xx responses. On failure, do not raise — instead append a small timestamped diagnostic line to a local log file (e.g. logs/ops_brain_v3_send.log) containing the chat_id, attempted message (truncated), error or HTTP status and response text. Ensure the logs/ directory is created if missing. This prevents a flaky network or Telegram outage from crashing main() and records failures for later analysis. Keep behavior unchanged on success.
