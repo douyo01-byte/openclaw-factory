@@ -1,0 +1,6 @@
+id=1503
+title=Reuse a single Playwright browser instance across DDG/landing fetches to reduce startup overhead
+batch=1503-1503
+ts=2026-03-13T08:31:57Z
+
+Introduce a small PlaywrightManager singleton in the module that starts sync_playwright() and launches one headless Chromium browser once, reusing pages for ddg_collect_domains and landing_title. Modify ddg_collect_domains and landing_title to obtain a new page from the manager instead of launching/closing a browser on each call. Ensure safe shutdown with atexit to close browser/playwright and keep a try/except fallback path that performs the original per-call launch if the manager is unavailable. This reduces expensive browser process startup for every domain/title check, improving performance and lowering transient failures due to rapid browser churn while keeping changes small and low-risk.
