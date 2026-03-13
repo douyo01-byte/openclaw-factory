@@ -1,0 +1,6 @@
+id=1470
+title=Commit DB changes after processing each item to avoid large uncommitted transaction
+batch=1470-1470
+ts=2026-03-13T05:53:18Z
+
+In bots/web_enrich_v1.py the script performs many conn.execute(...) calls inside a loop but only calls conn.commit() once at the end. If the process crashes or runs for long, all intermediate work is lost and the DB can be locked for the whole run. Make a minimal change: call conn.commit() at the end of each loop iteration (after inserting contacts/contact_points and after optionally updating official_url). This persists per-item results, shortens transaction duration, reduces chance of losing work, and releases locks sooner. Implementation: add conn.commit() as the last statement inside the for it in rows: loop (or wrap each iteration in a short transaction using conn.execute('BEGIN') / conn.commit()). This is a low-risk change that preserves existing logic and SQL.
