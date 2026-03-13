@@ -1,0 +1,6 @@
+id=1525
+title=Precompile DENY and SECRET_PATTERNS regexes and use them in deny_match/scan_secrets
+batch=1525-1525
+ts=2026-03-13T09:16:31Z
+
+Refactor to compile the regex strings in DENY and SECRET_PATTERNS once at module import and reuse the compiled patterns in deny_match() and scan_secrets(). Introduce two module-level lists: COMPILED_DENY = [(rx_str, re.compile(rx_str))...] and COMPILED_SECRETS = [(rx_str, re.compile(rx_str))...]. Change deny_match(p) to iterate COMPILED_DENY and return the original regex string when matched (preserving current return semantics). Change scan_secrets(paths) to iterate COMPILED_SECRETS and append (path, original_pattern) on match. This is a small, low-risk refactor that reduces repeated regex compilation on every file/line check, improving performance for large diffs and scans while keeping behavior identical.
