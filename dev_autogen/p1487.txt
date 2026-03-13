@@ -1,0 +1,6 @@
+id=1487
+title=build_text: gracefully handle DB errors and return a safe fallback summary
+batch=1487-1487
+ts=2026-03-13T07:55:48Z
+
+Wrap the database read block inside build_text() with a try/except that catches sqlite3.Error (or Exception) so a missing table, corrupt DB or other sqlite failure does not crash the bot. On error: log the exception (import logging at module top) and return a minimal, human-readable fallback summary list (e.g. header, timestamp, brief message asking to check logs). This is a small, low-risk change: add logging import, surround the existing with dconn()/fconn() queries with try/except, and return fallback lines early. It prevents the entire dashboard generation from failing when the DB schema is unavailable and preserves operator visibility.
