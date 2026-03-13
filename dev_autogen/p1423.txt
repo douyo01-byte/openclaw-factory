@@ -1,0 +1,6 @@
+id=1423
+title=Add safe fallback and error handling in llm_score_and_email to avoid crashes on API/JSON failures
+batch=1423-1423
+ts=2026-03-13T04:19:23Z
+
+Wrap the OpenAI call and JSON parsing in llm_score_and_email with a try/except that catches API errors, timeouts, and JSONDecodeError. On error return a well-formed safe dict: {"score": 0, "rationale_jp": "(評価失敗)" , "email_en": ""}. Also normalize/coerce the score to an int before returning to ensure callers (main) don't crash if the model returns non-numeric values. Log a concise warning via print with exception type to aid debugging. This is a small, local change limited to bots/meeting_hn_v1.py and prevents the whole run from crashing when the LLM response is malformed or the API fails.
