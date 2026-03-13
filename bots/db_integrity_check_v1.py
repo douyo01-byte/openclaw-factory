@@ -1,238 +1,113 @@
-import json, os, sqlite3, subprocess, time
+import json, os, sqlite3, time
 from pathlib import Path
-from urllib import request, parse
 
-ROOT = Path(__file__).resolve().parents[1]
-LOGS = ROOT / "logs"
-OBS = ROOT / "obs"
-OBS.mkdir(parents=True, exist_ok=True)
-STATE_PATH = OBS / "db_integrity_state.json"
+DB = os.environ.get("DB_PATH") or os.environ.get("OCLAW_DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+OUT = Path("obs/db_integrity_state.json")
+LOG = Path("logs/db_integrity_check_v1.log")
 
-def tg_send(token, chat_id, text):
-    if not token or not chat_id or not text:
-        return
-    data = parse.urlencode({"chat_id": chat_id, "text": text}).encode()
-    req = request.Request(f"https://api.telegram.org/bot{token}/sendMessage", data=data)
-    try:
-        request.urlopen(req, timeout=20).read()
-    except Exception:
-        pass
+SQL = '''
+with mismatch_counts as (
+  select 'status=merged but others mismatch' as kind, count(*) as cnt
+  from dev_proposals
+  where coalesce(status,'')='merged'
+    and (coalesce(dev_stage,'')!='merged' or coalesce(pr_status,'')!='merged')
 
-def detect_db():
-    cands = []
-    if os.environ.get("DB_PATH"):
-        cands.append(Path(os.environ["DB_PATH"]))
-    cands += [
-        ROOT / "data" / "openclaw.db",
-        ROOT / "data" / "openclaw_daemon.db",
-        ROOT / "data" / "openclaw",
-    ]
-    for p in cands:
-        if p.exists():
-            return p
-    return None
+  union all
+  select 'dev_stage=merged but others mismatch' as kind, count(*) as cnt
+  from dev_proposals
+  where coalesce(dev_stage,'')='merged'
+    and (coalesce(status,'')!='merged' or coalesce(pr_status,'')!='merged')
 
-def table_exists(conn, name):
-    cur = conn.execute("select 1 from sqlite_master where type='table' and name=?", (name,))
-    return cur.fetchone() is not None
+  union all
+  select 'pr_status=merged but others mismatch' as kind, count(*) as cnt
+  from dev_proposals
+  where coalesce(pr_status,'')='merged'
+    and (coalesce(status,'')!='merged' or coalesce(dev_stage,'')!='merged')
 
-def cols(conn, table):
-    return [r[1] for r in conn.execute(f"pragma table_info({table})").fetchall()]
+  union all
+  select 'status=closed but others mismatch' as kind, count(*) as cnt
+  from dev_proposals
+  where coalesce(status,'')='closed'
+    and (coalesce(dev_stage,'')!='closed' or coalesce(pr_status,'')!='closed')
 
-def q1(conn):
-    if not table_exists(conn, "ceo_hub_events"):
-        return None
-    c = set(cols(conn, "ceo_hub_events"))
-    if not {"event_type", "proposal_id"}.issubset(c):
-        return None
-    return conn.execute("""
-        select count(*)
-        from (
-          select proposal_id
-          from ceo_hub_events
-          where event_type in ('pr_created','proposal_created')
-          group by proposal_id
-        ) a
-        left join (
-          select proposal_id
-          from ceo_hub_events
-          where event_type in ('merged','pr_merged','merge')
-          group by proposal_id
-        ) b
-        on a.proposal_id = b.proposal_id
-        where a.proposal_id is not null
-          and b.proposal_id is null
-    """).fetchone()[0]
+  union all
+  select 'dev_stage=closed but others mismatch' as kind, count(*) as cnt
+  from dev_proposals
+  where coalesce(dev_stage,'')='closed'
+    and (coalesce(status,'')!='closed' or coalesce(pr_status,'')!='closed')
 
-def q2(conn):
-    if not table_exists(conn, "ceo_hub_events"):
-        return None
-    c = set(cols(conn, "ceo_hub_events"))
-    if not {"event_type", "proposal_id"}.issubset(c):
-        return None
-    return conn.execute("""
-        select count(*)
-        from (
-          select proposal_id
-          from ceo_hub_events
-          where event_type in ('merged','pr_merged','merge')
-          group by proposal_id
-        ) a
-        left join (
-          select proposal_id
-          from ceo_hub_events
-          where event_type in ('learning_result','learning','learned')
-          group by proposal_id
-        ) b
-        on a.proposal_id = b.proposal_id
-        where a.proposal_id is not null
-          and b.proposal_id is null
-    """).fetchone()[0]
+  union all
+  select 'pr_status=closed but others mismatch' as kind, count(*) as cnt
+  from dev_proposals
+  where coalesce(pr_status,'')='closed'
+    and (coalesce(status,'')!='closed' or coalesce(dev_stage,'')!='closed')
+)
+select
+  (
+    select count(*)
+    from dev_proposals
+    where coalesce(status,'')='pr_created'
+      and coalesce(dev_stage,'')!='merged'
+  ) as pr_created_without_merged,
+  (
+    select count(*)
+    from dev_proposals
+    where coalesce(status,'')='merged'
+      and (result_type is null or coalesce(result_type,'')='')
+  ) as merged_without_learning_result,
+  (
+    select count(*)
+    from dev_proposals
+    where coalesce(status,'')!=coalesce(dev_stage,'')
+       or coalesce(status,'')!=coalesce(pr_status,'')
+  ) as status_mismatch,
+  (
+    select coalesce(sum(cnt),0)
+    from mismatch_counts
+  ) as lifecycle_anomaly_count,
+  (
+    select json_group_object(kind, cnt)
+    from mismatch_counts
+  ) as mismatch_counts_json,
+  (
+    select count(*)
+    from dev_proposals
+    where coalesce(source_ai,'')=''
+       or coalesce(category,'')=''
+       or coalesce(target_system,'')=''
+  ) as missing_source_category_target_system
+'''
 
-def q3(conn):
-    if not table_exists(conn, "dev_proposals"):
-        return None
-    dp = set(cols(conn, "dev_proposals"))
-    need = {"status", "dev_stage", "pr_status"}
-    if not need.issubset(dp):
-        return None
-    return conn.execute("""
-        select count(*)
-        from dev_proposals
-        where
-          (coalesce(pr_status,'')='open'   and coalesce(dev_stage,'')!='open')
-          or
-          (coalesce(pr_status,'')='merged' and coalesce(dev_stage,'')!='merged')
-          or
-          (coalesce(pr_status,'')='closed' and coalesce(dev_stage,'')!='closed')
-          or
-          (coalesce(dev_stage,'')='open'   and coalesce(pr_status,'')!='open')
-          or
-          (coalesce(dev_stage,'')='merged' and coalesce(pr_status,'')!='merged')
-          or
-          (coalesce(dev_stage,'')='closed' and coalesce(pr_status,'')!='closed')
-          or
-          (coalesce(dev_stage,'')='merged' and coalesce(status,'')!='merged')
-          or
-          (coalesce(dev_stage,'')='closed' and coalesce(status,'')!='closed')
-          or
-          (coalesce(pr_status,'')='merged' and coalesce(status,'')!='merged')
-          or
-          (coalesce(pr_status,'')='closed' and coalesce(status,'')!='closed')
-    """).fetchone()[0]
-
-def q4(conn):
-    if not table_exists(conn, "ceo_hub_events"):
-        return None
-    c = set(cols(conn, "ceo_hub_events"))
-    if not {"proposal_id", "event_type", "created_at"}.issubset(c):
-        return None
-    rows = conn.execute("""
-        select proposal_id, event_type, created_at
-        from ceo_hub_events
-        where proposal_id is not null
-        order by proposal_id, datetime(created_at)
-    """).fetchall()
-    rank = {
-        "proposal_created": 1, "pr_created": 1,
-        "approved": 2,
-        "merge": 3, "merged": 3, "pr_merged": 3,
-        "learning": 4, "learning_result": 4, "learned": 4,
-    }
-    bad = 0
-    prev_pid = None
-    prev_rank = 0
-    for pid, et, _ in rows:
-        r = rank.get(et)
-        if r is None:
-            continue
-        if pid != prev_pid:
-            prev_pid = pid
-            prev_rank = 0
-        if r < prev_rank:
-            bad += 1
-        prev_rank = max(prev_rank, r)
-    return bad
-
-def q5(conn):
-    if not table_exists(conn, "dev_proposals"):
-        return None
-    c = set(cols(conn, "dev_proposals"))
-    miss = 0
-    for col in ("source", "category", "target_system"):
-        if col in c:
-            miss += conn.execute(f"select count(*) from dev_proposals where {col} is null or trim({col}) = ''").fetchone()[0]
-    return miss
-
-def load_state():
-    if STATE_PATH.exists():
-        try:
-            return json.loads(STATE_PATH.read_text(encoding="utf-8"))
-        except Exception:
-            return {}
-    return {}
-
-def save_state(d):
-    STATE_PATH.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
 
 def main():
-    db = detect_db()
-    if not db:
-        raise SystemExit("DB not found")
-    conn = sqlite3.connect(str(db))
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    LOG.parent.mkdir(parents=True, exist_ok=True)
+    con = sqlite3.connect(DB, timeout=30)
+    con.row_factory = sqlite3.Row
+    con.execute("pragma busy_timeout=30000")
+    row = con.execute(SQL).fetchone()
+    con.close()
 
-    res = {
-        "pr_created_without_merged": q1(conn),
-        "merged_without_learning_result": q2(conn),
-        "status_mismatch": q3(conn),
-        "lifecycle_anomaly_count": q4(conn),
-        "missing_source_category_target_system": q5(conn),
+    state = {
         "checked_at": int(time.time()),
-        "db_path": str(db),
+        "db_path": DB,
+        "merged_without_learning_result": int(row["merged_without_learning_result"] or 0),
+        "status_mismatch": int(row["status_mismatch"] or 0),
+        "lifecycle_anomaly_count": int(row["lifecycle_anomaly_count"] or 0),
+        "mismatch_counts": json.loads(row["mismatch_counts_json"] or "{}"),
+        "pr_created_without_merged": int(row["pr_created_without_merged"] or 0),
+        "missing_source_category_target_system": int(row["missing_source_category_target_system"] or 0),
     }
-    conn.close()
 
-    line = "[db_integrity] " + " ".join(f"{k}={v}" for k, v in res.items() if k not in ("checked_at","db_path"))
-    with (LOGS / "db_integrity_check_v1.log").open("a", encoding="utf-8") as f:
-        f.write(line + "\n")
-
-    state = load_state()
-    prev = state.get("last_result", {})
-    changed = {k: res[k] for k in res if k in prev and isinstance(res[k], int) and prev.get(k) != res[k]}
-
-    ka01_token = os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("KAIKUN01_BOT_TOKEN")
-    ka01_chat = os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get("KAIKUN01_CHAT_ID")
-    ka02_token = os.environ.get("CEO_TELEGRAM_BOT_TOKEN") or ka01_token
-    ka02_chat = os.environ.get("CEO_CHAT_ID") or os.environ.get("KAIKUN02_CHAT_ID")
-
-    severe = []
-    if (res["lifecycle_anomaly_count"] or 0) > 0:
-        severe.append(f"lifecycle anomaly={res['lifecycle_anomaly_count']}")
-    if (res["status_mismatch"] or 0) > 0:
-        severe.append(f"status mismatch={res['status_mismatch']}")
-
-    if severe:
-        tg_send(
-            ka01_token,
-            ka01_chat,
-            "⚠ OpenClaw DB整合性異常\n" + "\n".join(severe)
+    OUT.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    with LOG.open("a", encoding="utf-8") as f:
+        f.write(
+            "[db_integrity] "
+            f"pr_created_without_merged={state['pr_created_without_merged']} "
+            f"merged_without_learning_result={state['merged_without_learning_result']} "
+            f"status_mismatch={state['status_mismatch']} "
+            f"lifecycle_anomaly_count={state['lifecycle_anomaly_count']} "
+            f"missing_source_category_target_system={state['missing_source_category_target_system']}\n"
         )
-
-    if not state.get("last_daily_sent_date") == time.strftime("%Y-%m-%d"):
-        txt = (
-            "OpenClaw daily integrity summary\n"
-            f"pr_created without merged: {res['pr_created_without_merged']}\n"
-            f"merged without learning_result: {res['merged_without_learning_result']}\n"
-            f"status mismatch: {res['status_mismatch']}\n"
-            f"lifecycle anomaly: {res['lifecycle_anomaly_count']}\n"
-            f"missing source/category/target_system: {res['missing_source_category_target_system']}"
-        )
-        tg_send(ka02_token, ka02_chat, txt)
-        state["last_daily_sent_date"] = time.strftime("%Y-%m-%d")
-
-    state["last_result"] = res
-    state["last_changed"] = changed
-    save_state(state)
-
 if __name__ == "__main__":
     main()
