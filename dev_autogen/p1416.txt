@@ -1,0 +1,6 @@
+id=1416
+title=Always close DB connection and rollback on error in main()
+batch=1416-1416
+ts=2026-03-13T04:07:25Z
+
+Wrap the sqlite3 connection usage in main() with try/except/finally so the connection is always closed. On success commit as now; on exception call conn.rollback() and re-raise. This ensures the database file/connection is not left open if requests.get or other operations raise, preventing locked DB files and resource leaks with a minimal change.
