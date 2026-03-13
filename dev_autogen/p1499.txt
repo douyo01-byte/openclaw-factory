@@ -1,0 +1,6 @@
+id=1499
+title=Add short retry with exponential backoff to gh_api for transient network/5xx errors
+batch=1499-1499
+ts=2026-03-13T08:21:07Z
+
+Wrap the requests.get call in gh_api with a small retry loop (e.g. 2 retries after the initial attempt) and short exponential backoff (sleep 1s, then 2s). Retry for network exceptions and HTTP 5xx responses, but preserve current behavior for 403 rate-limit and other client errors. This reduces missed PR checks caused by transient network failures without changing API semantics. Implementation: replace the single requests.get(...) with a for-loop that catches exceptions, treats r.status_code>=500 as retryable, and only raises the existing rate-limit handling when a successful 2xx/3xx/4xx response is returned or retries exhausted. Keep timeouts and headers unchanged.
