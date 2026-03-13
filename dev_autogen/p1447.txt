@@ -1,0 +1,6 @@
+id=1447
+title=Write Playwright storage state atomically to avoid partial/corrupt STATE_PATH files
+batch=1447-1447
+ts=2026-03-13T05:07:11Z
+
+Replace direct context.storage_state(path=STATE_PATH) with await context.storage_state() to obtain the state dict and then write it to a temporary file in the same directory and atomically rename (os.replace) to STATE_PATH. Also ensure the browser is closed in a finally block. Details: create configs dir if missing, call storage = await context.storage_state(), write JSON to a temp path (e.g. STATE_PATH + '.tmp') using json.dump with flush and os.fsync to ensure data is on disk, then os.replace(temp_path, STATE_PATH). This prevents ending up with a truncated or invalid JSON file if the process is interrupted during write and improves robustness when the file is used by other processes.
