@@ -1,0 +1,6 @@
+id=1425
+title=Guard llm_score against OpenAI API/network errors to avoid crash
+batch=1425-1425
+ts=2026-03-13T04:23:02Z
+
+Wrap the OpenAI call in llm_score with a try/except to catch API/network exceptions and return a safe default JSON (score=0) with a short rationale_jp containing a truncated error message. This prevents the whole scout job from crashing when the LLM call fails, keeps downstream logic working, and preserves the existing JSON parse fallback. Concrete change: in llm_score, surround client.chat.completions.create(...) with try/except Exception as e and on exception return {"score": 0, "rationale_jp": f"LLM error: {str(e)[:180]}"}. Keep the existing JSON parsing try/except that follows and ensure the returned rationale is later truncated to 200 chars as already done in main.
