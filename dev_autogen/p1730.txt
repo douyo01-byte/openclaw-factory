@@ -1,0 +1,11 @@
+id=1730
+title=Reduce duplicate writes in bots/ceo_hub_sender_v1.py
+batch=1731-1732
+ts=2026-03-13T23:27:55Z
+
+Goal:
+Implement: Reduce duplicate writes in bots/ceo_hub_sender_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
