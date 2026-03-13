@@ -90,12 +90,14 @@ def main():
             )
 
             if execute_now == 0 and pr_open == 0:
-                seed_once()
-                time.sleep(20)
+                for _ in range(SEED_BURST):
+                    seed_once()
+                    time.sleep(8)
                 normalize_fallback_rows()
             elif quiet >= QUIET_MIN and fb_age >= 10:
-                seed_once()
-                time.sleep(20)
+                for _ in range(SEED_BURST):
+                    seed_once()
+                    time.sleep(8)
                 normalize_fallback_rows()
 
         except Exception as e:

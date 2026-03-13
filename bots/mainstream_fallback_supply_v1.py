@@ -11,6 +11,20 @@ FALLBACK_TITLES = [
     "Mainstream supply resilience sweep",
     "Approved queue visibility sweep",
     "Batch anchor selection sweep",
+    "Router throughput sweep",
+    "Proposal dedupe sweep",
+    "Launchd resilience sweep",
+    "Merge notify stability sweep",
+    "Queue normalization sweep",
+    "DB lock avoidance sweep",
+    "Fallback seed rotation sweep",
+    "Watcher state sync sweep",
+    "Automerge safety sweep",
+    "Impact scoring resilience sweep",
+    "CEO hub event integrity sweep",
+    "Self-strength watchdog sweep",
+    "Supply loop durability sweep",
+    "Proposal routing stability sweep",
 ]
 
 def build_spec(title):

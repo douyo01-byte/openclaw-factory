@@ -426,7 +426,7 @@ def main():
             rows = conn.execute("""
                 select id, event_type, proposal_id, title, coalesce(pr_url,'') pr_url
                 from ceo_hub_events
-                where event_type in ('merged','pr_created') and id>?
+                where event_type='merged' and id>?
                 order by id asc
             """, (last_id,)).fetchall()
             new_last = last_id
