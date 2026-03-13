@@ -1,0 +1,6 @@
+id=1513
+title=Add timeouts and HTTP-status handling for external requests (Telegram & OpenAI)
+batch=1513-1513
+ts=2026-03-13T08:50:37Z
+
+Prevent the process from hanging on external network calls by adding explicit timeouts and proper HTTP-status handling. Concretely: add a timeout parameter (e.g. timeout=10) to requests.post in both send() and llm(); wrap the calls in try/except requests.RequestException; call r.raise_for_status() or check r.status_code and return a clear error string when non-2xx (e.g. "TELEGRAM_ERROR: <status>" or "LLM_HTTP_ERROR: <status> <body_snippet>"). This is a small change localized to bots/persona_reply_v2.py that reduces risk of indefinite blocking and gives clearer failure signals for monitoring/alerts.
