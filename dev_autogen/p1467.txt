@@ -1,0 +1,6 @@
+id=1467
+title=Add targeted logging for changed_files and evaluate_risk decisions
+batch=1466-1467
+ts=2026-03-13T05:46:36Z
+
+Introduce lightweight logging to dev_gatekeeper.py to make risk decisions observable without changing behavior. Implement: import logging and create logger = logging.getLogger(__name__); in changed_files(), log the git command stdout/stderr at DEBUG and log a WARNING when subprocess.returncode != 0 (including stderr) while still returning the parsed file list; in evaluate_risk(), log each filename checked at DEBUG, log an INFO/WARNING right before returning 'high' including the offending filename and matching keyword, and log an INFO when a file changes the risk from 'low' to 'medium' (include filename and reason). Keep existing return values and control flow unchanged. This is a small, low-risk change that improves observability for incident debugging.
