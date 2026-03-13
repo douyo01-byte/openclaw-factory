@@ -1,0 +1,6 @@
+id=1544
+title=Cache registrable_domain results with LRU to reduce repeated tldextract work
+batch=1544-1544
+ts=2026-03-13T09:53:39Z
+
+Apply a small, local cache on registrable_domain using functools.lru_cache(maxsize=4096). registrable_domain is called many times (e.g., in pick_official_candidate, in_block_domain, is_platform) and each call invokes tldextract.extract which is relatively expensive. Decorating registrable_domain with an LRU cache avoids repeated parsing for the same URLs/hosts, improving CPU and latency with minimal risk. Implementation: add `from functools import lru_cache` and annotate the function with `@lru_cache(maxsize=4096)`. No logic change; behavior identical except faster and bounded memory use.
