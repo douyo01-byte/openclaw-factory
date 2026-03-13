@@ -38,6 +38,7 @@ ACTIVE_POLICY_EXCLUDES = {
     "bots/auto_pr_v1.py",
     "bots/explain_orchestrator_v1.py",
     "bots/openai_smoke.py",
+    "bots/report_orchestrator_v1.py",
     "bots/dev_pr_automerge_v1.py",
     "bots/dev_pr_watcher_v1.py",
     "bots/dev_command_executor_v1.py",
