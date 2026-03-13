@@ -1,0 +1,6 @@
+id=1465
+title=Add --dry-run CLI flag to preview retrospective without sending
+batch=1465-1465
+ts=2026-03-13T05:45:56Z
+
+Add a lightweight --dry-run boolean argument to the script so operators can run it to preview the latest retrospective without calling oclibs.telegram.send. Implementation details: add ap.add_argument('--dry-run', action='store_true', help='Do not send to Telegram; just print message preview'), check args.dry_run after the DB query, and if true print a short preview (id, first N characters and full length) and return without importing or invoking oclibs.telegram.send. Keep current output format but indicate dry-run in the summary (e.g. "Done. sent=0 (dry-run) id=... preview_len=..."). This is a small, low-risk change that avoids accidental sends during tests and CI runs and does not alter normal behavior when --dry-run is not provided.
