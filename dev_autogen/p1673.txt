@@ -1,0 +1,11 @@
+id=1673
+title=Reduce event summary drift in scripts/go_next_step.sh
+batch=1676-1675
+ts=2026-03-13T22:22:58Z
+
+Goal:
+Implement: Reduce event summary drift in scripts/go_next_step.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
