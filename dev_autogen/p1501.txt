@@ -1,0 +1,6 @@
+id=1501
+title=Clamp computed priority into [0.0,1.0] and round before persisting
+batch=1501-1501
+ts=2026-03-13T08:26:31Z
+
+Make score() clamp the computed priority to the closed interval [0.0, 1.0] and round it to three decimals before using it to pick a decision and returning/storing it. Concretely: after accumulating weights in score(), set priority = round(min(max(priority, 0.0), 1.0), 3) and then apply the existing thresholds (0.7 / 0.4). This is a small, low-risk change that prevents unbounded priorities from pattern proliferation, ensures stable comparisons against fixed thresholds, and makes stored priority values consistent and compact.
