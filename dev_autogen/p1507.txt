@@ -1,0 +1,6 @@
+id=1507
+title=Ensure DB parent directory exists before connecting to SQLite
+batch=1507-1507
+ts=2026-03-13T08:38:31Z
+
+Create the directory for DB_PATH (default data/openclaw.db) before calling sqlite3.connect. If the parent directory does not exist, sqlite3.connect will raise an OperationalError. Add a small guard just before opening the DB: compute dirpath = os.path.dirname(DB); if dirpath and DB != ':memory:' then os.makedirs(dirpath, exist_ok=True). This is a minimal, low-risk change that prevents startup failures when the data/ directory hasn't been created.
