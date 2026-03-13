@@ -1,0 +1,6 @@
+id=1508
+title=Add timeout and clearer errors to sh() to avoid hangs and improve diagnostics
+batch=1508-1508
+ts=2026-03-13T08:39:15Z
+
+In the sh(cmd) helper, set a small default timeout for subprocess.run (e.g. 30s) and handle TimeoutExpired to raise a clear SystemExit that includes the command, timeout and any captured output. Also include the invoked command and returncode in the existing non-zero exit handling message so failures are easier to diagnose. This is a minimal, low-risk change local to the sh() function and prevents the bot from hanging indefinitely on network/git/gh commands while providing better error context.
