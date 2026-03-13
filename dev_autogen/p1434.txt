@@ -1,0 +1,17 @@
+id=1434
+title=Mark 'ok ' prefixed inbox commands as skipped to avoid reprocessing
+batch=1434-1434
+ts=2026-03-13T04:45:26Z
+
+In main(), when iterating rows the code currently continues on texts starting with "ok " but leaves their status as 'new', causing them to be repeatedly reprocessed. Make a small change to update the DB row status to a terminal value (e.g. 'skipped') before continuing. Concretely, replace the current branch
+
+    if text.lower().startswith("ok "):
+        continue
+
+with
+
+    if isinstance(text, str) and text.lower().startswith("ok "):
+        conn.execute("update inbox_commands set status='skipped' where id=?", (i,))
+        continue
+
+This is a low-risk bugfix: it avoids an infinite reprocessing loop for these messages, is limited to a single SQL update, and keeps the existing commit/connection flow.
