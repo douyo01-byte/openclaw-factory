@@ -1,0 +1,6 @@
+id=1408
+title=Ensure DB directory exists before opening SQLite connection
+batch=1408-1408
+ts=2026-03-13T03:52:38Z
+
+Make db() create the parent directory for the DB file before calling sqlite3.connect. Right now DB is 'data/openclaw.db' but the code doesn't ensure the 'data' folder exists; that can cause sqlite OperationalError on first run. Change db() to run Path(DB).parent.mkdir(parents=True, exist_ok=True) (or equivalent) before connecting and keep the rest of the function unchanged. This is a small, low-risk fix that prevents startup failures on fresh deployments.
