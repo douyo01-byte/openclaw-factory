@@ -1,0 +1,6 @@
+id=1406
+title=Add simple insertion/skip counters and info logs for run summary
+batch=1406-1406
+ts=2026-03-13T03:49:47Z
+
+Add lightweight logging to report how many chat rows produced new proposals vs were skipped (empty or existing branch). Implementation: import logging, create logger = logging.getLogger(__name__), initialize counters (inserted=0, skipped=0) before the loop, increment inserted when an insert is executed and skipped when continuing because text is empty or branch exists, and log an INFO-level summary after commit (e.g. "Inserted X proposals, skipped Y rows"). Keep logs unobtrusive (INFO summary + optional DEBUG per-branch log). This is a minimal, low-risk observability change that helps monitor how often the job creates proposals without changing DB schema or semantics.
