@@ -1,0 +1,6 @@
+id=1451
+title=Add structured logging and debug-level control to ingest_telegram_replies_v1.py
+batch=1451-1451
+ts=2026-03-13T05:13:45Z
+
+Introduce a lightweight, low-risk logging layer to the script so operators can see what updates are fetched and why messages may be ignored. Changes: import the logging module and configure basic logging (level controlled by a new TELEGRAM_INGEST_LOG_LEVEL env var, default INFO) after load_dotenv; create a module logger = logging.getLogger('ingest_telegram_replies'); log startup info (DB_PATH and API URL); wrap the http_get call in main with try/except to log exceptions (logger.exception) and bail/return an empty set of updates instead of crashing; add per-update logger.debug/info lines inside the updates loop logging update_id, chat_id, message_id, reply_id, from_username and the result of parse_spec_reply / parse_text (including decision/target/reason when parsed). Keep log messages concise and only add them — no behavioral changes to DB writes or polling. This is a small, additive change that improves observability and makes debugging production ingestion issues easier without changing logic.
