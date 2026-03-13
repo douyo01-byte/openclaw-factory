@@ -1,0 +1,11 @@
+id=1740
+title=Improve retry logic in oclibs/contact_finder.py
+batch=1739-1743
+ts=2026-03-13T23:34:11Z
+
+Goal:
+Implement: Improve retry logic in oclibs/contact_finder.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
