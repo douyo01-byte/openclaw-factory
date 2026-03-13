@@ -1,0 +1,6 @@
+id=1486
+title=Normalize chat text before hashing/deduplication to avoid near-duplicate proposals
+batch=1486-1486
+ts=2026-03-13T07:54:59Z
+
+Normalize each row's text by trimming and collapsing internal whitespace (e.g. normalized = " ".join(text.strip().split())) before computing the SHA1 hash and doing the exists check. Use the normalized text for branch_name and title generation (title = normalized[:80]) while preserving the original text column as the proposal description. This prevents multiple proposals being created for messages that differ only by extra spaces/newlines and is a small, low-risk change localized to main() in chat_to_proposal_v1.py.
