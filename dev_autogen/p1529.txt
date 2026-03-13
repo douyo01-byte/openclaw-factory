@@ -1,0 +1,6 @@
+id=1529
+title=Precompile regex patterns outside the loop to reduce repeated compilation
+batch=1529-1529
+ts=2026-03-13T09:23:21Z
+
+Currently the three regular expressions are recompiled for every row on every loop iteration. Precompile the patterns once (e.g. before the while True) using re.compile for: r"承認\s*#(\d+)", r"保留\s*#(\d+)", and r"質問\s*#(\d+)\s*(.*)" and then call pattern.search(t) inside the row loop. This is a small, low-risk change that reduces CPU overhead and GC churn, especially when there are many rows or the loop runs continuously.
