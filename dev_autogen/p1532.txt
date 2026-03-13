@@ -1,0 +1,6 @@
+id=1532
+title=Switch prints to structured logging and log exceptions with stack traces
+batch=1532-1532
+ts=2026-03-13T09:29:23Z
+
+Replace console prints in tg_inbox_poll_v1.py with the standard logging module to get timestamps, levels, and stack traces. Concretely: add `import logging` and `logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')` near the top; change the startup print to `logging.info('tg_inbox_poll_v1 started. offset=%s', offset)`; change the `ok` false branch to `logging.warning('get_updates returned ok=false, sleeping')`; replace the KeyboardInterrupt print with `logging.info('stopped by user')`; and in the broad except replace the `print('poll error:', type(e).__name__, e)` with `logging.exception('poll error')` so the full traceback is captured. This is a small, low-risk change that improves observability and makes postmortem debugging easier without altering behavior.
