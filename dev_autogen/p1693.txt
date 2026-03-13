@@ -1,0 +1,11 @@
+id=1693
+title=Improve executor stability in scripts/tg_poll_loop.sh
+batch=1692-1693
+ts=2026-03-13T22:48:04Z
+
+Goal:
+Implement: Improve executor stability in scripts/tg_poll_loop.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
