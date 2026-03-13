@@ -1,0 +1,6 @@
+id=1454
+title=Create inbox_commands table if missing to avoid runtime INSERT errors
+batch=1454-1455
+ts=2026-03-13T05:20:28Z
+
+Add a small ensure_inbox_table(conn) function that runs CREATE TABLE IF NOT EXISTS for inbox_commands with columns (chat_id TEXT, message_id INTEGER, reply_to_message_id INTEGER, from_username TEXT, from_name TEXT, text TEXT) and a UNIQUE(chat_id, message_id) constraint so INSERT OR IGNORE works as intended. Call this function from main() after ensure_state_table(conn). This prevents runtime failures when the DB is new or was reset, is a minimal change, and keeps current insert logic and semantics unchanged.
