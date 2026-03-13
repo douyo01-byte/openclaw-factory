@@ -1,0 +1,6 @@
+id=1483
+title=Emit skipped command ids and short text snippets for auditability
+batch=1483-1483
+ts=2026-03-13T07:33:47Z
+
+Collect the ids (and short text snippets) of inbox_commands that are marked 'skipped' and print them after processing. Concretely: add a small skipped list (e.g. skipped.append({'id': id, 'text': text[:120]})) when updating each matching row and print it (or print as JSON-compatible string) along with noise_skipped. This is a low-risk observability/logging change that does not alter DB semantics but makes it easy to audit which rows were considered noise.
