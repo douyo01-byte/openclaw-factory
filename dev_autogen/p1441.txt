@@ -1,0 +1,6 @@
+id=1441
+title=Log exceptions instead of silently swallowing them in ingest loop
+batch=1441-1441
+ts=2026-03-13T04:57:18Z
+
+Replace the bare except: pass in the main loop with explicit exception handling and structured logging. Concretely: add import logging and logging.basicConfig(level=logging.INFO) at the top, then change the except block to except Exception as e: logging.exception("ingest_private_replies_v1 polling error") so stack traces and contextual errors are recorded. This is a small, low-risk change that improves observability and makes debugging intermittent failures far easier without changing behavior on success.
