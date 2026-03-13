@@ -1,0 +1,6 @@
+id=1490
+title=Make fetch resilient to network errors and ignore non-HTML responses
+batch=1490-1490
+ts=2026-03-13T08:02:27Z
+
+Wrap the requests.get call in fetch with a try/except for requests.RequestException and return a safe (0, "") when a network error occurs to avoid crashing the worker. After a successful response, check the Content-Type header and only return r.text for text/html or other text/* types; for binary or unknown types (images, application/pdf, etc.) return (r.status_code, "") to avoid loading large binary bodies into memory. This is a small, low-risk change: add a try/except around requests.get and a Content-Type guard before reading r.text.
