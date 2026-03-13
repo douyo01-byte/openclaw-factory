@@ -1,0 +1,11 @@
+id=1687
+title=Refactor duplicated logic in scripts/launch_executor.sh
+batch=1686-1687
+ts=2026-03-13T22:42:04Z
+
+Goal:
+Implement: Refactor duplicated logic in scripts/launch_executor.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
