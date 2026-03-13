@@ -41,7 +41,6 @@ def main():
             json.dumps({"anomaly": 0, "last_sent_at": last_sent_at}, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-        print("[watchdog] suppress lifecycle notification because anomaly=0", flush=True)
         return
 
     if last_anomaly != anomaly or now - last_sent_at >= SEND_INTERVAL:
