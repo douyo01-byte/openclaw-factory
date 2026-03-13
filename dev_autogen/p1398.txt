@@ -1,0 +1,6 @@
+id=1398
+title=Replace print with structured logging and record navigation duration
+batch=1398-1398
+ts=2026-03-13T03:13:39Z
+
+Switch from print() to the standard logging module and add a small navigation timing measurement to improve observability. Concrete, low-risk changes to bots/browser_smoke.py: import logging and time, call logging.basicConfig(level=logging.INFO, format=...), log when the browser is launched and when navigation starts/ends, measure duration with time.monotonic() around page.goto(), and log the retrieved page title with logging.info. Expected effect: consistent, timestamped logs (suitable for CI/aggregators), easy visibility into slow navigations via the duration metric, and clearer success/failure entries without changing control flow or lifecycle handling.
