@@ -1,0 +1,111 @@
+# BOT SECONDARY CLASSIFICATION
+
+## ai_management
+- bots/ai_employee_ranking_v1.py
+- bots/ceo_dashboard_v1.py
+- bots/ceo_explain_trigger_v1.py
+- bots/ceo_help_v1.py
+- bots/ceo_hub_schema_v1.py
+- bots/ceo_hub_sender_v1.py
+- bots/ceo_noise_cleanup_v1.py
+- bots/employee_registry_v1.py
+- bots/secretary_llm_v1.py
+
+## dev_support
+- bots/chat_to_dev/daemon_chat_to_dev_v1.py
+- bots/command_apply_daemon_v1.py
+- bots/command_apply_v1.py
+- bots/dev_approval_parser.py
+- bots/dev_auto_execute_v1.py
+- bots/dev_executor_v1.py
+- bots/dev_gatekeeper.py
+- bots/dev_guardrails_v1.py
+- bots/dev_pr_creator_v1.py
+- bots/dev_proposal_generator_v1.py
+- bots/dev_proposal_notify_daemon_v1.py
+- bots/dev_proposal_notify_v1.py
+- bots/dev_schema_apply.py
+- bots/executor_audit_v1.py
+- bots/executor_guard_v1.py
+- bots/executor_guard_v2.py
+- bots/sync_execute_stage_v1.py
+- bots/sync_executor_ready_v1.py
+- bots/sync_pr_ready_v1.py
+
+## telegram_chat
+- bots/chat_router_daemon_v1.py
+- bots/chat_router_v1.py
+- bots/ingest_private_replies_v1.py
+- bots/ingest_telegram_replies_v1.py
+- bots/send_spec_questions_v1.py
+- bots/spec_notify_v1.py
+- bots/tg_inbox_poll_daemon_v1.py
+- bots/tg_inbox_poll_v1.py
+- bots/tg_send_reflection_v1.py
+
+## research_sales
+- bots/enrich_contacts_v1.py
+- bots/market_brain_v1.py
+- bots/scout_market_v1.py
+- bots/scout_market_v2.py
+- bots/scout_playwright.py
+- bots/team/kenji_researcher.py
+- bots/team/sakura_scout.py
+- bots/web_enrich_v1.py
+
+## ops_monitoring
+- bots/company_dashboard_v1.py
+- bots/healthcheck_v1.py
+- bots/mainstream_fallback_supply_v1.py
+- bots/meeting_from_db_v1.py
+- bots/openclaw_dashboard_v1.py
+- bots/ops_brain_v1.py
+- bots/ops_brain_v2.py
+- bots/ops_brain_v3.py
+- bots/supply_adoption_metrics_v1.py
+- bots/watchdog_v1.py
+
+## proposal_flow
+- bots/backfill_decisions_from_inbox_v1.py
+- bots/build_decision_patterns.py
+- bots/daily_cycle_v1.py
+- bots/proposal_builder_loop_v1.py
+- bots/proposal_dedupe_v1.py
+- bots/proposal_diversity_v1.py
+- bots/reflection_v1.py
+- bots/reflection_worker_v1.py
+
+## persona_content
+- bots/persona_reply_v1.py
+- bots/persona_reply_v2.py
+- bots/persona_reply_v3.py
+- bots/role_training_v1.py
+
+## meeting_ceo
+- bots/meeting_hn_v1.py
+- bots/meeting_orchestrator_v1.py
+- bots/report_orchestrator_v1.py
+
+## misc_other
+- bots/auto_plan_v1.py
+- bots/browser_smoke.py
+- bots/business_brain_v1.py
+- bots/business_engine_v1.py
+- bots/event_notify_v1.py
+- bots/explain_orchestrator_v1.py
+- bots/infra_brain_v2.py
+- bots/ingest_spec_answers_v1.py
+- bots/ingest_spec_reply_v1.py
+- bots/innovation_engine_v1.py
+- bots/llm_decider_v1.py
+- bots/mothership_brain_v2.py
+- bots/openai_smoke.py
+- bots/openclaw_supervisor_v1.py
+- bots/project_brain_v3.py
+- bots/project_brain_v4.py
+- bots/revenue_brain_v1.py
+- bots/revenue_engine_v1.py
+- bots/self_improve_generator_v1.py
+- bots/team/aya_judge.py
+- bots/team/daiki_analyst.py
+- bots/team/miho_finder.py
