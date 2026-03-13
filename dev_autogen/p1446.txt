@@ -1,0 +1,6 @@
+id=1446
+title=Normalize command text using Unicode NFKC before regex matching
+batch=1446-1446
+ts=2026-03-13T05:02:29Z
+
+Apply Unicode normalization (unicodedata.normalize('NFKC', ...)) to the incoming command text and collapse repeated whitespace to single spaces before performing regex matches. This small change (add import unicodedata and one normalization line near txt assignment, plus replacing multiple spaces with a single space for matching) makes the existing pattern matching (including Japanese full-width characters and mixed-width spaces) far more robust without changing behavior for well-formed input. Low-risk, easy to review, and preserves existing downstream logic (txt_nospace can still be derived afterward).
