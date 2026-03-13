@@ -1,0 +1,6 @@
+id=1482
+title=Use sqlite3 connection context manager to guarantee commit/close on success and rollback on error
+batch=1481-1482
+ts=2026-03-13T07:29:08Z
+
+Replace the manual sqlite3.connect/commit/close pattern with a context manager (with sqlite3.connect(DB) as conn:) so the connection is always closed and commits are automatic on successful exit or rolled back on exception. Apply PRAGMA and DDL calls on the context-managed connection. This is a minimal refactor that prevents resource leaks if an exception occurs during table/index creation and yields clearer transactional semantics.
