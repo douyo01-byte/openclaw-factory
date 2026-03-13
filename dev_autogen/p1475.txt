@@ -1,0 +1,6 @@
+id=1475
+title=Truncate messages exceeding Telegram max length in send()
+batch=1475-1475
+ts=2026-03-13T06:01:40Z
+
+Make a minimal change in send(m) to enforce Telegram's message length limit. Add a constant (e.g. TELEGRAM_MAX_MESSAGE = 4096) and if len(m) exceeds a safe threshold (use 4000 to leave room for suffix) truncate m to something like m[:4000] + '… (truncated)'. Keep the change confined to send() so callers are unaffected. This prevents silent failures or truncated deliveries at the API layer when reply text is unexpectedly long and is a low-risk single-function guard.
