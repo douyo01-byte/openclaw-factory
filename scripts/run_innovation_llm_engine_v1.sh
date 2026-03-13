@@ -9,6 +9,8 @@ export DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 export OCLAW_DB_PATH="$DB_PATH"
 export FACTORY_DB_PATH="$DB_PATH"
 export PYTHONPATH="/Users/doyopc/AI/openclaw-factory-daemon"
+export MERGED_REPROPOSE_HOURS="4"
+export CLOSED_REPROPOSE_HOURS="18"
 python - <<'PY'
 import os
 v=os.environ.get("OPENAI_API_KEY","")
