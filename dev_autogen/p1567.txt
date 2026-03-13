@@ -1,0 +1,6 @@
+id=1567
+title=Print update_id and message preview when reporting found chat_id
+batch=1567-1567
+ts=2026-03-13T10:13:28Z
+
+When a chat_id is found, also print the originating update_id plus a short preview of the message or callback data and the sender name to aid debugging. Implement by extracting update_id = u.get('update_id'), sender = (msg.get('from') or {}).get('username') or (msg.get('from') or {}).get('first_name'), and preview = msg.get('text') or u.get('callback_query', {}).get('data', '') (truncate to ~200 chars). Print these lines immediately after reporting chat_id. This is a tiny, low-risk observability enhancement that helps operators correlate the chat_id with the exact update in logs without changing behavior.
