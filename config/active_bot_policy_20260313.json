@@ -1,0 +1,44 @@
+{
+  "core_keep": [
+    "bots/ai_ceo_engine_v1.py",
+    "bots/ai_employee_factory_v1.py",
+    "bots/ai_employee_manager_v1.py",
+    "bots/ai_meeting_engine_v1.py",
+    "bots/auto_execute_now_v1.py",
+    "bots/brain_supply_v1.py",
+    "bots/chat_to_dev/chat_to_proposal_v1.py",
+    "bots/code_review_engine_v1.py",
+    "bots/company_health_score_v1.py",
+    "bots/db_integrity_check_v1.py",
+    "bots/db_integrity_watchdog_v1.py",
+    "bots/dev_command_executor_v1.py",
+    "bots/dev_merge_notify_v1.py",
+    "bots/dev_pr_automerge_v1.py",
+    "bots/dev_pr_watcher_v1.py",
+    "bots/dev_router_v1.py",
+    "bots/impact_judge_v1.py",
+    "bots/innovation_llm_engine_v1.py",
+    "bots/learning_brain_v1.py",
+    "bots/parse_dev_reply_v1.py",
+    "bots/proposal_ranking_v1.py",
+    "bots/schema_guardian_v1.py",
+    "bots/schema_migration_engine_v1.py",
+    "bots/self_healing_v2.py",
+    "bots/self_repair_engine_v1.py",
+    "bots/spec_refiner_v2.py",
+    "bots/spec_reply_v1.py",
+    "bots/tg_poll_loop_v2.py",
+    "bots/update_pr_created.py"
+  ],
+  "parked": [
+    "bots/chat_research_v1.py",
+    "bots/dev_reviewer_v1.py",
+    "bots/pipeline_hn_to_outreach.py",
+    "bots/chat_to_dev/ingest_private_chat_v1.py"
+  ],
+  "archived_prefixes": [
+    "archive/disabled_bots_20260313/",
+    "archive/disabled_bots_20260313_wave2/",
+    "archive/disabled_bots_20260313_wave3/"
+  ]
+}
