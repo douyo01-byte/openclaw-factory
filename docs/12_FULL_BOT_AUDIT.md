@@ -1,0 +1,445 @@
+# FULL BOT AUDIT
+
+## LaunchAgents
+- jp.openclaw.adaptive_supply_controller_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.adaptive_supply_controller_v1.plist`
+  - pid: `74003` / last_exit: `-15`
+  - scripts: `-`
+  - bots: `-`
+- jp.openclaw.ai_ceo_engine
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.ai_ceo_engine.plist`
+  - pid: `46298` / last_exit: `-15`
+  - scripts: `scripts/run_ai_ceo_engine.sh`
+  - bots: `bots/ai_ceo_engine_v1.py`
+- jp.openclaw.ai_employee_factory
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.ai_employee_factory.plist`
+  - pid: `46379` / last_exit: `-15`
+  - scripts: `scripts/run_ai_employee_factory.sh`
+  - bots: `bots/ai_employee_factory_v1.py`
+- jp.openclaw.ai_employee_manager_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.ai_employee_manager_v1.plist`
+  - pid: `19465` / last_exit: `1`
+  - scripts: `scripts/run_ai_employee_manager_v1.sh`
+  - bots: `bots/ai_employee_manager_v1.py`
+- jp.openclaw.ai_employee_ranking_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.ai_employee_ranking_v1.plist`
+  - pid: `-` / last_exit: `0`
+  - scripts: `scripts/run_ai_employee_ranking_v1.sh`
+  - bots: `bots/ai_employee_ranking_v1.py`
+- jp.openclaw.ai_meeting_engine
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.ai_meeting_engine.plist`
+  - pid: `46610` / last_exit: `-15`
+  - scripts: `scripts/run_ai_meeting_engine.sh`
+  - bots: `bots/ai_meeting_engine_v1.py`
+- jp.openclaw.auto_execute_now_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.auto_execute_now_v1.plist`
+  - pid: `79100` / last_exit: `-15`
+  - scripts: `scripts/run_auto_execute_now_v1.sh`
+  - bots: `bots/auto_execute_now_v1.py`
+- jp.openclaw.brain_supply_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.brain_supply_v1.plist`
+  - pid: `39083` / last_exit: `-15`
+  - scripts: `-`
+  - bots: `bots/brain_supply_v1.py`
+- jp.openclaw.business_engine
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.business_engine.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_business_engine.sh`
+  - bots: `bots/business_engine_v1.py`
+- jp.openclaw.ceo_dashboard
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.ceo_dashboard.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_ceo_dashboard.sh`
+  - bots: `bots/company_dashboard_v1.py`
+- jp.openclaw.chat_research_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.chat_research_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_chat_research_v1.sh`
+  - bots: `-`
+- jp.openclaw.code_review_engine
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.code_review_engine.plist`
+  - pid: `46801` / last_exit: `-15`
+  - scripts: `scripts/run_code_review_engine.sh`
+  - bots: `bots/code_review_engine_v1.py`
+- jp.openclaw.company_health_score_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.company_health_score_v1.plist`
+  - pid: `-` / last_exit: `0`
+  - scripts: `scripts/run_company_health_score_v1.sh`
+  - bots: `bots/company_health_score_v1.py`
+- jp.openclaw.daemon
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.daemon.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_daemon.sh`
+  - bots: `-`
+- jp.openclaw.db_integrity_check_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.db_integrity_check_v1.plist`
+  - pid: `-` / last_exit: `0`
+  - scripts: `scripts/run_db_integrity_check_v1.sh`
+  - bots: `bots/db_integrity_check_v1.py`
+- jp.openclaw.db_integrity_watchdog_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.db_integrity_watchdog_v1.plist`
+  - pid: `-` / last_exit: `0`
+  - scripts: `scripts/run_db_integrity_watchdog_v1.sh`
+  - bots: `-`
+- jp.openclaw.db_lifecycle_audit_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.db_lifecycle_audit_v1.plist`
+  - pid: `74057` / last_exit: `-15`
+  - scripts: `-`
+  - bots: `-`
+- jp.openclaw.dev_command_executor_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.dev_command_executor_v1.plist`
+  - pid: `13991` / last_exit: `-15`
+  - scripts: `-`
+  - bots: `bots/dev_executor_v1.py`
+- jp.openclaw.dev_executor_daemon_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.dev_executor_daemon_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `-`
+  - bots: `bots/dev_executor_v1.py`
+- jp.openclaw.dev_merge_notify_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.dev_merge_notify_v1.plist`
+  - pid: `27487` / last_exit: `-15`
+  - scripts: `scripts/run_dev_merge_notify_v1.sh`
+  - bots: `bots/dev_merge_notify_v1.py`
+- jp.openclaw.dev_pr_automerge_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.dev_pr_automerge_v1.plist`
+  - pid: `52733` / last_exit: `0`
+  - scripts: `scripts/run_dev_pr_automerge_v1.sh`
+  - bots: `bots/dev_pr_automerge_v1.py`
+- jp.openclaw.dev_pr_creator_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.dev_pr_creator_v1.plist`
+  - pid: `-` / last_exit: `0`
+  - scripts: `scripts/run_dev_pr_creator_v1.sh`
+  - bots: `bots/dev_pr_creator_v1.py`
+- jp.openclaw.dev_pr_sync_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.dev_pr_sync_v1.plist`
+  - pid: `-` / last_exit: `0`
+  - scripts: `scripts/run_dev_pr_sync_v1.sh`
+  - bots: `bots/dev_pr_sync_v1.py`
+- jp.openclaw.dev_pr_watcher_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.dev_pr_watcher_v1.plist`
+  - pid: `14001` / last_exit: `-15`
+  - scripts: `scripts/run_dev_pr_watcher_v1.sh`
+  - bots: `bots/dev_pr_watcher_v1.py`
+- jp.openclaw.dev_proposal_notify_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.dev_proposal_notify_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_dev_proposal_notify_v1.sh`
+  - bots: `-`
+- jp.openclaw.dev_router_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.dev_router_v1.plist`
+  - pid: `98241` / last_exit: `-15`
+  - scripts: `scripts/run_dev_router_v1.sh`
+  - bots: `bots/dev_router_v1.py`
+- jp.openclaw.event_notify_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.event_notify_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_event_notify_v1.sh`
+  - bots: `bots/event_notify_v1.py`
+- jp.openclaw.impact_judge_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.impact_judge_v1.plist`
+  - pid: `43681` / last_exit: `-15`
+  - scripts: `scripts/run_impact_judge_v1.sh`
+  - bots: `bots/impact_judge_v1.py`
+- jp.openclaw.ingest_private_replies_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.ingest_private_replies_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `-`
+  - bots: `bots/ingest_private_replies_v1.py`
+- jp.openclaw.innovation_engine
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.innovation_engine.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_innovation_engine.sh`
+  - bots: `bots/innovation_engine_v1.py`
+- jp.openclaw.innovation_engine_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.innovation_engine_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_innovation_engine_v1.sh`
+  - bots: `bots/innovation_engine_v1.py`
+- jp.openclaw.innovation_llm_engine_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.innovation_llm_engine_v1.plist`
+  - pid: `14895` / last_exit: `-15`
+  - scripts: `scripts/run_innovation_llm_engine_v1.sh`
+  - bots: `-`
+- jp.openclaw.learning_brain_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.learning_brain_v1.plist`
+  - pid: `13266` / last_exit: `-15`
+  - scripts: `scripts/run_learning_brain_v1.sh`
+  - bots: `bots/learning_brain_v1.py`
+- jp.openclaw.learning_pattern_engine
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.learning_pattern_engine.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_learning_pattern_engine.sh`
+  - bots: `-`
+- jp.openclaw.log_rotate_safe_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.log_rotate_safe_v1.plist`
+  - pid: `-` / last_exit: `0`
+  - scripts: `scripts/log_rotate_safe.sh`
+  - bots: `-`
+- jp.openclaw.mainstream_supply
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.mainstream_supply.plist`
+  - pid: `46488` / last_exit: `-15`
+  - scripts: `scripts/run_mainstream_supply.sh`
+  - bots: `bots/code_review_engine_v1.py, bots/innovation_engine_v1.py, bots/mainstream_fallback_supply_v1.py, bots/revenue_engine_v1.py`
+- jp.openclaw.market_brain_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.market_brain_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_market_brain_v1.sh`
+  - bots: `-`
+- jp.openclaw.ops_supply_engine
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.ops_supply_engine.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_ops_supply_engine.sh`
+  - bots: `-`
+- jp.openclaw.parse_dev_reply_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.parse_dev_reply_v1.plist`
+  - pid: `80677` / last_exit: `-15`
+  - scripts: `scripts/run_parse_dev_reply_v1.sh`
+  - bots: `-`
+- jp.openclaw.pr_kicker_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.pr_kicker_v1.plist`
+  - pid: `-` / last_exit: `1`
+  - scripts: `scripts/run_pr_kicker_v1.sh`
+  - bots: `-`
+- jp.openclaw.project_brain_v4
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.project_brain_v4.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_project_brain_v4.sh`
+  - bots: `bots/project_brain_v4.py`
+- jp.openclaw.proposal_auto_approve_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.proposal_auto_approve_v1.plist`
+  - pid: `-` / last_exit: `0`
+  - scripts: `scripts/run_proposal_auto_approve_v1.sh`
+  - bots: `bots/proposal_auto_approve_v1.py`
+- jp.openclaw.proposal_builder_loop_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.proposal_builder_loop_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_proposal_builder_loop_v1.sh`
+  - bots: `bots/proposal_builder_loop_v1.py`
+- jp.openclaw.proposal_ranking_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.proposal_ranking_v1.plist`
+  - pid: `79111` / last_exit: `-15`
+  - scripts: `scripts/run_proposal_ranking_v1.sh`
+  - bots: `bots/proposal_ranking_v1.py`
+- jp.openclaw.proposal_success_optimizer_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.proposal_success_optimizer_v1.plist`
+  - pid: `73898` / last_exit: `-15`
+  - scripts: `-`
+  - bots: `-`
+- jp.openclaw.py
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.py.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_py.sh`
+  - bots: `-`
+- jp.openclaw.reflection_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.reflection_v1.plist`
+  - pid: `-` / last_exit: `0`
+  - scripts: `scripts/run_reflection_v1.sh`
+  - bots: `-`
+- jp.openclaw.reflection_worker_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.reflection_worker_v1.plist`
+  - pid: `-` / last_exit: `0`
+  - scripts: `scripts/run_reflection_worker_v1.sh`
+  - bots: `-`
+- jp.openclaw.revenue_brain_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.revenue_brain_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_revenue_brain_v1.sh`
+  - bots: `-`
+- jp.openclaw.revenue_engine
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.revenue_engine.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_revenue_engine.sh`
+  - bots: `bots/revenue_engine_v1.py`
+- jp.openclaw.schema_guardian_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.schema_guardian_v1.plist`
+  - pid: `71401` / last_exit: `-15`
+  - scripts: `scripts/run_schema_guardian_v1.sh`
+  - bots: `bots/schema_guardian_v1.py`
+- jp.openclaw.schema_migration_engine_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.schema_migration_engine_v1.plist`
+  - pid: `13597` / last_exit: `-15`
+  - scripts: `scripts/run_schema_migration_engine_v1.sh`
+  - bots: `bots/schema_migration_engine_v1.py`
+- jp.openclaw.scout_market_v2
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.scout_market_v2.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_scout_market_v2.sh`
+  - bots: `-`
+- jp.openclaw.secretary_llm_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.secretary_llm_v1.plist`
+  - pid: `56541` / last_exit: `-15`
+  - scripts: `scripts/run_secretary_llm_v1.sh`
+  - bots: `bots/secretary_llm_v1.py`
+- jp.openclaw.self_evolution_engine_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.self_evolution_engine_v1.plist`
+  - pid: `-` / last_exit: `1`
+  - scripts: `scripts/run_self_evolution_engine_v1.sh`
+  - bots: `-`
+- jp.openclaw.self_healing_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.self_healing_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/self_healing_loop.sh`
+  - bots: `bots/self_healing_v1.py`
+- jp.openclaw.self_healing_v2
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.self_healing_v2.plist`
+  - pid: `73908` / last_exit: `-15`
+  - scripts: `-`
+  - bots: `bots/self_healing_v2.py`
+- jp.openclaw.self_repair_engine
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.self_repair_engine.plist`
+  - pid: `73915` / last_exit: `-15`
+  - scripts: `scripts/run_self_repair_engine.sh`
+  - bots: `bots/self_repair_engine_v1.py`
+- jp.openclaw.spec_executor_min_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.spec_executor_min_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `-`
+  - bots: `-`
+- jp.openclaw.spec_notify_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.spec_notify_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_spec_notify_v1.sh`
+  - bots: `bots/spec_notify_v1.py`
+- jp.openclaw.spec_refiner_v2
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.spec_refiner_v2.plist`
+  - pid: `74021` / last_exit: `-15`
+  - scripts: `scripts/run_spec_refiner_v2.sh`
+  - bots: `bots/spec_refiner_v2.py`
+- jp.openclaw.spec_reply_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.spec_reply_v1.plist`
+  - pid: `74029` / last_exit: `-15`
+  - scripts: `scripts/spec_reply_loop.sh`
+  - bots: `bots/ingest_spec_reply_v1.py`
+- jp.openclaw.supervisor
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.supervisor.plist`
+  - pid: `74042` / last_exit: `-15`
+  - scripts: `scripts/start_openclaw.sh`
+  - bots: `bots/openclaw_supervisor_v1.py`
+- jp.openclaw.supply_adoption_metrics_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.supply_adoption_metrics_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_supply_adoption_metrics_v1.sh`
+  - bots: `bots/supply_adoption_metrics_v1.py`
+- jp.openclaw.tg_poll_loop
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.tg_poll_loop.plist`
+  - pid: `78588` / last_exit: `-15`
+  - scripts: `scripts/tg_poll_loop.sh`
+  - bots: `bots/chat_to_dev/ingest_private_chat_v1.py, bots/ingest_spec_answers_v1.py, bots/ingest_telegram_replies_v1.py`
+- jp.openclaw.tg_poll_loop_v2
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.tg_poll_loop_v2.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_tg_poll_loop_v2.sh`
+  - bots: `-`
+- jp.openclaw.tg_private_ingest_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.tg_private_ingest_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_tg_private_ingest_v1.sh`
+  - bots: `bots/chat_to_dev/ingest_private_chat_v1.py`
+- jp.openclaw.tg_send_reflection_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.tg_send_reflection_v1.plist`
+  - pid: `-` / last_exit: `0`
+  - scripts: `scripts/run_tg_send_reflection_v1.sh`
+  - bots: `-`
+- jp.openclaw.update_pr_created
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.update_pr_created.plist`
+  - pid: `74034` / last_exit: `-15`
+  - scripts: `scripts/run_update_pr_created.sh, scripts/update_pr_created.sh`
+  - bots: `-`
+- jp.openclaw.watchdog_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.watchdog_v1.plist`
+  - pid: `-` / last_exit: `-`
+  - scripts: `scripts/run_watchdog_v1.sh`
+  - bots: `bots/watchdog_v1.py`
+- jp.openclaw.watcher_kicker_v1
+  - plist: `/Users/doyopc/Library/LaunchAgents/jp.openclaw.watcher_kicker_v1.plist`
+  - pid: `-` / last_exit: `1`
+  - scripts: `scripts/run_watcher_kicker_v1.sh`
+  - bots: `-`
+
+## Bots not referenced by runner
+- `bots/__init__.py`
+- `bots/auto_merge_v1.py`
+- `bots/auto_plan_v1.py`
+- `bots/auto_pr_v1.py`
+- `bots/backfill_decisions_from_inbox_v1.py`
+- `bots/brain_supply_v1.py`
+- `bots/browser_smoke.py`
+- `bots/build_decision_patterns.py`
+- `bots/business_brain_v1.py`
+- `bots/ceo_dashboard_v1.py`
+- `bots/ceo_explain_trigger_v1.py`
+- `bots/ceo_help_v1.py`
+- `bots/ceo_hub_schema_v1.py`
+- `bots/ceo_hub_sender_v1.py`
+- `bots/ceo_noise_cleanup_v1.py`
+- `bots/chat_research_v1.py`
+- `bots/chat_router_daemon_v1.py`
+- `bots/chat_to_dev/__init__.py`
+- `bots/chat_to_dev/chat_to_proposal_v1.py`
+- `bots/chat_to_dev/daemon_chat_to_dev_v1.py`
+- `bots/command_apply_daemon_v1.py`
+- `bots/command_apply_v1.py`
+- `bots/daily_cycle_v1.py`
+- `bots/db_integrity_watchdog_v1.py`
+- `bots/dev_approval_parser.py`
+- `bots/dev_command_executor_v1.py`
+- `bots/dev_gatekeeper.py`
+- `bots/dev_guardrails_v1.py`
+- `bots/dev_proposal_generator_v1.py`
+- `bots/dev_proposal_notify_v1.py`
+- `bots/dev_reviewer_v1.py`
+- `bots/dev_schema_apply.py`
+- `bots/employee_registry_v1.py`
+- `bots/enrich_contacts_v1.py`
+- `bots/executor_audit_v1.py`
+- `bots/executor_guard_v1.py`
+- `bots/executor_guard_v2.py`
+- `bots/explain_orchestrator_v1.py`
+- `bots/healthcheck_v1.py`
+- `bots/infra_brain_v2.py`
+- `bots/ingest_private_replies_v1.py`
+- `bots/innovation_llm_engine_v1.py`
+- `bots/llm_decider_v1.py`
+- `bots/market_brain_v1.py`
+- `bots/meeting_from_db_v1.py`
+- `bots/meeting_hn_v1.py`
+- `bots/meeting_orchestrator_v1.py`
+- `bots/mothership_brain_v2.py`
+- `bots/openai_smoke.py`
+- `bots/openclaw_dashboard_v1.py`
+- `bots/ops_brain_v1.py`
+- `bots/ops_brain_v2.py`
+- `bots/ops_brain_v3.py`
+- `bots/parse_dev_reply_v1.py`
+- `bots/persona_reply_v1.py`
+- `bots/persona_reply_v2.py`
+- `bots/persona_reply_v3.py`
+- `bots/pipeline_hn_to_outreach.py`
+- `bots/project_brain_v3.py`
+- `bots/proposal_dedupe_v1.py`
+- `bots/proposal_diversity_v1.py`
+- `bots/reflection_v1.py`
+- `bots/reflection_worker_v1.py`
+- `bots/report_orchestrator_v1.py`
+- `bots/revenue_brain_v1.py`
+- `bots/role_training_v1.py`
+- `bots/scout_market_v1.py`
+- `bots/scout_market_v2.py`
+- `bots/scout_playwright.py`
+- `bots/self_healing_v2.py`
+- `bots/self_improve_generator_v1.py`
+- `bots/send_spec_questions_v1.py`
+- `bots/team/__init__.py`
+- `bots/team/aya_judge.py`
+- `bots/team/daiki_analyst.py`
+- `bots/team/kenji_researcher.py`
+- `bots/team/miho_finder.py`
+- `bots/team/sakura_scout.py`
+- `bots/tg_inbox_poll_daemon_v1.py`
+- `bots/tg_inbox_poll_v1.py`
+- `bots/tg_poll_loop_v2.py`
+- `bots/tg_send_reflection_v1.py`
+- `bots/web_enrich_v1.py`
+
+## Compile failures

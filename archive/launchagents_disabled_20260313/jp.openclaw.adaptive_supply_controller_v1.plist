@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>jp.openclaw.adaptive_supply_controller_v1</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd ~/AI/openclaw-factory-daemon || exit 1; source .venv/bin/activate || exit 1; export DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"; python -u bots/adaptive_supply_controller_v1.py</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StartInterval</key>
+  <integer>120</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Users/doyopc/AI/openclaw-factory-daemon/logs/adaptive_supply.out</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/doyopc/AI/openclaw-factory-daemon/logs/adaptive_supply.err</string>
+</dict>
+</plist>

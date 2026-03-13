@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>jp.openclaw.spec_executor_min_v1</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd "$HOME/AI/openclaw-factory-daemon" || exit 1; mkdir -p logs; source .venv/bin/activate || exit 1; export PYTHONPATH="$HOME/AI/openclaw-factory-daemon"; export DB_PATH="$HOME/AI/openclaw-factory-daemon/data/openclaw_real.db"; export OCLAW_DB_PATH="$DB_PATH"; exec python -u bots/spec_executor_min_v1.py >> logs/spec_executor_min_v1.out 2>> logs/spec_executor_min_v1.err</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+</dict></plist>

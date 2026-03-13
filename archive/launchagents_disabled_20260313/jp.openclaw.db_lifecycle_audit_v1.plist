@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>Label</key><string>jp.openclaw.db_lifecycle_audit_v1</string>
+<key>ProgramArguments</key>
+<array>
+<string>/bin/bash</string>
+<string>-lc</string>
+<string>cd $HOME/AI/openclaw-factory-daemon;source .venv/bin/activate;python bots/db_lifecycle_audit_v1.py</string>
+</array>
+<key>RunAtLoad</key><true/>
+</dict>
+</plist>
