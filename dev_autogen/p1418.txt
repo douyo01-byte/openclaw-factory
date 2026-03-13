@@ -1,0 +1,6 @@
+id=1418
+title=Unify DB path usage via OCLAW_DB_PATH env var
+batch=1418-1418
+ts=2026-03-13T04:13:22Z
+
+Replace the hardcoded module-level DB string and the ad-hoc os.environ usage in meeting_text with a single DB variable initialized from OCLAW_DB_PATH (fallback to './data/openclaw.db' or 'data/openclaw.db' to match existing behavior). Change meeting_text to connect using sqlite3.connect(DB). This ensures fetch_pool, fetch_role_briefs and meeting_text all use the same database path when an environment override is provided, avoiding accidental mismatches and making behavior predictable. The change is one-line initialization and a single sqlite3.connect call modification—low risk and easy to review.
