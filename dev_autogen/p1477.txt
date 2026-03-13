@@ -1,0 +1,6 @@
+id=1477
+title=Treat PRs with no checks as failing CI to avoid merging unverified PRs
+batch=1477-1477
+ts=2026-03-13T07:12:23Z
+
+Change ci_success to return False when the gh checks list is empty or missing, and only return True if there is at least one check and every check's state is 'SUCCESS'. This is a small guard: add an explicit empty-checks check (e.g. if not checks: return False) before the all(...) call so we don't merge PRs that have no recorded CI runs.
