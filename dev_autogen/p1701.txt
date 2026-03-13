@@ -1,0 +1,11 @@
+id=1701
+title=Improve error handling in scripts/auto_meet_loop.sh.broken
+batch=1700-1701
+ts=2026-03-13T22:57:04Z
+
+Goal:
+Implement: Improve error handling in scripts/auto_meet_loop.sh.broken
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
