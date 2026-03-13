@@ -1,0 +1,6 @@
+id=1587
+title=Optimize polling behavior in meeting_hn_v1.py
+batch=1589-1587
+ts=2026-03-13T10:32:44Z
+
+AI generated proposal targeting bots/meeting_hn_v1.py. category=performance. improve meeting_hn_v1.py with a concrete, low-risk change.

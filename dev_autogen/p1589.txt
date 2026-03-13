@@ -1,0 +1,6 @@
+id=1589
+title=Add guard checks to miho_finder.py
+batch=1589-1587
+ts=2026-03-13T10:32:44Z
+
+AI generated proposal targeting bots/team/miho_finder.py. category=safety. improve miho_finder.py with a concrete, low-risk change.
