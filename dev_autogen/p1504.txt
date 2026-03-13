@@ -1,0 +1,6 @@
+id=1504
+title=Use context managers when reading persona files to ensure file handles are closed
+batch=1504-1505
+ts=2026-03-13T08:32:39Z
+
+Current _load_persona() opens persona files with open(...).read() without a context manager, which can leak file descriptors in long-running processes. Change to using with open(path, 'r', encoding='utf-8') as f: text = f.read().strip() and append that. This is a minimal, low-risk refactor; behavior is unchanged aside from reliably closing file handles and avoiding resource leaks on systems with many invocations or limited fds.

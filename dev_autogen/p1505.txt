@@ -1,0 +1,6 @@
+id=1505
+title=Normalize loop pacing by sleeping remaining interval after tasks complete
+batch=1504-1505
+ts=2026-03-13T08:32:39Z
+
+Current loop always sleeps a fixed INTERVAL after running three tasks, which causes the effective period to be INTERVAL + task_runtime and drifts when tasks take variable time. Change main() to measure the start time of each iteration, run ingest(), toprop(), execdev(), then compute elapsed = time.time() - start and sleep for max(0, INTERVAL - elapsed). If elapsed > INTERVAL, skip sleeping (immediately start next iteration) and emit a single warning via logging.warning indicating an overrun. This is a small, low-risk change localized to the loop and keeps the daemon running at a steady cadence.
