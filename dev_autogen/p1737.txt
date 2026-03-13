@@ -1,0 +1,11 @@
+id=1737
+title=Improve lifecycle event safety in bots/scout_market_v2.py
+batch=1733-1737
+ts=2026-03-13T23:31:12Z
+
+Goal:
+Implement: Improve lifecycle event safety in bots/scout_market_v2.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
