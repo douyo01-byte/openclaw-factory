@@ -1,0 +1,11 @@
+id=1709
+title=Improve error handling in bots/dev_executor_v1.py
+batch=1708-1709
+ts=2026-03-13T23:06:04Z
+
+Goal:
+Implement: Improve error handling in bots/dev_executor_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
