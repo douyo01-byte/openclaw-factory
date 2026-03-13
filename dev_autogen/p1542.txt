@@ -1,0 +1,6 @@
+id=1542
+title=Add --id CLI argument to send a specific retrospective by id
+batch=1542-1542
+ts=2026-03-13T09:52:19Z
+
+Add a small CLI option --id (int) so the script can send a specified retrospective row instead of always picking the latest. Implementation: add ap.add_argument('--id', type=int, help='retrospective id to send (defaults to latest)'); use a conditional SQL query: if id provided run SELECT id,text FROM retrospectives WHERE id=? LIMIT 1 else the existing ORDER BY id DESC LIMIT 1; print a clear message and exit when the requested id is not found. Keep existing behavior when --id is absent. This is a minimal, low-risk change that increases utility and avoids touching error handling or sending logic.
