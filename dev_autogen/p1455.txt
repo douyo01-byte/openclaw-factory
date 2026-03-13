@@ -1,0 +1,6 @@
+id=1455
+title=Add graceful shutdown handling (SIGINT/SIGTERM) and remove unused last_tick
+batch=1454-1455
+ts=2026-03-13T05:20:28Z
+
+Register signal handlers for SIGINT and SIGTERM and use a shared 'running' flag so the daemon can exit cleanly. Concretely: import the signal module, add a module-level running=True flag, install handlers that set running=False, change the main loop from while True to while running, and ensure that on shutdown the loop breaks immediately (avoid sleeping after handler triggers). Also remove the unused last_tick variable. This is a small, low-risk refactor that improves reliability when stopping/redeploying the daemon and prevents orphaned processes.
