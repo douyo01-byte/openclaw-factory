@@ -1,0 +1,6 @@
+id=1404
+title=Ensure DB connection is closed in main to avoid leaks
+batch=1404-1404
+ts=2026-03-13T03:32:16Z
+
+Wrap the main database usage in a try/finally (or use a context) and call conn.close() when finished (or on error). In bots/chat_research_v1.py main() currently opens conn = connect_db(args.db) and may exit early via continue/return without closing the SQLite connection. Add conn.close() in a finally block so the connection is always closed and file descriptors are not leaked.
