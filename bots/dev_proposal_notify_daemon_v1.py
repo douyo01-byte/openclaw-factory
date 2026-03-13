@@ -87,6 +87,53 @@ def tick():
     finally:
         conn.close()
 
+
+def human_explain(row):
+    title = str(row["title"] or "").strip()
+    target = str(row["target_system"] or "").strip()
+    kind = str(row["improvement_type"] or "").strip()
+    status = str(row["status"] or "").strip()
+    pr = str(row["pr_number"] or "").strip()
+    source_ai = str(row["source_ai"] or "").strip()
+
+    what = "自動開発"
+    if status == "approved":
+        what = "開発候補を生成"
+    elif status == "pr_created":
+        what = "PRを自動作成"
+    elif status == "merged":
+        what = "本流へ反映"
+
+    lines = []
+    lines.append(f"🛠 BOT開発通知")
+    lines.append(f"状態: {what}")
+    lines.append(f"対象: {target or '-'}")
+    lines.append(f"内容: {title or '-'}")
+    lines.append(f"種別: {kind or '-'}")
+    lines.append(f"実行AI: {source_ai or '-'}")
+
+    explain = []
+    t = (title or "").lower()
+    if "guard" in t:
+        explain.append("異常系で落ちにくくする修正です。")
+    elif "bugfix" in t:
+        explain.append("不具合や取りこぼしを減らす修正です。")
+    elif "refactor" in t:
+        explain.append("構造整理で保守しやすくする修正です。")
+    elif "logging" in t:
+        explain.append("原因追跡をしやすくする修正です。")
+    elif "optimization" in t or "performance" in t:
+        explain.append("速度や負荷を改善する修正です。")
+    else:
+        explain.append("安定性または運用性を上げる修正です。")
+
+    lines.append("解説: " + " ".join(explain))
+
+    if pr:
+        lines.append(f"PR: #{pr}")
+
+    return "\n".join(lines)
+
 def main():
     interval = int(os.environ.get("PROPOSAL_NOTIFY_INTERVAL", "5"))
     while True:
