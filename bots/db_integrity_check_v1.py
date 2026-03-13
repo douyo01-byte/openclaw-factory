@@ -58,8 +58,18 @@ select
   (
     select count(*)
     from dev_proposals
-    where coalesce(status,'')!=coalesce(dev_stage,'')
-       or coalesce(status,'')!=coalesce(pr_status,'')
+    where not (
+      coalesce(status,'')='pr_created'
+      and coalesce(dev_stage,'')='pr_created'
+      and coalesce(pr_status,'') in ('', 'pr_created')
+    )
+      and (
+        coalesce(status,'')!=coalesce(dev_stage,'')
+        or (
+          coalesce(pr_status,'')!=''
+          and coalesce(status,'')!=coalesce(pr_status,'')
+        )
+      )
   ) as status_mismatch,
   (
     select coalesce(sum(cnt),0)
