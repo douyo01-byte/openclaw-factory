@@ -1,0 +1,6 @@
+id=1540
+title=Add a single retry with short backoff in fetch_text for transient network/5xx/429 errors
+batch=1540-1540
+ts=2026-03-13T09:46:55Z
+
+Modify fetch_text to perform one additional attempt when a fetch fails due to a network exception, a 5xx HTTP status, or 429 Too Many Requests. On the first failure sleep a small backoff (e.g. 1.0s) and retry once, returning the same (text, status, err) tuple semantics. Include the attempt count or retry hint in the err string (e.g. "exc:Timeout:...;retry=1" or "http_503;retry=1") so callers and logs can distinguish transient vs permanent failures. Keep the change minimal (one retry only) to reduce risk and avoid altering upstream behavior, and preserve TIMEOUT and headers.
