@@ -1,0 +1,6 @@
+id=1452
+title=Log exceptions with traceback and last-processed row ID instead of silent pass
+batch=1452-1452
+ts=2026-03-13T05:14:31Z
+
+Replace the bare except: pass with explicit exception logging so runtime errors are visible. Concretely: import traceback and sys; add last_processed_id = None before iterating rows; set last_processed_id = r['id'] at top of the for-loop; change the except block to except Exception as e: print a timestamped error message to stderr including str(e) and last_processed_id, then call traceback.print_exc() so stack traces are captured. This small change preserves existing behavior but removes silent failures and makes debugging and monitoring far easier.
