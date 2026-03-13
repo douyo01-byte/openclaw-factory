@@ -1,0 +1,6 @@
+id=1449
+title=Include per-query exception details in healthcheck messages
+batch=1448-1449
+ts=2026-03-13T05:07:52Z
+
+Replace the bare except: blocks around each SELECT with explicit except Exception as e and include the exception type and message in the healthcheck output. Concretely, change each fallback from items = "n/a" to items = f"n/a (error: {type(e).__name__}: {e})" (and similarly for contacts, commands, last_meeting). This keeps the healthcheck low-risk (no control-flow change), but improves observability by reporting which query failed and why in the Telegram message.

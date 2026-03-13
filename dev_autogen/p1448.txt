@@ -1,0 +1,6 @@
+id=1448
+title=Add timeout and TimeoutExpired handling to git subprocess calls
+batch=1448-1449
+ts=2026-03-13T05:07:52Z
+
+Modify sh() to use a configurable timeout (env OCLAW_GIT_TIMEOUT, default 10s) when calling subprocess.check_output. Catch subprocess.TimeoutExpired, emit a machine-readable JSON error (e.g. {"ok": false, "error": "git_timeout", "cmd": [...], "timeout": n}) and exit with a non-zero code. This prevents the script from hanging if git is blocked or slow in CI and provides a clear actionable failure mode.
