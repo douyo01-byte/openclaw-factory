@@ -62,3 +62,10 @@
 - do not add more agents during current burn-in
 - only observe core loop stability
 - next activation candidates are reviewed after burn-in result
+
+## 6. Archived bot source files
+- auto_merge_v1.py
+- auto_pr_v1.py
+- dev_pr_sync_v1.py
+- proposal_auto_approve_v1.py
+- self_healing_v1.py
