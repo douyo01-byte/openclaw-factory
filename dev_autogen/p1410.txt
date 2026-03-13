@@ -1,0 +1,6 @@
+id=1410
+title=Guard against very large explain body by truncating before insert
+batch=1410-1410
+ts=2026-03-13T03:55:34Z
+
+In run_once() the code builds a potentially unbounded text blob with build_text(r) and inserts it into ceo_hub_events.body. Large or malformed proposal data can bloat the DB, hit size limits, or slow inserts. Make a minimal, low-risk change: compute body = build_text(r) and if its length exceeds a safe threshold (e.g. 10000 characters) truncate it and append a clear marker like '... [truncated]' before inserting. This change is local, backwards-compatible, avoids schema changes, and prevents single large rows from impacting the DB or downstream consumers.
