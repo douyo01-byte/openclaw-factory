@@ -1,0 +1,6 @@
+id=1395
+title=Process auto PRs in deterministic oldest-first order by sorting get_open_auto_prs results
+batch=1395-1395
+ts=2026-03-13T03:10:53Z
+
+Change get_open_auto_prs to return auto-* PRs sorted by their numeric PR number (ascending) before main() iterates and attempts merges. Concretely: return sorted([p for p in prs if p["headRefName"].startswith("auto-")], key=lambda p: p["number"]). Expected effect: deterministic processing order (oldest PRs merged first), which reduces likelihood of merge conflicts between concurrently-created auto PRs, makes behavior reproducible for debugging, and slightly reduces surprises when multiple auto-PRs target the same files.
