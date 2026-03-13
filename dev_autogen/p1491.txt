@@ -1,0 +1,6 @@
+id=1491
+title=Open factory DB in read-only mode to avoid accidental writes
+batch=1491-1491
+ts=2026-03-13T08:07:16Z
+
+Change fconn() to open the FACTORY_DB in SQLite read-only mode (using the URI 'file:{path}?mode=ro' with uri=True). This prevents accidental writes to the factory database from this orchestrator. Implement a low-risk fallback: if opening read-only fails (e.g. older SQLite or non-URI path), fall back to the existing writable connect behavior. Keep the same PRAGMA settings and row_factory. This is a small localized change to fconn() that reduces risk of corrupting or altering the factory DB.
