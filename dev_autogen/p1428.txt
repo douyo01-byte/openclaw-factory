@@ -1,0 +1,6 @@
+id=1428
+title=Skip commit/push/PR when there are no staged changes to avoid aborts
+batch=1428-1428
+ts=2026-03-13T04:30:39Z
+
+After 'git add -A' in the proposal loop, check whether there are any staged changes (e.g. run git diff --cached --name-only). If that check returns empty, skip the commit/push/gh api PR creation steps for that proposal and continue to the next row. This prevents git commit from failing with "nothing to commit" (which raises SystemExit via sh()) when append_readme or file writes made no changes, avoiding an abort that stops processing remaining proposals. Implement as a small conditional between sh(["git","add","-A"]) and sh(["git","commit",...]) in bots/dev_pr_creator_v1.py.
