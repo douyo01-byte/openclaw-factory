@@ -1,0 +1,6 @@
+id=1464
+title=Add optional SEED_OPPORTUNITY env var to make random data generation reproducible
+batch=1464-1464
+ts=2026-03-13T05:41:23Z
+
+Make the random price/units generation deterministic when desired by reading an optional SEED_OPPORTUNITY environment variable near the top of the file and calling random.seed(int(seed)). Convert the value with a safe try/except (ignore invalid values) so behavior is unchanged by default. This is a small, low-risk change that helps testing, debugging, and reproducing generated opportunity_plan rows without altering current logic.
