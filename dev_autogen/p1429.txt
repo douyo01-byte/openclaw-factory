@@ -1,0 +1,6 @@
+id=1429
+title=Make daemon loop interval configurable via env var with validation and live reloading
+batch=1429-1429
+ts=2026-03-13T04:31:20Z
+
+Replace the hard-coded INTERVAL constant with a small helper that reads DAEMON_CHAT_TO_DEV_INTERVAL from the environment each loop iteration, parses it as an integer, clamps it to a safe range (min 5s, max 3600s), and falls back to 30s on missing/invalid values. Implement get_interval() that returns the validated value and call it before each time.sleep so operators can change interval without restarting the process. On parse/fallback, emit a warning (use existing logger) so configuration mistakes are visible. This is a low-risk change limited to adding os.environ access, validation, and one extra function call in the loop.
