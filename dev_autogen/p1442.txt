@@ -1,0 +1,6 @@
+id=1442
+title=Truncate long conversation to last 30 messages and cap message length in render_conversation
+batch=1442-1442
+ts=2026-03-13T04:58:56Z
+
+Change render_conversation to fetch only the most recent N messages (e.g. 30) by selecting rows ordered desc limit N and then reversing them, and cap each message to a safe max length (e.g. 1000 characters). If truncation occurs, insert a clear marker like "[...older messages truncated...]" at the top. This limits prompt size sent to ask_llm, reduces token/cost spikes, and prevents giant DB conversation fields from causing API errors or timeouts. The change is localized to render_conversation and is low-risk: SQL still uses parameterized queries and output formatting remains the same except for obvious truncation markers.
