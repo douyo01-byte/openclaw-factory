@@ -1,0 +1,6 @@
+id=1520
+title=Use context managers for SQLite and reliably detect 'insert or ignore' result
+batch=1520-1520
+ts=2026-03-13T09:04:19Z
+
+Replace manual sqlite3.connect/close sequences with context managers (with sqlite3.connect(DB) as conn:) so connections are always closed and commits are deterministic. Change the current pattern that relies on cursor.rowcount after "insert or ignore" (which is unreliable) to a small, low-risk check: perform the INSERT OR IGNORE, then detect whether a row was actually added by comparing conn.total_changes before/after the insert (or by doing a lightweight SELECT for the key). Commit only when needed. This removes potential leaked connections, fixes incorrect logic when cursor.rowcount is not set, and makes the executed_decisions de-duplication robust.
