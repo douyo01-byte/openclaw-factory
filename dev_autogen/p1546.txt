@@ -1,0 +1,6 @@
+id=1546
+title=Gracefully handle LLM failures and validate/normalize llm_assess output
+batch=1549-1546
+ts=2026-03-13T09:59:07Z
+
+Make llm_assess more robust: wrap the OpenAI chat call in a try/except to return a safe default when the client/network/API fails; check that res and res.choices exist before accessing nested fields; validate and normalize the parsed JSON fields (ensure 'japan_presence' is one of ['likely','unlikely','unknown'], coerce/clip 'score' to int in 0-100, trim 'category_guess' and 'rationale_jp'); and send a terse alert via tg_send when the model call or JSON parsing fails. This is a small, low-risk change confined to llm_assess that prevents exceptions from bubbling up and provides better observability of LLM errors.
