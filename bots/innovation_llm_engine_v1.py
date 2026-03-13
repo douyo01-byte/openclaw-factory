@@ -188,6 +188,108 @@ def same_lane(a, b):
         (a.get("category", "") or "").strip().lower() == (b["category"] or "").strip().lower()
     )
 
+
+
+def total_count(con, path):
+    row = con.execute("""
+    select count(*)
+    from dev_proposals
+    where lower(coalesce(target_system,'')) = lower(?)
+    """, (path,)).fetchone()
+    return int(row[0] or 0) if row else 0
+
+def target_limit_allowed(con, path):
+    n = total_count(con, path)
+    if n >= 12:
+        return False, f"target_total_cap:{n}"
+    return True, "ok"
+
+
+def closed_count(con, path):
+    r = con.execute("""
+    select count(*)
+    from dev_proposals
+    where lower(coalesce(target_system,'')) = lower(?)
+      and coalesce(status,'')='closed'
+    """, (path,)).fetchone()
+    try:
+        return int(r[0] or 0)
+    except:
+        return 0
+
+def target_rank(con, path):
+    row = con.execute("""
+    select id, coalesce(status,'')
+    from dev_proposals
+    where lower(coalesce(target_system,'')) = lower(?)
+    order by id desc
+    limit 1
+    """, (path,)).fetchone()
+    if not row:
+        return 0
+    try:
+        last_id = int(row["id"])
+        last_status = (row["status"] or "").lower()
+    except:
+        last_id = int(row[0])
+        last_status = (row[1] or "").lower()
+    ccount = closed_count(con, path)
+    tcount = total_count(con, path)
+    closed_bonus = min(ccount * 2500, 15000)
+    total_penalty = min(max(tcount - 3, 0) * 3500, 28000)
+    base = last_id
+    if last_status == "closed":
+        return 900000 + closed_bonus - total_penalty - base
+    if last_status == "merged":
+        return 500000 + closed_bonus - total_penalty - base
+    return 100000 + closed_bonus - total_penalty - base
+
+def recent_improvement_types(con, path, limit_n=3):
+    rows = con.execute("""
+    select coalesce(improvement_type,'')
+    from dev_proposals
+    where lower(coalesce(target_system,'')) = lower(?)
+      and coalesce(improvement_type,'') != ''
+    order by id desc
+    limit ?
+    """, (path, limit_n)).fetchall()
+    vals = set()
+    for r in rows:
+        try:
+            v = r["improvement_type"]
+        except:
+            v = r[0]
+        if v:
+            vals.add(str(v).strip().lower())
+    return vals
+
+def improvement_cooldown_hours(cur):
+    cur = (cur or "").lower()
+    if cur in ("guard", "bugfix"):
+        return 2
+    if cur in ("optimization", "performance"):
+        return 3
+    if cur in ("refactor", "logging"):
+        return 4
+    return 3
+
+def improvement_allowed(con, path, row):
+    cur = (row["improvement_type"] or "").lower().strip()
+    if not cur:
+        return True, "ok"
+    h = improvement_cooldown_hours(cur)
+    last = con.execute("""
+    select cast((strftime('%s','now') - strftime('%s', created_at))/3600 as integer)
+    from dev_proposals
+    where lower(coalesce(target_system,'')) = lower(?)
+      and lower(coalesce(improvement_type,'')) = lower(?)
+    order by id desc
+    limit 1
+    """, (path, cur)).fetchone()
+    if last and last[0] is not None and int(last[0]) < h:
+        return False, f"improvement_cooldown:{cur}:{int(last[0])}h<{h}h"
+    return True, "ok"
+
 def main():
     con = sqlite3.connect(DB, timeout=30)
     con.row_factory = sqlite3.Row
@@ -198,9 +300,10 @@ def main():
         pass
 
     seen_titles = recent_titles(con)
-    targets = list_targets()
+    targets = sorted(list_targets(), key=lambda x: target_rank(con, x), reverse=True)
     inserted = 0
 
+    print("[innovation] ranked_targets_top=", [(x, target_rank(con, x), closed_count(con, x), total_count(con, x)) for x in targets[:12]], flush=True)
     for path in targets:
         code = read_text(path, 7000)
         if not code.strip():
@@ -220,6 +323,14 @@ def main():
 
         if row["title"].lower() in seen_titles:
             print(f"[skip] target={path} reason=duplicate_title", flush=True)
+            continue
+        ok2, reason2 = improvement_allowed(con, path, row)
+        if not ok2:
+            print(f"[skip] target={path} reason={reason2}", flush=True)
+            continue
+        ok3, reason3 = target_limit_allowed(con, path)
+        if not ok3:
+            print(f"[skip] target={path} reason={reason3}", flush=True)
             continue
 
         if latest and same_lane(row, latest):
