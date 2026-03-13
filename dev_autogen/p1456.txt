@@ -1,0 +1,6 @@
+id=1456
+title=Make role_from_text matching case-insensitive for Latin aliases
+batch=1456-1456
+ts=2026-03-13T05:25:45Z
+
+Currently role_from_text checks for alias substrings with direct equality which misses ASCII case variants (e.g. 'Scout', 'SCOUT'). Change role_from_text to lowercase the input text once and compare against lowercase alias names (n.lower()) so Latin aliases match regardless of case. This is a minimal, low-risk refactor: no schema or DB changes, only string comparisons. Japanese aliases are unaffected. Return behavior is unchanged for exact matches but more robust for user input with different capitalization.
