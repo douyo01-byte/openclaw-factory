@@ -1,0 +1,6 @@
+id=1566
+title=Ensure DB connection is always closed and handle sqlite errors gracefully
+batch=1566-1566
+ts=2026-03-13T10:12:43Z
+
+Wrap database access and write in a try/except/finally block so the sqlite connection is always closed even if a SELECT or INSERT fails. On sqlite3.Error: rollback any pending transaction, print a clear error message including the DB path and exception, and exit non-zero. Keep commits only on success. This avoids leaked connections and makes failures visible without leaving WAL/journal files locked.
