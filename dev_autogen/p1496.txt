@@ -1,0 +1,6 @@
+id=1496
+title=Truncate overly long meeting text before tg_send to avoid Telegram/API failures
+batch=1496-1496
+ts=2026-03-13T08:15:09Z
+
+The meeting_text(top) can build a very long string (many rows, notes, and role briefs). Sending an oversized payload to tg_send (Telegram) may fail or be rejected. Add a small, low-risk guard in main(): compute the message, and if its length exceeds a safe maximum (e.g. 3900 chars for Telegram), truncate it cleanly (preserve start, append '\n\n…(truncated, full output in DB)') and ensure tg_send is called with the truncated message. This avoids adding new dependencies and keeps behavior predictable. Also log/print a short notice when truncation occurs. Implement as a 3-5 line change in main() right before tg_send.
