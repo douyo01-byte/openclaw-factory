@@ -1,0 +1,6 @@
+id=1576
+title=Improve diagnostics for chat_research_v1.py
+batch=1575-1576
+ts=2026-03-13T10:20:25Z
+
+AI generated proposal targeting bots/chat_research_v1.py. category=analysis. improve chat_research_v1.py with a concrete, low-risk change.
