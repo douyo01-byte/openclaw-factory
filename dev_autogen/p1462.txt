@@ -1,0 +1,6 @@
+id=1462
+title=Remove duplicate 'import re' and tidy standard imports in command_apply_v1.py
+batch=1462-1462
+ts=2026-03-13T05:39:53Z
+
+The file currently imports 're' twice (once at top and once after importing sqlite3). Remove the second redundant 'import re' and group/organize the standard library imports (argparse, re, sqlite3) into a single block. This is a minimal refactor that reduces clutter, avoids linter warnings, and slightly improves readability with zero behavioral change.
