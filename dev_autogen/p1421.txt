@@ -1,0 +1,6 @@
+id=1421
+title=Reuse a requests.Session for feed fetches to reduce connection overhead
+batch=1421-1421
+ts=2026-03-13T04:16:22Z
+
+Create a module-level requests.Session configured with the UA and Accept headers and use it inside fetch_text instead of calling requests.get each time. This reuses TCP connections (keep-alive), reduces latency and resource usage when iterating many feeds, and is a minimal, low-risk change confined to this file. Implementation: add SESSION = requests.Session() and SESSION.headers.update({"User-Agent": UA, "Accept": "application/rss+xml, application/xml, text/xml, */*"}) at module scope and replace requests.get(...) with SESSION.get(...).
