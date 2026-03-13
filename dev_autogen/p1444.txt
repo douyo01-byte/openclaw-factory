@@ -1,0 +1,6 @@
+id=1444
+title=Make CHAT_ID configurable via environment and validate before notify
+batch=1444-1444
+ts=2026-03-13T05:01:03Z
+
+Replace the hardcoded CHAT_ID with an environment-driven value and add a lightweight validation check in notify(). Concretely: set CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "-5293321023") at top of file; in notify(msg) return early if TOKEN or CHAT_ID is falsy; add a simple validation that CHAT_ID is a string of digits or starts with '-' followed by digits (to catch obvious misconfigurations) and skip sending + log/notify locally if invalid. This is a small, low-risk refactor that lets different deploys override the chat target without editing code and avoids accidental sends when CHAT_ID is missing or malformed.
