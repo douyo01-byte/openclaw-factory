@@ -1,6 +1,8 @@
 
+
 ## Auto-generated status documents
-These files are generated from runtime or audit scripts.
+
+These files are generated from runtime or audit snapshots.
 
 - 12_FULL_BOT_AUDIT.md
 - 14_ACTIVE_AGENTS_FINAL.md
