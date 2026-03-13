@@ -1,0 +1,6 @@
+id=1537
+title=Sanitize and truncate proposal title before sending Telegram message
+batch=1537-1538
+ts=2026-03-13T09:40:52Z
+
+Before calling tg_send, normalize the proposal title to a single-line string and truncate it to a safe maximum length (e.g. 200 chars). Replace newlines and control whitespace with single spaces and strip surrounding whitespace so very long or multi-line titles cannot bloat or break Telegram messages. Implementing this in dev_proposal_notify_v1.py is a small, low-risk change: compute a local variable title = (r['title'] or '').replace('\n', ' ').replace('\r', ' ').split() joined by single spaces, then if len(title) > 200 set title = title[:197] + '...'. Use that sanitized title in the tg_send payload.

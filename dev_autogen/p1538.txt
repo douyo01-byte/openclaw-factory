@@ -1,0 +1,6 @@
+id=1538
+title=Claim inbox rows by setting status='processing' before handling to avoid duplicate processing
+batch=1537-1538
+ts=2026-03-13T09:40:52Z
+
+In main(), immediately after selecting up to 20 rows with status='new', update those rows in the same DB connection to status='processing' (using a single parameterized UPDATE ... WHERE id IN (...)) and commit before processing. This makes the script idempotent-safe when multiple workers run concurrently: once a run claims rows they won't be picked up by another run. Keep the existing per-row update to 'replied' after handling. This is a small, low-risk change limited to main(): fetch rows, build a list of ids, if non-empty run conn.execute("update inbox_commands set status='processing' where id in ({placeholders})", ids) then conn.commit(), then process the previously fetched rows as now.
