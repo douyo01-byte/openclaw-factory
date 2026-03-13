@@ -1,0 +1,11 @@
+id=1717
+title=Improve error handling in scripts/meet_open.sh
+batch=1716-1717
+ts=2026-03-13T23:15:15Z
+
+Goal:
+Implement: Improve error handling in scripts/meet_open.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
