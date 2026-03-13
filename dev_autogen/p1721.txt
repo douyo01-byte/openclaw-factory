@@ -1,0 +1,11 @@
+id=1721
+title=Harden DB path handling in scripts/dev_stage_sync_from_github.sh
+batch=1718-1721
+ts=2026-03-13T23:18:35Z
+
+Goal:
+Implement: Harden DB path handling in scripts/dev_stage_sync_from_github.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
