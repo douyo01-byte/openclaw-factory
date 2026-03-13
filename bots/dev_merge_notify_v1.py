@@ -456,8 +456,6 @@ def main():
                     continue
                 try:
                     msg = build_msg(r, dp)
-                    if (r["event_type"] or "") == "pr_created":
-                        msg = "🛠️ OpenClaw 自動開発\n" + msg
                 except Exception as e:
                     print(f"[merge_notify] build_error proposal_id={r['proposal_id']} {e!r}", flush=True)
                     msg = build_fallback(dp, {})

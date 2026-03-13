@@ -6,8 +6,10 @@ export PYTHONPATH="$HOME/AI/openclaw-factory-daemon"
 export DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"
 export OCLAW_DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"
 export OPENAI_API_KEY="${OPENAI_API_KEY:-}"
-
 consecutive_no_new=0
+toggle_file="data/mainstream_supply.mode"
+mkdir -p data
+[ -f "$toggle_file" ] || echo code_review > "$toggle_file"
 
 run_one() {
   local out
@@ -22,8 +24,15 @@ run_one() {
 
 while true; do
   [ -f bots/innovation_llm_engine_v1.py ] && run_one bots/innovation_llm_engine_v1.py
-  run_one bots/code_review_engine_v1.py
-  true
+
+  mode="$(cat "$toggle_file" 2>/dev/null || echo code_review)"
+  if [ "$mode" = "code_review" ]; then
+    run_one bots/code_review_engine_v1.py
+    echo fallback > "$toggle_file"
+  else
+    python bots/mainstream_fallback_supply_v1.py || true
+    echo code_review > "$toggle_file"
+  fi
 
   active=$(sqlite3 "$DB_PATH" "
   select count(*)
@@ -33,14 +42,11 @@ while true; do
     and coalesce(guard_status,'')='safe';
   " 2>/dev/null || echo 0)
 
-  echo "[supply] active_execute_now_safe=$active consecutive_no_new=$consecutive_no_new"
+  echo "[supply] active_execute_now_safe=$active consecutive_no_new=$consecutive_no_new mode=$mode"
 
-  if [ "${active:-0}" -lt 3 ]; then
+  if [ "${active:-0}" -lt 2 ]; then
     python bots/mainstream_fallback_supply_v1.py || true
-  elif [ "$consecutive_no_new" -ge 3 ]; then
-    python bots/mainstream_fallback_supply_v1.py || true
-    consecutive_no_new=0
   fi
 
-  sleep 900
+  sleep 180
 done

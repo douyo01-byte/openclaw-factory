@@ -55,7 +55,7 @@ if int(active or 0) >= 3:
 
 title = None
 for base in FALLBACK_TITLES:
-    cand = f"{base} {datetime.now().strftime('%H%M')}"
+    cand = f"{base} {datetime.now().strftime('%H%M%S')}"
     dup = c.execute("""
     select 1
     from dev_proposals

@@ -96,12 +96,38 @@ spec = build_spec(proposal)
 
 c.execute("""
 insert into dev_proposals(
-  title,description,spec,status,spec_stage,project_decision,guard_status,guard_reason,
-  created_at,category,target_system,improvement_type,quality_score
+  title,
+  description,
+  branch_name,
+  spec,
+  status,
+  spec_stage,
+  project_decision,
+  guard_status,
+  guard_reason,
+  created_at,
+  category,
+  target_system,
+  improvement_type,
+  quality_score
 ) values(
-  ?,?,?,?,'refined','execute_now','safe','bootstrap_spec',datetime('now'),?,?,?,?
+  ?,?,?,?,?,?,?,?,?,datetime('now'),?,?,?,?
 )
-""", (proposal, spec, f"code-review/{int(time.time())}", spec, "approved", CATEGORY, TARGET_SYSTEM, IMPROVEMENT_TYPE, QUALITY_SCORE))
+""", (
+  proposal,
+  spec,
+  f"code-review/{int(time.time())}",
+  spec,
+  "approved",
+  "refined",
+  "execute_now",
+  "safe",
+  "bootstrap_spec",
+  CATEGORY,
+  TARGET_SYSTEM,
+  IMPROVEMENT_TYPE,
+  QUALITY_SCORE
+))
 
 conn.commit()
 print("inserted", proposal)

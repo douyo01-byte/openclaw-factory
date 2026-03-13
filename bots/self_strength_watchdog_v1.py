@@ -7,7 +7,8 @@ import time
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 ROOT = "/Users/doyopc/AI/openclaw-factory-daemon"
 SLEEP = int(os.environ.get("SELF_STRENGTH_WATCHDOG_SLEEP", "180"))
-QUIET_MIN = int(os.environ.get("SELF_STRENGTH_WATCHDOG_QUIET_MIN", "10"))
+QUIET_MIN = int(os.environ.get("SELF_STRENGTH_WATCHDOG_QUIET_MIN", "4"))
+SEED_BURST = int(os.environ.get("SELF_STRENGTH_SEED_BURST", "2"))
 
 def connect():
     con = sqlite3.connect(DB, timeout=30)
@@ -60,7 +61,7 @@ def normalize_fallback_rows():
         set project_decision='execute_now',
             dev_stage='execute_now'
         where coalesce(status,'')='approved'
-          and coalesce(guard_reason,'')='mainstream_fallback'
+          and coalesce(guard_reason,'') in ('mainstream_fallback','bootstrap_spec')
           and coalesce(project_decision,'')='execute_now'
           and coalesce(dev_stage,'')=''
         """)
@@ -99,7 +100,6 @@ def main():
                     seed_once()
                     time.sleep(8)
                 normalize_fallback_rows()
-
         except Exception as e:
             print(f"[self_strength_watchdog] error={e!r}", flush=True)
 
