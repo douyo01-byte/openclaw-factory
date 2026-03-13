@@ -1,72 +1,57 @@
-import json, os, time
+import json
+import os
+import time
 from pathlib import Path
 
 STATE = Path("obs/db_integrity_state.json")
 LAST = Path("obs/db_integrity_watchdog_last.json")
-INTERVAL_SEC = 600
-
-def load_json(path, default):
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except:
-        return default
+SEND_INTERVAL = 600
 
 def tg_send(text):
-    tok = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-    chat = os.environ.get("TELEGRAM_CHAT_ID", "")
+    tok = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    chat = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
     if not tok or not chat:
         return
     import requests
     requests.post(
         f"https://api.telegram.org/bot{tok}/sendMessage",
         data={"chat_id": chat, "text": text},
-        timeout=20
+        timeout=20,
     ).raise_for_status()
 
+def load_json(path, default):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
 def main():
-    cur = load_json(STATE, {})
+    state = load_json(STATE, {})
     last = load_json(LAST, {})
 
-    lifecycle = int(cur.get("lifecycle_anomaly_count", 0) or 0)
-    pr_created_without_merged = int(cur.get("pr_created_without_merged", 0) or 0)
-    merged_without_learning_result = int(cur.get("merged_without_learning_result", 0) or 0)
-    status_mismatch = int(cur.get("status_mismatch", 0) or 0)
-
-    anomaly = lifecycle + pr_created_without_merged + merged_without_learning_result + status_mismatch
-    now = int(time.time())
-
+    anomaly = int(state.get("lifecycle_anomaly_count", 0) or 0)
     last_anomaly = int(last.get("anomaly", 0) or 0)
     last_sent_at = int(last.get("last_sent_at", 0) or 0)
+    now = int(time.time())
 
-    should_send = False
-    if anomaly > 0:
-        if last_anomaly <= 0:
-            should_send = True
-        elif now - last_sent_at >= INTERVAL_SEC:
-            should_send = True
+    LAST.parent.mkdir(parents=True, exist_ok=True)
 
-    if should_send:
-        text = (
-            "⚠ OpenClaw DB整合性異常\\n"
-            f"lifecycle anomaly={lifecycle}\\n"
-            f"pr_created_without_merged={pr_created_without_merged}\\n"
-            f"merged_without_learning_result={merged_without_learning_result}\\n"
-            f"status_mismatch={status_mismatch}"
+    if anomaly <= 0:
+        LAST.write_text(
+            json.dumps({"anomaly": 0, "last_sent_at": last_sent_at}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
         )
-        tg_send(text)
-        last = {"anomaly": anomaly, "last_sent_at": now}
-        LAST.parent.mkdir(parents=True, exist_ok=True)
-        LAST.write_text(json.dumps(last, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"[watchdog] sent anomaly={anomaly}", flush=True)
+        print("[watchdog] suppress lifecycle notification because anomaly=0", flush=True)
         return
 
-    if anomaly == 0:
-        if last_anomaly > 0:
-            print("[watchdog] suppress recovery notification", flush=True)
-        last = {"anomaly": 0, "last_sent_at": last_sent_at}
-        LAST.parent.mkdir(parents=True, exist_ok=True)
-        LAST.write_text(json.dumps(last, ensure_ascii=False, indent=2), encoding="utf-8")
-        print("[watchdog] suppress lifecycle notification because mismatch_total=0", flush=True)
+    if last_anomaly != anomaly or now - last_sent_at >= SEND_INTERVAL:
+        text = f"⚠ OpenClaw DB整合性異常\nlifecycle anomaly={anomaly}"
+        tg_send(text)
+        LAST.write_text(
+            json.dumps({"anomaly": anomaly, "last_sent_at": now}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"[watchdog] sent anomaly={anomaly}", flush=True)
         return
 
     print(f"[watchdog] skip anomaly={anomaly} cooldown={now - last_sent_at}s", flush=True)
