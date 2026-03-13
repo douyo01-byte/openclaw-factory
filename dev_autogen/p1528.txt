@@ -1,0 +1,6 @@
+id=1528
+title=Create decisions table if missing before ALTER TABLE in ensure()
+batch=1528-1528
+ts=2026-03-13T09:22:36Z
+
+Bugfix: ensure() currently calls PRAGMA table_info(decisions) and then attempts ALTER TABLE decisions ADD COLUMN ...; if the decisions table does not exist this can cause runtime errors. Add a small, explicit CREATE TABLE IF NOT EXISTS decisions (...) before querying table_info/ALTER so the schema migration is safe. The created table should include the columns used elsewhere in this file: id INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT, target TEXT, decision TEXT, reason TEXT, meta_json TEXT, created_at TEXT DEFAULT (datetime('now')). Keep this change minimal and idempotent (CREATE TABLE IF NOT EXISTS), then proceed with the existing column-add checks. This is a low-risk reliability fix specific to bots/ingest_telegram_replies_v1.py.
