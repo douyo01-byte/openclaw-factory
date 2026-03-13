@@ -1,0 +1,6 @@
+id=1433
+title=Enforce timeout on executor subprocess and revert dev_stage on timeout
+batch=1433-1433
+ts=2026-03-13T04:40:10Z
+
+Add a configurable timeout for the subprocess.run that launches bots/dev_executor_v1.py to prevent the worker from hanging indefinitely. Read EXECUTOR_TIMEOUT (seconds) from environment with a safe default (e.g. 300). Pass timeout=int(EXECUTOR_TIMEOUT) to subprocess.run, and catch subprocess.TimeoutExpired. On timeout, execute a simple DB update to revert the proposal's dev_stage from 'executing' back to 'approved' (only if still 'executing') and commit so the item can be retried later. This is a small, low-risk change: it prevents stuck executor runs and ensures proposals don't remain permanently stuck in 'executing'.
