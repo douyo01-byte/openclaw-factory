@@ -5,6 +5,7 @@ source .venv/bin/activate || exit 1
 export PYTHONPATH="$HOME/AI/openclaw-factory-daemon"
 export DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"
 export OCLAW_DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"
+export OPENAI_API_KEY="${OPENAI_API_KEY:-}"
 
 consecutive_no_new=0
 
