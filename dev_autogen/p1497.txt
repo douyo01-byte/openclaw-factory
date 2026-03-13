@@ -1,0 +1,6 @@
+id=1497
+title=Robustly extract item description/content by matching XML local-names (handle namespaced content:encoded)
+batch=1497-1497
+ts=2026-03-13T08:19:48Z
+
+In parse_rss(), the code currently uses it.findtext('description') or it.findtext('content:encoded') which misses namespaced elements such as {http://purl.org/rss/1.0/modules/content/}encoded. Propose a small refactor: add a helper that iterates children and returns text for any child whose local-name matches one of ['description', 'encoded', 'content', 'summary'] (ignoring namespace). Use that helper for RSS item summary extraction and similarly for title/link fallback to be tolerant of namespaced tags. This is a low-risk change limited to parse_rss that increases feed parsing reliability for many real-world feeds.
