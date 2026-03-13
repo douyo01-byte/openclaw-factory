@@ -1,0 +1,6 @@
+id=1535
+title=Validate OpenAI JSON candidate fields and reject invalid responses
+batch=1535-1535
+ts=2026-03-13T09:35:33Z
+
+After loading the JSON from the OpenAI response, validate that category, target_system and improvement_type are members of the allowed sets and enforce minimal title/description lengths; if validation fails, ignore the candidate and keep the fallback so malformed or out-of-taxonomy proposals are never inserted into the DB.
