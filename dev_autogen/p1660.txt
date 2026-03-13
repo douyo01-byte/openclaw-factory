@@ -1,0 +1,11 @@
+id=1660
+title=Watcher recovery sweep 0657
+batch=1659-1660
+ts=2026-03-13T21:58:33Z
+
+Goal:
+Implement: Watcher recovery sweep 0657
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
