@@ -1,0 +1,6 @@
+id=1450
+title=Truncate long user messages before inserting into proposal_conversation
+batch=1450-1450
+ts=2026-03-13T05:13:04Z
+
+Limit the length of user messages written to the factory DB to avoid very large inserts or column/DB bloat. Concretely: before f.execute("insert into proposal_conversation(...)", ...), compute a safe_txt = txt if len(txt) <= 4000 else txt[:4000] + "... [truncated]" and insert safe_txt instead of txt. This is a small, low-risk change localized to the single insert, preserves behavior for normal messages, and prevents excessive storage and potential errors when inbox_commands.text is unexpectedly large.
