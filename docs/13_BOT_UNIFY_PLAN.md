@@ -1,6 +1,7 @@
 # BOT UNIFY PLAN
 
 ## Keep
+- chat_to_proposal_v1
 - mainstream_supply
 - brain_supply_v1
 - innovation_llm_engine_v1
