@@ -1,0 +1,6 @@
+id=1514
+title=Truncate event title and body to limit payload size
+batch=1514-1514
+ts=2026-03-13T08:51:23Z
+
+Add a small helper to truncate strings and apply it to the ceo_hub_events insertion in run_once: limit title to 200 chars and body (build_text result) to 2000 chars, appending an ellipsis when truncated. This prevents oversized payloads from the factory DB (very long titles/descriptions) from causing large DB rows or downstream consumer issues. Implementation is a minimal, low-risk change: add a truncate(s, n) function, call it just before d.execute(...) to produce title_trunc and body_trunc, and insert those instead of the raw values.
