@@ -1,0 +1,6 @@
+id=1397
+title=Compile-check generated autogen.py with py_compile and abort commit on syntax errors
+batch=1397-1397
+ts=2026-03-13T03:12:58Z
+
+After writing the generated code to autogen.py, run a syntax-only compile check using the standard library (py_compile.compile(..., doraise=True)). If compilation raises py_compile.PyCompileError, update the decisions row to 'compile_failed', commit that state, close the DB connection, and stop before creating the git branch / commit / push / PR. If compile succeeds, proceed as now. This is a small, low-risk refactor: it prevents committing syntactically invalid Python into a branch and creating broken PRs, reduces manual rollback work, and keeps behavior deterministic. Concrete change: add import py_compile at top and insert a try/except around py_compile.compile('autogen.py', doraise=True) immediately after open('autogen.py', 'w').write(code); on exception set decision and return without running subprocess git/gh commands.
