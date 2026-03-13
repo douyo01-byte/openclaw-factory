@@ -1,0 +1,6 @@
+id=1435
+title=Add timeout guard to subprocess execution in daily_cycle_v1.py
+batch=1435-1435
+ts=2026-03-13T04:46:08Z
+
+Modify the run() helper to accept a timeout (default 300s) and pass it to subprocess.run(..., timeout=...). Catch subprocess.TimeoutExpired and exit with a distinct non-zero code (e.g. 124) after printing a short message. This prevents the daily cycle from hanging indefinitely when a subtask stalls and is a minimal, low-risk change confined to the existing run() function.
