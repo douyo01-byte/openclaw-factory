@@ -1,0 +1,6 @@
+id=1502
+title=Truncate long Telegram message text to 4096 chars before send
+batch=1502-1502
+ts=2026-03-13T08:27:11Z
+
+Telegram messages are limited to 4096 characters. If a proposal's pending_question is very long the current send can fail or produce API errors. Add a small guard just before calling requests.post that ensures the assembled text does not exceed 4096 chars: compute available space for the question portion after the fixed header/footer, and if too long truncate the question body with an ellipsis and append a short "(truncated)" note. This is a minimal, low-risk change limited to preparing the `text` variable (before requests.post), preserves the header "【仕様確認 #...】", and prevents avoidable API errors for oversized payloads.
