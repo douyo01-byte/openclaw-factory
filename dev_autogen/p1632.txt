@@ -1,0 +1,6 @@
+id=1632
+title=Add guard checks to command_apply_daemon_v1.py
+batch=1632-1633
+ts=2026-03-13T11:18:43Z
+
+AI generated proposal targeting bots/command_apply_daemon_v1.py. category=safety. improve command_apply_daemon_v1.py with a concrete, low-risk change.
