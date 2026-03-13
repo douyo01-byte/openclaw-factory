@@ -1,0 +1,6 @@
+id=1437
+title=Add transient-network retry for external requests in meeting_orchestrator_v1.py
+batch=1436-1437
+ts=2026-03-13T04:48:26Z
+
+Introduce a small retry wrapper used by ask_llm and tg_send to handle transient network errors and 429/5xx responses. Implement a _post_with_retry(url, **kwargs) helper that retries up to 3 attempts with exponential backoff (e.g. 1s, 2s) on requests.exceptions.ConnectionError, requests.exceptions.Timeout and on HTTP status codes 429, 502, 503, 504. Replace direct requests.post calls in ask_llm and tg_send with this helper, keep r.raise_for_status() after a successful response, and preserve existing timeouts. This is a minimal, low-risk change that reduces flakiness when calling external services without altering business logic or DB state changes.

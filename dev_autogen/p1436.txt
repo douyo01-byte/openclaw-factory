@@ -1,0 +1,6 @@
+id=1436
+title=Reuse HTTP connections by using requests.Session for Telegram sends
+batch=1436-1437
+ts=2026-03-13T04:48:26Z
+
+Replace per-request requests.post calls with a single requests.Session() opened before the loop and closed after to enable HTTP connection reuse (keep-alive). This is a small, low-risk change: create session = requests.Session() before iterating rows, call session.post(...) instead of requests.post(...), and ensure session.close() in a finally block (or use a with requests.Session() as session:). This reduces latency and TCP connection churn when sending up to 10 messages and improves reliability under load without changing behavior.
