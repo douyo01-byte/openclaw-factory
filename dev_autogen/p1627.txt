@@ -1,0 +1,6 @@
+id=1627
+title=Optimize polling behavior in chat_research_v1.py
+batch=1627-1627
+ts=2026-03-13T11:13:24Z
+
+AI generated proposal targeting bots/chat_research_v1.py. category=performance. improve chat_research_v1.py with a concrete, low-risk change.
