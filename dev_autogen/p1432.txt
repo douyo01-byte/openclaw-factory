@@ -1,0 +1,6 @@
+id=1432
+title=Truncate long spec text to Telegram 4096-char limit before send
+batch=1432-1432
+ts=2026-03-13T04:39:29Z
+
+Prevent failed Telegram API calls caused by messages exceeding Telegram's 4096 character limit. In run(), compute the full message length and, if it would exceed 4096 chars, truncate the spec field to fit (append '...' when truncated). Also defensively cast spec to an empty string if None. This is a minimal, local change within run() before calling send(), avoiding crashes and ensuring notified_at is only updated after a successful send.
