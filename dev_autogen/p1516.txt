@@ -1,0 +1,6 @@
+id=1516
+title=Add structured logging for proposal creation and DB errors
+batch=1516-1516
+ts=2026-03-13T08:57:29Z
+
+Introduce lightweight structured logging in dev_router_v1.create_proposal: import the logging module, create a module-level logger, and add an info log after a successful proposal creation containing proposal_id, branch_name, risk_level and DB path. Surround DB operations with a try/except/finally that logs exceptions with logger.exception (including the DB path and input title length instead of full description to avoid large/secret payloads) and ensures the connection is closed in finally. This is a small, low-risk change that improves observability of normal flows and failures without changing DB schema or transaction semantics.
