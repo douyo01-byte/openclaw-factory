@@ -1,0 +1,6 @@
+id=1526
+title=Mark slash-command inbox rows as processed/skipped to avoid repeated reprocessing
+batch=1526-1526
+ts=2026-03-13T09:17:16Z
+
+In main(), messages whose text lowercased starts with '/' are currently skipped with 'continue' but not marked processed, so they remain in inbox_commands and will be re-evaluated every run. Change the branch that handles t.startswith('/') to update inbox_commands for that id to processed=1, status='skipped', applied_at=now() and commit (same pattern used for empty text). This is a small, low-risk bugfix that prevents infinite reprocessing of bot commands and reduces DB churn.
