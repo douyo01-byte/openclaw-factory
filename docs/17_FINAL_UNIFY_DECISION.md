@@ -86,3 +86,20 @@
 - report_orchestrator_v1.py
 - event_notify_v1.py
 - explain_orchestrator_v1.py
+
+## 8. Archived bot source files (wave3)
+- ai_employee_ranking_v1.py
+- business_brain_v1.py
+- business_engine_v1.py
+- innovation_engine_v1.py
+- revenue_brain_v1.py
+- revenue_engine_v1.py
+- market_brain_v1.py
+- mothership_brain_v2.py
+- project_brain_v3.py
+- project_brain_v4.py
+- ops_brain_v1.py
+- ops_brain_v2.py
+- ops_brain_v3.py
+- infra_brain_v2.py
+- llm_decider_v1.py
