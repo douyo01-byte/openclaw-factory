@@ -1,0 +1,6 @@
+id=1609
+title=Add structured logging to ingest_private_replies_v1.py
+batch=1609-1609
+ts=2026-03-13T10:54:57Z
+
+AI generated proposal targeting bots/ingest_private_replies_v1.py. category=observability. improve ingest_private_replies_v1.py with a concrete, low-risk change.
