@@ -1,0 +1,11 @@
+id=1695
+title=Reduce API latency in scripts/backfill_opportunity_from_items.sh
+batch=1694-1695
+ts=2026-03-13T22:51:04Z
+
+Goal:
+Implement: Reduce API latency in scripts/backfill_opportunity_from_items.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
