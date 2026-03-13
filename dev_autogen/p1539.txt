@@ -1,0 +1,6 @@
+id=1539
+title=Commit DB transactions before returning 'applied' in apply_one
+batch=1539-1539
+ts=2026-03-13T09:46:15Z
+
+apply_one performs multiple database writes (try_apply_intuitive, inserting dev_proposals, insert_retro, set_decision/set_priority/add_note) but never calls conn.commit(), risking lost changes if the caller doesn't commit. Make a small, low-risk change inside bots/command_apply_v1.py: call conn.commit() immediately before each return that follows database writes (every path that returns ("applied", None)), and also before the early return after try_apply_intuitive. This keeps change minimal (no schema or API changes), improves reliability by ensuring changes are persisted, and is safe because it only adds explicit commits and does not change transaction semantics elsewhere.
