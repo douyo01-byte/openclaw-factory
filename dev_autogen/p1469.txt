@@ -1,0 +1,6 @@
+id=1469
+title=Use tolerant HTML->XML fallback parsing for BeautifulSoup to improve link/text extraction
+batch=1469-1469
+ts=2026-03-13T05:52:33Z
+
+Replace direct BeautifulSoup(..., "xml") calls in parse_list and extract_contacts with a small helper that first parses with 'html.parser' (more tolerant for real-world HTML) and falls back to 'xml' only when necessary (e.g., no anchors found). This is a low-risk refactor: it improves link and text extraction on noisy HTML pages (reducing missed links/emails) while preserving behavior for clean XML feeds. Implement by adding a _make_soup(html: str) -> BeautifulSoup helper and using it in the two functions.
