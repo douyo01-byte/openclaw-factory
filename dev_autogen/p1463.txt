@@ -1,0 +1,6 @@
+id=1463
+title=Reuse requests.Session for feed fetches to reduce overhead and improve stability
+batch=1463-1463
+ts=2026-03-13T05:40:38Z
+
+Create a module-level requests.Session with the default User-Agent/Accept headers and use session.get(...) in fetch_text instead of requests.get(...). This reuses HTTP connections, reduces TLS/SSL handshakes and latency when fetching multiple feeds, and can reduce transient network errors against rate-limited hosts. Change is minimal: add SESSION = requests.Session(); SESSION.headers.update({...}) at module scope and replace requests.get(...) with SESSION.get(...). Behavior, timeouts and error handling remain unchanged.
