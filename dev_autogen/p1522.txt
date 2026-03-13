@@ -1,0 +1,6 @@
+id=1522
+title=Add small jittered sleep after a successful merge to avoid secondary rate limit bursts
+batch=1522-1522
+ts=2026-03-13T09:09:45Z
+
+After a successful merge and DB commit, add a short randomized sleep (e.g. time.sleep(1 + random.random()*2)) before continuing the loop. Concretely: import random at top and insert a sleep immediately after the existing conn.commit() and merged print. This spreads merge requests across a small window, reducing the chance of triggering GitHub secondary/abuse rate limits when processing multiple PRs in quick succession. Change is minimal, low-risk, and preserves existing behavior while lowering rate-limit errors.
