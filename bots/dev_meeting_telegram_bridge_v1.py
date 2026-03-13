@@ -6,24 +6,17 @@ from pathlib import Path
 import requests
 
 DB_PATH = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
-STATE_PATH = Path(os.path.expanduser("~/AI/openclaw-factory-daemon/data/dev_meeting_telegram_bridge_v1.state"))
-SLEEP = int(os.environ.get("DEV_MEETING_BRIDGE_SLEEP", "10"))
+STATE_PATH = Path("data/dev_meeting_telegram_bridge_v1.state")
 TG_TOKEN = (os.environ.get("TELEGRAM_OPS_BOT_TOKEN") or os.environ.get("TELEGRAM_ROUTING_BOT_TOKEN") or os.environ.get("TELEGRAM_03_BOT_TOKEN") or os.environ.get("TELEGRAM_REPORT_BOT_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
 TG_CHAT = (os.environ.get("TELEGRAM_OPS_CHAT_ID") or os.environ.get("TELEGRAM_ROUTING_CHAT_ID") or os.environ.get("TELEGRAM_03_CHAT_ID") or os.environ.get("TELEGRAM_REPORT_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
-
-def tg_send(text: str):
-    if not TG_TOKEN or not TG_CHAT:
-        print("[meeting_bridge] telegram env missing", flush=True)
-        return
-    requests.post(
-        f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
-        data={"chat_id": TG_CHAT, "text": text},
-        timeout=(3, 20),
-    ).raise_for_status()
+SLEEP = int(os.environ.get("DEV_MEETING_BRIDGE_SLEEP", "20"))
+MAX_ROWS_PER_TICK = int(os.environ.get("DEV_MEETING_BRIDGE_MAX_ROWS", "8"))
+LEARNING_COOLDOWN_SEC = int(os.environ.get("DEV_MEETING_BRIDGE_LEARNING_COOLDOWN_SEC", "180"))
+LEARNING_STATE_PATH = Path("data/dev_meeting_telegram_bridge_learning.state")
 
 def load_last_id() -> int:
     try:
-        return int((STATE_PATH.read_text(encoding="utf-8").strip() or "0"))
+        return int(STATE_PATH.read_text(encoding="utf-8").strip() or "0")
     except Exception:
         return 0
 
@@ -48,119 +41,121 @@ def clamp_last_id(conn: sqlite3.Connection, last_id: int) -> int:
         return max_id
     return last_id
 
-def short(s: str, n: int = 80) -> str:
-    s = (s or "").replace("\n", " ").strip()
-    return s if len(s) <= n else s[:n] + "..."
+def load_learning_state() -> dict[str, str]:
+    try:
+        raw = LEARNING_STATE_PATH.read_text(encoding="utf-8").splitlines()
+        out = {}
+        for line in raw:
+            if "\t" in line:
+                k, v = line.split("\t", 1)
+                out[k] = v
+        return out
+    except Exception:
+        return {}
 
-def recent_meeting_context(conn: sqlite3.Connection, event_id: int):
-    conn.row_factory = sqlite3.Row
-    rows = conn.execute("""
-        select id, event_type, title, created_at
-        from ceo_hub_events
-        where id <= ?
-          and coalesce(event_type,'') in ('learning_result','merged','pr_created','ai_employee')
-        order by id desc
-        limit 12
-    """, (event_id,)).fetchall()
-    return list(reversed(rows))
+def save_learning_state(d: dict[str, str]):
+    LEARNING_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    text = "\n".join(f"{k}\t{v}" for k, v in d.items())
+    LEARNING_STATE_PATH.write_text(text, encoding="utf-8")
 
-def build_ai_meeting(conn: sqlite3.Connection, r: sqlite3.Row) -> str:
-    rows = recent_meeting_context(conn, int(r["id"]))
-    merged = [x for x in rows if (x["event_type"] or "") == "merged"]
-    prs = [x for x in rows if (x["event_type"] or "") == "pr_created"]
-    learn = [x for x in rows if (x["event_type"] or "") == "learning_result"]
-    emp = [x for x in rows if (x["event_type"] or "") == "ai_employee"]
+def tg_send(text: str):
+    if not TG_TOKEN or not TG_CHAT:
+        raise RuntimeError("telegram env missing")
+    r = requests.post(
+        f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
+        data={"chat_id": TG_CHAT, "text": text},
+        timeout=20,
+    )
+    r.raise_for_status()
 
-    lines = []
-    lines.append("🧠 OpenClaw AI会議")
-    lines.append(f"件名: {r['title']}")
-    lines.append(f"時刻: {r['created_at']}")
-    lines.append("")
-    lines.append(f"要点: merged={len(merged)} / pr_created={len(prs)} / learning={len(learn)} / ai_employee={len(emp)}")
-
-    focus = []
-    for x in (merged[-2:] + prs[-2:] + learn[-3:] + emp[-2:]):
-        t = short(x["title"], 60)
-        if t and t not in focus:
-            focus.append(t)
-    if focus:
-        lines.append("")
-        lines.append("今回の論点:")
-        for t in focus[:6]:
-            lines.append(f"- {t}")
-
-    nexts = []
-    if prs:
-        nexts.append("PR作成済み案件の統合待ち確認")
-    if merged:
-        nexts.append("統合済み案件の学習反映監視")
-    if learn:
-        nexts.append("学習結果の次提案への転用")
-    if emp:
-        nexts.append("AI社員トピックの継続監視")
-    if nexts:
-        lines.append("")
-        lines.append("次アクション:")
-        for t in nexts[:4]:
-            lines.append(f"- {t}")
-
-    return "\n".join(lines)
-
-def build_ai_employee(r: sqlite3.Row) -> str:
+def format_ai_employee(r: sqlite3.Row) -> str:
+    title = (r["title"] or "").strip()
+    body = (r["body"] or "").strip()
+    created = (r["created_at"] or "").strip()
     return "\n".join([
         "👤 OpenClaw AI社員",
-        f"件名: {r['title']}",
-        f"時刻: {r['created_at']}",
+        f"件名: {title}",
+        f"時刻: {created}",
         "",
-        "AI社員トピックが更新されました。"
+        body or "内容なし",
     ])
 
-def build_learning(r: sqlite3.Row) -> str:
+def format_learning_result(r: sqlite3.Row) -> str:
+    title = (r["title"] or "").strip()
+    body = (r["body"] or "").strip()
+    created = (r["created_at"] or "").strip()
     return "\n".join([
         "📘 OpenClaw 学習反映",
-        f"件名: {r['title']}",
-        f"時刻: {r['created_at']}",
+        f"件名: {title}",
+        f"時刻: {created}",
+        "",
+        body or "内容なし",
     ])
 
-def build_default(r: sqlite3.Row) -> str:
+def format_ai_meeting(r: sqlite3.Row) -> str:
+    title = (r["title"] or "").strip()
+    body = (r["body"] or "").strip()
+    created = (r["created_at"] or "").strip()
     return "\n".join([
-        "📎 OpenClaw イベント",
-        f"種別: {r['event_type']}",
-        f"件名: {r['title']}",
-        f"時刻: {r['created_at']}",
+        "🧠 OpenClaw 定例会議",
+        f"件名: {title}",
+        f"時刻: {created}",
+        "",
+        body or "内容なし",
     ])
 
-def build_msg(conn: sqlite3.Connection, r: sqlite3.Row) -> str:
+def should_send_learning(r: sqlite3.Row) -> bool:
+    state = load_learning_state()
+    title = (r["title"] or "").strip()
+    created = (r["created_at"] or "").strip()
+    key = title[:140]
+    now = time.time()
+    last = float(state.get(key, "0") or "0")
+    if now - last < LEARNING_COOLDOWN_SEC:
+        return False
+    state[key] = str(now)
+    if len(state) > 300:
+        items = list(state.items())[-200:]
+        state = dict(items)
+    save_learning_state(state)
+    return True
+
+def build_message(r: sqlite3.Row) -> str | None:
     et = (r["event_type"] or "").strip()
-    if et == "ai_meeting":
-        return build_ai_meeting(conn, r)
     if et == "ai_employee":
-        return build_ai_employee(r)
+        return format_ai_employee(r)
+    if et == "ai_meeting":
+        return format_ai_meeting(r)
     if et == "learning_result":
-        return build_learning(r)
-    return build_default(r)
+        if not should_send_learning(r):
+            return None
+        return format_learning_result(r)
+    return None
 
 def main():
     while True:
         try:
-            last_id = load_last_id()
             conn = sqlite3.connect(DB_PATH, timeout=30)
             conn.row_factory = sqlite3.Row
-            conn.execute("pragma busy_timeout=30000")
-            last_id = clamp_last_id(conn, last_id)
+            conn.execute("PRAGMA busy_timeout=30000")
+            last_id = clamp_last_id(conn, load_last_id())
             rows = conn.execute("""
-                select id, event_type, title, created_at
+                select id, event_type, title, body, created_at
                 from ceo_hub_events
                 where id > ?
                   and coalesce(event_type,'') in ('ai_meeting','ai_employee','learning_result')
                 order by id asc
-            """, (last_id,)).fetchall()
+                limit ?
+            """, (last_id, MAX_ROWS_PER_TICK)).fetchall()
             new_last = last_id
             for r in rows:
-                msg = build_msg(conn, r)
-                tg_send(msg)
+                msg = build_message(r)
                 new_last = int(r["id"])
-                print(f"[meeting_bridge] sent event_id={new_last} type={r['event_type']}", flush=True)
+                if msg:
+                    tg_send(msg)
+                    print(f"[meeting_bridge] sent event_id={new_last} type={r['event_type']}", flush=True)
+                else:
+                    print(f"[meeting_bridge] skipped event_id={new_last} type={r['event_type']}", flush=True)
             conn.close()
             if new_last != last_id:
                 save_last_id(new_last)
