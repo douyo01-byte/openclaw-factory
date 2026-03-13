@@ -1,0 +1,6 @@
+id=1608
+title=Improve diagnostics for persona_reply_v3.py
+batch=1608-1610
+ts=2026-03-13T10:54:13Z
+
+AI generated proposal targeting bots/persona_reply_v3.py. category=analysis. improve persona_reply_v3.py with a concrete, low-risk change.
