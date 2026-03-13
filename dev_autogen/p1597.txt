@@ -1,0 +1,6 @@
+id=1597
+title=Add recovery path to ops_brain_v2.py
+batch=1596-1597
+ts=2026-03-13T10:41:57Z
+
+AI generated proposal targeting bots/ops_brain_v2.py. category=self_healing. improve ops_brain_v2.py with a concrete, low-risk change.
