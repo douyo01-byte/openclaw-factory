@@ -1,0 +1,6 @@
+id=1517
+title=Set a requests timeout and handle requests.Timeout to avoid indefinite blocking
+batch=1517-1517
+ts=2026-03-13T08:58:15Z
+
+Currently the code passes Telegram's long-polling 'timeout' value as a query param but does not set requests' own timeout argument, so a network stall or library hang can block the process indefinitely. Change the GET call to include a requests-level timeout slightly above the long-poll value (e.g. requests.get(API, params={"offset": offset+1, "timeout": 30}, timeout=35)). Also catch requests.exceptions.Timeout separately (log/continue) so a timed-out request doesn't get swallowed or cause an unexpected delay. This is a single-line call change plus a small except branch and is low-risk.
