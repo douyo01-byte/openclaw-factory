@@ -1,0 +1,6 @@
+id=1633
+title=Add guard checks to daemon_chat_to_dev_v1.py
+batch=1632-1633
+ts=2026-03-13T11:18:43Z
+
+AI generated proposal targeting bots/chat_to_dev/daemon_chat_to_dev_v1.py. category=safety. improve daemon_chat_to_dev_v1.py with a concrete, low-risk change.
