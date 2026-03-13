@@ -1,0 +1,6 @@
+id=1485
+title=Add timeouts and protective exception handling for Telegram requests and subprocess apply
+batch=1485-1485
+ts=2026-03-13T07:54:15Z
+
+Make two minimal, low-risk changes to avoid the process hanging on external calls: (1) In n(), add a short requests timeout and wrap requests.post in a try/except requests.RequestException so a transient network issue or Telegram outage doesn't crash the script. e.g. requests.post(..., timeout=5). Swallow/log the exception. (2) In r(), replace subprocess.call(...) with subprocess.run(..., capture_output=True, text=True, timeout=60) (or add a timeout parameter to subprocess.call) and catch subprocess.TimeoutExpired to return a non-zero rc and notify via n() that the apply timed out. Return the process returncode as before. These changes are local to bots/ops_brain_v2.py, preserve current behavior on success, and avoid long hangs or unhandled exceptions from external services.
