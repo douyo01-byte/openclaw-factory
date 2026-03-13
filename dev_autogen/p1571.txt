@@ -1,0 +1,6 @@
+id=1571
+title=Add recovery path to chat_to_proposal_v1.py
+batch=1571-1572
+ts=2026-03-13T10:17:21Z
+
+AI generated proposal targeting bots/chat_to_dev/chat_to_proposal_v1.py. category=self_healing. improve chat_to_proposal_v1.py with a concrete, low-risk change.
