@@ -1,0 +1,6 @@
+id=1620
+title=Add guard checks to backfill_decisions_from_inbox_v1.py
+batch=1620-1621
+ts=2026-03-13T11:06:40Z
+
+AI generated proposal targeting bots/backfill_decisions_from_inbox_v1.py. category=safety. improve backfill_decisions_from_inbox_v1.py with a concrete, low-risk change.
