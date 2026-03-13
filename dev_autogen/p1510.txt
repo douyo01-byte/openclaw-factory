@@ -1,0 +1,6 @@
+id=1510
+title=Add limited retry with exponential backoff for Telegram sends and skip failed notifications
+batch=1510-1510
+ts=2026-03-13T08:44:29Z
+
+Wrap the Telegram send with a small retry loop so transient network or API errors don't crash the whole run and a single failed send doesn't incorrectly mark a spec as notified. Concretely: modify send()/call site to attempt up to 3 sends with exponential backoff (e.g. delays 1s, 2s, 4s) catching requests.exceptions.RequestException and requests.Timeout. Only update dev_proposals.notified_at when a send succeeds. On final failure, print a structured error (id and error) and continue to the next row. This is a minimal change (add retry loop and exception handling) that preserves existing behavior on success and avoids partial notification state on transient failures.
