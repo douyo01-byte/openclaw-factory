@@ -1,0 +1,6 @@
+id=1557
+title=Claim /help rows before sending to avoid duplicate deliveries
+batch=1556-1557
+ts=2026-03-13T10:05:54Z
+
+Before calling tg_send for each fetched /help row, atomically claim the row by updating its status to 'help_sending' only if it is still unprocessed. Check the update's affected row count; if zero, skip that row (another worker claimed it). Commit the claim immediately so concurrent processes won't attempt to send the same message. Keep the existing logic to mark 'help_done' or 'help_error' after sending/exception. This is a small change: add an UPDATE ... WHERE id=? AND coalesce(processed,0)=0 and check cursor.rowcount before proceeding, and commit after the claim.
