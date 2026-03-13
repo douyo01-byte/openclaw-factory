@@ -1,0 +1,6 @@
+id=1445
+title=Ensure SQLite connection is closed on all exit paths
+batch=1445-1445
+ts=2026-03-13T05:01:45Z
+
+Wrap the sqlite3 connection usage in a context manager (or add a try/finally) so the DB connection is always closed even if an exception or early return occurs. Concretely: replace conn = sqlite3.connect(DB) ... with a with sqlite3.connect(DB) as conn: block, set conn.row_factory inside that block, and move the query/loop logic into the block. This is a small, low-risk refactor that prevents leaked file descriptors/locks if the script errors or is interrupted.
