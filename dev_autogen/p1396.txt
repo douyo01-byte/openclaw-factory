@@ -1,0 +1,6 @@
+id=1396
+title=Add lightweight logging to report number of candidate items and inserted plans
+batch=1396-1396
+ts=2026-03-13T03:11:56Z
+
+Add Python logging to bots/auto_plan_v1.py to (1) log the count of rows returned by the initial query, (2) increment and log an inserted_count for each loop iteration at INFO level, and (3) emit DEBUG logs for assigned price/units per item. Keep configuration minimal (basicConfig) and use logger.getLogger(__name__). Expected effect: low-risk improvement in observability — operators can quickly see whether the script found items to process and how many opportunity_plan rows were created, making it easier to detect no-op runs or unexpected volume changes without changing DB semantics.
