@@ -1,0 +1,6 @@
+id=1558
+title=Do not abort whole daily cycle on a single bot failure; collect and report per-step exit codes
+batch=1558-1559
+ts=2026-03-13T10:06:39Z
+
+Modify run() to return the subprocess returncode instead of raising SystemExit, and change main() to call run() for each step, record any non-zero return codes with a short step label, print a consolidated summary (including the existing healthcheck line), and only exit non‑zero after all steps complete (e.g. SystemExit(1) if any failed). This is a small, low-risk change: it prevents one failing module from stopping the remainder of the daily cycle, preserves existing behavior for supervisors by exiting non-zero if there were failures, and makes troubleshooting easier by listing which step(s) failed.
