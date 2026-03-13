@@ -1,0 +1,6 @@
+id=1411
+title=Consolidate duplicate constants and kai/now function definitions
+batch=1411-1411
+ts=2026-03-13T03:59:16Z
+
+File contains duplicated top-level definitions: DB_PATH, BASE_BRANCH, REPO, KAI_LOG are declared twice and two time functions (_now / now) and two kai(...) implementations exist. This is confusing and error-prone. Make a small refactor: remove the first duplicated block (the first DB_PATH/BASE_BRANCH/REPO/KAI_LOG, the _now() and the first kai() that also attempts Telegram notifications), keeping the single canonical definitions and implementations that appear later in the file. Ensure the remaining kai() uses os.makedirs(os.path.dirname(KAI_LOG), exist_ok=True) (as the later version does) and keep a single now() helper used everywhere. This removes the accidental shadowing and guarantees there is exactly one log path and one kai() behavior. Low-risk: no behavioral change if you choose the later implementations, and reduces maintenance confusion and accidental regressions from shadowing.
