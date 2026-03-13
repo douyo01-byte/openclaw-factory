@@ -1,0 +1,6 @@
+id=1479
+title=Set explicit Playwright timeouts and retry navigation once on TimeoutError
+batch=1479-1479
+ts=2026-03-13T07:17:48Z
+
+Add deterministic timeouts and a one-attempt retry to avoid the script hanging on slow networks. Specifically: after creating the page (after await browser.new_page()), call await page.set_default_navigation_timeout(30000) and await page.set_default_timeout(30000). Wrap the single page.goto(...) call in a try/except that catches playwright.async_api.TimeoutError and retries the same goto once before re-raising the error. Keep the rest of the flow unchanged. This is a minimal, low-risk change that prevents indefinite waits and transient navigation failures from stopping the smoke test.
