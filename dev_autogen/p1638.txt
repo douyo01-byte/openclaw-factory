@@ -1,0 +1,6 @@
+id=1638
+title=Count each token at most once per source row to avoid within-row multiplicity bias
+batch=1638-1638
+ts=2026-03-13T11:31:08Z
+
+When a single decision reason or retrospective text contains the same token multiple times, the current code increments counters by the number of occurrences, biasing weights toward verbose repeats. Change the updates to use the unique set of tokens per row (e.g. pos.update(set(tokens)) and neg.update(set(tokens))) so each token contributes at most +1/-1 per source row. This is a small, local change (three update calls) that reduces skew and is low-risk.
