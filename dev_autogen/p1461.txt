@@ -1,0 +1,6 @@
+id=1461
+title=Guard llm/send and per-row processing against network/JSON errors and mark failures
+batch=1461-1461
+ts=2026-03-13T05:34:39Z
+
+Add lightweight error handling so a single transient failure (network, HTTP error, or invalid JSON) doesn't crash the whole run or leave rows stuck as 'new'. Changes: (1) In llm(): return a clear error string if OPENAI_KEY is missing, catch requests exceptions and JSON decode errors, call r.raise_for_status() before r.json(), and return a descriptive LLM_ERROR message instead of raising. (2) In send(): catch requests exceptions and log/return failure (no crash). (3) In main(): wrap per-row processing in try/except so any exception updates the processed inbox_commands row to status='failed' with an error message (via an update query) and continues to the next row. These are small, low-risk edits limited to this file that improve reliability and ensure the loop continues on individual failures.
