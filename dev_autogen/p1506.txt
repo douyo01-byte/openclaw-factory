@@ -1,0 +1,6 @@
+id=1506
+title=Use context managers when reading persona files to avoid leaking file descriptors
+batch=1506-1506
+ts=2026-03-13T08:37:49Z
+
+Replace direct open(...) calls in _load_persona() with with open(...) as f: so file descriptors are closed promptly. This is a minimal refactor: change both core and role file reads to use context managers and read via f.read().strip(). This prevents file descriptor leaks if the process runs long-lived and repeatedly reloads personas.
