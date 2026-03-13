@@ -1,0 +1,6 @@
+id=1518
+title=Validate TELEGRAM_BOT_TOKEN and CHAT_ID formats before sending
+batch=1518-1518
+ts=2026-03-13T09:02:53Z
+
+Add lightweight input validation: check TELEGRAM_BOT_TOKEN against the expected Telegram token pattern (digits, colon, token characters) using a regex and ensure CHAT_ID can be parsed as an integer (allowing leading '-' for groups). On validation failure print a clear error message showing the expected format and exit with a non-zero status. This prevents pointless API calls with malformed credentials and gives immediate actionable feedback.
