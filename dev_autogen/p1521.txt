@@ -1,0 +1,6 @@
+id=1521
+title=Verify launchctl bootstrap succeeded and notify detailed failure
+batch=1521-1521
+ts=2026-03-13T09:09:04Z
+
+After attempting to bootstrap the launch agent, re-run the same 'launchctl list | grep jp.openclaw.tg_poll_loop' check and verify the service is active. If the verification still shows missing (empty or contains '\t-'), send a failure notification with the verification output and a short hint to check the plist path and file permissions. Keep the change minimal: add a verification call and clearer notify messages (e.g. 'poll restarted' -> on success 'poll restarted (verified)'; on failure 'poll restart FAILED: <output> - check ~/Library/LaunchAgents/jp.openclaw.tg_poll_loop.plist'). No change to existing environment loading or TOKEN logic.
