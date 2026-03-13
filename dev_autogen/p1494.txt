@@ -1,0 +1,6 @@
+id=1494
+title=Avoid posting duplicate automated review comments
+batch=1494-1494
+ts=2026-03-13T08:13:42Z
+
+Add a small check before commenting to avoid posting the same automated review body multiple times. Implement a pr_comments(repo, n) helper that calls gh pr view --repo <repo> --json comments and extracts existing comment bodies, then in main() skip comment_pr() if the generated body exactly matches an existing comment. This is a low-risk change (only reads PR comments) and prevents comment spam when the bot is re-run or retried.
