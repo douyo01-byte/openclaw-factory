@@ -1,0 +1,6 @@
+id=1472
+title=Support full-width '＃' and full-width digits when extracting IDs
+batch=1471-1472
+ts=2026-03-13T05:58:51Z
+
+Modify the three parsers to accept both ASCII '#' and full-width '＃', and to convert full-width digits (０-９) to ASCII before calling int(). Add a tiny helper to normalize extracted digit strings. This is backward-compatible, low-risk, and fixes missed matches when reviewers use full-width characters in Japanese text.

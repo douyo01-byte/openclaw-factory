@@ -1,0 +1,6 @@
+id=1471
+title=Add simple retry + backoff in tg_send to make Telegram sends resilient to transient failures
+batch=1471-1472
+ts=2026-03-13T05:58:51Z
+
+Modify tg_send in bots/ceo_help_v1.py to use a short retry loop with exponential backoff and jitter (e.g. up to 3 attempts) and a requests.Session for connection reuse. Retry on network errors and timeouts (requests.exceptions.RequestException) and on HTTP 5xx and 429 responses. Do not retry on client 4xx other than 429. Keep the existing timeout (20s). Add a small import (time) and a minimal loop so transient Telegram/API/network glitches do not immediately mark /help rows as errors, while keeping error handling unchanged so permanent failures are still recorded in the DB. This is a small, low-risk change limited to tg_send.
