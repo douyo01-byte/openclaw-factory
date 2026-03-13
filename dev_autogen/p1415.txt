@@ -1,0 +1,6 @@
+id=1415
+title=Add a short timeout and explicit timeout logging to run() to avoid hangs
+batch=1415-1415
+ts=2026-03-13T04:06:43Z
+
+Change the run(cmd) helper to call subprocess.check_output(..., timeout=5) and explicitly catch subprocess.TimeoutExpired and subprocess.CalledProcessError. On TimeoutExpired, call log with a concise message including the command (e.g. "timeout running: <cmd>") and return an empty string; on CalledProcessError, return an empty string as before. This prevents the script from hanging indefinitely if launchctl/pgrep block, is a minimal local change (only run()), and keeps existing behavior for normal output.
