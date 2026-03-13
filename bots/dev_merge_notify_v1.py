@@ -442,6 +442,7 @@ def main():
                       result_note,
                       pr_number,
                       pr_url
+                    coalesce(target_policy,'') as target_policy
                     from dev_proposals
                     where id=?
                     limit 1
