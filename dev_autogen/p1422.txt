@@ -1,0 +1,6 @@
+id=1422
+title=Ensure sqlite connection is always closed in main loop to avoid resource leaks
+batch=1422-1422
+ts=2026-03-13T04:18:38Z
+
+In main(), each loop iteration opens a sqlite3 connection with sqlite3.connect(DB_PATH, timeout=30) but there is no guaranteed conn.close() on errors or after tick_once returns. Over long runs this can leak file descriptors / locks and prevent WAL checkpointing. Change: wrap the connection use in a try/finally (or use a with sqlite3.connect(...) as conn:) so conn.close() is always called. Also move row_factory and PRAGMA calls inside that scoped block. This is a small, low-risk change that ensures the DB handle is released even on exceptions and reduces chance of locked DB or resource exhaustion.
