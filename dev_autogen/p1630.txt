@@ -1,0 +1,6 @@
+id=1630
+title=Improve diagnostics for scout_playwright.py
+batch=1630-1630
+ts=2026-03-13T11:16:24Z
+
+AI generated proposal targeting bots/scout_playwright.py. category=analysis. improve scout_playwright.py with a concrete, low-risk change.
