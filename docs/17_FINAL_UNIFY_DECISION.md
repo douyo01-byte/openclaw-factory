@@ -69,3 +69,20 @@
 - dev_pr_sync_v1.py
 - proposal_auto_approve_v1.py
 - self_healing_v1.py
+
+## 7. Archived bot source files (wave2)
+- browser_smoke.py
+- openai_smoke.py
+- ceo_dashboard_v1.py
+- company_dashboard_v1.py
+- openclaw_dashboard_v1.py
+- openclaw_supervisor_v1.py
+- auto_plan_v1.py
+- employee_registry_v1.py
+- ceo_help_v1.py
+- ceo_noise_cleanup_v1.py
+- ceo_hub_schema_v1.py
+- meeting_hn_v1.py
+- report_orchestrator_v1.py
+- event_notify_v1.py
+- explain_orchestrator_v1.py
