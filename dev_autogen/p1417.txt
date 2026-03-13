@@ -1,0 +1,6 @@
+id=1417
+title=Restrict TODO/print/DEBUG/requests checks to added diff lines
+batch=1417-1417
+ts=2026-03-13T04:12:37Z
+
+Modify analyze() to examine only added lines from the unified diff when checking for TODO, print(, DEBUG, and requests-related additions. Concretely, extract added lines (lines starting with '+' but not '+++' file headers), join them into a smaller string (or list), and run the existing regex/substring checks against that instead of the entire diff_text. Keep the large-diff and binary-file checks unchanged. This reduces false positives from context/removed lines or file metadata and is a small, deterministic change limited to analyze().
