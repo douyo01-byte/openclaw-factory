@@ -1,0 +1,17 @@
+id=1405
+title=Guard send_message call to avoid notification-induced daemon crash and truncate large payloads
+batch=1405-1405
+ts=2026-03-13T03:49:07Z
+
+Wrap the send_message(...) call inside the except block in its own try/except so that failures in the notification path cannot raise out of the exception handler and kill the daemon. Also truncate the composed notification text (error + traceback) to a safe length (e.g. 1500 characters) before calling send_message to reduce likelihood of API rejections for overly large messages. Ensure fails is reset regardless of send_message success so the notify-threshold behavior remains unchanged. Minimal code change: replace the current send_message(...) and fails=0 lines with a guarded block like:
+
+    msg = f"🔴 chat_router error\n{e}\n{traceback.format_exc(limit=8)}"
+    msg = msg[:1500]
+    try:
+        send_message(CHAT_ID, msg)
+    except Exception:
+        traceback.print_exc()
+    finally:
+        fails = 0
+
+This is low-risk (localizes exception handling), prevents a notification failure from bringing down the daemon, and avoids sending extremely large messages.
