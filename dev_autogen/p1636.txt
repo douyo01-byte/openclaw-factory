@@ -1,0 +1,6 @@
+id=1636
+title=Improve diagnostics for dev_approval_parser.py
+batch=1635-1636
+ts=2026-03-13T11:21:45Z
+
+AI generated proposal targeting bots/dev_approval_parser.py. category=analysis. improve dev_approval_parser.py with a concrete, low-risk change.
