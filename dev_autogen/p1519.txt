@@ -1,0 +1,6 @@
+id=1519
+title=Guard against oversized prompts by truncating long fields and recording truncation
+batch=1519-1519
+ts=2026-03-13T09:03:36Z
+
+Add a prompt-size guard in refine_once: compute prompt length after build_prompt and if it exceeds a safe threshold (e.g. 12000 chars) produce a truncated prompt by trimming the largest fields (existing_spec and conversation) from the HEAD so the most recent context is kept. Insert a proposal_conversation record noting the truncation and print a short log. Implement MAX_PROMPT_CHARS constant and ensure the truncated prompt still includes the required task/requirements text. This prevents sending overly large prompts that can cause LLM errors or token-limit rejections while recording the truncation event for auditing. The change is a small, isolated guard before ask_llm and does not alter DB semantics beyond an additional conversation row.
