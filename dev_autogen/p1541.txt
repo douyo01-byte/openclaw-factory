@@ -1,0 +1,6 @@
+id=1541
+title=Batch opportunity_plan inserts using executemany to reduce DB round-trips
+batch=1541-1541
+ts=2026-03-13T09:47:37Z
+
+Replace per-row c.execute(...) inside the loop with collecting parameter tuples into a list and performing a single c.executemany(...) before conn.commit(). This is a small, low-risk change that reduces SQLite round-trips and speeds up insertion when rows has multiple items. Keep the single commit at the end and preserve the current insert-or-replace SQL and generated values; skip adding entries for rows with empty or NULL title.
