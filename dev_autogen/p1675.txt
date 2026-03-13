@@ -1,0 +1,11 @@
+id=1675
+title=Improve retry logic in bots/persona_reply_v2.py
+batch=1676-1675
+ts=2026-03-13T22:22:58Z
+
+Goal:
+Implement: Improve retry logic in bots/persona_reply_v2.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
