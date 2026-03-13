@@ -1,0 +1,11 @@
+id=1724
+title=Reduce event summary drift in bots/dev_proposal_generator_v1.py
+batch=1723-1724
+ts=2026-03-13T23:21:36Z
+
+Goal:
+Implement: Reduce event summary drift in bots/dev_proposal_generator_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
