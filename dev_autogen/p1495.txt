@@ -1,0 +1,6 @@
+id=1495
+title=Close persona files using with-open and handle read errors
+batch=1495-1495
+ts=2026-03-13T08:14:25Z
+
+Replace bare open(...).read() calls in _load_persona_from_env with context managers and minimal error handling. Specifically: use with open(path, 'r', encoding='utf-8') as f: content = f.read().strip(); append content only on success. Catch and ignore (or log) IO/Unicode errors per-file so a bad persona file doesn't crash startup. This removes file-descriptor leaks and reduces risk of unhandled read-time exceptions.
