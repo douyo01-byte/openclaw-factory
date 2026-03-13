@@ -1,0 +1,11 @@
+id=1498
+title=Use context managers and safe reads when loading persona files
+batch=1498-1498
+ts=2026-03-13T08:20:27Z
+
+Replace direct open(...).read() calls in _load_persona_from_env with with-open context managers and minimal error handling. Concretely: for each persona path, use
+
+with open(path, "r", encoding="utf-8") as f:
+    contents = f.read().strip()
+
+and append contents when non-empty. Wrap the open/read in a try/except that catches OSError and UnicodeDecodeError, skips the file on error, and emits a small warning to stderr (or the module logger) including the path and exception. This prevents file descriptor leaks, avoids crashing the script on transient file read errors, and gives quick actionable diagnostics without changing higher-level behavior.
