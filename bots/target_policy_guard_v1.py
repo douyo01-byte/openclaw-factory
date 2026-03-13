@@ -2,99 +2,99 @@ from __future__ import annotations
 import os
 import sqlite3
 import time
-from pathlib import Path
-from bots.active_bot_policy_v1 import classify_text
 
-DB = os.environ.get("DB_PATH") or os.environ.get("OCLAW_DB_PATH") or "data/openclaw.db"
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+SLEEP = int(os.environ.get("TARGET_POLICY_GUARD_SLEEP", "20"))
+
+ARCHIVE_KEYS = [
+    "auto_merge_v1",
+    "auto_pr_v1",
+    "openai_smoke",
+    "browser_smoke",
+    "ops_brain_v1",
+    "ops_brain_v2",
+    "ops_brain_v3",
+    "explain_orchestrator_v1",
+    "meeting_hn_v1",
+    "report_orchestrator_v1",
+    "market_brain_v1",
+    "innovation_engine_v1",
+    "revenue_engine_v1",
+    "project_brain_v4",
+    "company_dashboard_v1",
+    "ceo_help_v1",
+    "auto_plan_v1",
+]
+PARK_KEYS = [
+    "chat_research_v1",
+]
 
 def connect():
-    conn = sqlite3.connect(DB, timeout=20)
-    conn.execute("pragma journal_mode=WAL;")
-    conn.execute("pragma busy_timeout=20000;")
-    return conn
+    con = sqlite3.connect(DB, timeout=30)
+    con.execute("PRAGMA busy_timeout=30000")
+    return con
 
-def ensure_column(conn: sqlite3.Connection):
-    cols = [r[1] for r in conn.execute("pragma table_info(dev_proposals)").fetchall()]
-    if "target_policy" not in cols:
-        conn.execute("alter table dev_proposals add column target_policy text default ''")
+def ensure_column():
+    con = connect()
+    try:
+        cols = [r[1] for r in con.execute("PRAGMA table_info(dev_proposals)")]
+        if "target_policy" not in cols:
+            con.execute("ALTER TABLE dev_proposals ADD COLUMN target_policy TEXT DEFAULT ''")
+            con.commit()
+    finally:
+        con.close()
 
-def classify_all(conn: sqlite3.Connection):
-    rows = conn.execute("""
-        select id, title, description, coalesce(target_system,''), coalesce(improvement_type,'')
-        from dev_proposals
-        where coalesce(target_policy,'')=''
-    """).fetchall()
-    updates = []
-    for pid, title, desc, target_system, improvement_type in rows:
-        text = " | ".join([
-            title or "",
-            desc or "",
-            target_system or "",
-            improvement_type or ""
-        ])
-        pol = classify_text(text)
-        if pol:
-            updates.append((pol, pid))
-    if updates:
-        conn.executemany(
-            "update dev_proposals set target_policy=? where id=?",
-            updates
-        )
-    return len(updates)
+def classify_title(title: str) -> str:
+    t = (title or "").lower()
+    if any(k in t for k in ARCHIVE_KEYS):
+        return "archived_or_parked"
+    if any(k in t for k in PARK_KEYS):
+        return "parked"
+    return ""
 
-def block_archived(conn: sqlite3.Connection):
-    rows = conn.execute("""
-        select id
-        from dev_proposals
-        where coalesce(target_policy,'')='archived_or_parked'
-          and coalesce(status,'') not in ('merged','closed','rejected')
-          and (
-            coalesce(dev_stage,'') in ('', 'execute_now', 'pr_open', 'approved', 'ready')
-            or coalesce(project_decision,'') in ('execute_now','approved')
-            or coalesce(guard_status,'')=''
-          )
-    """).fetchall()
-    pids = [r[0] for r in rows]
-    if not pids:
-        return 0
-    conn.executemany("""
-        update dev_proposals
-        set
-          guard_status='blocked_target_policy',
-          guard_reason='archived_or_parked target blocked by policy',
-          decision_note=trim(coalesce(decision_note,'') || ' | blocked by target policy'),
-          dev_stage=case
-            when coalesce(dev_stage,'')='merged' then dev_stage
-            else 'blocked_target_policy'
-          end,
-          project_decision=case
-            when coalesce(project_decision,'')='execute_now' then 'blocked_target_policy'
-            else coalesce(project_decision,'')
-          end
-        where id=?
-    """, [(pid,) for pid in pids])
-    now = time.strftime("%Y-%m-%d %H:%M:%S")
-    for pid in pids:
-        try:
-            conn.execute("""
-                insert into dev_events(proposal_id,event_type,payload,created_at)
-                values(?,?,?,?)
-            """, (pid, "target_policy_blocked", '{"reason":"archived_or_parked"}', now))
-        except Exception:
-            pass
-    return len(pids)
+def run_once():
+    con = connect()
+    con.row_factory = sqlite3.Row
+    try:
+        rows = con.execute("""
+            select id, title, coalesce(status,'') as status, coalesce(dev_stage,'') as dev_stage,
+                   coalesce(pr_status,'') as pr_status, coalesce(target_policy,'') as target_policy
+            from dev_proposals
+            order by id desc
+            limit 500
+        """).fetchall()
+
+        classified = 0
+        blocked = 0
+
+        for r in rows:
+            tp = r["target_policy"] or classify_title(r["title"])
+            if tp and (r["target_policy"] or "") != tp:
+                con.execute("update dev_proposals set target_policy=? where id=?", (tp, r["id"]))
+                classified += 1
+
+            if tp and r["status"] in ("pending", "approved") and r["dev_stage"] not in ("merged", "closed", "blocked_target_policy"):
+                con.execute("""
+                    update dev_proposals
+                    set status='approved',
+                        dev_stage='blocked_target_policy',
+                        guard_status='blocked_target_policy',
+                        guard_reason='target blocked by active bot policy',
+                        target_policy=?
+                    where id=?
+                """, (tp, r["id"]))
+                blocked += 1
+
+        con.commit()
+        print(f"[target_policy_guard] classified={classified} blocked={blocked}", flush=True)
+    finally:
+        con.close()
 
 def main():
-    Path("logs").mkdir(parents=True, exist_ok=True)
-    conn = connect()
-    try:
-        ensure_column(conn)
-        n1 = classify_all(conn)
-        n2 = block_archived(conn)
-        conn.commit()
-        print(f"[target_policy_guard] classified={n1} blocked={n2}")
-    finally:
-        conn.close()
+    ensure_column()
+    while True:
+        run_once()
+        time.sleep(SLEEP)
 
 if __name__ == "__main__":
     main()

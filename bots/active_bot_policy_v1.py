@@ -17,35 +17,31 @@ def parked() -> list[str]:
 def archived() -> list[str]:
     return list(load_policy().get("archived", []))
 
-def allowed_targets() -> set[str]:
-    return set(core_keep())
+def allowed_targets() -> list[str]:
+    return core_keep() + parked()
 
-def parked_targets() -> set[str]:
-    return set(parked())
-
-def archived_targets() -> set[str]:
-    return set(archived())
+def blocked_targets() -> list[str]:
+    return archived() + parked()
 
 def normalize(path: str) -> str:
     return (path or "").replace("\\", "/").strip()
 
 def is_allowed_target(path: str) -> bool:
-    return normalize(path) in allowed_targets()
+    p = normalize(path)
+    return p in set(map(normalize, allowed_targets()))
 
-def is_parked_target(path: str) -> bool:
-    return normalize(path) in parked_targets()
+def is_blocked_target(path: str) -> bool:
+    p = normalize(path)
+    return p in set(map(normalize, blocked_targets()))
 
-def is_archived_target(path: str) -> bool:
-    return normalize(path) in archived_targets()
-
-def classify_text(text: str) -> str:
-    t = (text or "").lower()
-    for x in sorted(archived_targets()):
-        name = x.split("/")[-1].lower()
-        if name and name in t:
-            return "archived_or_parked"
-    for x in sorted(parked_targets()):
-        name = x.split("/")[-1].lower()
-        if name and name in t:
-            return "parked"
+def classify_target(path: str) -> str:
+    p = normalize(path)
+    if not p:
+        return ""
+    if p in set(map(normalize, archived())):
+        return "archived_or_parked"
+    if p in set(map(normalize, parked())):
+        return "parked"
+    if p in set(map(normalize, core_keep())):
+        return "core_keep"
     return ""
