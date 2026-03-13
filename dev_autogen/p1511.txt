@@ -1,0 +1,6 @@
+id=1511
+title=Add per-agent restart rate limiting to avoid rapid restart loops
+batch=1511-1511
+ts=2026-03-13T08:45:17Z
+
+Introduce a small, per-agent rate limit before invoking restart_agent() to prevent rapid repeated kickstarts when an agent continually fails. Implement a module-level dict last_restart = {} that records the last restart epoch for each label (lb). Before calling restart_agent(lb), check if time.time() - last_restart.get(lb, 0) < 60 (60 seconds throttle). If throttled, log a skip message (e.g. f"{lb} restart skipped: throttled") and do not call restart_agent; otherwise call restart_agent and update last_restart[lb] = time.time(). This is a minimal change limited to the loop and restart path, low risk, and reduces system churn and log noise when an agent cannot come up.
