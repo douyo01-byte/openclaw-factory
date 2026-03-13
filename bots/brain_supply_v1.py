@@ -6,9 +6,10 @@ INTERVAL = 600
 while True:
     try:
         subprocess.run(
-            ["python","-u","bots/project_brain_v4.py"],
-            cwd="/Users/doyopc/AI/openclaw-factory-daemon"
+            ["python", "-u", "bots/project_brain_v4.py"],
+            cwd="/Users/doyopc/AI/openclaw-factory-daemon",
+            check=False,
         )
-    except:
+    except Exception:
         pass
     time.sleep(INTERVAL)

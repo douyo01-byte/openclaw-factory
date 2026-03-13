@@ -10,7 +10,6 @@ def score(row):
         conf=float(row["confidence"] or 0)
     except:
         conf=0.0
-
     if "security" in t:
         s+=50
     if "performance" in t:
@@ -23,7 +22,6 @@ def score(row):
         s+=20
     if "log" in t:
         s+=10
-
     if c=="reliability":
         s+=24
     if c=="learning":
@@ -44,7 +42,6 @@ def score(row):
         s+=19
     if c=="performance":
         s+=24
-
     if a=="self_improve":
         s+=8
     if a=="revenue_brain":
@@ -53,7 +50,6 @@ def score(row):
         s+=4
     if a=="market_brain":
         s+=4
-
     if conf>=0.9:
         s+=8
     elif conf>=0.8:
@@ -62,12 +58,16 @@ def score(row):
         s+=4
     elif conf>=0.6:
         s+=2
-
     return s
 
 def run():
-    conn=sqlite3.connect(DB)
+    conn=sqlite3.connect(DB, timeout=30)
     conn.row_factory=sqlite3.Row
+    conn.execute("pragma busy_timeout=30000")
+    try:
+        conn.execute("pragma journal_mode=WAL")
+    except:
+        pass
     rows=conn.execute("""
     select id,title,status,category,source_ai,confidence
     from dev_proposals
@@ -75,15 +75,23 @@ def run():
     """).fetchall()
     for r in rows:
         sc=score(r)
-        conn.execute("""
-        update dev_proposals
-        set priority=?
-        where id=?
-        """,(sc,r["id"]))
+        try:
+            conn.execute("""
+            update dev_proposals
+            set priority=?
+            where id=?
+            """,(sc,r["id"]))
+        except sqlite3.OperationalError as e:
+            if "locked" in str(e).lower():
+                print(f"[brain_supply] locked proposal={r['id']}", flush=True)
+                time.sleep(1)
+                continue
+            raise
     conn.commit()
     conn.close()
 
 if __name__=="__main__":
-    while True:
+    try:
         run()
-        time.sleep(60)
+    except Exception as e:
+        print(repr(e), flush=True)
