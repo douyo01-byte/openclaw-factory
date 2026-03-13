@@ -1,0 +1,6 @@
+id=1430
+title=Gracefully handle factory DB read errors in run_once
+batch=1430-1430
+ts=2026-03-13T04:33:39Z
+
+Wrap the query against the FACTORY_DB in run_once with a focused try/except that catches sqlite3.DatabaseError (and other Exception as fallback). On failure, log a concise error (print to stdout/stderr) including the DB path and exception, and return or continue with zero rows instead of letting the exception crash the entire run. This is a minimal, low-risk change: it prevents the orchestrator from failing when the factory DB is temporarily unavailable, preserves existing behavior when the query succeeds, and avoids cascading failures to the primary DB.
