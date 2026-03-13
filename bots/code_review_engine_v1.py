@@ -33,6 +33,23 @@ CATEGORY = "automation"
 TARGET_SYSTEM = "codebase"
 IMPROVEMENT_TYPE = "refactor"
 QUALITY_SCORE = 72
+ACTIVE_POLICY_EXCLUDES = {
+    "bots/auto_merge_v1.py",
+    "bots/auto_pr_v1.py",
+    "bots/explain_orchestrator_v1.py",
+    "bots/openai_smoke.py",
+    "bots/dev_pr_automerge_v1.py",
+    "bots/dev_pr_watcher_v1.py",
+    "bots/dev_command_executor_v1.py",
+    "bots/dev_router_v1.py",
+    "bots/mainstream_fallback_supply_v1.py",
+    "bots/self_strength_watchdog_v1.py",
+    "bots/dev_merge_notify_v1.py",
+}
+ACTIVE_POLICY_PREFIXES = (
+    "bots/chat_to_dev/",
+    "bots/team/",
+)
 
 def build_spec(title):
     return f"""Goal:
@@ -61,6 +78,8 @@ files = [
     and ".bak_" not in x
     and "__pycache__" not in x
     and ".pyc" not in x
+    and x not in ACTIVE_POLICY_EXCLUDES
+    and not any(x.startswith(pfx) for pfx in ACTIVE_POLICY_PREFIXES)
 ]
 preferred = []
 secondary = []
