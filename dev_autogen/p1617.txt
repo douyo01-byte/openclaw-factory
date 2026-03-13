@@ -1,0 +1,6 @@
+id=1617
+title=Improve diagnostics for explain_orchestrator_v1.py
+batch=1619-1617
+ts=2026-03-13T11:03:39Z
+
+AI generated proposal targeting bots/explain_orchestrator_v1.py. category=analysis. improve explain_orchestrator_v1.py with a concrete, low-risk change.
