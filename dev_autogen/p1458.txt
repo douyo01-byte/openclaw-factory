@@ -1,0 +1,6 @@
+id=1458
+title=Use context manager for sqlite3 connection to guarantee commit/close on exceptions
+batch=1458-1458
+ts=2026-03-13T05:27:11Z
+
+Replace the manual connect/commit/close pattern with a with sqlite3.connect(DB) as conn: context manager and use conn.executemany for inserting seeds. In bots/employee_registry_v1.py change c=sqlite3.connect(DB) / c.commit() / c.close() to a single with-block, run PRAGMAs and DDL inside it, and call conn.executemany("insert or ignore into ai_employees(...)", seeds). This ensures the transaction is committed or rolled back and the connection is closed automatically on exceptions, reducing resource leaks and making error behavior deterministic.
