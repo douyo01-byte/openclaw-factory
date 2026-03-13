@@ -1,0 +1,6 @@
+id=1460
+title=Include pr_number in notification when pr_url is missing
+batch=1460-1460
+ts=2026-03-13T05:33:54Z
+
+Currently the message uses pr_url or empty string, so records that have a pr_number but no pr_url produce an empty 'pr:' line. Change the tg_send payload to prefer pr_url and, if missing, include a fallback 'PR #<pr_number>' (casting pr_number to string and ignoring null). This is a one-line change to the message construction in run(): set pr_display = r['pr_url'] or (f"PR #{r['pr_number']}" if r['pr_number'] is not None else '') and use pr_display in the formatted text. This makes notifications informative for proposals with only a PR number and is low-risk (no DB schema or external dependency changes).
