@@ -1,0 +1,6 @@
+id=1500
+title=Create missing items table in db() to prevent INSERT failures
+batch=1500-1500
+ts=2026-03-13T08:25:51Z
+
+The file defines save_item(...) which INSERTs/UPSERTs into an items table, but db() only ensures seen and contacts tables exist. If the items table is missing the script will crash at runtime. Add a CREATE TABLE IF NOT EXISTS items (...) statement in db() with columns matching save_item usage (url TEXT PRIMARY KEY, title TEXT, source TEXT, first_seen_at TEXT, last_seen_at TEXT, status TEXT) and commit, keeping schema changes minimal and backward-compatible.
