@@ -1,0 +1,6 @@
+id=1613
+title=Add structured logging to chat_research_v1.py
+batch=1613-1613
+ts=2026-03-13T10:58:09Z
+
+AI generated proposal targeting bots/chat_research_v1.py. category=observability. improve chat_research_v1.py with a concrete, low-risk change.
