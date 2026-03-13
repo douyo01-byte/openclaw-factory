@@ -1,0 +1,6 @@
+id=1534
+title=Add explicit error handling and stderr logging for DB operations
+batch=1534-1534
+ts=2026-03-13T09:34:51Z
+
+Wrap the database connection and DDL/DML calls in a try/except that catches sqlite3.Error and other Exceptions, print a concise error message (including DB path) and stack trace to stderr, and exit with a non-zero status. This ensures failures (e.g. permission issues, corrupt DB) are visible in CI/logs instead of only printing the success string; the change is small and low-risk (no behavior change on success).
