@@ -447,6 +447,10 @@ def main():
                     where id=?
                     limit 1
                 """, (r["proposal_id"],)).fetchone()
+                if should_skip_by_target_policy(dp):
+                    save_last_id(int(r["id"]))
+                    new_last = int(r["id"])
+                    continue
                 if not dp:
                     new_last = int(r["id"])
                     continue
