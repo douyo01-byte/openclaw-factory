@@ -1,0 +1,6 @@
+id=1480
+title=Make parse_text split the remainder on any whitespace (handle full-width spaces/tabs)
+batch=1480-1480
+ts=2026-03-13T07:28:24Z
+
+In parse_text the code uses rest.split(" ", 1) to separate target and reason. That fails when the user uses other whitespace (e.g. full-width Japanese space U+3000, tabs, multiple spaces), causing the entire remainder to be treated as the target and leaving reason empty. Change parts = rest.split(" ", 1) to parts = rest.split(maxsplit=1) (or rest.split(None, 1)) so splitting uses any Unicode whitespace and collapses runs of whitespace. This is a small, low-risk change localized to parse_text in bots/backfill_decisions_from_inbox_v1.py and improves robustness of target/reason extraction.
