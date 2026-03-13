@@ -1,0 +1,6 @@
+id=1478
+title=Mark chosen decision as in_progress atomically before making external calls to avoid duplicate PRs
+batch=1478-1478
+ts=2026-03-13T07:17:08Z
+
+Make the selection-to-processing transition atomic to prevent concurrent runs from generating duplicate branches/PRs for the same target. Change flow: select rowid and target from decisions where decision='adopt' limit 1; then run an UPDATE decisions set decision='in_progress' where rowid=? and decision='adopt' and check the affected row count. If the update affects 0 rows, another process claimed it — exit. Commit this change before calling llm()/git/gh. Leave the final update to 'pr_created' as-is on success. This is a small, low-risk DB-side guard that prevents race conditions between parallel invocations.
