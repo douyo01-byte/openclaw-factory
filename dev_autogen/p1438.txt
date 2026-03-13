@@ -1,0 +1,6 @@
+id=1438
+title=Only mark proposal as notified when Telegram send succeeds
+batch=1438-1438
+ts=2026-03-13T04:50:44Z
+
+In tick(), currently the code updates dev_proposals.notified_at and notified_msg_id even when tg_send() fails or returns an empty string, which causes proposals to be treated as notified while no Telegram message was sent. Change the loop so that after calling tg_send(text) it: 1) checks whether the returned mid is non-empty/truthy; 2) if mid is truthy, performs the UPDATE to set notified_at=datetime('now') and notified_msg_id=mid and commits as before; 3) if mid is empty, logs a warning (print with context) and skips the UPDATE so the proposal remains eligible for retry on the next tick. This is a small, low-risk change limited to the tick() function and prevents silent loss of notifications.
