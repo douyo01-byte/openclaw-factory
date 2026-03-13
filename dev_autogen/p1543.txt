@@ -1,0 +1,6 @@
+id=1543
+title=Make evaluate_risk filename matching more precise to avoid false positives
+batch=1543-1543
+ts=2026-03-13T09:52:59Z
+
+Replace fragile substring checks in evaluate_risk with normalized path + segment-aware and pattern checks. Concretely: import os and re, normalize each path with os.path.normpath, split into path segments and the basename, and then match risky patterns using stricter rules: - requirements files: basename matches r'^requirements(\.(txt|in))?$' - env files: basename == '.env' or basename.startswith('.env.') - secrets: segment or basename equals 'secret' or 'secrets' (not arbitrary substring) - .github workflows: first two segments equal '.github' and 'workflows' - 'db' should match a path segment named 'db' or common db filenames/extensions (e.g., '*.sqlite3', '*.db', '*.sql') - migrations/schema: segment equals 'migrations' or basename contains 'schema' or endswith typical migration suffixes. This is a small, low-risk refactor that reduces false positives (e.g., avoids treating files with 'db' inside unrelated words like 'debug.txt' as medium/high risk) while keeping existing high-risk detections intact.
