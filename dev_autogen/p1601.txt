@@ -1,0 +1,6 @@
+id=1601
+title=Improve error handling in ingest_telegram_replies_v1.py
+batch=1601-1601
+ts=2026-03-13T10:45:44Z
+
+AI generated proposal targeting bots/ingest_telegram_replies_v1.py. category=reliability. improve ingest_telegram_replies_v1.py with a concrete, low-risk change.
