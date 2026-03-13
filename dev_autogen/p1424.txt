@@ -1,0 +1,6 @@
+id=1424
+title=Ensure SQLite connections are closed (use try/finally or context managers)
+batch=1424-1424
+ts=2026-03-13T04:22:21Z
+
+Wrap the daemon and factory sqlite3 connections in a try/finally (or use with-context) so d.close() and f.close() are always called even on exceptions. This small refactor prevents file handle/connection leaks when the script fails or is long-lived: e.g. open d and f, perform operations, then in finally call d.commit() if needed and d.close(), f.close(). Keep existing behavior (raise SystemExit on missing env) and do not change SQL logic.
