@@ -1,0 +1,6 @@
+id=1402
+title=Ensure parent directory for DB_PATH exists before sqlite3.connect
+batch=1402-1402
+ts=2026-03-13T03:28:36Z
+
+Create the parent directory for the configured DB_PATH (if any) before opening the SQLite connection. Specifically, add a small guard such as: dir=os.path.dirname(DB); if dir: os.makedirs(dir, exist_ok=True) before sqlite3.connect(DB). Expected effect: prevents startup crashes when the configured DB path includes a non-existent directory (e.g. default "data/openclaw.db"), improving reliability on fresh deployments with no manual directory setup. Low risk: no behavior change when directory already exists and only adds a filesystem-safe check.
