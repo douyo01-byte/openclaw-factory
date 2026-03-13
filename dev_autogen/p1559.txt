@@ -1,0 +1,6 @@
+id=1559
+title=Precompile and reuse regex patterns to avoid recompilation on each call
+batch=1558-1559
+ts=2026-03-13T10:06:39Z
+
+Replace per-call re.search(...) string patterns with module-level compiled regex objects (e.g. APPROVAL_RE = re.compile(r"承認します\s*#(\d+)") ) and use their .search() methods in parse_approval, parse_diff, and parse_test_only. This avoids recompiling the same patterns on every invocation, reducing CPU overhead and small latency for high-call-rate paths with no behavioral changes. Change is low-risk: keep the exact patterns and flags (re.IGNORECASE for parse_diff) and only move them to module scope and reuse.
