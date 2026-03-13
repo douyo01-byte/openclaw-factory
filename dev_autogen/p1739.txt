@@ -1,0 +1,11 @@
+id=1739
+title=Improve error handling in oclibs/human/dev_reply.py
+batch=1739-1743
+ts=2026-03-13T23:34:11Z
+
+Goal:
+Implement: Improve error handling in oclibs/human/dev_reply.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
