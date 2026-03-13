@@ -1,0 +1,6 @@
+id=1453
+title=Ensure DB connection is closed on unexpected exceptions in dev_pr_sync_v1.py
+batch=1453-1453
+ts=2026-03-13T05:19:48Z
+
+Wrap the sqlite3 connection usage in a try/finally (or use a context manager) so con.close() is always executed even if an unexpected exception escapes sync(). Also perform a con.rollback() in the exception path before closing to avoid leaving the DB in a partial transaction. Concretely: after con = sqlite3.connect(DB_PATH) move the main processing loop into a try block and in finally call con.rollback() (if needed) and con.close(). This is a small change that prevents DB locks or leaked connections when errors occur outside the existing gh-call try/except.
