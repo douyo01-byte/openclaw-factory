@@ -1,0 +1,6 @@
+id=1628
+title=Improve diagnostics for openai_smoke.py
+batch=1626-1628
+ts=2026-03-13T11:12:40Z
+
+AI generated proposal targeting bots/openai_smoke.py. category=analysis. improve openai_smoke.py with a concrete, low-risk change.
