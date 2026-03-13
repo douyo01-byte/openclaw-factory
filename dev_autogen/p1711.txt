@@ -1,0 +1,11 @@
+id=1711
+title=Optimize database queries in migrations/2026-02-27_add_inbox_and_meta.sql
+batch=1710-1711
+ts=2026-03-13T23:09:25Z
+
+Goal:
+Implement: Optimize database queries in migrations/2026-02-27_add_inbox_and_meta.sql
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
