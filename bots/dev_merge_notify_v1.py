@@ -3,6 +3,21 @@ import json
 import os
 import re
 import sqlite3
+
+def should_skip_by_target_policy(row) -> bool:
+    try:
+        tp = ""
+        if isinstance(row, dict):
+            tp = str(row.get("target_policy") or "").strip().lower()
+        else:
+            try:
+                tp = str(row["target_policy"] or "").strip().lower()
+            except Exception:
+                tp = ""
+        return tp in {"archived_or_parked", "parked"}
+    except Exception:
+        return False
+
 import subprocess
 import time
 from pathlib import Path
