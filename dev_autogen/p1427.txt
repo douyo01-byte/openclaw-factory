@@ -1,0 +1,6 @@
+id=1427
+title=Add simple in-memory URL fetch cache to avoid duplicate HTTP requests
+batch=1427-1427
+ts=2026-03-13T04:25:15Z
+
+Introduce a small module-level cache to reuse HTML responses for URLs already fetched during a single run. Implement by adding a private dict (e.g. _FETCH_CACHE = {}) and normalizing keys with url.split('#')[0].split('?')[0].rstrip('/'). Modify fetch(url) to: 1) build the normalized key; 2) return cached value if present; 3) otherwise perform requests.get, store successful (non-4xx/5xx) r.text in the cache before returning; 4) enforce a simple cap (e.g. clear cache if it exceeds 1000 entries) to bound memory. This reduces redundant requests when item_url == official_url or when multiple rows reference the same target, improving performance and external load with minimal, low-risk changes limited to this file.
