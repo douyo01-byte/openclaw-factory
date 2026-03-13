@@ -1,0 +1,6 @@
+id=1624
+title=Add structured logging to get_chat_id.py
+batch=1623-1624
+ts=2026-03-13T11:09:42Z
+
+AI generated proposal targeting scripts/get_chat_id.py. category=observability. improve get_chat_id.py with a concrete, low-risk change.
