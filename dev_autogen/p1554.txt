@@ -1,0 +1,6 @@
+id=1554
+title=Add guard checks to project_decider_v1.py
+batch=1554-1555
+ts=2026-03-13T10:05:11Z
+
+AI generated proposal targeting bots/project_decider_v1.py. category=safety. improve project_decider_v1.py with a concrete, low-risk change.
