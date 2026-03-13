@@ -1,0 +1,6 @@
+id=1459
+title=OpenAI呼び出しの例外をログ出力して原因追跡を容易にする
+batch=1459-1459
+ts=2026-03-13T05:33:12Z
+
+bots/dev_proposal_generator_v1.py の main() 内で client.chat.completions 呼び出しを囲む bare except を削除し、logging.basicConfig を導入して例外情報を logging.exception() で記録（フォールバック選択時も INFO ログを出す）することで、失敗原因の可視化と運用デバッグを容易にする。
