@@ -1,0 +1,6 @@
+id=1473
+title=Persist generated reflection summary to DB with safe fallback
+batch=1473-1473
+ts=2026-03-13T05:59:32Z
+
+After composing the reflection 'text', attempt to store it in the reflection_requests row to improve observability and auditability. Concretely: replace the single INSERT of (window_n,status) with a best-effort insert that includes a summary column: try INSERT INTO reflection_requests(window_n,status,summary) VALUES(?,?,?) using (args.limit, 'new', text); catch sqlite3.OperationalError (missing column) and fall back to the existing INSERT of (window_n,status). In the fallback branch also print the summary to stdout (or stderr) so the message is not lost. This is a minimal, low-risk change that adds traceability without requiring a guaranteed schema migration.
