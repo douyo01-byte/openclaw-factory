@@ -1,0 +1,10 @@
+id=1474
+title=Include additional Telegram update types when extracting chat_id (edited_message, edited_channel_post, callback_query, my_chat_member)
+batch=1474-1474
+ts=2026-03-13T06:00:56Z
+
+Currently the script only inspects 'message' and 'channel_post' for a chat object. Add a small, low-risk change in the loop to also consider 'edited_message', 'edited_channel_post', 'callback_query' (use its 'message'), and 'my_chat_member' (use its 'chat') when locating the chat object. This increases the likelihood of finding a chat_id from common update types without changing behavior for existing cases. Implementation: replace the line that builds msg with something like:
+
+msg = (u.get('message') or u.get('edited_message') or u.get('channel_post') or u.get('edited_channel_post') or (u.get('callback_query') or {}).get('message') or (u.get('my_chat_member') or {}).get('chat') or {})
+
+and keep the rest of the logic unchanged. No external dependencies, minimal surface area, and backwards-compatible.
