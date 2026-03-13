@@ -1,0 +1,6 @@
+id=1580
+title=Add recovery path to auto_merge_v1.py
+batch=1580-1580
+ts=2026-03-13T10:24:16Z
+
+AI generated proposal targeting bots/auto_merge_v1.py. category=self_healing. improve auto_merge_v1.py with a concrete, low-risk change.
