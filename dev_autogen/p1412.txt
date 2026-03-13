@@ -1,0 +1,6 @@
+id=1412
+title=Clamp window_n to a safe range in build_reflection to avoid unbounded queries
+batch=1412-1412
+ts=2026-03-13T03:59:59Z
+
+Add a small guard in build_reflection to validate and clamp the incoming window_n. Specifically: if window_n <= 0, return a short reflection message indicating invalid window; if window_n > 500, replace it with 500 before running the SELECT LIMIT. This prevents accidental huge LIMIT values (from bad requests or DB entries) that can cause large memory/CPU usage when fetching rows and keeps behavior deterministic. The change is localized to the start of build_reflection and does not alter schema or transaction logic.
