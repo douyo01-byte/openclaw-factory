@@ -1,0 +1,6 @@
+id=1530
+title=Sanitize and truncate inputs in enqueue_chat_job to prevent DB errors
+batch=1530-1530
+ts=2026-03-13T09:28:03Z
+
+Make enqueue_chat_job more defensive: coerce chat_id to str, ensure item_id is an int (or NULL), normalize and trim role/query, and truncate query to a safe length before inserting. Implementation: in enqueue_chat_job call str(chat_id), cast item_id via (None if item_id is None else int(item_id)), role = (role or '').strip() and query = _normalize_text(query)[:2000]. This prevents accidental None/unexpected types or extremely long texts from causing sqlite parameter/type errors or storing runaway data while keeping behavior unchanged for normal inputs.
