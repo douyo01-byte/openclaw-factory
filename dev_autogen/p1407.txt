@@ -1,0 +1,6 @@
+id=1407
+title=Use context managers and increase sqlite timeout to avoid DB lock/connection leaks
+batch=1407-1407
+ts=2026-03-13T03:51:56Z
+
+Replace manual sqlite3.connect()/close() calls with with-context managers and pass a timeout (e.g. timeout=10) when opening connections. Specifically: use 'with sqlite3.connect(DB, timeout=10) as c:' for the initial SELECT and for per-row insert/update connections. This ensures connections are closed on exceptions, reduces risk of leaked connections, and reduces transient 'database is locked' errors by allowing SQLite to wait briefly before failing. The change is small, low-risk, and limited to connection construction and close patterns in bots/ops_brain_v2.py.
