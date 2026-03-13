@@ -27,8 +27,8 @@ import requests
 DB_PATH = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 STATE_PATH = Path(os.path.expanduser("~/AI/openclaw-factory-daemon/data/dev_merge_notify_v1.state"))
 SLEEP = int(os.environ.get("DEV_MERGE_NOTIFY_SLEEP", "10"))
-TG_TOKEN = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
-TG_CHAT = (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
+TG_TOKEN = (os.environ.get("TELEGRAM_DEV_BOT_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
+TG_CHAT = (os.environ.get("TELEGRAM_DEV_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
 OPENAI_API_KEY = (os.environ.get("OPENAI_API_KEY") or "").strip()
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4.1-mini")
 OPENAI_TIMEOUT = int(os.environ.get("DEV_MERGE_NOTIFY_OPENAI_TIMEOUT", "45"))
@@ -441,8 +441,8 @@ def main():
                       result_type,
                       result_note,
                       pr_number,
-                      pr_url
-                    coalesce(target_policy,'') as target_policy
+                      pr_url,
+                      coalesce(target_policy,'') as target_policy
                     from dev_proposals
                     where id=?
                     limit 1
