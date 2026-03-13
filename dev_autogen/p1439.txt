@@ -1,0 +1,6 @@
+id=1439
+title=Sanitize and auto-uniquify branch_name to avoid UNIQUE constraint failures
+batch=1439-1439
+ts=2026-03-13T04:51:23Z
+
+In create_proposal, normalize the computed or provided branch_name (strip surrounding whitespace, replace internal whitespace with '-', remove/escape unsafe chars, and cap length to e.g. 100 chars) and guard the UPDATE that sets branch_name with a small uniqueness loop. After computing base_name, attempt the UPDATE; if sqlite3.IntegrityError occurs (unique constraint on branch_name), append a numeric suffix like -1, -2, ... and retry up to a reasonable limit (e.g. 100 attempts). If still failing, fall back to a guaranteed unique name such as f"dev/proposal-{proposal_id}-auto" or return a clear error. This is a small, low-risk change limited to the branch_name handling in create_proposal that prevents silent failures or exceptions when callers supply colliding names.
