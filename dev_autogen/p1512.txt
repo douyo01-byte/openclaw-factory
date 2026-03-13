@@ -1,0 +1,6 @@
+id=1512
+title=Truncate Telegram message to below 4096 chars to avoid API 400 errors
+batch=1512-1512
+ts=2026-03-13T08:49:57Z
+
+When building the message text from title+body, ensure it does not exceed Telegram's 4096 character limit. Implement a simple guard that truncates the composed text to 4000 characters (leaving space for an appended '… (truncated)' suffix) and append that suffix. Also print a short warning with the row id when truncation occurs so operators can notice truncated notifications. This is a small, low-risk change limited to the text construction and logging and prevents sendMessage HTTP 400 errors for overly long DB rows.
