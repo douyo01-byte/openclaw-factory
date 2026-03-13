@@ -1,0 +1,6 @@
+id=1440
+title=Parse Telegram API JSON response and fail loudly on API errors
+batch=1440-1440
+ts=2026-03-13T04:56:36Z
+
+After sending the POST, parse the HTTP response as JSON and inspect the Telegram API fields. If the HTTP status is not 200 or the JSON contains {"ok": false}, print the error_code and description from the JSON (or the raw text if JSON parsing fails) and exit with a non-zero status. This provides clearer diagnostics when the bot token/chat id are syntactically present but the API rejects the request (e.g. bad token, chat not found, permissions), and keeps the change very small and low-risk.
