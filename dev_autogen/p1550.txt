@@ -1,0 +1,6 @@
+id=1550
+title=Add BeautifulSoup parser fallback (lxml -> html.parser) and guard against parse failures
+batch=1550-1550
+ts=2026-03-13T10:00:33Z
+
+Some environments may not have the 'lxml' parser available or BeautifulSoup.parse can raise on malformed input, causing the script to crash. Introduce a small helper that attempts to parse with 'lxml' and falls back to 'html.parser' (and returns None on persistent failure). Use this helper in pick_official() and extract_socials(), and guard those functions to return empty results when parsing fails or html is empty. This is a localized, low-risk change: add a _parse_soup(html) helper, replace direct BeautifulSoup(...) calls in pick_official and extract_socials with the helper, and ensure early-return on None so the rest of the script continues processing other items.
