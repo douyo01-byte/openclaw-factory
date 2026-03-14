@@ -1,0 +1,11 @@
+id=1985
+title=Improve proposal filtering in scripts/dev_auto_execute_v1.sh
+batch=1986-1987
+ts=2026-03-14T05:44:58Z
+
+Goal:
+Implement: Improve proposal filtering in scripts/dev_auto_execute_v1.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable

@@ -1,0 +1,11 @@
+id=1987
+title=Harden watcher state sync in bots/chat_router_v1.py
+batch=1986-1987
+ts=2026-03-14T05:44:58Z
+
+Goal:
+Implement: Harden watcher state sync in bots/chat_router_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
