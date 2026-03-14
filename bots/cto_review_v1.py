@@ -7,6 +7,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+DB_PATH = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+
 ROOT = Path("/Users/doyopc/AI/openclaw-factory-daemon")
 DB = os.environ.get("DB_PATH", str(Path("/Users/doyopc/AI/openclaw-factory/data/openclaw.db")))
 STATE = ROOT / "data/cto_review_v1.state"
