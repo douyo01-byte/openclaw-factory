@@ -35,7 +35,6 @@ def proposal_exists(c, title: str) -> bool:
         select id
         from dev_proposals
         where title=?
-          and coalesce(status,'') not in ('merged','closed')
         order by id desc
         limit 1
     """, (title,)).fetchone()
@@ -83,7 +82,7 @@ def insert_proposal(c, title: str, description: str, target_system: str, improve
         improvement_type,
         "generated from learning_patterns + supply_bias"
     ))
-    return c.lastrowid
+    return
 
 def run_once():
     c = conn()
