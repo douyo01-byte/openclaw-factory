@@ -1,0 +1,11 @@
+id=1830
+title=Improve executor stability in scripts/review_run_one.sh
+batch=1829-1830
+ts=2026-03-14T02:04:04Z
+
+Goal:
+Implement: Improve executor stability in scripts/review_run_one.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
