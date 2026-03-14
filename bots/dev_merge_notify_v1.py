@@ -131,25 +131,67 @@ def summarize_kind(improvement_type: str) -> tuple[str, list[str], list[str]]:
     )
 
 
-def choose_display_files(row: sqlite3.Row) -> str:
-    raw = (row["changed_files"] if "changed_files" in row.keys() else "") or ""
-    raw = str(raw).strip()
-    if raw:
-        parts = [x.strip() for x in raw.replace("\r", "\n").split("\n") if x.strip()]
-        parts = parts[:4]
-        if parts:
-            return " / ".join(parts)
-    target = ((row["target_system"] or "").strip() if "target_system" in row.keys() else "")
-    improvement = ((row["improvement_type"] or "").strip() if "improvement_type" in row.keys() else "")
-    title = ((row["title"] or "").strip() if "title" in row.keys() else "")
-    hint = "core"
+def choose_display_files(row: sqlite3.Row, pr: dict) -> list[str]:
+    files = []
+    try:
+        if pr:
+            for f in (pr.get("files") or []):
+                path = (f.get("path") or "").strip()
+                if not path:
+                    continue
+                if path.startswith("dev_autogen/"):
+                    continue
+                files.append(path)
+    except Exception:
+        pass
+
+    if not files:
+        try:
+            raw = (row["changed_files"] if "changed_files" in row.keys() else "") or ""
+            raw = str(raw).strip()
+            if raw:
+                for x in raw.replace("\r", "\n").split("\n"):
+                    x = x.strip()
+                    if not x:
+                        continue
+                    if x.startswith("dev_autogen/"):
+                        continue
+                    files.append(x)
+        except Exception:
+            pass
+
+    seen = set()
+    out = []
+    for x in files:
+        if x in seen:
+            continue
+        seen.add(x)
+        out.append(x)
+
+    out = out[:3]
+    if out:
+        return out
+
+    try:
+        target = ((row["target_system"] or "").strip() if "target_system" in row.keys() else "")
+    except Exception:
+        target = ""
+    try:
+        improvement = ((row["improvement_type"] or "").strip() if "improvement_type" in row.keys() else "")
+    except Exception:
+        improvement = ""
+    try:
+        title = ((row["title"] or "").strip() if "title" in row.keys() else "")
+    except Exception:
+        title = ""
+
     if target:
-        hint = target
-    elif improvement:
-        hint = improvement
-    elif title:
-        hint = title[:40]
-    return hint
+        return [target]
+    if improvement:
+        return [improvement]
+    if title:
+        return [title[:40]]
+    return ["core"]
 
 def build_fallback(row: sqlite3.Row, pr: dict) -> str:
     title = (row["title"] or "").strip()
@@ -277,7 +319,7 @@ def build_prompt(row: sqlite3.Row, pr: dict) -> str:
     pr_body = pr.get("body") or ""
 
     all_files = [(f.get("path") or "").strip() for f in (pr.get("files") or []) if (f.get("path") or "").strip()]
-    display_files = choose_display_files(target, pr)
+    display_files = choose_display_files(row, pr)
     extra = max(len([x for x in all_files if not x.startswith("dev_autogen/")]) - len(display_files), 0)
 
     diff_files = []
