@@ -182,7 +182,7 @@ def tick_once(conn: sqlite3.Connection):
         "select id, pr_number, pr_url, coalesce(pr_status,'') pr_status, coalesce(status,'') status, coalesce(dev_stage,'') dev_stage "
         "from dev_proposals "
         "where (pr_number is null or pr_number='' or pr_number=0 or coalesce(pr_status,'') in ('','open','closed')) "
-        "order by id desc limit 50"
+        "order by id desc limit 500"
     ).fetchall()
 
     dirty = False

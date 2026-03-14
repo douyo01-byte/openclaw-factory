@@ -135,7 +135,6 @@ def tick():
           and coalesce(dev_stage,'')='merged'
           and coalesce(pr_status,'')='merged'
           and coalesce(impact_level,'')=''
-          and coalesce(source_ai,'')<>''
           and lower(coalesce(title,'')) not like 'mothership:%'
         order by id desc
         limit ?
