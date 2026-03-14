@@ -1,0 +1,11 @@
+id=2352
+title=Executor stability sweep 000450
+batch=2352-2352
+ts=2026-03-14T15:07:48Z
+
+Goal:
+Implement: Executor stability sweep 000450
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
