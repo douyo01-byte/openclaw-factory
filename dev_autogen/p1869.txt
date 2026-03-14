@@ -1,0 +1,11 @@
+id=1869
+title=Improve logging coverage in bots/dev_guardrails_v1.py
+batch=1870-1869
+ts=2026-03-14T02:47:44Z
+
+Goal:
+Implement: Improve logging coverage in bots/dev_guardrails_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
