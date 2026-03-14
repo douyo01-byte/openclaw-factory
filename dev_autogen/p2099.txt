@@ -1,0 +1,11 @@
+id=2099
+title=Reduce event summary drift in config/personas/kenji.txt
+batch=2097-2099
+ts=2026-03-14T08:36:03Z
+
+Goal:
+Implement: Reduce event summary drift in config/personas/kenji.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
