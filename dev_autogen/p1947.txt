@@ -1,0 +1,11 @@
+id=1947
+title=Improve executor stability in scripts/launch_pr_watcher.sh
+batch=1946-1947
+ts=2026-03-14T04:57:02Z
+
+Goal:
+Implement: Improve executor stability in scripts/launch_pr_watcher.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
