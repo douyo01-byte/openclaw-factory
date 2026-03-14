@@ -1,0 +1,6 @@
+id=2271
+title=Self improve logging loop
+batch=2268-2271
+ts=2026-03-14T12:33:55Z
+
+learning_patterns と supply_bias で logging が高重み。OpenClaw 自体の logging 系改善を優先し、成功パターン寄りの安定化・自動化を進める。
