@@ -1,0 +1,30 @@
+id=2617
+title=🧠 Kaikun04 CTOレビュー
+batch=2617-2616
+ts=2026-03-14T23:31:51Z
+
+🧠 Kaikun04 CTOレビュー
+
+事業開始達成率: 65%
+現在フェーズ: 事業準備
+
+■ 開発ライン
+・ merged(24h): 812
+・ open PR: 46
+・ approved滞留: 1
+・ execute_now滞留: 1
+・ COO未完了: 0
+
+■ 常駐状態
+・ secretary: 停止
+・ executor: 停止
+・ watcher: 稼働中
+・ merge_notify: 停止
+・ meeting_bridge: 停止
+・ mainstream_supply: 停止
+
+■ 最新提案
+・ #2616 MotherShip: db check
+
+■ CTO判断
+・ supply停止 / executor停止 / Kaikun02停止
