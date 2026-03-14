@@ -1,0 +1,11 @@
+id=1957
+title=Reduce duplicate writes in scripts/review_many.sh
+batch=1956-1957
+ts=2026-03-14T05:09:18Z
+
+Goal:
+Implement: Reduce duplicate writes in scripts/review_many.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
