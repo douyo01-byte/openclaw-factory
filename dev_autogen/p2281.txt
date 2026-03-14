@@ -1,0 +1,30 @@
+id=2281
+title=🧠 Kaikun04 CTOレビュー
+batch=2281-2281
+ts=2026-03-14T12:43:54Z
+
+🧠 Kaikun04 CTOレビュー
+
+事業開始達成率: 65%
+現在フェーズ: 事業準備
+
+■ 開発ライン
+・ merged(24h): 620
+・ open PR: 0
+・ approved滞留: 13
+・ execute_now滞留: 11
+・ COO未完了: 0
+
+■ 常駐状態
+・ secretary: 稼働中
+・ executor: 稼働中
+・ watcher: 稼働中
+・ merge_notify: 稼働中
+・ meeting_bridge: 稼働中
+・ mainstream_supply: 停止
+
+■ 最新提案
+・ #2280 Self improve bots/build_decision_patterns.py loop
+
+■ CTO判断
+・ supply停止 / execute_now滞留 11件
