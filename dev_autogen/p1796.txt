@@ -1,0 +1,11 @@
+id=1796
+title=Improve proposal filtering in scripts/db_init.py
+batch=1797-1796
+ts=2026-03-14T01:23:45Z
+
+Goal:
+Implement: Improve proposal filtering in scripts/db_init.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
