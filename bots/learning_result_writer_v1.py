@@ -33,29 +33,33 @@ def run_once():
     c = conn()
     try:
         rows = c.execute("""
-            select
-              id as proposal_id,
-              coalesce(title,'') as title,
-              coalesce(source_ai,'') as source_ai,
-              coalesce(target_system,'') as target_system,
-              coalesce(improvement_type,'') as improvement_type,
-              coalesce(impact_score,0) as impact_score,
-              coalesce(impact_level,'') as impact_level,
-              coalesce(impact_reason,'') as impact_reason,
-              coalesce(result_score,0) as result_score,
-              coalesce(result_type,'') as result_type,
-              coalesce(result_note,'') as result_note,
-              coalesce(executed_at,'') as executed_at,
-              coalesce(created_at,'') as created_at
-            from dev_proposals
-            where coalesce(dev_stage,'')='merged'
-              and not exists (
-                select 1 from learning_results lr
-                where lr.proposal_id = dev_proposals.id
-              )
-            order by id asc
-            limit 100
-        """).fetchall()
+        select
+          dp.id as proposal_id,
+          coalesce(dp.title,'') as title,
+          coalesce(dp.source_ai,'') as source_ai,
+          coalesce(dp.target_system,'') as target_system,
+          coalesce(dp.improvement_type,'') as improvement_type,
+          coalesce(dp.impact_score,0) as impact_score,
+          coalesce(dp.impact_level,'') as impact_level,
+          coalesce(dp.impact_reason,'') as impact_reason,
+          coalesce(dp.result_score,0) as result_score,
+          coalesce(dp.result_type,'') as result_type,
+          coalesce(dp.result_note,'') as result_note,
+          case
+            when coalesce(dp.dev_stage,'')='merged' then 1
+            else 0
+          end as success_flag,
+          coalesce(dp.executed_at,'') as merged_at
+        from dev_proposals dp
+        where coalesce(dp.dev_stage,'')='merged'
+          and not exists (
+            select 1
+            from learning_results lr
+            where lr.proposal_id = dp.id
+          )
+        order by dp.id asc
+        limit 100
+    """).fetchall()
 
         n = 0
         for r in rows:
