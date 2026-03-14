@@ -1,55 +1,57 @@
 import os
+import re
 import sqlite3
 import time
 
-DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 
-def norm(t: str) -> str:
-    return "".join((t or "").lower().split())
+def norm(s: str) -> str:
+    s = (s or "").lower().strip()
+    s = re.sub(r"\s+", "", s)
+    s = re.sub(r"[^a-z0-9ぁ-んァ-ヶ一-龠_-]", "", s)
+    return s[:160]
 
 def run_once():
-    conn = sqlite3.connect(DB, timeout=30)
-    conn.row_factory = sqlite3.Row
-    conn.execute("pragma busy_timeout=30000")
-    rows = conn.execute("""
+    con = sqlite3.connect(DB, timeout=30)
+    con.execute("pragma busy_timeout=30000")
+    con.row_factory = sqlite3.Row
+    rows = con.execute("""
         select id, coalesce(title,'') as title, coalesce(source_ai,'') as source_ai,
-               coalesce(status,'') as status, created_at
+               coalesce(status,'') as status, coalesce(project_decision,'') as project_decision,
+               created_at
         from dev_proposals
-        where coalesce(status,'') in ('approved','new','pending','idea')
+        where coalesce(status,'') in ('new','approved','pending','idea')
         order by id desc
         limit 1000
     """).fetchall()
 
     seen = {}
-    closed = []
+    closed = 0
     for r in rows:
-        k = (norm(r["title"]), (r["source_ai"] or "").strip().lower())
-        if not k[0]:
+        key = norm(r["title"])
+        if not key:
             continue
-        if k not in seen:
-            seen[k] = r["id"]
+        if key not in seen:
+            seen[key] = r["id"]
             continue
-        newer = seen[k]
-        older = r["id"]
-        conn.execute("""
+        keep_id = max(seen[key], r["id"])
+        drop_id = min(seen[key], r["id"])
+        con.execute("""
             update dev_proposals
             set status='closed',
-                dev_stage=case when coalesce(dev_stage,'')='' then 'closed' else dev_stage end,
-                pr_status=case when coalesce(pr_status,'')='' then 'closed' else pr_status end,
-                decision_note=trim(coalesce(decision_note,'') || ' deduped_by_proposal_dedupe_v1')
+                dev_stage='closed',
+                result_note='deduped'
             where id=?
-              and coalesce(status,'') in ('approved','new','pending','idea')
-              and coalesce(dev_stage,'') not in ('merged')
-        """, (older,))
-        closed.append((older, newer, r["title"]))
+              and coalesce(status,'') not in ('merged','closed')
+        """, (drop_id,))
+        seen[key] = keep_id
+        closed += con.total_changes > 0
 
-    conn.commit()
-    conn.close()
-    print(f"proposal_dedupe_closed={len(closed)}", flush=True)
-    for older, newer, title in closed[:20]:
-        print(f"[proposal_dedupe] closed old={older} keep={newer} title={title}", flush=True)
+    con.commit()
+    con.close()
+    print(f"proposal_dedupe_closed={int(closed)}", flush=True)
 
 if __name__ == "__main__":
     while True:
         run_once()
-        time.sleep(300)
+        time.sleep(120)

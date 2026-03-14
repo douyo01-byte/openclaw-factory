@@ -1,63 +1,82 @@
 import os
 import sqlite3
 from datetime import datetime
-from oclibs.tg_api import send_message
 
-DB_PATH = os.environ.get("OCLAW_DB_PATH", "./data/openclaw.db")
-CHAT_ID = os.environ.get("OCLAW_TELEGRAM_CHAT_ID", "-5208829484")
-
+DB_PATH = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 
 def one(conn, sql):
-    cur = conn.execute(sql)
-    row = cur.fetchone()
+    row = conn.execute(sql).fetchone()
     return row[0] if row else None
 
+def upsert_event(conn, title: str, body: str):
+    conn.execute("""
+        create table if not exists ceo_hub_events(
+          id integer primary key,
+          event_type text,
+          title text,
+          body text,
+          proposal_id integer,
+          pr_url text,
+          created_at text default (datetime('now')),
+          sent_at text
+        )
+    """)
+    last = conn.execute("""
+        select id, coalesce(body,'')
+        from ceo_hub_events
+        where coalesce(event_type,'')='healthcheck'
+        order by id desc
+        limit 1
+    """).fetchone()
+    if last and (last[1] or "").strip() == body.strip():
+        return
+    conn.execute("""
+        insert into ceo_hub_events(event_type,title,body,created_at)
+        values('healthcheck', ?, ?, datetime('now'))
+    """, (title, body))
+    conn.commit()
 
 def main():
-    parts = [
-        "🟢 OpenClaw Alive",
-        f"time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-    ]
-
-    if not os.path.exists(DB_PATH):
-        parts.append(f"db: NOT FOUND ({DB_PATH})")
-        msg = "\n".join(parts)
-        chat_id = CHAT_ID
-        send_message(chat_id, msg)
-        return
-
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30)
+    conn.execute("pragma busy_timeout=30000")
     try:
+        parts = [
+            "🟢 OpenClaw Alive",
+            f"time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        ]
         try:
-            items = one(conn, "SELECT COUNT(*) FROM items")
-        except:
+            items = one(conn, "select count(*) from items")
+        except Exception:
             items = "n/a"
         try:
-            contacts = one(conn, "SELECT COUNT(*) FROM contacts")
-        except:
+            contacts = one(conn, "select count(*) from contacts")
+        except Exception:
             contacts = "n/a"
         try:
-            commands = one(conn, "SELECT COUNT(*) FROM inbox_commands")
-        except:
+            commands = one(conn, "select count(*) from inbox_commands")
+        except Exception:
             commands = "n/a"
+        try:
+            open_pr = one(conn, "select count(*) from dev_proposals where coalesce(pr_status,'')='open'")
+        except Exception:
+            open_pr = "n/a"
+        try:
+            approved = one(conn, "select count(*) from dev_proposals where coalesce(status,'')='approved'")
+        except Exception:
+            approved = "n/a"
 
         parts.append(f"items: {items}")
         parts.append(f"contacts: {contacts}")
         parts.append(f"commands: {commands}")
-
-        try:
-            last_meeting = one(conn, "SELECT MAX(created_at) FROM retrospectives")
-        except:
-            last_meeting = "n/a"
-        parts.append(f"last_meeting: {last_meeting}")
+        parts.append(f"open_pr: {open_pr}")
+        parts.append(f"approved: {approved}")
         parts.append("status: OK")
+
+        body = "\n".join(parts)
+        upsert_event(conn, "healthcheck", body)
+        print("[healthcheck] ceo_hub_events updated", flush=True)
     finally:
         conn.close()
-
-    msg = "\n".join(parts)
-    chat_id = CHAT_ID
-    send_message(chat_id, msg)
-
 
 if __name__ == "__main__":
     main()
