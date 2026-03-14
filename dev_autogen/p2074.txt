@@ -1,0 +1,11 @@
+id=2074
+title=Improve lifecycle event safety in bots/spec_notify_v1.py
+batch=2073-2074
+ts=2026-03-14T08:07:34Z
+
+Goal:
+Implement: Improve lifecycle event safety in bots/spec_notify_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
