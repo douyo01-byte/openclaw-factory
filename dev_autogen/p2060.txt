@@ -1,0 +1,11 @@
+id=2060
+title=Improve proposal filtering in docs/gates.md
+batch=2061-2060
+ts=2026-03-14T07:51:13Z
+
+Goal:
+Implement: Improve proposal filtering in docs/gates.md
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
