@@ -1,0 +1,11 @@
+id=2084
+title=Improve error handling in scripts/meeting_once.sh
+batch=2083-2084
+ts=2026-03-14T08:17:08Z
+
+Goal:
+Implement: Improve error handling in scripts/meeting_once.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
