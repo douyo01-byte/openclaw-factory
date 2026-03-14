@@ -1,0 +1,11 @@
+id=2070
+title=Improve proposal filtering in bots/dev_guardrails_v1.py
+batch=2071-2072
+ts=2026-03-14T08:04:16Z
+
+Goal:
+Implement: Improve proposal filtering in bots/dev_guardrails_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
