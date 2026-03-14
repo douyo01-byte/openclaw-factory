@@ -1,0 +1,11 @@
+id=1818
+title=Improve queue handling in scripts/set_telegram_token_launchagent.sh
+batch=1817-1818
+ts=2026-03-14T01:51:32Z
+
+Goal:
+Implement: Improve queue handling in scripts/set_telegram_token_launchagent.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
