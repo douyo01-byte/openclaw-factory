@@ -70,13 +70,29 @@ def create_cto_proposal(conn, title: str, body: str):
 
     cur.execute("""
         insert into dev_proposals(
-            title, body, status, project_decision, dev_stage, guard_status,
-            source_ai, category, target_system, improvement_type, created_at
+            title,
+            status,
+            project_decision,
+            dev_stage,
+            guard_status,
+            source_ai,
+            category,
+            target_system,
+            improvement_type,
+            created_at
         ) values(
-            ?, ?, 'approved', 'execute_now', 'execute_now', 'safe',
-            'cto', 'automation', 'core', 'automation', datetime('now')
+            ?,
+            'approved',
+            'execute_now',
+            'execute_now',
+            'safe',
+            'cto',
+            'automation',
+            'core',
+            'automation',
+            datetime('now')
         )
-    """, (title, body))
+    """, (title,))
     pid = cur.lastrowid
     conn.commit()
     print(f"[cto_review] proposal inserted id={pid}", flush=True)
