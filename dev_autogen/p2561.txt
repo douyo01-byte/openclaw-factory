@@ -1,0 +1,6 @@
+id=2561
+title=Self improve self_improve loop
+batch=2561-2565
+ts=2026-03-14T22:04:48Z
+
+learning_patterns と supply_bias で self_improve が高重み。OpenClaw 自体の self_improve 系改善を優先し、成功パターン寄りの安定化・自動化を進める。
