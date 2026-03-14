@@ -1,0 +1,11 @@
+id=1973
+title=Refactor duplicated logic in scripts/tg_poll_loop.sh
+batch=1974-1973
+ts=2026-03-14T05:28:38Z
+
+Goal:
+Implement: Refactor duplicated logic in scripts/tg_poll_loop.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
