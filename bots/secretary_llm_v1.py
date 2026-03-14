@@ -1,7 +1,9 @@
+import re
 import json
 import os
 import sqlite3
 import time
+import subprocess
 from pathlib import Path
 
 import requests
@@ -88,18 +90,18 @@ def build_context(conn):
 def ask_llm(user_text, context_text):
     if not OPENAI_API_KEY:
         return (
-            "今の状況です。\n"
-            "・LLMキー未設定のため簡易応答です\n"
-            "・詳細ダッシュボード生成は可能ですが、自然文要約は未接続です"
+            "OpenClaw COOです。\n"
+            "今は簡易モードです。\n"
+            "事実ベースで短く答えます。"
         )
     system = (
-        "あなたは OpenClaw の秘書AIです。"
-        "ユーザーの質問に対して、日本語で短く自然に返答してください。"
-        "箇条書きは最大3点まで。"
-        "事実は与えられた context のみを使うこと。"
-        "わからないことは推測しない。"
-        "『今どう？』『何が詰まってる？』『maturityは何%？』のような質問には、"
-        "先に結論、その後に最大3項目で理由、最後に次の一手を1行で返す。"
+        "あなたは OpenClaw 専属の COO / 右腕です。"
+        "日本語で自然に、断定しすぎず、OpenClaw の内部事情を知る実務家として答えてください。"
+        "事実は context のみを使うこと。推測は禁止。"
+        "質問が経営・弱点・次の一手なら、"
+        "1) 結論 2) 根拠 3) 次の一手 の順で簡潔に返す。"
+        "必要なら作業チャットに貼れる短い指示も出す。"
+        "箇条書きは多くても 4 個まで。"
     )
     payload = {
         "model": OPENAI_MODEL,
@@ -124,14 +126,20 @@ def ask_llm(user_text, context_text):
 
 def send(chat_id, text):
     if not BOT_TOKEN or not chat_id:
+        print(f"[secretary_send] missing token/chat bot_len={len(BOT_TOKEN)} chat_id={chat_id}", flush=True)
         return False, "missing_token_or_chat"
-    r = requests.post(
-        f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-        data={"chat_id": str(chat_id), "text": text},
-        timeout=30,
-    )
-    r.raise_for_status()
-    return True, ""
+    try:
+        r = requests.post(
+            f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+            data={"chat_id": str(chat_id), "text": text},
+            timeout=30,
+        )
+        r.raise_for_status()
+        print(f"[secretary_send] ok chat_id={chat_id} text_head={(text or '')[:60]!r}", flush=True)
+        return True, ""
+    except Exception as e:
+        print(f"[secretary_send] error chat_id={chat_id} err={e!r}", flush=True)
+        return False, repr(e)[:500]
 
 def ensure_cols(conn):
     cols = {r[1] for r in conn.execute("pragma table_info(inbox_commands)")}
@@ -163,6 +171,345 @@ def mark(conn, rid, status, err=None):
     )
     conn.commit()
 
+
+
+def fetch_recent_decisions(conn):
+    try:
+        rows = conn.execute("""
+            select id, coalesce(target,''), coalesce(decision,''), coalesce(reason,''), coalesce(created_at,'')
+            from decisions
+            order by id desc
+            limit 4
+        """).fetchall()
+        return rows
+    except Exception:
+        return []
+
+def employee_block():
+    return """■ 海外事業
+SekawakuClaw_bot
+・さがすけ（探索）
+・しらべえ（調査）
+・かんがえもん（企画）
+
+■ 開発
+Kaikun01_bot
+・きめたろう（設計）
+・つくるぞう（実装）
+・みはるん（監査）
+・くっつけ丸（統合）
+
+■ 経営共有
+Kaikun02_bot
+・ひしょりん（秘書）
+・しらせるん（報告）
+
+■ 自動実行
+Kaikun03_bot
+・とどけるん（通知）
+・まわすけ（実行管理）
+・なおし丸（自己修復）
+・みはりん（監視）"""
+
+def bot_status_block():
+    labels = [
+        ("secretary_llm_v1", "jp.openclaw.secretary_llm_v1"),
+        ("tg_poll_loop", "jp.openclaw.tg_poll_loop"),
+        ("dev_pr_watcher_v1", "jp.openclaw.dev_pr_watcher_v1"),
+        ("dev_pr_automerge_v1", "jp.openclaw.dev_pr_automerge_v1"),
+        ("mainstream_supply", "jp.openclaw.mainstream_supply"),
+        ("self_strength_watchdog_v1", "jp.openclaw.self_strength_watchdog_v1"),
+        ("ai_meeting_digest_v1", "jp.openclaw.ai_meeting_digest_v1"),
+        ("dev_meeting_telegram_bridge_v1", "jp.openclaw.dev_meeting_telegram_bridge_v1"),
+    ]
+    out = []
+    for name, lb in labels:
+        try:
+            r = subprocess.run(
+                ["launchctl", "print", f"gui/{os.getuid()}/{lb}"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            txt = (r.stdout or "") + (r.stderr or "")
+            status = "稼働中" if "state = running" in txt else "停止"
+        except Exception:
+            status = "不明"
+        out.append(f"{name}: {status}")
+    return "\n".join(out)
+
+def build_dashboard(conn):
+    f = fetch_dashboard_facts(conn)
+    latest = f.get("latest") or {"id": "-", "title": "なし"}
+    latest_merged = f.get("latest_merged") or {"id": "-", "title": "なし"}
+    top_backlog = f.get("top_backlog") or []
+    decisions = fetch_recent_decisions(conn)
+
+    txt = "OpenClaw CEOダッシュボード\n"
+    txt += "━━━━━━━━━━━━━━━━━━\n"
+    txt += "【会社状態】\n\n"
+    txt += f"総提案件数: {f['total']}\n"
+    txt += f"マージ済み: {f['merged']}\n"
+    txt += f"Open PR: {f['open_pr']}\n"
+    txt += f"承認済み: {f['approved']}\n"
+    txt += f"社長回答待ち: {f['waiting']}\n\n"
+
+    txt += "━━━━━━━━━━━━━━━━━━\n"
+    txt += "【最新提案】\n\n"
+    txt += f"#{latest['id']} {latest['title']}\n\n"
+
+    txt += "━━━━━━━━━━━━━━━━━━\n"
+    txt += "【最新マージ】\n\n"
+    txt += f"#{latest_merged['id']} {latest_merged['title']}\n\n"
+
+    txt += "━━━━━━━━━━━━━━━━━━\n"
+    txt += "【優先バックログ】\n\n"
+    if top_backlog:
+        for r in top_backlog:
+            txt += f"#{r['id']} {r['title']}\n"
+    else:
+        txt += "現在 0件\n"
+    txt += "\n"
+
+    txt += "━━━━━━━━━━━━━━━━━━\n"
+    txt += "【最近の意思決定】\n\n"
+    if decisions:
+        for r in decisions:
+            tgt = r[1] or "-"
+            dec = r[2] or "-"
+            txt += f"{tgt} 評価: {dec}\n"
+    else:
+        txt += "最近の記録なし\n"
+    txt += "\n"
+
+    txt += "━━━━━━━━━━━━━━━━━━\n"
+    txt += "【AI社員構成】\n\n"
+    txt += employee_block() + "\n\n"
+
+    txt += "━━━━━━━━━━━━━━━━━━\n"
+    txt += "【BOT状態】\n\n"
+    txt += bot_status_block() + "\n\n"
+
+    txt += "━━━━━━━━━━━━━━━━━━\n"
+    txt += "【次の一手】\n\n"
+    txt += "・executorキュー監視\n"
+    txt += "・供給とPR消化バランス確認\n"
+    txt += "・blocked targetの整理\n"
+    return txt
+
+def normalize_user_text(text):
+    t = (text or "").strip()
+    t = t.replace("@Kaikun02_bot", "").replace("@kaikun02_bot", "").strip()
+    return "".join(t.split())
+
+
+
+def infer_targets(text: str):
+    t = normalize_user_text(text)
+    targets = []
+    if any(k in t for k in ["通知", "telegram", "テレグラム", "dm", "送信"]):
+        targets.append("Telegram通知系")
+    if any(k in t for k in ["会議", "meeting", "digest"]):
+        targets.append("AI会議/要約系")
+    if any(k in t for k in ["進捗", "dashboard", "ダッシュボード", "ceo"]):
+        targets.append("Kaikun02/ダッシュボード系")
+    if any(k in t for k in ["自動化", "loop", "launchagent", "常時", "定期"]):
+        targets.append("常駐化/LaunchAgent系")
+    if any(k in t for k in ["proposal", "提案", "起票"]):
+        targets.append("dev_proposals/起票系")
+    if any(k in t for k in ["db", "sqlite", "データベース"]):
+        targets.append("SQLite/DB系")
+    if any(k in t for k in ["pr", "merge", "executor", "review"]):
+        targets.append("開発実行/PR系")
+    return targets[:4]
+
+
+def build_coo_plan(text, conn):
+    user_text = normalize_user_text(text)
+    f = fetch_dashboard_facts(conn)
+    backlog = f.get("top_backlog") or []
+    targets = infer_targets(text)
+
+    t = user_text.lower()
+    tc = re.sub(r"\s+", "", t)
+
+    target_system = "core"
+    category = "automation"
+    improvement_type = "automation"
+
+    if "telegram" in tc or "通知" in tc or "送信" in tc:
+        target_system = "telegram"
+    elif "dashboard" in tc or "進捗" in tc:
+        target_system = "dashboard"
+    elif "meeting" in tc or "会議" in tc or "digest" in tc:
+        target_system = "meeting"
+
+    lines = []
+    lines.append("【 目 的 】 ")
+    lines.append("- 依 頼 内 容 を 実 装 可 能 な 粒 度 に 整 理 す る ")
+    lines.append(f"- 入 力 : {user_text}")
+    lines.append("")
+    lines.append("【 対 象 候 補 】 ")
+    if targets:
+        for x in targets:
+            lines.append(f"- {x}")
+    else:
+        lines.append("- 対 象 は 未 特 定 ")
+    lines.append("")
+    lines.append("【 実 装 方 針 】 ")
+    lines.append("- 既 存 bot / script / DB / LaunchAgent の 接 続 点 を 先 に 確 認 す る ")
+    lines.append("- 人 間 判 断 が 必 要 な 点 だ け 先 に 確 定 す る ")
+    lines.append("- そ れ 以 外 は 自 動 実 装 候 補 と し て 分 離 す る ")
+    lines.append("")
+    lines.append("【 あ な た が 決 め る こ と 】 ")
+    lines.append("- 通 知 対 象 の chat_id を 既 存 流 用 か 新 規 か ")
+    lines.append("- 手 動 実 行 か 常 駐 自 動 実 行 か ")
+    lines.append("- 在 庫 の 変 化 判 定 を DB 起 点 に す る か 外 部 起 点 に す る か ")
+    lines.append("")
+    lines.append("【 作 業 チ ャ ッ ト 指 示 】 ")
+    lines.append("cd ~/AI/openclaw-factory-daemon || exit 1")
+    lines.append("launchctl list | grep openclaw")
+    lines.append("sqlite3 data/openclaw.db \"select count(*) from dev_proposals;\"")
+    lines.append("sqlite3 data/openclaw.db \"select id,title,status,dev_stage from dev_proposals order by id desc limit 10;\"")
+    lines.append("grep -Rni 'telegram\\|meeting\\|dashboard\\|proposal\\|executor' bots scripts 2>/dev/null | sed -n '1,120p'")
+    lines.append("")
+    lines.append("【 推 定 メ タ 情 報 】 ")
+    lines.append(f"- category: {category}")
+    lines.append(f"- target_system: {target_system}")
+    lines.append(f"- improvement_type: {improvement_type}")
+    lines.append("")
+    lines.append("【 現 在 の 会 社 状 態 】 ")
+    lines.append(f"- 総 提 案 件 数 : {f.get('total', 0)}")
+    lines.append(f"- マ ー ジ 済 み : {f.get('merged', 0)}")
+    lines.append(f"- 承 認 済 み : {f.get('approved', 0)}")
+    lines.append(f"- Open PR: {f.get('open_pr', 0)}")
+    lines.append("")
+    lines.append("【 優 先 バ ッ ク ロ グ 】 ")
+    if backlog:
+        for r in backlog[:3]:
+            lines.append(f"- #{r.get('id')} {r.get('title')}")
+    else:
+        lines.append("- な し ")
+    lines.append("")
+    lines.append("【 自 動 化 候 補 】 ")
+    lines.append("- 必 要 な ら こ の 内 容 で dev_proposals 化 す る ")
+    return "\n".join(lines)
+
+def coo_to_proposal(conn, user_text, reply_text):
+    raw = normalize_user_text(user_text).strip()
+    title = raw[:120] or "COO proposal"
+    slug = re.sub(r"[^a-zA-Z0-9]+", "-", raw.lower()).strip("-")
+    if not slug:
+        slug = "coo-proposal"
+    branch_name = f"coo/{slug[:40]}"
+
+    tl = raw.lower()
+    tc = re.sub(r"\s+", "", tl)
+
+    category = "automation"
+    target_system = "core"
+    improvement_type = "automation"
+    quality_score = 72
+
+    if "telegram" in tc or "通知" in tc or "送信" in tc:
+        target_system = "telegram"
+    elif "dashboard" in tc or "進捗" in tc:
+        target_system = "dashboard"
+    elif "meeting" in tc or "会議" in tc or "digest" in tc:
+        target_system = "meeting"
+
+    cur = conn.cursor()
+    cur.execute("""
+        insert into dev_proposals(
+            title,
+            description,
+            branch_name,
+            status,
+            dev_stage,
+            source_ai,
+            category,
+            target_system,
+            improvement_type,
+            quality_score
+        ) values(?,?,?,?,?,?,?,?,?,?)
+    """, (
+        title,
+        reply_text,
+        branch_name,
+        "approved",
+        "approved",
+        "coo",
+        category,
+        target_system,
+        improvement_type,
+        quality_score,
+    ))
+    conn.commit()
+    pid = cur.lastrowid
+    print(f"[coo_proposal] inserted id={pid} status=approved target={target_system}", flush=True)
+    return pid
+
+def route_special(text):
+    t = normalize_user_text(text)
+    tl = t.lower()
+    tc = re.sub(r"\s+", "", tl)
+
+    if t in ["/start", "start"]:
+        return "start"
+
+    dashboard_keys = [
+        "進捗は？", "進捗", "今どう？", "今どう", "ダッシュボード", "/進捗", "/dashboard"
+    ]
+    if any(k in tc for k in dashboard_keys):
+        return "dashboard"
+
+    next_keys = [
+        "次の作業は？", "次の作業", "次やること", "作業指示", "/次作業", "/next"
+    ]
+    if any(k in tc for k in next_keys):
+        return "next_actions"
+
+    coo_keys = [
+        "こんなん作って",
+        "これを自動化したい",
+        "この機能を追加したい",
+        "こういう仕組みにしたい",
+        "この案を実装したい",
+        "これ作って",
+        "自動化したい",
+        "機能追加したい",
+        "telegramに自動送信したい",
+        "telegram通知を自動送信したい",
+        "在庫通知をtelegramに自動送信したい",
+        "在庫通知を自動送信したい",
+        "telegramへ自動送信したい",
+        "telegramに通知したい",
+    ]
+    if any(k in tc for k in coo_keys):
+        return "coo_intake"
+
+    return "chat"
+
+def is_terminal_dump(text):
+    raw = text or ""
+    tc = re.sub(r"\s+", "", raw.lower())
+    hit = 0
+    for k in [
+        "lastlogin:",
+        "doyopc@",
+        "launchctl",
+        "sqlite3",
+        "tail-n",
+        "grep-rni",
+        "cd~/ai/openclaw-factory-daemon",
+        "echo'===",
+        "echo\"===",
+    ]:
+        if k in tc:
+            hit += 1
+    return len(raw) > 500 and hit >= 2
+
+
 def run_once():
     conn = sqlite3.connect(DB, timeout=30)
     conn.row_factory = sqlite3.Row
@@ -177,8 +524,47 @@ def run_once():
     chat_id = str(row[1] or "").strip()
     text = str(row[2] or "").strip()
     try:
-        context_text = build_context(conn)
-        reply = ask_llm(text, context_text)
+        if is_terminal_dump(text):
+            mark(conn, rid, "secretary_skipped_terminal_dump", None)
+            print(f"[secretary_skip] rid={rid} terminal_dump=1", flush=True)
+            return
+
+        route = route_special(text)
+        print(f"[secretary_route] text={text!r} route={route}", flush=True)
+
+        if route == "start":
+            reply = (
+                "OpenClaw COOで す 。 \n"
+                "・ 進 捗 は ？ → CEOダッシュボード \n"
+                "・ 次 の 作 業 は ？ → 作業チャット指示 \n"
+                "・ こ ん な ん 作 っ て → COO整理で返答 \n"
+                "・ そ れ 以 外 → 通常相談に返答 "
+            )
+        elif route == "dashboard":
+            reply = build_dashboard(conn)
+        elif route == "next_actions":
+            reply = (
+                "OpenClaw 次 の 作 業 \n"
+                "1. executor安定性チェック \n"
+                "2. PR backlog確認 \n"
+                "3. supply生成状況確認 \n"
+                "4. learning反映確認 \n"
+                "5. AI会議ログ確認 \n\n"
+                "作業チャット指示例 \n"
+                "cd ~/AI/openclaw-factory-daemon\n"
+                "launchctl list | grep openclaw\n"
+                "sqlite3 data/openclaw.db \"select count(*) from dev_proposals;\""
+            )
+        elif route == "coo_intake":
+            reply = build_coo_plan(text, conn)
+            try:
+                coo_to_proposal(conn, text, reply)
+            except Exception as e:
+                print(f"[coo_proposal] error {e!r}", flush=True)
+        else:
+            context_text = build_context(conn)
+            reply = ask_llm(text, context_text)
+
         ok, err = send(chat_id, reply)
         if ok:
             mark(conn, rid, "secretary_done", None)
