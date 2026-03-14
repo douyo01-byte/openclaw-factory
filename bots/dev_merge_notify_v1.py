@@ -130,6 +130,27 @@ def summarize_kind(improvement_type: str) -> tuple[str, list[str], list[str]]:
         ["全体の運用が安定する"],
     )
 
+
+def choose_display_files(row: sqlite3.Row) -> str:
+    raw = (row["changed_files"] if "changed_files" in row.keys() else "") or ""
+    raw = str(raw).strip()
+    if raw:
+        parts = [x.strip() for x in raw.replace("\r", "\n").split("\n") if x.strip()]
+        parts = parts[:4]
+        if parts:
+            return " / ".join(parts)
+    target = ((row["target_system"] or "").strip() if "target_system" in row.keys() else "")
+    improvement = ((row["improvement_type"] or "").strip() if "improvement_type" in row.keys() else "")
+    title = ((row["title"] or "").strip() if "title" in row.keys() else "")
+    hint = "core"
+    if target:
+        hint = target
+    elif improvement:
+        hint = improvement
+    elif title:
+        hint = title[:40]
+    return hint
+
 def build_fallback(row: sqlite3.Row, pr: dict) -> str:
     title = (row["title"] or "").strip()
     target = (row["target_system"] or "").strip()
