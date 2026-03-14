@@ -1,0 +1,11 @@
+id=1820
+title=Refactor duplicated logic in scripts/meet_open.sh
+batch=1821-1822
+ts=2026-03-14T01:54:33Z
+
+Goal:
+Implement: Refactor duplicated logic in scripts/meet_open.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable

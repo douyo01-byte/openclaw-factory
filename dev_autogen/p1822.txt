@@ -1,0 +1,11 @@
+id=1822
+title=Reduce event summary drift in scripts/daily_text_example.txt
+batch=1821-1822
+ts=2026-03-14T01:54:33Z
+
+Goal:
+Implement: Reduce event summary drift in scripts/daily_text_example.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
