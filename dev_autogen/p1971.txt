@@ -1,0 +1,11 @@
+id=1971
+title=Improve lifecycle event safety in bots/tg_inbox_poll_v1.py
+batch=1970-1971
+ts=2026-03-14T05:25:24Z
+
+Goal:
+Implement: Improve lifecycle event safety in bots/tg_inbox_poll_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
