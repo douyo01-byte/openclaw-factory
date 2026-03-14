@@ -1,0 +1,11 @@
+id=1814
+title=Optimize database queries in scripts/jobs_apply_scout_contacts.sh
+batch=1815-1816
+ts=2026-03-14T01:48:17Z
+
+Goal:
+Implement: Optimize database queries in scripts/jobs_apply_scout_contacts.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
