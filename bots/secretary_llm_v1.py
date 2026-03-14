@@ -221,6 +221,7 @@ def bot_status_block():
         ("self_strength_watchdog_v1", "jp.openclaw.self_strength_watchdog_v1"),
         ("ai_meeting_digest_v1", "jp.openclaw.ai_meeting_digest_v1"),
         ("dev_meeting_telegram_bridge_v1", "jp.openclaw.dev_meeting_telegram_bridge_v1"),
+        ("cto_review_v1", "jp.openclaw.cto_review_v1"),
     ]
     out = []
     for name, lb in labels:
