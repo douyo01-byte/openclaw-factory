@@ -46,3 +46,4 @@ scripts/run_spec_notify_v1.sh
 scripts/self_healing_loop.sh
 scripts/spec_reply_loop.sh
 obs/
+tmp/
