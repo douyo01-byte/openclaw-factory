@@ -1,0 +1,11 @@
+id=1931
+title=Improve logging coverage in scripts/auto_meet_cycle.sh
+batch=1930-1931
+ts=2026-03-14T04:37:10Z
+
+Goal:
+Implement: Improve logging coverage in scripts/auto_meet_cycle.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
