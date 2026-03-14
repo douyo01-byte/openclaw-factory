@@ -1,0 +1,11 @@
+id=2113
+title=Improve executor stability in scripts/set_telegram_token_launchctl.sh
+batch=2112-2113
+ts=2026-03-14T08:51:37Z
+
+Goal:
+Implement: Improve executor stability in scripts/set_telegram_token_launchctl.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
