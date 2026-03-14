@@ -1,0 +1,11 @@
+id=1844
+title=Improve queue handling in scripts/go_next_step.sh
+batch=1845-1846
+ts=2026-03-14T02:19:41Z
+
+Goal:
+Implement: Improve queue handling in scripts/go_next_step.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
