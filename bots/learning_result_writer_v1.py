@@ -12,60 +12,48 @@ def conn():
 
 def build_summary(row):
     bits = []
-    src = (row["source_ai"] or "").strip()
-    tgt = (row["target_system"] or "").strip()
-    imp = (row["improvement_type"] or "").strip()
-    lvl = (row["impact_level"] or "").strip()
-    rtype = (row["result_type"] or "").strip()
-    if src:
-        bits.append(f"source_ai={src}")
-    if tgt:
-        bits.append(f"target={tgt}")
-    if imp:
-        bits.append(f"type={imp}")
-    if lvl:
-        bits.append(f"impact={lvl}")
-    if rtype:
-        bits.append(f"result={rtype}")
+    for k, label in [
+        ("source_ai", "source_ai"),
+        ("target_system", "target"),
+        ("improvement_type", "type"),
+        ("impact_level", "impact"),
+        ("result_type", "result"),
+    ]:
+        v = str(row[k] or "").strip()
+        if v:
+            bits.append(f"{label}={v}")
     return " / ".join(bits) if bits else "merged_result"
 
 def run_once():
     c = conn()
     try:
         rows = c.execute("""
-        select
-          dp.id as proposal_id,
-          coalesce(dp.title,'') as title,
-          coalesce(dp.source_ai,'') as source_ai,
-          coalesce(dp.target_system,'') as target_system,
-          coalesce(dp.improvement_type,'') as improvement_type,
-          coalesce(dp.impact_score,0) as impact_score,
-          coalesce(dp.impact_level,'') as impact_level,
-          coalesce(dp.impact_reason,'') as impact_reason,
-          coalesce(dp.result_score,0) as result_score,
-          coalesce(dp.result_type,'') as result_type,
-          coalesce(dp.result_note,'') as result_note,
-          case
-            when coalesce(dp.dev_stage,'')='merged' then 1
-            else 0
-          end as success_flag,
-          coalesce(dp.executed_at,'') as merged_at
-        from dev_proposals dp
-        where coalesce(dp.dev_stage,'')='merged'
-          and not exists (
-            select 1
-            from learning_results lr
-            where lr.proposal_id = dp.id
-          )
-        order by dp.id asc
-        limit 100
-    """).fetchall()
+            select
+              dp.id as proposal_id,
+              coalesce(dp.title,'') as title,
+              coalesce(dp.source_ai,'') as source_ai,
+              coalesce(dp.target_system,'') as target_system,
+              coalesce(dp.improvement_type,'') as improvement_type,
+              coalesce(dp.impact_score,0) as impact_score,
+              coalesce(dp.impact_level,'') as impact_level,
+              coalesce(dp.impact_reason,'') as impact_reason,
+              coalesce(dp.result_score,0) as result_score,
+              coalesce(dp.result_type,'') as result_type,
+              coalesce(dp.result_note,'') as result_note,
+              coalesce(dp.executed_at,'') as merged_at
+            from dev_proposals dp
+            where coalesce(dp.dev_stage,'')='merged'
+              and not exists (
+                select 1
+                from learning_results lr
+                where lr.proposal_id = dp.id
+              )
+            order by dp.id asc
+            limit 100
+        """).fetchall()
 
         n = 0
         for r in rows:
-            success_flag = 1
-            merged_at = (r["executed_at"] or r["created_at"] or "").strip()
-            summary = build_summary(r)
             c.execute("""
                 insert into learning_results(
                   proposal_id,
@@ -84,20 +72,20 @@ def run_once():
                   merged_at
                 ) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (
-                r["proposal_id"],
-                r["title"],
-                r["source_ai"],
-                r["target_system"],
-                r["improvement_type"],
+                int(r["proposal_id"]),
+                str(r["title"] or ""),
+                str(r["source_ai"] or ""),
+                str(r["target_system"] or ""),
+                str(r["improvement_type"] or ""),
                 float(r["impact_score"] or 0),
-                r["impact_level"],
-                r["impact_reason"],
+                str(r["impact_level"] or ""),
+                str(r["impact_reason"] or ""),
                 float(r["result_score"] or 0),
-                r["result_type"],
-                r["result_note"],
-                success_flag,
-                summary,
-                merged_at
+                str(r["result_type"] or ""),
+                str(r["result_note"] or ""),
+                1,
+                build_summary(r),
+                str(r["merged_at"] or ""),
             ))
             n += 1
 
