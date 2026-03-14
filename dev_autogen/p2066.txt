@@ -1,0 +1,11 @@
+id=2066
+title=Improve proposal filtering in scripts/run_daemon.sh
+batch=2065-2066
+ts=2026-03-14T07:57:45Z
+
+Goal:
+Implement: Improve proposal filtering in scripts/run_daemon.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
