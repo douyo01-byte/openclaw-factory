@@ -131,183 +131,106 @@ def summarize_kind(improvement_type: str) -> tuple[str, list[str], list[str]]:
     )
 
 def build_fallback(row: sqlite3.Row, pr: dict) -> str:
-    title = clean_title((row["title"] or ""))
+    title = (row["title"] or "").strip()
     target = (row["target_system"] or "").strip()
-    source_ai = (row["source_ai"] or "").strip() or "unknown"
-    result_type = (row["result_type"] or "").strip()
-    result_note = (row["result_note"] or "").strip()
-    pr_url = (row["pr_url"] or "").strip()
-    pr_number = row["pr_number"] or ""
+    improvement = (row["improvement_type"] or "").strip().lower()
+    source_ai = (row["source_ai"] or "").strip()
+    pr_url = (pr.get("url") or row["pr_url"] or "").strip()
 
-    files = choose_display_files(target, pr)
-    all_files = [(x.get("path") or "").strip() for x in (pr.get("files") or []) if (x.get("path") or "").strip()]
-    extra = max(len([x for x in all_files if not x.startswith("dev_autogen/")]) - len(files), 0)
+    kind, probs, effs = summarize_kind(improvement)
+    prob1 = probs[0] if probs else "同 じ 改 善 点 が 見 え に く い 状 態 が あ っ た"
+    prob2 = probs[1] if len(probs) > 1 else "今 後 の 変 更 影 響 を 追 い に く か っ た"
+    eff1 = effs[0] if effs else "動 作 を よ り 安 定 さ せ や す く な る"
+    eff2 = effs[1] if len(effs) > 1 else "今 後 の 改 善 を 進 め や す く な る"
 
-    lower = (title + " " + (row["improvement_type"] or "")).lower()
+    target_map = {
+        "telegram": "Telegramま わ り",
+        "dashboard": "ダ ッ シ ュ ボ ー ド ま わ り",
+        "meeting": "会 議 /共 有 ま わ り",
+        "core": "中 核 ロ ジ ッ ク",
+        "db": "DBま わ り",
+    }
+    target_txt = target_map.get(target.lower(), target or "シ ス テ ム 全 体")
 
-    if any(x in lower for x in ["retry", "backoff", "timeout"]):
-        one = "通信や外部処理が一時的に失敗しても止まりにくくしました"
-        prob1 = "一時的な通信エラーや外部APIの不調で処理が失敗することがあった"
-        prob2 = "失敗がそのまま表面化し、通知漏れや処理停止につながる可能性があった"
-        fix1 = "失敗時に一定回数だけ自動でやり直す仕組みを追加した"
-        fix2 = "待ち時間を少しずつ増やしながら再試行するようにした"
-        eff1 = "一時的な不安定さで処理全体が止まりにくくなる"
-        eff2 = "通知や外部連携の成功率が上がりやすくなる"
-        ex1 = "ネット回線が一瞬不安定でも、その場で復旧しやすくなる"
-        ex2 = "外部サービスの短い不調で処理が失敗しっぱなしになる事態が減る"
-    elif any(x in lower for x in ["log", "logging", "record", "debug"]):
-        one = "エラーや処理結果をあとから確認しやすくしました"
-        prob1 = "問題が起きたときに、何が原因だったのか追いにくいことがあった"
-        prob2 = "成功した処理と失敗した処理の違いが分かりにくいことがあった"
-        fix1 = "重要な処理結果やエラー内容を記録する仕組みを追加した"
-        fix2 = "あとから見返して原因を追いやすい形に整理した"
-        eff1 = "トラブル時の調査が速くなる"
-        eff2 = "運用中の問題発見と修正がしやすくなる"
-        ex1 = "失敗した理由が分からず長く止まる事態が減る"
-        ex2 = "同じ不具合を何度も調べ直す手間が減る"
-    elif any(x in lower for x in ["sqlite", "db", "connection", "close", "rollback", "context manager"]):
-        one = "データベースまわりが壊れにくく、安全に動くようにしました"
-        prob1 = "データベース接続の閉じ忘れや途中失敗で、状態が不安定になる可能性があった"
-        prob2 = "放置するとロックや接続残りで次の処理に悪影響が出ることがあった"
-        fix1 = "接続を安全に開閉する形へ整理した"
-        fix2 = "失敗時にも後片付けが行われるようにした"
-        eff1 = "データベースの安定性が上がる"
-        eff2 = "ロックや接続残りによる不具合が起きにくくなる"
-        ex1 = "処理後に接続が残って次の処理が詰まる事態が減る"
-        ex2 = "途中エラー後に状態が中途半端になる問題が起きにくくなる"
-    elif any(x in lower for x in ["refactor", "cleanup", "tidy", "duplicate"]):
-        one = "コードの整理を行い、今後の保守をしやすくしました"
-        prob1 = "同じような処理が散らばり、修正時に見落としが出やすかった"
-        prob2 = "読みづらさが将来の改修ミスにつながる可能性があった"
-        fix1 = "重複や分かりにくい処理を整理した"
-        fix2 = "構造を整えて読みやすくした"
-        eff1 = "今後の修正や追加開発がしやすくなる"
-        eff2 = "変更時の見落としや事故が減りやすくなる"
-        ex1 = "似た修正を複数箇所に入れ忘れる問題が減る"
-        ex2 = "後から見たときに処理の流れを理解しやすくなる"
+    style_idx = sum(ord(c) for c in (title + improvement + target)) % 4
+
+    if improvement in ("logging", "observability"):
+        one = f"{target_txt} の 見 え に く さ を 減 ら す 調 整 を 入 れ ま し た"
+        fix1 = f"{target_txt} で 追 い に く か っ た 情 報 を 見 や す く 整 理 し た"
+        fix2 = "状 況 確 認 に 使 う 出 力 の 粒 度 を 整 え た"
+        risk1 = "異 常 が 起 き て も 気 づ く の が 遅 れ る 事 態"
+        risk2 = "何 が 起 き た か 分 か り に く い 状 態"
+    elif improvement in ("refactor", "cleanup"):
+        one = f"{target_txt} の コ ー ド を 整 理 し て 今 後 い じ り や す く し ま し た"
+        fix1 = "重 複 し て い た 処 理 を ま と め た"
+        fix2 = f"{target_txt} の 読 み や す さ と 保 守 性 を 上 げ た"
+        risk1 = "同 じ 修 正 を 複 数 箇 所 に 入 れ 忘 れ る 不 具 合"
+        risk2 = "小 さ な 変 更 で 壊 れ や す い 状 態"
+    elif improvement in ("automation", "auto", "workflow"):
+        one = f"{target_txt} の 手 作 業 を 減 ら す 側 の 改 善 を 入 れ ま し た"
+        fix1 = "人 手 で や っ て い た 流 れ を 自 動 ラ イ ン に 乗 せ や す く し た"
+        fix2 = "次 の 実 行 に つ な が る 状 態 遷 移 を 整 え た"
+        risk1 = "手 動 作 業 の 抜 け 漏 れ"
+        risk2 = "流 れ が 途 中 で 止 ま る 状 態"
+    elif improvement in ("guard", "safety", "reliability"):
+        one = f"{target_txt} で 危 な い 動 き を 起 こ し に く く す る 調 整 を 入 れ ま し た"
+        fix1 = "異 常 系 で も 壊 れ に く い よ う ガ ー ド を 追 加 し た"
+        fix2 = "想 定 外 デ ー タ で 落 ち に く い よ う に し た"
+        risk1 = "突 然 の 停 止"
+        risk2 = "危 な い 実 行 が そ の ま ま 通 る 状 態"
+    elif improvement in ("optimization", "performance"):
+        one = f"{target_txt} の 動 作 を 少 し 軽 く す る 側 の 改 善 を 入 れ ま し た"
+        fix1 = "無 駄 な 処 理 を 減 ら し た"
+        fix2 = "実 行 の 重 さ が 出 や す い 部 分 を 見 直 し た"
+        risk1 = "処 理 が だ ん だ ん 重 く な る 状 態"
+        risk2 = "負 荷 時 の 反 応 遅 延"
     else:
-        one = "内部処理を安定して動きやすい形に改善しました"
-        prob1 = "処理の一部で失敗や不安定さが起きる可能性があった"
-        prob2 = "放置すると運用時の手戻りや確認コストが増える可能性があった"
-        fix1 = "不安定になりやすい箇所を見直した"
-        fix2 = "失敗しにくくなるよう安全側の処理を追加した"
-        eff1 = "日常運用で止まりにくくなる"
-        eff2 = "トラブル時の切り分けがしやすくなる"
-        ex1 = "小さな失敗で全体の流れが止まる事態が減る"
-        ex2 = "原因不明の不調として残るケースが減る"
+        one = f"{target_txt} の 安 定 性 を 上 げ る 調 整 を 行 い ま し た"
+        fix1 = f"{target_txt} の 挙 動 を 見 直 し て 不 安 定 要 因 を 減 ら し た"
+        fix2 = "今 後 の 改 善 を 入 れ や す い 形 に 整 え た"
+        risk1 = "同 種 の 不 安 定 動 作"
+        risk2 = "原 因 が 追 い に く い 不 具 合"
+
+    headers = [
+        ("今 回 の 変 更", "直 し た 理 由", "期 待 で き る 効 果", "起 き に く く な る こ と"),
+        ("今 回 や っ た こ と", "背 景", "こ の 変 更 の 効 果", "減 ら し た い リ ス ク"),
+        ("今 回 の 改 善 点", "な ぜ 手 を 入 れ た か", "変 更 後 の 見 込 み", "防 ぎ た い 事 象"),
+        ("今 回 の 調 整", "課 題 だ っ た 点", "良 く な る 点", "起 き に く く な る 不 具 合"),
+    ]
+    h1, h2, h3, h4 = headers[style_idx]
 
     lines = []
-    lines.append("🧠 OpenClaw 自律開発")
+    lines.append("🧠 OpenClaw 自 律 開 発")
     lines.append("")
-    lines.append("AIがシステムの改善を完了しました")
-    lines.append("")
-    lines.append("■ まず結論")
+    lines.append(f"■ {h1}")
     lines.append(one)
+    if title:
+        lines.append(f"・ 対 象 : {title[:120]}")
     lines.append("")
-    lines.append("■ 直す前の課題")
+    lines.append(f"■ {h2}")
     lines.append(f"・ {prob1}")
     lines.append(f"・ {prob2}")
     lines.append("")
-    lines.append("■ 今回やったこと")
+    lines.append("■ 今 回 入 れ た 手 当 て")
     lines.append(f"・ {fix1}")
     lines.append(f"・ {fix2}")
     lines.append("")
-    lines.append("■ 良くなる点")
+    lines.append(f"■ {h3}")
     lines.append(f"・ {eff1}")
     lines.append(f"・ {eff2}")
     lines.append("")
-    lines.append("■ 防げるトラブル例")
-    lines.append(f"・ {ex1}")
-    lines.append(f"・ {ex2}")
-    lines.append("")
-    lines.append("■ 変更ファイル")
-    if files:
-        for f in files:
-            lines.append(f)
-        if extra > 0:
-            lines.append(f"ほか {extra}件")
-    else:
-        lines.append("不明")
-    lines.append("")
-    lines.append("■ 開発AI")
-    lines.append(source_ai)
-    if result_type or result_note:
+    lines.append(f"■ {h4}")
+    lines.append(f"・ {risk1}")
+    lines.append(f"・ {risk2}")
+    if source_ai:
         lines.append("")
-        lines.append("■ 学習結果")
-        lines.append(human_learning_text(result_type, result_note))
-    if pr_url or pr_number:
+        lines.append("■ 担 当 AI")
+        lines.append(source_ai)
+    if pr_url:
         lines.append("")
         lines.append("■ PR")
-        lines.append(pr_url or f"#{pr_number}")
+        lines.append(pr_url)
     return "\n".join(lines)
-
-def human_learning_text(result_type: str, result_note: str) -> str:
-    rt = (result_type or "").strip().lower()
-    rn = (result_note or "").strip()
-    if rt == "success":
-        if "normal merged change" in rn.lower():
-            return "通常の改善として問題なく取り込まれました。"
-        return "今回の改善は正常に取り込まれ、今後の判断材料として活用されます。"
-    if rt == "neutral":
-        if rn:
-            return f"大きな問題はありませんが、効果は限定的と判断されました。({rn})"
-        return "大きな問題はありませんが、効果は限定的と判断されました。"
-    if rt in ("fail", "failed", "error"):
-        if rn:
-            return f"改善効果は弱い可能性があり、再検討候補として記録されました。({rn})"
-        return "改善効果は弱い可能性があり、再検討候補として記録されました。"
-    if rn:
-        return rn
-    return "今回の変更結果は学習データとして保存されました。"
-
-def choose_display_files(target: str, pr: dict) -> list[str]:
-    t = (target or "").strip()
-    if t and not t.startswith("dev_autogen/"):
-        return [t]
-    files = [(f.get("path") or "").strip() for f in (pr.get("files") or [])]
-    files = [x for x in files if x and not x.startswith("dev_autogen/")]
-    if files:
-        return files[:3]
-    if t:
-        return [t]
-    raw = [(f.get("path") or "").strip() for f in (pr.get("files") or [])]
-    raw = [x for x in raw if x]
-    return raw[:3]
-
-def call_openai(prompt: str) -> str:
-    if not OPENAI_API_KEY:
-        return ""
-    try:
-        r = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {OPENAI_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": OPENAI_MODEL,
-                "temperature": 0.2,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": (
-                            "あなたはOpenClawの開発通知要約AIです。"
-                            "初心者でも分かる日本語で、専門用語を噛み砕いて説明してください。"
-                            "出力は指定フォーマットを厳守してください。"
-                            "誇張禁止。diffとPR情報から分かることだけを書く。"
-                        ),
-                    },
-                    {"role": "user", "content": prompt},
-                ],
-            },
-            timeout=OPENAI_TIMEOUT,
-        )
-        r.raise_for_status()
-        j = r.json()
-        return (((j.get("choices") or [{}])[0].get("message") or {}).get("content") or "").strip()
-    except Exception as e:
-        print(f"[merge_notify] openai_error {e!r}", flush=True)
-        return ""
 
 def build_prompt(row: sqlite3.Row, pr: dict) -> str:
     title = clean_title((row["title"] or ""))
