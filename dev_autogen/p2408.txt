@@ -1,0 +1,6 @@
+id=2408
+title=Self improve bots/chat_to_dev/daemon_chat_to_dev_v1.py loop
+batch=2408-2408
+ts=2026-03-14T16:53:44Z
+
+learning_patterns と supply_bias で bots/chat_to_dev/daemon_chat_to_dev_v1.py が高重み。OpenClaw 自体の bots/chat_to_dev/daemon_chat_to_dev_v1.py 系改善を優先し、成功パターン寄りの安定化・自動化を進める。
