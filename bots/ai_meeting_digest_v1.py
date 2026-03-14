@@ -110,114 +110,94 @@ def build_title(c: dict) -> str:
     emp = int(c.get("emp", 0))
 
     if merged >= 4 and pr >= 3:
-        return "OpenClaw 定 例 会 議 : 実 装 消 化 は 順 調 、 次 は 学 習 密 度 を 上 げ た い"
+        return "OpenClaw 定 例 会 議 : 実 装 消 化 は 順 調 、 次 は 学 習 密 度 を 観 測"
     if pr >= 4:
-        return "OpenClaw 定 例 会 議 : PR生 成 は 強 い 、 実 装 の 流 れ は 維 持"
+        return "OpenClaw 定 例 会 議 : PR生 成 は 強 い 、 実 装 側 の 消 化 を 維 持"
     if learn >= 2:
-        return "OpenClaw 定 例 会 議 : 学 習 反 映 が 進 行 、 改 善 の 再 現 性 を 伸 ば し た い"
+        return "OpenClaw 定 例 会 議 : 学 習 反 映 が 進 行 、 再 現 性 が 少 し 上 昇"
     if emp >= 1:
-        return "OpenClaw 定 例 会 議 : AI社 員 側 の 更 新 あ り 、 役 割 の 固 定 化 を 観 測"
-    return "OpenClaw 定 例 会 議 : 実 装 は 継 続 、 次 の 材 料 を 集 め る フ ェ ー ズ"
+        return "OpenClaw 定 例 会 議 : AI社 員 側 に 更 新 あ り"
+    return "OpenClaw 定 例 会 議 : 実 装 は 継 続 、 次 の 材 料 を 観 測"
 
 def build_body(c: dict, merged_titles: list[str], learn_titles: list[str]) -> str:
-    from pathlib import Path
     import json
+    from pathlib import Path
 
     merged = int(c.get("merged", 0))
     pr = int(c.get("pr", 0))
     learn = int(c.get("learn", 0))
     emp = int(c.get("emp", 0))
 
-    hp = None
+    hp = 0
     phase = "自 己 強 化"
-    delta_txt = "前 回 比 不 明 "
-    growth = []
-
     try:
-        hp_json = json.loads(Path("obs/company_health_score.json").read_text(encoding="utf-8"))
-        hp = int(hp_json.get("maturity_percent", 0))
+        health = json.loads(Path("obs/company_health_score.json").read_text(encoding="utf-8"))
+        hp = int(health.get("maturity_percent", 0) or 0)
     except:
-        hp = None
+        hp = 0
 
+    if hp >= 85:
+        phase = "実 運 用 直 前"
+    elif hp >= 60:
+        phase = "事 業 準 備"
+
+    delta = 0
     try:
-        state_path = Path("data/ai_meeting_digest_v1.state")
-        if state_path.exists():
-            prev = json.loads(state_path.read_text(encoding="utf-8"))
-            prev_hp = int(prev.get("last_maturity_percent", hp if hp is not None else 0))
-            if hp is not None:
-                diff = hp - prev_hp
-                if diff > 0:
-                    delta_txt = f"前 回 比 +{diff}%"
-                elif diff < 0:
-                    delta_txt = f"前 回 比 {diff}%"
-                else:
-                    delta_txt = "前 回 比 ±0%"
+        st = Path("data/ai_meeting_digest_v1.state")
+        if st.exists():
+            prev = json.loads(st.read_text(encoding="utf-8"))
+            delta = hp - int(prev.get("last_maturity_percent", hp))
     except:
-        pass
+        delta = 0
 
-    if hp is not None:
-        if hp >= 85:
-            phase = "実 運 用 直 前"
-        elif hp >= 60:
-            phase = "事 業 準 備"
-        else:
-            phase = "自 己 強 化"
-
-    if merged >= 4:
-        growth.append("実 装 消 化")
-    if pr >= 4:
-        growth.append("PR生 成")
-    if learn >= 2:
-        growth.append("学 習 反 映")
-    if emp >= 1:
-        growth.append("AI社 員 側")
-
-    merged_line = "、 ".join(merged_titles[:2]) if merged_titles else "目 立 つ 統 合 は ま だ 少 な め"
-    learn_line = "、 ".join(learn_titles[:2]) if learn_titles else "今 回 は 学 習 反 映 が 少 な め"
+    merged_line = "、 ".join(merged_titles[:2]) if merged_titles else "大 き な 統 合 は 少 な め"
+    learn_line = "、 ".join(learn_titles[:2]) if learn_titles else "学 習 反 映 は 少 な め"
 
     agenda = []
     if merged >= 4:
-        agenda.append("実 装 の 消 化 速 度 は 良 好")
+        agenda.append("実 装 消 化 が し っ か り 進 ん だ")
     elif merged >= 2:
         agenda.append("実 装 は 継 続 的 に 前 進")
     else:
-        agenda.append("実 装 は 小 休 止 気 味")
+        agenda.append("実 装 の 動 き は 小 さ め")
 
     if pr >= 4:
-        agenda.append("供 給 か ら PRま で の 流 れ は 強 め")
+        agenda.append("PR生 成 は 強 く 、 供 給 の 勢 い は 維 持")
     elif pr >= 2:
-        agenda.append("PR生 成 は 維 持")
+        agenda.append("PR生 成 は 維 持 圏")
     else:
-        agenda.append("PR材 料 は 少 な め")
+        agenda.append("PR材 料 は や や 少 な め")
 
     if learn >= 2:
-        agenda.append("学 習 反 映 が じ わ じ わ 積 み 上 が っ て い る")
+        agenda.append("学 習 反 映 が 複 数 件 あ り 、 再 利 用 性 が 上 が り つ つ あ る")
     else:
-        agenda.append("学 習 反 映 は 次 回 の 観 測 点")
+        agenda.append("学 習 反 映 は 次 回 の 注 目 点")
 
-    decisions = []
-    decisions.append(f"直 近 の 主 な 統 合 は {merged_line}")
-    decisions.append(f"学 習 側 は {learn_line}")
-    if hp is not None:
-        decisions.append(f"事 業 開 始 達 成 率 は {hp}% 、 フ ェ ー ズ は {phase}")
+    decisions = [
+        f"主 な 統 合 は {merged_line}",
+        f"学 習 面 は {learn_line}",
+        f"事 業 開 始 達 成 率 は {hp}% 、 現 在 フ ェ ー ズ は {phase}",
+    ]
 
     hold = []
     if learn == 0:
         hold.append("学 習 反 映 の 厚 み は ま だ 弱 い")
     if emp == 0:
-        hold.append("AI社 員 側 の 変 化 は 今 回 少 な め")
+        hold.append("AI社 員 側 の 更 新 は 今 回 少 な め")
     if merged < 2 and pr < 2:
-        hold.append("会 議 材 料 は や や 少 な め")
+        hold.append("会 議 材 料 は 少 な め")
 
-    nexts = []
+    nxt = []
     if pr >= merged:
-        nexts.append("供 給 ペ ー ス を 維 持 し つ つ 学 習 側 の 密 度 を 観 測")
+        nxt.append("供 給 と PR の 勢 い を 維 持 し つ つ 、 学 習 反 映 の 本 数 を 観 測")
     else:
-        nexts.append("実 装 済 み の 学 習 反 映 が 次 回 ど れ だ け 積 み 上 が る か 確 認")
-    if hp is not None:
-        nexts.append(f"達 成 率 {hp}% の 次 の 壁 を 越 え ら れ る か を 観 測")
-    if growth:
-        nexts.append(f"今 回 伸 び た 領 域 は {' / '.join(growth)}")
+        nxt.append("統 合 済 み 変 更 が 学 習 に ど れ だ け 回 る か を 観 測")
+    if delta > 0:
+        nxt.append(f"前 回 比 +{delta}% 分 の 伸 び を 維 持 で き る か 確 認")
+    elif delta < 0:
+        nxt.append(f"前 回 比 {delta}% の 揺 れ を 戻 せ る か 確 認")
+    else:
+        nxt.append("達 成 率 は 横 ば い 、 次 の 上 昇 材 料 を 確 認")
 
     lines = []
     lines.append("🧠 OpenClaw 定 例 会 議")
@@ -238,10 +218,11 @@ def build_body(c: dict, merged_titles: list[str], learn_titles: list[str]) -> st
         lines.append("・ 大 き な 保 留 は 少 な め")
     lines.append("")
     lines.append("■ 次 回 ま で の 観 測 点")
-    for x in nexts[:3]:
+    for x in nxt[:3]:
         lines.append(f"・ {x}")
     lines.append("")
-    lines.append(f"進 捗 率 : {hp if hp is not None else '不 明 '}% / {delta_txt}")
+    sign = "+" if delta > 0 else ""
+    lines.append(f"進 捗 率 : {hp}% / 前 回 比 {sign}{delta}%")
     return "\n".join(lines)
 
 def main():

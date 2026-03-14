@@ -137,94 +137,105 @@ def build_fallback(row: sqlite3.Row, pr: dict) -> str:
     source_ai = (row["source_ai"] or "").strip()
     pr_url = (pr.get("url") or row["pr_url"] or "").strip()
 
-    kind, probs, effs = summarize_kind(improvement)
-    prob1 = probs[0] if probs else "同 じ 改 善 点 が 見 え に く い 状 態 が あ っ た"
-    prob2 = probs[1] if len(probs) > 1 else "今 後 の 変 更 影 響 を 追 い に く か っ た"
-    eff1 = effs[0] if effs else "動 作 を よ り 安 定 さ せ や す く な る"
-    eff2 = effs[1] if len(effs) > 1 else "今 後 の 改 善 を 進 め や す く な る"
-
     target_map = {
-        "telegram": "Telegramま わ り",
-        "dashboard": "ダ ッ シ ュ ボ ー ド ま わ り",
-        "meeting": "会 議 /共 有 ま わ り",
         "core": "中 核 ロ ジ ッ ク",
-        "db": "DBま わ り",
+        "telegram": "Telegram ま わ り",
+        "dashboard": "ダ ッ シ ュ ボ ー ド",
+        "meeting": "会 議 /共 有 系",
+        "db": "DB ま わ り",
     }
     target_txt = target_map.get(target.lower(), target or "シ ス テ ム 全 体")
 
-    style_idx = sum(ord(c) for c in (title + improvement + target)) % 4
-
     if improvement in ("logging", "observability"):
-        one = f"{target_txt} の 見 え に く さ を 減 ら す 調 整 を 入 れ ま し た"
-        fix1 = f"{target_txt} で 追 い に く か っ た 情 報 を 見 や す く 整 理 し た"
-        fix2 = "状 況 確 認 に 使 う 出 力 の 粒 度 を 整 え た"
-        risk1 = "異 常 が 起 き て も 気 づ く の が 遅 れ る 事 態"
-        risk2 = "何 が 起 き た か 分 か り に く い 状 態"
+        one = f"{target_txt} の 見 え に く さ を 減 ら す 側 の 改 善 を 入 れ ま し た"
+        bg1 = "状 況 確 認 に 時 間 が か か る 箇 所 が あ っ た"
+        bg2 = "何 が 起 き た か 追 い に く い 瞬 間 が あ っ た"
+        fx1 = "出 力 の 粒 度 と 見 え 方 を 整 え た"
+        fx2 = "追 跡 に 必 要 な 情 報 を 取 り や す く し た"
+        ef1 = "異 常 の 察 知 が 早 く な る"
+        ef2 = "原 因 の 切 り 分 け が し や す く な る"
+        rs1 = "見 落 と し"
+        rs2 = "調 査 の 長 期 化"
     elif improvement in ("refactor", "cleanup"):
-        one = f"{target_txt} の コ ー ド を 整 理 し て 今 後 い じ り や す く し ま し た"
-        fix1 = "重 複 し て い た 処 理 を ま と め た"
-        fix2 = f"{target_txt} の 読 み や す さ と 保 守 性 を 上 げ た"
-        risk1 = "同 じ 修 正 を 複 数 箇 所 に 入 れ 忘 れ る 不 具 合"
-        risk2 = "小 さ な 変 更 で 壊 れ や す い 状 態"
-    elif improvement in ("automation", "auto", "workflow"):
-        one = f"{target_txt} の 手 作 業 を 減 ら す 側 の 改 善 を 入 れ ま し た"
-        fix1 = "人 手 で や っ て い た 流 れ を 自 動 ラ イ ン に 乗 せ や す く し た"
-        fix2 = "次 の 実 行 に つ な が る 状 態 遷 移 を 整 え た"
-        risk1 = "手 動 作 業 の 抜 け 漏 れ"
-        risk2 = "流 れ が 途 中 で 止 ま る 状 態"
+        one = f"{target_txt} を い じ り や す く す る 整 理 を 入 れ ま し た"
+        bg1 = "同 じ よ う な 処 理 が 分 か れ て い た"
+        bg2 = "今 後 の 修 正 で 差 分 管 理 が 面 倒 に な り や す か っ た"
+        fx1 = "重 複 気 味 の 処 理 を 整 理 し た"
+        fx2 = "読 み や す さ と 保 守 性 を 上 げ た"
+        ef1 = "次 の 修 正 を 入 れ や す く な る"
+        ef2 = "修 正 漏 れ を 起 こ し に く く な る"
+        rs1 = "同 歩 修 正 漏 れ"
+        rs2 = "保 守 コ ス ト 増 加"
+    elif improvement in ("automation", "workflow"):
+        one = f"{target_txt} の 手 作 業 を 減 ら す 方 向 の 調 整 を 入 れ ま し た"
+        bg1 = "人 手 を 挟 む と 流 れ が 止 ま り や す い"
+        bg2 = "処 理 の 受 け 渡 し が 不 安 定 に な る 場 面 が あ っ た"
+        fx1 = "自 動 ラ イ ン に 乗 せ や す い 状 態 へ 整 え た"
+        fx2 = "次 の ス テ ー ジ へ 進 み や す く し た"
+        ef1 = "流 れ が 途 切 れ に く く な る"
+        ef2 = "処 理 の 進 行 速 度 が 安 定 し や す い"
+        rs1 = "手 動 漏 れ"
+        rs2 = "停 滞"
     elif improvement in ("guard", "safety", "reliability"):
-        one = f"{target_txt} で 危 な い 動 き を 起 こ し に く く す る 調 整 を 入 れ ま し た"
-        fix1 = "異 常 系 で も 壊 れ に く い よ う ガ ー ド を 追 加 し た"
-        fix2 = "想 定 外 デ ー タ で 落 ち に く い よ う に し た"
-        risk1 = "突 然 の 停 止"
-        risk2 = "危 な い 実 行 が そ の ま ま 通 る 状 態"
+        one = f"{target_txt} で 危 な い 動 き を 減 ら す た め の ガ ー ド を 入 れ ま し た"
+        bg1 = "想 定 外 の 入 力 で 崩 れ る 余 地 が あ っ た"
+        bg2 = "異 常 系 の と き の 守 り が 薄 い 箇 所 が あ っ た"
+        fx1 = "落 ち や す い 条 件 を 先 回 り で 防 い だ"
+        fx2 = "危 な い 実 行 に 入 り に く い よ う に し た"
+        ef1 = "突 然 止 ま る 事 象 が 減 る"
+        ef2 = "安 定 運 用 に 近 づ く"
+        rs1 = "異 常 停 止"
+        rs2 = "想 定 外 実 行"
     elif improvement in ("optimization", "performance"):
-        one = f"{target_txt} の 動 作 を 少 し 軽 く す る 側 の 改 善 を 入 れ ま し た"
-        fix1 = "無 駄 な 処 理 を 減 ら し た"
-        fix2 = "実 行 の 重 さ が 出 や す い 部 分 を 見 直 し た"
-        risk1 = "処 理 が だ ん だ ん 重 く な る 状 態"
-        risk2 = "負 荷 時 の 反 応 遅 延"
+        one = f"{target_txt} を 少 し 軽 く す る 側 の 見 直 し を 行 い ま し た"
+        bg1 = "無 駄 な 負 荷 が 積 み 上 が り や す か っ た"
+        bg2 = "処 理 の 重 さ が 今 後 の 足 か せ に な り う る 状 態 だ っ た"
+        fx1 = "重 く な り や す い 箇 所 を 整 理 し た"
+        fx2 = "実 行 コ ス ト を 抑 え る 方 向 へ 調 整 し た"
+        ef1 = "反 応 が 安 定 し や す い"
+        ef2 = "今 後 の 拡 張 に 耐 え や す い"
+        rs1 = "遅 延"
+        rs2 = "負 荷 増 大"
     else:
-        one = f"{target_txt} の 安 定 性 を 上 げ る 調 整 を 行 い ま し た"
-        fix1 = f"{target_txt} の 挙 動 を 見 直 し て 不 安 定 要 因 を 減 ら し た"
-        fix2 = "今 後 の 改 善 を 入 れ や す い 形 に 整 え た"
-        risk1 = "同 種 の 不 安 定 動 作"
-        risk2 = "原 因 が 追 い に く い 不 具 合"
-
-    headers = [
-        ("今 回 の 変 更", "直 し た 理 由", "期 待 で き る 効 果", "起 き に く く な る こ と"),
-        ("今 回 や っ た こ と", "背 景", "こ の 変 更 の 効 果", "減 ら し た い リ ス ク"),
-        ("今 回 の 改 善 点", "な ぜ 手 を 入 れ た か", "変 更 後 の 見 込 み", "防 ぎ た い 事 象"),
-        ("今 回 の 調 整", "課 題 だ っ た 点", "良 く な る 点", "起 き に く く な る 不 具 合"),
-    ]
-    h1, h2, h3, h4 = headers[style_idx]
+        one = f"{target_txt} の 挙 動 を 安 定 側 に 寄 せ る 調 整 を 行 い ま し た"
+        bg1 = "挙 動 の む ら を 減 ら し た か っ た"
+        bg2 = "次 の 改 善 を 入 れ や す い 土 台 に し た か っ た"
+        fx1 = "不 安 定 要 因 を 減 ら す 見 直 し を 行 っ た"
+        fx2 = "継 続 改 善 し や す い 状 態 に 整 え た"
+        ef1 = "運 用 の 安 定 性 が 上 が る"
+        ef2 = "次 の 改 善 が ス ム ー ズ に な る"
+        rs1 = "再 発"
+        rs2 = "追 跡 困 難"
 
     lines = []
     lines.append("🧠 OpenClaw 自 律 開 発")
     lines.append("")
-    lines.append(f"■ {h1}")
+    lines.append("今 回 は、AIが こ こ に 手 を 入 れ ま し た。")
     lines.append(one)
+    lines.append("")
+    lines.append("■ 今 回 の 変 更")
     if title:
         lines.append(f"・ 対 象 : {title[:120]}")
+    lines.append(f"・ 範 囲 : {target_txt}")
     lines.append("")
-    lines.append(f"■ {h2}")
-    lines.append(f"・ {prob1}")
-    lines.append(f"・ {prob2}")
+    lines.append("■ 直 し た 理 由")
+    lines.append(f"・ {bg1}")
+    lines.append(f"・ {bg2}")
     lines.append("")
-    lines.append("■ 今 回 入 れ た 手 当 て")
-    lines.append(f"・ {fix1}")
-    lines.append(f"・ {fix2}")
+    lines.append("■ 今 回 や っ た こ と")
+    lines.append(f"・ {fx1}")
+    lines.append(f"・ {fx2}")
     lines.append("")
-    lines.append(f"■ {h3}")
-    lines.append(f"・ {eff1}")
-    lines.append(f"・ {eff2}")
+    lines.append("■ 期 待 で き る 効 果")
+    lines.append(f"・ {ef1}")
+    lines.append(f"・ {ef2}")
     lines.append("")
-    lines.append(f"■ {h4}")
-    lines.append(f"・ {risk1}")
-    lines.append(f"・ {risk2}")
+    lines.append("■ 起 き に く く な る こ と")
+    lines.append(f"・ {rs1}")
+    lines.append(f"・ {rs2}")
     if source_ai:
         lines.append("")
-        lines.append("■ 担 当 AI")
+        lines.append("■ 開 発 AI")
         lines.append(source_ai)
     if pr_url:
         lines.append("")
