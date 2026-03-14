@@ -1,0 +1,6 @@
+id=2264
+title=Self improve innovation_llm_engine_v1 loop
+batch=2263-2267
+ts=2026-03-14T12:33:15Z
+
+learning_patterns と supply_bias で innovation_llm_engine_v1 が高重み。OpenClaw 自体の innovation_llm_engine_v1 系改善を優先し、成功パターン寄りの安定化・自動化を進める。

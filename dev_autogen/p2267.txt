@@ -1,0 +1,6 @@
+id=2267
+title=Self improve bugfix loop
+batch=2263-2267
+ts=2026-03-14T12:33:15Z
+
+learning_patterns と supply_bias で bugfix が高重み。OpenClaw 自体の bugfix 系改善を優先し、成功パターン寄りの安定化・自動化を進める。
