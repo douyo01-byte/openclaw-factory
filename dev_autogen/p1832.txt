@@ -1,0 +1,11 @@
+id=1832
+title=Reduce API latency in bots/self_healing_v2.py
+batch=1833-1834
+ts=2026-03-14T02:07:05Z
+
+Goal:
+Implement: Reduce API latency in bots/self_healing_v2.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
