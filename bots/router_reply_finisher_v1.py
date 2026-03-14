@@ -1,8 +1,9 @@
 from __future__ import annotations
-import os, time, sqlite3
+import os, time, sqlite3, re
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 SLEEP = float(os.environ.get("ROUTER_REPLY_FINISHER_SLEEP", "8"))
+TASK_ID_RE = re.compile(r"\[TASK_ID:(\d+)\]")
 
 def conn():
     c = sqlite3.connect(DB, timeout=30)
@@ -22,31 +23,43 @@ def ensure_schema(c):
     if "router_finish_status" not in cols2:
         c.execute("alter table inbox_commands add column router_finish_status text default ''")
 
+def extract_task_id(text: str):
+    m = TASK_ID_RE.search(text or "")
+    return int(m.group(1)) if m else None
+
 def tick():
     c = conn()
     try:
         ensure_schema(c)
-
         replies = c.execute("""
-        select id, coalesce(text,'') as text, coalesce(created_at,'') as created_at
+        select id, coalesce(text,'') as text
         from inbox_commands
         where coalesce(router_finish_status,'')=''
           and coalesce(text,'')<>''
         order by id asc
         limit 20
         """).fetchall()
-
         done = 0
         touched = 0
         for r in replies:
-            task = c.execute("""
-            select id, target_bot
-            from router_tasks
-            where coalesce(status,'')='started'
-            order by id asc
-            limit 1
-            """).fetchone()
-
+            task = None
+            task_id = extract_task_id(r["text"])
+            if task_id:
+                task = c.execute("""
+                select id, target_bot
+                from router_tasks
+                where id=?
+                  and coalesce(status,'')='started'
+                limit 1
+                """, (task_id,)).fetchone()
+            if not task:
+                task = c.execute("""
+                select id, target_bot
+                from router_tasks
+                where coalesce(status,'')='started'
+                order by id asc
+                limit 1
+                """).fetchone()
             if not task:
                 pending = c.execute("""
                 select id
@@ -66,7 +79,6 @@ def tick():
                 """, (r["id"],))
                 touched += 1
                 continue
-
             c.execute("""
             update router_tasks
             set status='done',
@@ -76,17 +88,14 @@ def tick():
                 result_text=coalesce(result_text,'') || ' | reply_received'
             where id=?
             """, (r["text"], task["id"]))
-
             c.execute("""
             update inbox_commands
             set router_finish_status='applied',
                 updated_at=datetime('now')
             where id=?
             """, (r["id"],))
-
             done += 1
             touched += 1
-
         if touched:
             c.commit()
         print(f"[router_reply_finisher_v1] done={done} touched={touched} replies={len(replies)}", flush=True)
