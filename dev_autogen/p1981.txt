@@ -1,0 +1,11 @@
+id=1981
+title=Reduce duplicate writes in config/personas/core.txt
+batch=1980-1981
+ts=2026-03-14T05:38:25Z
+
+Goal:
+Implement: Reduce duplicate writes in config/personas/core.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
