@@ -2,6 +2,7 @@ import requests
 import os
 import json
 import datetime
+import time
 import sqlite3
 from dotenv import load_dotenv
 
@@ -56,7 +57,8 @@ def kv_set(c, k, v):
 
 def ensure(c):
     c.execute("PRAGMA journal_mode=WAL;")
-    c.execute("PRAGMA busy_timeout=5000;")
+    c.execute("PRAGMA synchronous=NORMAL;")
+    c.execute("PRAGMA busy_timeout=30000;")
     c.execute("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
     c.execute("""CREATE TABLE IF NOT EXISTS proposal_state(
   proposal_id INTEGER PRIMARY KEY,
@@ -127,6 +129,18 @@ def http_get(url, params):
     r = requests.get(url, params=params, timeout=20)
     r.raise_for_status()
     return r.json()
+
+def exec_retry(conn, sql, params=(), tries=8, sleep_sec=0.5):
+    last = None
+    for _ in range(tries):
+        try:
+            return conn.execute(sql, params)
+        except sqlite3.OperationalError as e:
+            last = e
+            if "locked" not in str(e).lower():
+                raise
+            time.sleep(sleep_sec)
+    raise last
 def parse_spec_reply(text):
     t = (text or "").strip()
     if not t.startswith("ID:"):
@@ -171,7 +185,7 @@ def main():
         from_username = str(frm.get("username") or "")
         from_name = str(frm.get("first_name") or "")
 
-        c.execute(
+        exec_retry(c,
             """INSERT OR IGNORE INTO inbox_commands(
                 chat_id, message_id, reply_to_message_id, from_username, from_name, text, received_at, update_id
             ) VALUES(?,?,?,?,?,?,?,?)""",
@@ -180,11 +194,11 @@ def main():
 
         spec_pid, spec_body = parse_spec_reply(text)
         if spec_pid:
-            c.execute(
+            exec_retry(c,
                 "INSERT INTO proposal_conversation(proposal_id,role,message,created_at) VALUES(?,?,?,?)",
                 (spec_pid, "human", spec_body, now()),
             )
-            c.execute(
+            exec_retry(c,
                 """INSERT INTO proposal_state(proposal_id,stage,updated_at)
                 VALUES(?, 'answer_received', ?)
                 ON CONFLICT(proposal_id) DO UPDATE SET
@@ -192,7 +206,7 @@ def main():
                   updated_at=excluded.updated_at""",
                 (spec_pid, now()),
             )
-            c.execute(
+            exec_retry(c,
                 "UPDATE dev_proposals SET spec_stage='answer_received' WHERE id=?",
                 (spec_pid,),
             )
@@ -210,7 +224,7 @@ def main():
                 "update_id": uid,
                 "raw": text,
             }
-            c.execute(
+            exec_retry(c,
                 "INSERT INTO decisions(run_id,target,decision,reason,meta_json,created_at) VALUES(?,?,?,?,?,?)",
                 (
                     os.environ.get("RUN_ID"),
