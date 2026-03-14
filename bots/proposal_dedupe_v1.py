@@ -1,72 +1,55 @@
 import os
 import sqlite3
+import time
 
-DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH", "data/openclaw.db")
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 
-def _norm_title(s: str) -> str:
-    return " ".join((s or "").strip().lower().split())
+def norm(t: str) -> str:
+    return "".join((t or "").lower().split())
 
-def _revenue_body(title: str) -> str:
-    t = (title or "").strip()
-    if t.upper().startswith("REVENUE:"):
-        t = t.split(":", 1)[1]
-    return _norm_title(t)
-
-def should_skip(conn, title: str, category: str, target_system: str, improvement_type: str, lookback: int = 120, signature_limit: int = 16):
-    nt = _norm_title(title)
-    sig = (category or "", target_system or "", improvement_type or "")
-
-    dup = conn.execute("""
-    select id
-    from dev_proposals
-    where lower(trim(title)) = lower(trim(?))
-    order by id desc
-    limit 1
-    """, (title,)).fetchone()
-    if dup:
-        return True, "duplicate_title"
-
+def run_once():
+    conn = sqlite3.connect(DB, timeout=30)
+    conn.row_factory = sqlite3.Row
+    conn.execute("pragma busy_timeout=30000")
     rows = conn.execute("""
-    select
-      id,
-      coalesce(title,'') as title,
-      coalesce(category,'') as category,
-      coalesce(target_system,'') as target_system,
-      coalesce(improvement_type,'') as improvement_type
-    from dev_proposals
-    order by id desc
-    limit ?
-    """, (lookback,)).fetchall()
+        select id, coalesce(title,'') as title, coalesce(source_ai,'') as source_ai,
+               coalesce(status,'') as status, created_at
+        from dev_proposals
+        where coalesce(status,'') in ('approved','new','pending','idea')
+        order by id desc
+        limit 1000
+    """).fetchall()
 
-    same_sig = 0
-    revenue_dup = False
+    seen = {}
+    closed = []
     for r in rows:
-        rsig = (r[2], r[3], r[4])
-        if rsig == sig:
-            same_sig += 1
-        if category == "revenue":
-            if _revenue_body(r[1]) == _revenue_body(title):
-                revenue_dup = True
+        k = (norm(r["title"]), (r["source_ai"] or "").strip().lower())
+        if not k[0]:
+            continue
+        if k not in seen:
+            seen[k] = r["id"]
+            continue
+        newer = seen[k]
+        older = r["id"]
+        conn.execute("""
+            update dev_proposals
+            set status='closed',
+                dev_stage=case when coalesce(dev_stage,'')='' then 'closed' else dev_stage end,
+                pr_status=case when coalesce(pr_status,'')='' then 'closed' else pr_status end,
+                decision_note=trim(coalesce(decision_note,'') || ' deduped_by_proposal_dedupe_v1')
+            where id=?
+              and coalesce(status,'') in ('approved','new','pending','idea')
+              and coalesce(dev_stage,'') not in ('merged')
+        """, (older,))
+        closed.append((older, newer, r["title"]))
 
-    if category == "revenue" and revenue_dup:
-        return True, "duplicate_revenue_body"
+    conn.commit()
+    conn.close()
+    print(f"proposal_dedupe_closed={len(closed)}", flush=True)
+    for older, newer, title in closed[:20]:
+        print(f"[proposal_dedupe] closed old={older} keep={newer} title={title}", flush=True)
 
-    if category == "automation" and target_system == "codebase":
-        if same_sig >= max(signature_limit * 2, 40):
-            return True, "duplicate_signature"
-    elif category == "automation":
-        if same_sig >= signature_limit:
-            return True, "duplicate_signature"
-    else:
-        if same_sig >= max(signature_limit - 8, 8):
-            return True, "duplicate_signature"
-
-    return False, ""
-
-def approved_idea_cap(conn, cap: int = 300) -> bool:
-    n = conn.execute("""
-    select count(*)
-    from dev_proposals
-    where status in ('approved','idea')
-    """).fetchone()[0]
-    return int(n or 0) >= cap
+if __name__ == "__main__":
+    while True:
+        run_once()
+        time.sleep(300)
