@@ -1,0 +1,11 @@
+id=2107
+title=Harden DB path handling in config/feeds/kenji.txt
+batch=2106-2107
+ts=2026-03-14T08:45:30Z
+
+Goal:
+Implement: Harden DB path handling in config/feeds/kenji.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
