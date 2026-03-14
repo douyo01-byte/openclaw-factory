@@ -1,0 +1,11 @@
+id=2105
+title=Reduce event summary drift in scripts/meet_close.sh
+batch=2104-2105
+ts=2026-03-14T08:42:24Z
+
+Goal:
+Implement: Reduce event summary drift in scripts/meet_close.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
