@@ -1,0 +1,11 @@
+id=1877
+title=Executor stability sweep 115653
+batch=1877-1878
+ts=2026-03-14T03:00:16Z
+
+Goal:
+Implement: Executor stability sweep 115653
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
