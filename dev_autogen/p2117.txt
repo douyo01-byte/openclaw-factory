@@ -1,0 +1,11 @@
+id=2117
+title=Optimize database queries in scripts/print_audit.sh
+batch=2116-2117
+ts=2026-03-14T08:57:52Z
+
+Goal:
+Implement: Optimize database queries in scripts/print_audit.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
