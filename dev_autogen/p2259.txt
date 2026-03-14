@@ -1,0 +1,6 @@
+id=2259
+title=Self improve executor loop
+batch=2258-2259
+ts=2026-03-14T12:28:40Z
+
+learning_patterns と supply_bias で executor が高重み。OpenClaw 自体の executor 系改善を優先し、成功パターン寄りの安定化・自動化を進める。
