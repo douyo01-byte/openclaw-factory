@@ -1,0 +1,11 @@
+id=1990
+title=Improve proposal filtering in scripts/meet_open.sh
+batch=1991-1992
+ts=2026-03-14T05:51:29Z
+
+Goal:
+Implement: Improve proposal filtering in scripts/meet_open.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
