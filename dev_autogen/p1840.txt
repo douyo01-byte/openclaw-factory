@@ -1,0 +1,11 @@
+id=1840
+title=Reduce event summary drift in bots/build_decision_patterns.py
+batch=1839-1840
+ts=2026-03-14T02:13:24Z
+
+Goal:
+Implement: Reduce event summary drift in bots/build_decision_patterns.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
