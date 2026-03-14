@@ -1,0 +1,11 @@
+id=2092
+title=Improve executor stability in bots/spec_notify_v1.py
+batch=2091-2092
+ts=2026-03-14T08:26:37Z
+
+Goal:
+Implement: Improve executor stability in bots/spec_notify_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
