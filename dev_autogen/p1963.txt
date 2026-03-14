@@ -1,0 +1,11 @@
+id=1963
+title=Harden DB path handling in scripts/run_py.sh
+batch=1962-1963
+ts=2026-03-14T05:15:39Z
+
+Goal:
+Implement: Harden DB path handling in scripts/run_py.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
