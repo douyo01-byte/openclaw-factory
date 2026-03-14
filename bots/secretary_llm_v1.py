@@ -241,61 +241,73 @@ def bot_status_block():
 
 def build_dashboard(conn):
     f = fetch_dashboard_facts(conn)
-    latest = f.get("latest") or {"id": "-", "title": "なし"}
-    latest_merged = f.get("latest_merged") or {"id": "-", "title": "なし"}
+    latest = f.get("latest") or {"id": "-", "title": "な し "}
+    latest_merged = f.get("latest_merged") or {"id": "-", "title": "な し "}
     top_backlog = f.get("top_backlog") or []
     decisions = fetch_recent_decisions(conn)
+    health = f.get("company_health") or {}
+    maturity = int(health.get("maturity_percent", 0) or 0)
 
-    txt = "OpenClaw CEOダッシュボード\n"
+    if maturity >= 85:
+        phase = "実 運 用 直 前"
+    elif maturity >= 60:
+        phase = "事 業 準 備"
+    else:
+        phase = "自 己 強 化"
+
+    txt = "OpenClaw CEOダ ッ シ ュ ボ ー ド \n"
     txt += "━━━━━━━━━━━━━━━━━━\n"
-    txt += "【会社状態】\n\n"
-    txt += f"総提案件数: {f['total']}\n"
-    txt += f"マージ済み: {f['merged']}\n"
+    txt += "【 会 社 状 態 】 \n\n"
+    txt += f"事 業 開 始 達 成 率 : {maturity}%\n"
+    txt += f"現 在 フ ェ ー ズ : {phase}\n"
+    txt += f"総 提 案 件 数 : {f['total']}\n"
+    txt += f"マ ー ジ 済 み : {f['merged']}\n"
     txt += f"Open PR: {f['open_pr']}\n"
-    txt += f"承認済み: {f['approved']}\n"
-    txt += f"社長回答待ち: {f['waiting']}\n\n"
+    txt += f"承 認 済 み : {f['approved']}\n"
+    txt += f"社 長 回 答 待 ち : {f['waiting']}\n\n"
 
     txt += "━━━━━━━━━━━━━━━━━━\n"
-    txt += "【最新提案】\n\n"
+    txt += "【 最 新 提 案 】 \n\n"
     txt += f"#{latest['id']} {latest['title']}\n\n"
 
     txt += "━━━━━━━━━━━━━━━━━━\n"
-    txt += "【最新マージ】\n\n"
+    txt += "【 最 新 マ ー ジ 】 \n\n"
     txt += f"#{latest_merged['id']} {latest_merged['title']}\n\n"
 
     txt += "━━━━━━━━━━━━━━━━━━\n"
-    txt += "【優先バックログ】\n\n"
+    txt += "【 優 先 バ ッ ク ロ グ 】 \n\n"
     if top_backlog:
         for r in top_backlog:
             txt += f"#{r['id']} {r['title']}\n"
     else:
-        txt += "現在 0件\n"
+        txt += "現 在 0件 \n"
     txt += "\n"
 
     txt += "━━━━━━━━━━━━━━━━━━\n"
-    txt += "【最近の意思決定】\n\n"
+    txt += "【 最 近 の 意 思 決 定 】 \n\n"
     if decisions:
         for r in decisions:
             tgt = r[1] or "-"
             dec = r[2] or "-"
-            txt += f"{tgt} 評価: {dec}\n"
+            txt += f"{tgt} 評 価 : {dec}\n"
     else:
-        txt += "最近の記録なし\n"
+        txt += "最 近 の 記 録 な し \n"
     txt += "\n"
 
     txt += "━━━━━━━━━━━━━━━━━━\n"
-    txt += "【AI社員構成】\n\n"
+    txt += "【 AI社 員 構 成 】 \n\n"
     txt += employee_block() + "\n\n"
 
     txt += "━━━━━━━━━━━━━━━━━━\n"
-    txt += "【BOT状態】\n\n"
+    txt += "【 BOT状 態 】 \n\n"
     txt += bot_status_block() + "\n\n"
 
     txt += "━━━━━━━━━━━━━━━━━━\n"
-    txt += "【次の一手】\n\n"
-    txt += "・executorキュー監視\n"
-    txt += "・供給とPR消化バランス確認\n"
-    txt += "・blocked targetの整理\n"
+    txt += "【 次 の 一 手 】 \n\n"
+    txt += "・ executorキ ュ ー 監 視 \n"
+    txt += "・ 供 給 と PR消 化 バ ラ ン ス 確 認 \n"
+    txt += "・ blocked targetの 整 理 \n"
+    txt += "・ CTOレ ビ ュ ー の 提 案 接 続 準 備 \n"
     return txt
 
 def normalize_user_text(text):
