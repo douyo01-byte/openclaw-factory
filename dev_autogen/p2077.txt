@@ -1,0 +1,11 @@
+id=2077
+title=Optimize database queries in scripts/run_daemon.sh
+batch=2075-2077
+ts=2026-03-14T08:10:47Z
+
+Goal:
+Implement: Optimize database queries in scripts/run_daemon.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
