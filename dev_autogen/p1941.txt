@@ -1,0 +1,11 @@
+id=1941
+title=Improve proposal filtering in scripts/merge_if_clean.sh
+batch=1940-1941
+ts=2026-03-14T04:50:27Z
+
+Goal:
+Implement: Improve proposal filtering in scripts/merge_if_clean.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
