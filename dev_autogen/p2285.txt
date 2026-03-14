@@ -1,0 +1,6 @@
+id=2285
+title=Self improve bots/persona_reply_v3.py loop
+batch=2285-2285
+ts=2026-03-14T12:48:15Z
+
+learning_patterns と supply_bias で bots/persona_reply_v3.py が高重み。OpenClaw 自体の bots/persona_reply_v3.py 系改善を優先し、成功パターン寄りの安定化・自動化を進める。
