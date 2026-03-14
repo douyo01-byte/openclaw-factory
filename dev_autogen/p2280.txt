@@ -1,0 +1,6 @@
+id=2280
+title=Self improve bots/build_decision_patterns.py loop
+batch=2278-2280
+ts=2026-03-14T12:43:13Z
+
+learning_patterns と supply_bias で bots/build_decision_patterns.py が高重み。OpenClaw 自体の bots/build_decision_patterns.py 系改善を優先し、成功パターン寄りの安定化・自動化を進める。
