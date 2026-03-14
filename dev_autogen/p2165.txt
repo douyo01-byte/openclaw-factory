@@ -1,0 +1,11 @@
+id=2165
+title=Improve lifecycle event safety in scripts/set_telegram_token_shell.sh
+batch=2166-2165
+ts=2026-03-14T10:28:33Z
+
+Goal:
+Implement: Improve lifecycle event safety in scripts/set_telegram_token_shell.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
