@@ -1,0 +1,11 @@
+id=1863
+title=Improve logging coverage in scripts/backfill_opportunity_from_items.sh
+batch=1864-1865
+ts=2026-03-14T02:41:44Z
+
+Goal:
+Implement: Improve logging coverage in scripts/backfill_opportunity_from_items.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
