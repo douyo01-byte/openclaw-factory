@@ -1,0 +1,11 @@
+id=1854
+title=Improve queue handling in bots/web_enrich_v1.py
+batch=1853-1854
+ts=2026-03-14T02:29:13Z
+
+Goal:
+Implement: Improve queue handling in bots/web_enrich_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
