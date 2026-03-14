@@ -1,0 +1,11 @@
+id=1935
+title=Optimize database queries in scripts/set_telegram_token_launchctl.sh
+batch=1936-1937
+ts=2026-03-14T04:43:48Z
+
+Goal:
+Implement: Optimize database queries in scripts/set_telegram_token_launchctl.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
