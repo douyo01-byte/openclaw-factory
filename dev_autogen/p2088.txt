@@ -1,0 +1,11 @@
+id=2088
+title=Optimize database queries in bots/ceo_noise_cleanup_v1.py
+batch=2089-2088
+ts=2026-03-14T08:23:27Z
+
+Goal:
+Implement: Optimize database queries in bots/ceo_noise_cleanup_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
