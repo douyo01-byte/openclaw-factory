@@ -1,0 +1,6 @@
+id=2400
+title=Self improve bots/team/sakura_scout.py loop
+batch=2399-2400
+ts=2026-03-14T16:38:33Z
+
+learning_patterns と supply_bias で bots/team/sakura_scout.py が高重み。OpenClaw 自体の bots/team/sakura_scout.py 系改善を優先し、成功パターン寄りの安定化・自動化を進める。
