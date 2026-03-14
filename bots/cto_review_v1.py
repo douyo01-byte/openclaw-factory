@@ -52,6 +52,23 @@ def phase_text(maturity: int) -> str:
     return "自己強化"
 
 
+
+def slugify(text: str) -> str:
+    t = (text or "").lower()
+    out = []
+    prev_dash = False
+    for ch in t:
+        ok = ("a" <= ch <= "z") or ("0" <= ch <= "9")
+        if ok:
+            out.append(ch)
+            prev_dash = False
+        else:
+            if not prev_dash:
+                out.append("-")
+                prev_dash = True
+    slug = "".join(out).strip("-")
+    return slug[:60] or "cto-review"
+
 def create_cto_proposal(conn, title: str, body: str):
     cur = conn.cursor()
     row = cur.execute("""
@@ -68,9 +85,13 @@ def create_cto_proposal(conn, title: str, body: str):
         print(f"[cto_review] duplicate id={row[0]}", flush=True)
         return row[0]
 
+    branch_name = f"cto/{slugify(title)}"
     cur.execute("""
         insert into dev_proposals(
             title,
+            description,
+            branch_name,
+            risk_level,
             status,
             project_decision,
             dev_stage,
@@ -82,6 +103,9 @@ def create_cto_proposal(conn, title: str, body: str):
             created_at
         ) values(
             ?,
+            ?,
+            ?,
+            'medium',
             'approved',
             'execute_now',
             'execute_now',
@@ -92,7 +116,7 @@ def create_cto_proposal(conn, title: str, body: str):
             'automation',
             datetime('now')
         )
-    """, (title,))
+    """, (title, body, branch_name))
     pid = cur.lastrowid
     conn.commit()
     print(f"[cto_review] proposal inserted id={pid}", flush=True)
