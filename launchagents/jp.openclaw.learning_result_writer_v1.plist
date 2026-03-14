@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>jp.openclaw.learning_result_writer_v1</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>/Users/doyopc/AI/openclaw-factory-daemon/scripts/run_learning_result_writer_v1.sh</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/doyopc/AI/openclaw-factory-daemon/logs/learning_result_writer_v1.out</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/doyopc/AI/openclaw-factory-daemon/logs/learning_result_writer_v1.err</string>
+</dict>
+</plist>
