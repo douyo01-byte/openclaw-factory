@@ -584,7 +584,16 @@ def run_once():
             print(f"[secretary_skip] rid={rid} terminal_dump=1", flush=True)
             return
 
-        route = route_special(text)
+                    if text.strip().startswith("/meeting"):
+                conn.execute(
+                    "update inbox_commands set status='new', processed=0, applied_at=null, error='' where id=?",
+                    (int(row["id"]),)
+                )
+                conn.commit()
+                print("[secretary_skip] delegated_meeting", flush=True)
+                return
+
+route = route_special(text)
         print(f"[secretary_route] text={text!r} route={route}", flush=True)
 
         if route == "start":
