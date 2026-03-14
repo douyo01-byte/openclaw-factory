@@ -1,4 +1,8 @@
 from __future__ import annotations
+
+
+def missing_call_openai_disabled(*args, **kwargs):
+    raise RuntimeError("llm_disabled_for_merge_notify")
 import json
 import os
 import re
@@ -290,41 +294,190 @@ def build_fallback(row: sqlite3.Row, pr: dict) -> str:
         rs1 = "再 発"
         rs2 = "追 跡 困 難"
 
+    bucket = classify_notify_bucket(title, target_txt, improvement, pr_url)
+    scope_txt = bucket_scope_text(bucket)
+    reason_lines = bucket_reason_lines(bucket)
+    action_items = bucket_action_lines(bucket)
+    effects = bucket_effect_lines(bucket)
+    avoids = bucket_avoid_lines(bucket)
+
     lines = []
-    lines.append("🧠 OpenClaw 自 律 開 発")
-    lines.append("")
-    lines.append("今 回 は、AIが こ こ に 手 を 入 れ ま し た。")
-    lines.append(one)
-    lines.append("")
-    lines.append("■ 今 回 の 変 更")
+    lines.append("🧠 OpenClaw 自律開発")
     if title:
-        lines.append(f"・ 対 象 : {title[:120]}")
-    lines.append(f"・ 範 囲 : {target_txt}")
-    lines.append("")
-    lines.append("■ 直 し た 理 由")
-    lines.append(f"・ {bg1}")
-    lines.append(f"・ {bg2}")
-    lines.append("")
-    lines.append("■ 今 回 や っ た こ と")
-    lines.append(f"・ {fx1}")
-    lines.append(f"・ {fx2}")
-    lines.append("")
-    lines.append("■ 期 待 で き る 効 果")
-    lines.append(f"・ {ef1}")
-    lines.append(f"・ {ef2}")
-    lines.append("")
-    lines.append("■ 起 き に く く な る こ と")
-    lines.append(f"・ {rs1}")
-    lines.append(f"・ {rs2}")
+        lines.append(f"対象: {title[:120]}")
+    else:
+        lines.append(f"対象: {target_txt}")
+    lines.append(f"種類: {improvement or 'general'}")
     if source_ai:
-        lines.append("")
-        lines.append("■ 開 発 AI")
-        lines.append(source_ai)
+        lines.append(f"開発AI: {source_ai}")
     if pr_url:
-        lines.append("")
-        lines.append("■ PR")
-        lines.append(pr_url)
+        lines.append(f"PR: {pr_url}")
     return "\n".join(lines)
+
+
+
+def compact_text(x: str) -> str:
+    return " ".join((x or "").replace("\n", " ").split()).strip()
+
+def classify_notify_bucket(title: str, target_txt: str, improvement: str, pr_url: str) -> str:
+    x = " ".join([
+        compact_text(title).lower(),
+        compact_text(target_txt).lower(),
+        compact_text(improvement).lower(),
+        compact_text(pr_url).lower(),
+    ])
+    if any(k in x for k in ["telegram", "notify", "notification", "message", "reply", "chat"]):
+        return "notification"
+    if any(k in x for k in ["router", "route", "dispatch", "handover"]):
+        return "routing"
+    if any(k in x for k in ["watcher", "merge", "automerge", "pr"]):
+        return "pr_flow"
+    if any(k in x for k in ["db", "database", "sqlite", "schema", "migration"]):
+        return "database"
+    if any(k in x for k in ["timeout", "watchdog", "guard", "healing", "health"]):
+        return "stability"
+    if any(k in x for k in ["ceo", "cto", "meeting", "decision", "hub"]):
+        return "decision"
+    if any(k in x for k in ["docs", "readme", "handover", ".md"]):
+        return "docs"
+    return "general"
+
+def bucket_scope_text(bucket: str) -> str:
+    mp = {
+        "notification": "通 知 ま わ り",
+        "routing": "振 り 分 け 導 線",
+        "pr_flow": "PR / マ ー ジ 導 線",
+        "database": "DB / ス キ ー マ",
+        "stability": "安 定 化",
+        "decision": "判 断 / 会 議 導 線",
+        "docs": "文 書 / 引 き 継 ぎ",
+        "general": "中 核 ロ ジ ッ ク",
+    }
+    return mp.get(bucket, "中 核 ロ ジ ッ ク")
+
+def bucket_reason_lines(bucket: str) -> list[str]:
+    mp = {
+        "notification": [
+            "通 知 が 埋 も れ る と 状 況 把 握 が 遅 れ や す い",
+            "似 た 文 面 が 続 く と 変 化 点 が 見 え に く い",
+        ],
+        "routing": [
+            "受 け 渡 し が ず れ る と 全 体 が 詰 ま り や す い",
+            "次 の 担 当 に 渡 る 精 度 を 上 げ た い",
+        ],
+        "pr_flow": [
+            "PR / マ ー ジ 導 線 が 崩 れ る と 開 発 ル ー プ が 止 ま り や す い",
+            "反 映 状 態 を 読 み や す く し た い",
+        ],
+        "database": [
+            "DB の 整 合 が 崩 れ る と 後 段 判 定 が 不 安 定 に な る",
+            "土 台 側 の 情 報 を 揃 え て お き た い",
+        ],
+        "stability": [
+            "停 滞 や timeout を 減 ら し た い",
+            "再 実 行 頼 み に な る 状 態 を 減 ら し た い",
+        ],
+        "decision": [
+            "判 断 経 路 が 弱 い と 次 ア ク シ ョ ン が 遅 れ や す い",
+            "会 議 / CEO / CTO 層 へ 流 れ や す く し た い",
+        ],
+        "docs": [
+            "引 き 継 ぎ の 精 度 が 低 い と 継 続 実 装 が 遅 く な る",
+            "文 書 と 実 装 の ず れ を 減 ら し た い",
+        ],
+        "general": [
+            "人 手 を 挟 む と 流 れ が 止 ま り や す い",
+            "次 の 改 善 を 入 れ や す い 土 台 に し た い",
+        ],
+    }
+    return mp.get(bucket, mp["general"])
+
+def bucket_action_lines(bucket: str) -> list[str]:
+    mp = {
+        "notification": [
+            "・ 通 知 文 面 の 出 し 分 け を 強 め た",
+            "・ 同 じ 見 え 方 に な り や す い 表 現 を 減 ら し た",
+        ],
+        "routing": [
+            "・ タ ス ク の 受 け 渡 し 導 線 を 整 え た",
+            "・ 次 の 担 当 に 渡 り や す い 状 態 に し た",
+        ],
+        "pr_flow": [
+            "・ PR / マ ー ジ の 流 れ を 追 い や す く し た",
+            "・ 状 態 ず れ を 起 こ し に く く し た",
+        ],
+        "database": [
+            "・ DB の 扱 い を 揃 え た",
+            "・ 後 段 判 定 で 使 う 情 報 を 安 定 化 し た",
+        ],
+        "stability": [
+            "・ 停 滞 し や す い 部 分 を 減 ら し た",
+            "・ 監 視 / 再 試 行 の 前 提 を 整 え た",
+        ],
+        "decision": [
+            "・ 判 断 層 に 情 報 が 流 れ や す い 形 に 整 え た",
+            "・ 次 ア ク シ ョ ン を 決 め や す く し た",
+        ],
+        "docs": [
+            "・ 文 書 と 実 装 の ず れ を 減 ら し た",
+            "・ 継 続 作 業 の 読 み 取 り を し や す く し た",
+        ],
+        "general": [
+            "・ 自 動 ラ イ ン に 乗 せ や す い 状 態 へ 整 え た",
+            "・ 次 の ス テ ー ジ へ 進 み や す く し た",
+        ],
+    }
+    return mp.get(bucket, mp["general"])
+
+def bucket_effect_lines(bucket: str) -> list[str]:
+    mp = {
+        "notification": [
+            "・ 通 知 の 見 分 け が つ き や す く な る",
+            "・ 変 更 点 を 早 く 把 握 し や す い",
+        ],
+        "routing": [
+            "・ 担 当 の 振 り 分 け ミ ス が 減 り や す い",
+            "・ 受 け 渡 し が 安 定 し や す い",
+        ],
+        "pr_flow": [
+            "・ 開 発 ル ー プ が 途 切 れ に く く な る",
+            "・ マ ー ジ 後 の 反 映 が 読 み や す く な る",
+        ],
+        "database": [
+            "・ 判 定 の 土 台 が 安 定 し や す い",
+            "・ デ ー タ ず れ に よ る 詰 ま り が 減 る",
+        ],
+        "stability": [
+            "・ 停 滞 や timeout が 起 き に く く な る",
+            "・ 運 用 が 安 定 し や す い",
+        ],
+        "decision": [
+            "・ 判 断 か ら 実 行 ま で の 流 れ が 速 く な り や す い",
+            "・ 会 議 / CEO 層 の 活 用 が し や す い",
+        ],
+        "docs": [
+            "・ 次 の 作 業 開 始 が 速 く な り や す い",
+            "・ 認 識 ず れ が 起 き に く い",
+        ],
+        "general": [
+            "・ 流 れ が 途 切 れ に く く な る",
+            "・ 処 理 の 進 行 速 度 が 安 定 し や す い",
+        ],
+    }
+    return mp.get(bucket, mp["general"])
+
+def bucket_avoid_lines(bucket: str) -> list[str]:
+    mp = {
+        "notification": ["・ 見 落 と し", "・ 同 系 統 通 知 の 埋 没"],
+        "routing": ["・ 渡 し 先 の ず れ", "・ 宙 に 浮 く タ ス ク"],
+        "pr_flow": ["・ マ ー ジ 漏 れ", "・ 状 態 反 映 漏 れ"],
+        "database": ["・ カ ラ ム ず れ", "・ 判 定 ミ ス"],
+        "stability": ["・ 停 滞", "・ 再 実 行 の 増 加"],
+        "decision": ["・ 判 断 待 ち の 長 期 化", "・ 次 ア ク シ ョ ン の 遅 延"],
+        "docs": ["・ 引 き 継 ぎ 漏 れ", "・ 読 み 違 い"],
+        "general": ["・ 手 動 漏 れ", "・ 停 滞"],
+    }
+    return mp.get(bucket, mp["general"])
 
 def build_prompt(row: sqlite3.Row, pr: dict) -> str:
     title = clean_title((row["title"] or ""))
@@ -428,7 +581,7 @@ def build_msg(event_row: sqlite3.Row, proposal_row: sqlite3.Row) -> str:
     pr_number = proposal_row["pr_number"]
     pr = gh_json(int(pr_number)) if pr_number else {}
     prompt = build_prompt(proposal_row, pr)
-    msg = call_openai(prompt)
+    msg = missing_call_openai_disabled(prompt)
     if msg:
         return msg
     return build_fallback(proposal_row, pr)
@@ -477,6 +630,13 @@ def main():
                     print(f"[merge_notify] build_error proposal_id={r['proposal_id']} {e!r}", flush=True)
                     msg = build_fallback(dp, {})
                 tg_send(msg)
+                conn.execute("""
+                    update dev_proposals
+                    set notified_at=datetime('now'),
+                        notified_msg_id='sent'
+                    where id=?
+                """, (r["proposal_id"],))
+                conn.commit()
                 new_last = int(r["id"])
                 print(f"[merge_notify] sent event_id={new_last} proposal_id={r['proposal_id']}", flush=True)
             conn.close()
