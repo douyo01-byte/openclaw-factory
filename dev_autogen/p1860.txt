@@ -1,0 +1,11 @@
+id=1860
+title=Improve lifecycle event safety in scripts/follow_main.sh
+batch=1859-1860
+ts=2026-03-14T02:35:32Z
+
+Goal:
+Implement: Improve lifecycle event safety in scripts/follow_main.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
