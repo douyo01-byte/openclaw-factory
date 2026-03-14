@@ -1,0 +1,11 @@
+id=1848
+title=Harden watcher state sync in scripts/launch_executor.sh
+batch=1847-1848
+ts=2026-03-14T02:22:58Z
+
+Goal:
+Implement: Harden watcher state sync in scripts/launch_executor.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
