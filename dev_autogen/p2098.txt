@@ -1,0 +1,47 @@
+id=2098
+title=在庫通知をTelegramに自動送信したいTEST_COO_EXEC_05
+batch=2098-2098
+ts=2026-03-14T08:33:35Z
+
+【 目 的 】 
+- 依 頼 内 容 を 実 装 可 能 な 粒 度 に 整 理 す る 
+- 入 力 : 在庫通知をTelegramに自動送信したいTEST_COO_EXEC_05
+
+【 対 象 候 補 】 
+- Telegram通知系
+
+【 実 装 方 針 】 
+- 既 存 bot / script / DB / LaunchAgent の 接 続 点 を 先 に 確 認 す る 
+- 人 間 判 断 が 必 要 な 点 だ け 先 に 確 定 す る 
+- そ れ 以 外 は 自 動 実 装 候 補 と し て 分 離 す る 
+
+【 あ な た が 決 め る こ と 】 
+- 通 知 対 象 の chat_id を 既 存 流 用 か 新 規 か 
+- 手 動 実 行 か 常 駐 自 動 実 行 か 
+- 在 庫 の 変 化 判 定 を DB 起 点 に す る か 外 部 起 点 に す る か 
+
+【 作 業 チ ャ ッ ト 指 示 】 
+cd ~/AI/openclaw-factory-daemon || exit 1
+launchctl list | grep openclaw
+sqlite3 data/openclaw.db "select count(*) from dev_proposals;"
+sqlite3 data/openclaw.db "select id,title,status,dev_stage from dev_proposals order by id desc limit 10;"
+grep -Rni 'telegram\|meeting\|dashboard\|proposal\|executor' bots scripts 2>/dev/null | sed -n '1,120p'
+
+【 推 定 メ タ 情 報 】 
+- category: automation
+- target_system: telegram
+- improvement_type: automation
+
+【 現 在 の 会 社 状 態 】 
+- 総 提 案 件 数 : 2097
+- マ ー ジ 済 み : 2031
+- 承 認 済 み : 14
+- Open PR: 1
+
+【 優 先 バ ッ ク ロ グ 】 
+- #2080 Strengthen launchd recovery in bots/ops_brain_v2.py
+- #2078 在庫通知をTelegramに自動送信したいTEST_COO_EXEC_03
+- #2076 在庫通知をTelegramに自動送信したいTEST_COO_EXEC_03
+
+【 自 動 化 候 補 】 
+- 必 要 な ら こ の 内 容 で dev_proposals 化 す る 
