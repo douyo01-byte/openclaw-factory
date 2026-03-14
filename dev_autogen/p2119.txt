@@ -1,0 +1,11 @@
+id=2119
+title=Improve logging coverage in oclibs/human/reply.py
+batch=2118-2119
+ts=2026-03-14T09:00:59Z
+
+Goal:
+Implement: Improve logging coverage in oclibs/human/reply.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
