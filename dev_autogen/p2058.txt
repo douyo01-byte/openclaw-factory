@@ -1,0 +1,11 @@
+id=2058
+title=Reduce duplicate writes in scripts/auto_pr_entry.sh
+batch=2057-2058
+ts=2026-03-14T07:47:56Z
+
+Goal:
+Implement: Reduce duplicate writes in scripts/auto_pr_entry.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
