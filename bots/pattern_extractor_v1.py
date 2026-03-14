@@ -1,133 +1,130 @@
 import os
+import re
 import sqlite3
 import time
 
-DB_PATH = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 
-def db():
-    con = sqlite3.connect(DB_PATH, timeout=30)
-    con.row_factory = sqlite3.Row
-    con.execute("pragma busy_timeout=30000")
-    return con
+def conn():
+    c = sqlite3.connect(DB, timeout=30)
+    c.row_factory = sqlite3.Row
+    c.execute("pragma busy_timeout=30000")
+    return c
 
-def calc_weight(sample_count, success_count, avg_impact, avg_result):
-    sr = (success_count / sample_count) if sample_count else 0.0
-    return round(sr * 60 + avg_impact * 8 + avg_result * 4 + min(sample_count, 20), 3)
+def norm(v):
+    return str(v or "").strip().lower()
 
-def upsert_pattern(con, pattern_type, pattern_key, sample_count, success_count, avg_impact, avg_result):
-    weight = calc_weight(sample_count, success_count, avg_impact, avg_result)
-    con.execute("""
-        insert into learning_patterns(
-          pattern_type, pattern_key, sample_count, success_count,
-          avg_impact_score, avg_result_score, weight, updated_at
-        ) values(?,?,?,?,?,?,?,datetime('now'))
-        on conflict(pattern_type, pattern_key) do update set
-          sample_count=excluded.sample_count,
-          success_count=excluded.success_count,
-          avg_impact_score=excluded.avg_impact_score,
-          avg_result_score=excluded.avg_result_score,
-          weight=excluded.weight,
-          updated_at=datetime('now')
-    """, (
-        pattern_type, pattern_key, sample_count, success_count,
-        avg_impact, avg_result, weight
-    ))
+def title_bucket(title: str) -> str:
+    t = norm(title)
+    if not t:
+        return "misc"
+    if "health" in t:
+        return "health"
+    if "db " in f"{t} " or "database" in t:
+        return "db"
+    if "watcher" in t:
+        return "watcher"
+    if "log" in t:
+        return "log"
+    if "merge" in t:
+        return "merge"
+    if "executor" in t:
+        return "executor"
+    if "ceo" in t:
+        return "ceo"
+    if "proposal" in t:
+        return "proposal"
+    return re.sub(r'[^a-z0-9_]+', '_', t[:24]).strip('_') or "misc"
 
-def rebuild_patterns(con):
-    con.execute("delete from learning_patterns")
+def rows_to_patterns(rows):
+    buckets = {}
 
-    queries = {
-        "source_ai": """
-            select
-              coalesce(source_ai,'') as k,
-              count(*) as n,
-              sum(case when coalesce(success_flag,0)=1 then 1 else 0 end) as s,
-              avg(coalesce(impact_score,0)) as ai,
-              avg(coalesce(result_score,0)) as ar
-            from learning_results
-            group by coalesce(source_ai,'')
-            having trim(coalesce(source_ai,'')) <> ''
-        """,
-        "target_system": """
-            select
-              coalesce(target_system,'') as k,
-              count(*) as n,
-              sum(case when coalesce(success_flag,0)=1 then 1 else 0 end) as s,
-              avg(coalesce(impact_score,0)) as ai,
-              avg(coalesce(result_score,0)) as ar
-            from learning_results
-            group by coalesce(target_system,'')
-            having trim(coalesce(target_system,'')) <> ''
-        """,
-        "improvement_type": """
-            select
-              coalesce(improvement_type,'') as k,
-              count(*) as n,
-              sum(case when coalesce(success_flag,0)=1 then 1 else 0 end) as s,
-              avg(coalesce(impact_score,0)) as ai,
-              avg(coalesce(result_score,0)) as ar
-            from learning_results
-            group by coalesce(improvement_type,'')
-            having trim(coalesce(improvement_type,'')) <> ''
-        """,
-        "source_target": """
-            select
-              coalesce(source_ai,'') || '|' || coalesce(target_system,'') as k,
-              count(*) as n,
-              sum(case when coalesce(success_flag,0)=1 then 1 else 0 end) as s,
-              avg(coalesce(impact_score,0)) as ai,
-              avg(coalesce(result_score,0)) as ar
-            from learning_results
-            group by coalesce(source_ai,''), coalesce(target_system,'')
-            having trim(coalesce(source_ai,'')) <> '' or trim(coalesce(target_system,'')) <> ''
-        """,
-        "target_improvement": """
-            select
-              coalesce(target_system,'') || '|' || coalesce(improvement_type,'') as k,
-              count(*) as n,
-              sum(case when coalesce(success_flag,0)=1 then 1 else 0 end) as s,
-              avg(coalesce(impact_score,0)) as ai,
-              avg(coalesce(result_score,0)) as ar
-            from learning_results
-            group by coalesce(target_system,''), coalesce(improvement_type,'')
-            having trim(coalesce(target_system,'')) <> '' or trim(coalesce(improvement_type,'')) <> ''
-        """
-    }
+    for r in rows:
+        success = int(r["success_flag"] or 0)
+        impact = float(r["impact_score"] or 0)
+        result = float(r["result_score"] or 0)
 
-    inserted = 0
-    for pattern_type, sql in queries.items():
-        rows = con.execute(sql).fetchall()
-        for r in rows:
-            upsert_pattern(
-                con,
-                pattern_type,
-                r["k"],
-                int(r["n"] or 0),
-                int(r["s"] or 0),
-                float(r["ai"] or 0),
-                float(r["ar"] or 0),
-            )
-            inserted += 1
-    con.commit()
-    return inserted
+        pairs = []
+
+        src = norm(r["source_ai"])
+        tgt = norm(r["target_system"])
+        imp = norm(r["improvement_type"])
+        title = str(r["title"] or "")
+
+        if src:
+            pairs.append(("source_ai", src))
+        if tgt:
+            pairs.append(("target_system", tgt))
+        if imp:
+            pairs.append(("improvement_type", imp))
+
+        pairs.append(("title_bucket", title_bucket(title)))
+
+        for ptype, pkey in pairs:
+            k = (ptype, pkey)
+            if k not in buckets:
+                buckets[k] = {
+                    "sample_count": 0,
+                    "success_count": 0,
+                    "impact_sum": 0.0,
+                    "result_sum": 0.0,
+                }
+            buckets[k]["sample_count"] += 1
+            buckets[k]["success_count"] += success
+            buckets[k]["impact_sum"] += impact
+            buckets[k]["result_sum"] += result
+
+    out = []
+    for (ptype, pkey), v in buckets.items():
+        n = v["sample_count"]
+        s = v["success_count"]
+        avg_impact = v["impact_sum"] / n if n else 0.0
+        avg_result = v["result_sum"] / n if n else 0.0
+        success_rate = s / n if n else 0.0
+        weight = round(success_rate * 60 + avg_impact * 5 + avg_result * 20, 4)
+        out.append((ptype, pkey, n, s, avg_impact, avg_result, weight))
+    return out
 
 def run_once():
-    con = db()
+    c = conn()
     try:
-        n = rebuild_patterns(con)
-        top = con.execute("""
-            select pattern_type, pattern_key, sample_count, success_count, round(weight,2)
-            from learning_patterns
-            order by weight desc, sample_count desc, id desc
-            limit 15
+        rows = c.execute("""
+            select
+              title,
+              coalesce(source_ai,'') as source_ai,
+              coalesce(target_system,'') as target_system,
+              coalesce(improvement_type,'') as improvement_type,
+              coalesce(impact_score,0) as impact_score,
+              coalesce(result_score,0) as result_score,
+              coalesce(success_flag,0) as success_flag
+            from learning_results
+            order by id desc
+            limit 1000
         """).fetchall()
-        print(f"pattern_extractor_updated={n}", flush=True)
-        for r in top:
-            print(tuple(r), flush=True)
+
+        pats = rows_to_patterns(rows)
+
+        c.execute("delete from learning_patterns")
+        for p in pats:
+            c.execute("""
+                insert into learning_patterns(
+                  pattern_type,
+                  pattern_key,
+                  sample_count,
+                  success_count,
+                  avg_impact_score,
+                  avg_result_score,
+                  weight,
+                  updated_at
+                ) values(?,?,?,?,?,?,?,datetime('now'))
+            """, p)
+
+        c.commit()
+        print(f"pattern_extractor_updated={len(pats)}", flush=True)
     finally:
-        con.close()
+        c.close()
 
 if __name__ == "__main__":
     while True:
         run_once()
-        time.sleep(300)
+        time.sleep(180)
