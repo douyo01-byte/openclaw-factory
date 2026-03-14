@@ -1,0 +1,11 @@
+id=1955
+title=Improve executor stability in configs/sources.json.bak.20260227-011407
+batch=1954-1955
+ts=2026-03-14T05:06:19Z
+
+Goal:
+Implement: Improve executor stability in configs/sources.json.bak.20260227-011407
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
