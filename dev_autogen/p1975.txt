@@ -1,0 +1,11 @@
+id=1975
+title=Improve queue handling in scripts/opportunity_promote.sh
+batch=1976-1975
+ts=2026-03-14T05:31:54Z
+
+Goal:
+Implement: Improve queue handling in scripts/opportunity_promote.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
