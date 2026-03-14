@@ -1,0 +1,11 @@
+id=1937
+title=Harden watcher state sync in scripts/log_rotate_safe.sh
+batch=1936-1937
+ts=2026-03-14T04:43:48Z
+
+Goal:
+Implement: Harden watcher state sync in scripts/log_rotate_safe.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
