@@ -1,0 +1,11 @@
+id=2086
+title=Improve executor stability in scripts/meeting_once.sh
+batch=2085-2086
+ts=2026-03-14T08:20:16Z
+
+Goal:
+Implement: Improve executor stability in scripts/meeting_once.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
