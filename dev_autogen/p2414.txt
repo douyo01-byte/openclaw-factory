@@ -1,0 +1,30 @@
+id=2414
+title=🧠 Kaikun04 CTOレビュー
+batch=2414-2414
+ts=2026-03-14T17:06:04Z
+
+🧠 Kaikun04 CTOレビュー
+
+事業開始達成率: 45%
+現在フェーズ: 自己強化
+
+■ 開発ライン
+・ merged(24h): 749
+・ open PR: 0
+・ approved滞留: 14
+・ execute_now滞留: 12
+・ COO未完了: 0
+
+■ 常駐状態
+・ secretary: 稼働中
+・ executor: 稼働中
+・ watcher: 稼働中
+・ merge_notify: 稼働中
+・ meeting_bridge: 稼働中
+・ mainstream_supply: 停止
+
+■ 最新提案
+・ #2413 Executor stability sweep 020439
+
+■ CTO判断
+・ supply停止 / execute_now滞留 12件
