@@ -1,0 +1,11 @@
+id=2094
+title=Harden DB path handling in configs/sources.json.bak.20260227-011407
+batch=2093-2094
+ts=2026-03-14T08:29:48Z
+
+Goal:
+Implement: Harden DB path handling in configs/sources.json.bak.20260227-011407
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
