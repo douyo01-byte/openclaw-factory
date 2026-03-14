@@ -1,0 +1,11 @@
+id=2064
+title=Harden DB path handling in scripts/brain_supply_loop.sh
+batch=2063-2064
+ts=2026-03-14T07:54:27Z
+
+Goal:
+Implement: Harden DB path handling in scripts/brain_supply_loop.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
