@@ -1,0 +1,11 @@
+id=2096
+title=Improve error handling in oclibs/telegram.py
+batch=2095-2096
+ts=2026-03-14T08:32:55Z
+
+Goal:
+Implement: Improve error handling in oclibs/telegram.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
