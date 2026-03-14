@@ -1,0 +1,11 @@
+id=1852
+title=Improve lifecycle event safety in bots/dev_schema_apply.py
+batch=1851-1852
+ts=2026-03-14T02:25:57Z
+
+Goal:
+Implement: Improve lifecycle event safety in bots/dev_schema_apply.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
