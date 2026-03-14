@@ -1,0 +1,11 @@
+id=1806
+title=Refactor duplicated logic in scripts/opportunity_meeting_now.sh
+batch=1805-1806
+ts=2026-03-14T01:35:52Z
+
+Goal:
+Implement: Refactor duplicated logic in scripts/opportunity_meeting_now.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
