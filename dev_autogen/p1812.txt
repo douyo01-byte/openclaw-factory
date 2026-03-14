@@ -1,0 +1,11 @@
+id=1812
+title=Strengthen launchd recovery in docs/gates.md
+batch=1811-1812
+ts=2026-03-14T01:42:28Z
+
+Goal:
+Implement: Strengthen launchd recovery in docs/gates.md
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
