@@ -1,0 +1,11 @@
+id=1808
+title=Refactor duplicated logic in scripts/daemon_selfcheck.sh
+batch=1807-1808
+ts=2026-03-14T01:39:09Z
+
+Goal:
+Implement: Refactor duplicated logic in scripts/daemon_selfcheck.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
