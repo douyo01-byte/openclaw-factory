@@ -1,0 +1,6 @@
+id=2468
+title=Self improve proposal loop
+batch=2467-2468
+ts=2026-03-14T18:58:46Z
+
+learning_patterns と supply_bias で proposal が高重み。OpenClaw 自体の proposal 系改善を優先し、成功パターン寄りの安定化・自動化を進める。
