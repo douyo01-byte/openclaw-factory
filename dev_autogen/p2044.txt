@@ -1,0 +1,11 @@
+id=2044
+title=Optimize database queries in bots/dev_proposal_notify_v1.py
+batch=2043-2044
+ts=2026-03-14T07:28:19Z
+
+Goal:
+Implement: Optimize database queries in bots/dev_proposal_notify_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
