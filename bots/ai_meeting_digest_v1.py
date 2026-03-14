@@ -104,42 +104,145 @@ def should_emit(c: dict) -> bool:
     )
 
 def build_title(c: dict) -> str:
-    return f"OpenClaw 定例会議 merged={c['merged']} pr={c['pr']} learn={c['learn']} emp={c['emp']}"
+    merged = int(c.get("merged", 0))
+    pr = int(c.get("pr", 0))
+    learn = int(c.get("learn", 0))
+    emp = int(c.get("emp", 0))
+
+    if merged >= 4 and pr >= 3:
+        return "OpenClaw 定 例 会 議 : 実 装 消 化 は 順 調 、 次 は 学 習 密 度 を 上 げ た い"
+    if pr >= 4:
+        return "OpenClaw 定 例 会 議 : PR生 成 は 強 い 、 実 装 の 流 れ は 維 持"
+    if learn >= 2:
+        return "OpenClaw 定 例 会 議 : 学 習 反 映 が 進 行 、 改 善 の 再 現 性 を 伸 ば し た い"
+    if emp >= 1:
+        return "OpenClaw 定 例 会 議 : AI社 員 側 の 更 新 あ り 、 役 割 の 固 定 化 を 観 測"
+    return "OpenClaw 定 例 会 議 : 実 装 は 継 続 、 次 の 材 料 を 集 め る フ ェ ー ズ"
 
 def build_body(c: dict, merged_titles: list[str], learn_titles: list[str]) -> str:
-    lines = [
-        "OpenClaw 会議メモ",
-        f"集計窓: 直近{WINDOW_MIN}分",
-        f"統合: {c['merged']}件 / PR作成: {c['pr']}件 / 学習反映: {c['learn']}件 / AI社員: {c['emp']}件",
-    ]
-    if merged_titles:
-        lines.append("")
-        lines.append("主な統合")
-        for x in merged_titles:
-            lines.append(f"- {x}")
-    if learn_titles:
-        lines.append("")
-        lines.append("主な学習反映")
-        for x in learn_titles:
-            lines.append(f"- {x}")
-    lines.append("")
-    lines.append("次のアクション")
-    if c["pr"] > c["merged"]:
-        lines.append("- PR消化を優先")
-    else:
-        lines.append("- 供給継続で次の改善を回す")
-    if c["learn"] >= 3:
-        lines.append("- 学習反映の高頻度帯を監視")
-    else:
-        lines.append("- 会議材料が増えるまで継続観測")
-    return "\n".join(lines)
+    from pathlib import Path
+    import json
 
-def insert_ai_meeting(con: sqlite3.Connection, title: str, body: str):
-    con.execute("""
-        insert into ceo_hub_events(event_type,title,body,created_at)
-        values('ai_meeting', ?, ?, datetime('now'))
-    """, (title, body))
-    con.commit()
+    merged = int(c.get("merged", 0))
+    pr = int(c.get("pr", 0))
+    learn = int(c.get("learn", 0))
+    emp = int(c.get("emp", 0))
+
+    hp = None
+    phase = "自 己 強 化"
+    delta_txt = "前 回 比 不 明 "
+    growth = []
+
+    try:
+        hp_json = json.loads(Path("obs/company_health_score.json").read_text(encoding="utf-8"))
+        hp = int(hp_json.get("maturity_percent", 0))
+    except:
+        hp = None
+
+    try:
+        state_path = Path("data/ai_meeting_digest_v1.state")
+        if state_path.exists():
+            prev = json.loads(state_path.read_text(encoding="utf-8"))
+            prev_hp = int(prev.get("last_maturity_percent", hp if hp is not None else 0))
+            if hp is not None:
+                diff = hp - prev_hp
+                if diff > 0:
+                    delta_txt = f"前 回 比 +{diff}%"
+                elif diff < 0:
+                    delta_txt = f"前 回 比 {diff}%"
+                else:
+                    delta_txt = "前 回 比 ±0%"
+    except:
+        pass
+
+    if hp is not None:
+        if hp >= 85:
+            phase = "実 運 用 直 前"
+        elif hp >= 60:
+            phase = "事 業 準 備"
+        else:
+            phase = "自 己 強 化"
+
+    if merged >= 4:
+        growth.append("実 装 消 化")
+    if pr >= 4:
+        growth.append("PR生 成")
+    if learn >= 2:
+        growth.append("学 習 反 映")
+    if emp >= 1:
+        growth.append("AI社 員 側")
+
+    merged_line = "、 ".join(merged_titles[:2]) if merged_titles else "目 立 つ 統 合 は ま だ 少 な め"
+    learn_line = "、 ".join(learn_titles[:2]) if learn_titles else "今 回 は 学 習 反 映 が 少 な め"
+
+    agenda = []
+    if merged >= 4:
+        agenda.append("実 装 の 消 化 速 度 は 良 好")
+    elif merged >= 2:
+        agenda.append("実 装 は 継 続 的 に 前 進")
+    else:
+        agenda.append("実 装 は 小 休 止 気 味")
+
+    if pr >= 4:
+        agenda.append("供 給 か ら PRま で の 流 れ は 強 め")
+    elif pr >= 2:
+        agenda.append("PR生 成 は 維 持")
+    else:
+        agenda.append("PR材 料 は 少 な め")
+
+    if learn >= 2:
+        agenda.append("学 習 反 映 が じ わ じ わ 積 み 上 が っ て い る")
+    else:
+        agenda.append("学 習 反 映 は 次 回 の 観 測 点")
+
+    decisions = []
+    decisions.append(f"直 近 の 主 な 統 合 は {merged_line}")
+    decisions.append(f"学 習 側 は {learn_line}")
+    if hp is not None:
+        decisions.append(f"事 業 開 始 達 成 率 は {hp}% 、 フ ェ ー ズ は {phase}")
+
+    hold = []
+    if learn == 0:
+        hold.append("学 習 反 映 の 厚 み は ま だ 弱 い")
+    if emp == 0:
+        hold.append("AI社 員 側 の 変 化 は 今 回 少 な め")
+    if merged < 2 and pr < 2:
+        hold.append("会 議 材 料 は や や 少 な め")
+
+    nexts = []
+    if pr >= merged:
+        nexts.append("供 給 ペ ー ス を 維 持 し つ つ 学 習 側 の 密 度 を 観 測")
+    else:
+        nexts.append("実 装 済 み の 学 習 反 映 が 次 回 ど れ だ け 積 み 上 が る か 確 認")
+    if hp is not None:
+        nexts.append(f"達 成 率 {hp}% の 次 の 壁 を 越 え ら れ る か を 観 測")
+    if growth:
+        nexts.append(f"今 回 伸 び た 領 域 は {' / '.join(growth)}")
+
+    lines = []
+    lines.append("🧠 OpenClaw 定 例 会 議")
+    lines.append("")
+    lines.append("■ 今 回 の 論 点")
+    for x in agenda:
+        lines.append(f"・ {x}")
+    lines.append("")
+    lines.append("■ 決 定 事 項")
+    for x in decisions:
+        lines.append(f"・ {x}")
+    lines.append("")
+    lines.append("■ 保 留 事 項")
+    if hold:
+        for x in hold:
+            lines.append(f"・ {x}")
+    else:
+        lines.append("・ 大 き な 保 留 は 少 な め")
+    lines.append("")
+    lines.append("■ 次 回 ま で の 観 測 点")
+    for x in nexts[:3]:
+        lines.append(f"・ {x}")
+    lines.append("")
+    lines.append(f"進 捗 率 : {hp if hp is not None else '不 明 '}% / {delta_txt}")
+    return "\n".join(lines)
 
 def main():
     STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
