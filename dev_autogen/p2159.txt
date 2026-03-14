@@ -1,0 +1,11 @@
+id=2159
+title=Harden DB path handling in scripts/set_telegram_token_launchctl.sh
+batch=2160-2159
+ts=2026-03-14T10:19:05Z
+
+Goal:
+Implement: Harden DB path handling in scripts/set_telegram_token_launchctl.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
