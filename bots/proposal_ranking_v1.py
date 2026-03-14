@@ -50,7 +50,7 @@ def main():
     rows = conn.execute("""
     select id, title, category, target_system, improvement_type, quality_score, status
     from dev_proposals
-    where coalesce(status,'') in ('idea','approved')
+    where coalesce(status,'') in ('idea','approved','new','open','execute_now')
     order by id desc
     limit 300
     """).fetchall()

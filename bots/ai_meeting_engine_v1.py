@@ -71,11 +71,38 @@ def main():
     )
     """)
 
+    conn.execute("""
+    create table if not exists ceo_decision_layer_results(
+      proposal_id integer primary key,
+      rank_score real default 0,
+      meeting_needed integer default 0,
+      decision_bucket text default '',
+      summary text default '',
+      source_snapshot text default '',
+      updated_at text default (datetime('now'))
+    )
+    """)
     rows = conn.execute("""
-    select id, coalesce(title,'') as title, coalesce(category,'') as category
-    from dev_proposals
-    where status in ('approved','merged','pr_created')
-    order by id desc
+    select
+      p.id,
+      coalesce(p.title,'') as title,
+      coalesce(p.category,'') as category,
+      coalesce(c.rank_score,0) as rank_score,
+      coalesce(c.decision_bucket,'') as decision_bucket
+    from ceo_decision_layer_results c
+    join dev_proposals p on p.id = c.proposal_id
+    where coalesce(c.meeting_needed,0)=1
+      and (
+        coalesce(p.status,'') in ('approved','new','open','execute_now','pr_created','merged')
+        or coalesce(p.dev_stage,'') in ('blocked_target_policy','pr_created','execute_now','merged')
+      )
+      and not exists (
+        select 1
+        from ceo_hub_events e
+        where e.event_type='ai_meeting'
+          and e.proposal_id = p.id
+      )
+    order by c.rank_score desc, p.id desc
     limit 3
     """).fetchall()
 
@@ -103,6 +130,8 @@ def main():
         f"system_importance={system_importance}",
     ])
 
+    stamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    branch_name = f"ai-meeting-{stamp}"
     spec = "\n".join([
         f"Goal:",
         f"Implement: {title}",
@@ -125,13 +154,13 @@ def main():
 
     conn.execute("""
     insert into dev_proposals(
-      title, description, spec, status, spec_stage, project_decision, guard_status, guard_reason,
-      created_at, category, target_system, improvement_type, quality_score
+      title, description, branch_name, spec, status, spec_stage, project_decision, guard_status, guard_reason,
+      created_at, category, target_system, improvement_type, quality_score, source_ai
     ) values(
-      ?, ?, ?, 'idea', 'raw', 'backlog', 'pending', 'ai_meeting_discussion',
-      datetime('now'), 'improvement', 'core', 'refinement', 58
+      ?, ?, ?, ?, 'idea', 'raw', 'backlog', 'pending', 'ai_meeting_discussion',
+      datetime('now'), 'improvement', 'core', 'refinement', 58, 'ai_meeting_engine_v1'
     )
-    """, (title, description, spec))
+    """, (title, description, branch_name, spec))
     proposal_id = conn.execute("select last_insert_rowid()").fetchone()[0]
 
     conn.execute("""
