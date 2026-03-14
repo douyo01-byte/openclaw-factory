@@ -1,0 +1,11 @@
+id=1810
+title=Reduce API latency in scripts/go.sh
+batch=1811-1812
+ts=2026-03-14T01:42:28Z
+
+Goal:
+Implement: Reduce API latency in scripts/go.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
