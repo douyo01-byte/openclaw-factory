@@ -49,6 +49,37 @@ def phase_text(maturity: int) -> str:
         return "事業準備"
     return "自己強化"
 
+
+def create_cto_proposal(conn, title: str, body: str):
+    cur = conn.cursor()
+    row = cur.execute("""
+        select id
+        from dev_proposals
+        where coalesce(source_ai,'')='cto'
+          and title=?
+          and coalesce(status,'') in ('new','approved','pending')
+          and created_at >= datetime('now','-60 minutes')
+        order by id desc
+        limit 1
+    """, (title,)).fetchone()
+    if row:
+        print(f"[cto_review] duplicate id={row[0]}", flush=True)
+        return row[0]
+
+    cur.execute("""
+        insert into dev_proposals(
+            title, body, status, project_decision, dev_stage, guard_status,
+            source_ai, category, target_system, improvement_type, created_at
+        ) values(
+            ?, ?, 'approved', 'execute_now', 'execute_now', 'safe',
+            'cto', 'automation', 'core', 'automation', datetime('now')
+        )
+    """, (title, body))
+    pid = cur.lastrowid
+    conn.commit()
+    print(f"[cto_review] proposal inserted id={pid}", flush=True)
+    return pid
+
 def build_msg():
     con = sqlite3.connect(DB, timeout=30)
     try:
@@ -163,6 +194,11 @@ def main():
         try:
             msg = build_msg()
             if msg != load_last():
+                title = msg.split("\n", 1)[0][:140]
+                conn = sqlite3.connect(DB_PATH, timeout=30)
+                conn.execute("pragma busy_timeout=30000")
+                create_cto_proposal(conn, title, msg)
+                conn.close()
                 tg(msg)
                 save_last(msg)
                 print("[cto_review] sent", flush=True)
