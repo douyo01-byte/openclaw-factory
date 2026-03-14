@@ -1,0 +1,11 @@
+id=1929
+title=Reduce event summary drift in scripts/env_check.sh
+batch=1928-1929
+ts=2026-03-14T04:34:30Z
+
+Goal:
+Implement: Reduce event summary drift in scripts/env_check.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
