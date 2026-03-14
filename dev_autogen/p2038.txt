@@ -1,0 +1,11 @@
+id=2038
+title=Improve retry logic in scripts/env_check.sh
+batch=2039-2038
+ts=2026-03-14T07:21:47Z
+
+Goal:
+Implement: Improve retry logic in scripts/env_check.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
