@@ -131,6 +131,26 @@ def summarize_kind(improvement_type: str) -> tuple[str, list[str], list[str]]:
     )
 
 
+
+def human_learning_text(result_type: str, result_note: str) -> str:
+    rt = (result_type or "").strip().lower()
+    rn = (result_note or "").strip()
+    if rt in {"success", "merged", "normal"}:
+        if rn:
+            return f"今 回 の 変 更 は 安 定 し た 改 善 と し て 取 り 込 ま れ ま し た 。 {rn[:120]}"
+        return "今 回 の 変 更 は 通 常 の 改 善 と し て 問 題 な く 取 り 込 ま れ ま し た 。"
+    if rt in {"warning", "partial"}:
+        if rn:
+            return f"反 映 は 進 ん で い ま す が 、 一 部 は 継 続 観 察 が 必 要 で す 。 {rn[:120]}"
+        return "反 映 は 進 ん で い ま す が 、 継 続 観 察 が 必 要 で す 。"
+    if rt in {"fail", "error"}:
+        if rn:
+            return f"今 回 の 学 習 反 映 は 課 題 つ き で 、 再 調 整 の 余 地 が あ り ま す 。 {rn[:120]}"
+        return "今 回 の 学 習 反 映 は 再 調 整 の 余 地 が あ り ま す 。"
+    if rn:
+        return rn[:120]
+    return "今 回 の 変 更 は 次 の 改 善 に つ な が る 学 習 と し て 記 録 さ れ ま し た 。"
+
 def choose_display_files(row: sqlite3.Row, pr: dict) -> list[str]:
     files = []
     try:
