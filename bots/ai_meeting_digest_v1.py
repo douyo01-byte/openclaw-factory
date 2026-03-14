@@ -5,6 +5,7 @@ from pathlib import Path
 
 DB_PATH = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 STATE_PATH = Path("data/ai_meeting_digest_v1.state")
+
 WINDOW_MIN = int(os.environ.get("AI_MEETING_DIGEST_WINDOW_MIN", "20"))
 MIN_MERGED = int(os.environ.get("AI_MEETING_DIGEST_MIN_MERGED", "2"))
 MIN_PR = int(os.environ.get("AI_MEETING_DIGEST_MIN_PR", "2"))
@@ -89,8 +90,8 @@ def top_merged_titles(con: sqlite3.Connection, last_id: int, limit: int = 2):
     out = []
     for r in rows:
         t = (r["title"] or "").strip()
-        if t.startswith("統  合  完  了  :"):
-            t = t.replace("統  合  完  了  :", "", 1).strip()
+        if t.startswith("統 合 完 了 :"):
+            t = t.replace("統 合 完 了 :", "", 1).strip()
         out.append(t[:120])
     return list(reversed(out))
 
@@ -103,7 +104,7 @@ def should_emit(c: dict) -> bool:
     )
 
 def build_title(c: dict) -> str:
-    return f"OpenClaw 定 例 会 議  merged={c['merged']} pr={c['pr']} learn={c['learn']} emp={c['emp']}"
+    return f"OpenClaw 定例会議 merged={c['merged']} pr={c['pr']} learn={c['learn']} emp={c['emp']}"
 
 def build_body(c: dict, merged_titles: list[str], learn_titles: list[str]) -> str:
     lines = [
@@ -122,7 +123,7 @@ def build_body(c: dict, merged_titles: list[str], learn_titles: list[str]) -> st
         for x in learn_titles:
             lines.append(f"- {x}")
     lines.append("")
-    lines.append("次アクション")
+    lines.append("次のアクション")
     if c["pr"] > c["merged"]:
         lines.append("- PR消化を優先")
     else:
