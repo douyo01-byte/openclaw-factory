@@ -1,0 +1,11 @@
+id=2062
+title=Harden DB path handling in bots/pipeline_hn_to_outreach.py
+batch=2063-2064
+ts=2026-03-14T07:54:27Z
+
+Goal:
+Implement: Harden DB path handling in bots/pipeline_hn_to_outreach.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
