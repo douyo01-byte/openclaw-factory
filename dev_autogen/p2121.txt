@@ -1,0 +1,11 @@
+id=2121
+title=Improve retry logic in scripts/go_queue.sh
+batch=2122-2121
+ts=2026-03-14T09:04:06Z
+
+Goal:
+Implement: Improve retry logic in scripts/go_queue.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
