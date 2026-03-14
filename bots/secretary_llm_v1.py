@@ -16,6 +16,7 @@ OPENAI_MODEL = (os.environ.get("OPENAI_MODEL") or "gpt-4o-mini").strip()
 
 ROOT = Path(__file__).resolve().parent.parent
 OBS = ROOT / "obs"
+DB_PATH = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 LOGS = ROOT / "logs"
 
 def load_json(path):
@@ -566,55 +567,58 @@ def route_special(text):
     return "chat"
 
 def run_once():
-    conn = sqlite3.connect(DB, timeout=30)
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
     conn.execute("pragma busy_timeout=30000")
-    ensure_cols(conn)
-    row = next_row(conn)
-    if not row:
-        print("secretary_done=0", flush=True)
-        conn.close()
-        return
-    rid = int(row[0])
-    chat_id = str(row[1] or "").strip()
-    text = str(row[2] or "").strip()
+    rid = None
     try:
-        if is_terminal_dump(text):
-            mark(conn, rid, "secretary_skipped_terminal_dump", None)
-            print(f"[secretary_skip] rid={rid} terminal_dump=1", flush=True)
+        row = conn.execute("""
+            select id, chat_id, text
+            from inbox_commands
+            where coalesce(processed,0)=0
+            order by id asc
+            limit 1
+        """).fetchone()
+        if not row:
+            print("secretary_done=0", flush=True)
             return
 
-                    if text.strip().startswith("/meeting"):
-                conn.execute(
-                    "update inbox_commands set status='new', processed=0, applied_at=null, error='' where id=?",
-                    (int(row["id"]),)
-                )
-                conn.commit()
-                print("[secretary_skip] delegated_meeting", flush=True)
-                return
+        rid = int(row["id"])
+        chat_id = str(row["chat_id"] or "").strip()
+        text = str(row["text"] or "")
 
-route = route_special(text)
+        if is_terminal_dump(text):
+            mark(conn, rid, "closed", "terminal_dump_skip")
+            print("secretary_done=0", flush=True)
+            return
+
+        if text.strip().startswith("/meeting"):
+            mark(conn, rid, "meeting_done", None)
+            print("secretary_done=1", flush=True)
+            return
+
+        route = route_special(text)
         print(f"[secretary_route] text={text!r} route={route}", flush=True)
 
         if route == "start":
             reply = (
-                "OpenClaw COOで す 。 \n"
-                "・ 進 捗 は ？ → CEOダッシュボード \n"
-                "・ 次 の 作 業 は ？ → 作業チャット指示 \n"
-                "・ こ ん な ん 作 っ て → COO整理で返答 \n"
-                "・ そ れ 以 外 → 通常相談に返答 "
+                "OpenClaw COOで  す  。  \n"
+                "・  進  捗  は  ？  → CEOダ ッ シ ュ ボ ー ド  \n"
+                "・  次  の  作  業  は  ？  → 作 業 チ ャ ッ ト 指 示  \n"
+                "・  こ  ん  な  ん  作  っ  て  → COO整 理 で 返 答  \n"
+                "・  そ  れ  以  外  → 通 常 相 談 に 返 答  "
             )
         elif route == "dashboard":
             reply = build_dashboard(conn)
         elif route == "next_actions":
             reply = (
-                "OpenClaw 次 の 作 業 \n"
-                "1. executor安定性チェック \n"
-                "2. PR backlog確認 \n"
-                "3. supply生成状況確認 \n"
-                "4. learning反映確認 \n"
-                "5. AI会議ログ確認 \n\n"
-                "作業チャット指示例 \n"
+                "OpenClaw 次  の  作  業  \n"
+                "1. executor安 定 性 チ ェ ッ ク  \n"
+                "2. PR backlog確 認  \n"
+                "3. supply生 成 状 況 確 認  \n"
+                "4. learning反 映 確 認  \n"
+                "5. AI会 議 ロ グ 確 認  \n\n"
+                "作 業 チ ャ ッ ト 指 示 例  \n"
                 "cd ~/AI/openclaw-factory-daemon\n"
                 "launchctl list | grep openclaw\n"
                 "sqlite3 data/openclaw.db \"select count(*) from dev_proposals;\""
@@ -636,8 +640,13 @@ route = route_special(text)
         else:
             mark(conn, rid, "secretary_error", err)
             print(f"secretary_error={err}", flush=True)
+
     except Exception as e:
-        mark(conn, rid, "secretary_error", repr(e)[:500])
+        if rid is not None:
+            try:
+                mark(conn, rid, "secretary_error", repr(e)[:500])
+            except Exception:
+                pass
         print(f"secretary_error={e}", flush=True)
     finally:
         conn.close()
