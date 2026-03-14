@@ -1,0 +1,11 @@
+id=1979
+title=Improve executor stability in scripts/go_queue.sh
+batch=1978-1979
+ts=2026-03-14T05:35:07Z
+
+Goal:
+Implement: Improve executor stability in scripts/go_queue.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
