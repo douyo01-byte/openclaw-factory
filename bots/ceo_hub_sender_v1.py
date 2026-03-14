@@ -68,13 +68,18 @@ def run_once():
               coalesce(status,'') as status,
               coalesce(project_decision,'') as project_decision,
               coalesce(dev_stage,'') as dev_stage,
-              coalesce(notified_at,'') as notified_at
+              coalesce(notified_at,'') as notified_at,
+              coalesce(priority,0) as priority
             from dev_proposals
-            where coalesce(source_ai,'')<>''
+            where coalesce(source_ai,'') in ('self_improve','cto','coo')
               and coalesce(notified_at,'')=''
               and coalesce(dev_stage,'') not in ('merged','closed')
               and coalesce(status,'') in ('new','pending','approved')
-            order by id asc
+              and (
+                    coalesce(priority,0) >= 40
+                 or coalesce(source_ai,'') in ('self_improve','cto')
+              )
+            order by coalesce(priority,0) desc, id asc
             limit 10
         """).fetchall()
         done = 0
