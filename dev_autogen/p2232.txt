@@ -1,0 +1,6 @@
+id=2232
+title=Self improve ceo loop
+batch=2230-2234
+ts=2026-03-14T12:14:19Z
+
+learning_patterns と supply_bias で ceo が高重み。OpenClaw 自体の ceo 系改善を優先し、成功パターン寄りの安定化・自動化を進める。

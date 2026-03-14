@@ -1,0 +1,6 @@
+id=2233
+title=Self improve merge loop
+batch=2230-2234
+ts=2026-03-14T12:14:19Z
+
+learning_patterns と supply_bias で merge が高重み。OpenClaw 自体の merge 系改善を優先し、成功パターン寄りの安定化・自動化を進める。
