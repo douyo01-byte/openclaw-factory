@@ -1,0 +1,11 @@
+id=1842
+title=Reduce API latency in .gitignore
+batch=1841-1842
+ts=2026-03-14T02:16:41Z
+
+Goal:
+Implement: Reduce API latency in .gitignore
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
