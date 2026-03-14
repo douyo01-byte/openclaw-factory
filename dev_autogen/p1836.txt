@@ -1,0 +1,11 @@
+id=1836
+title=Harden watcher state sync in scripts/self_learning_loop.sh
+batch=1835-1836
+ts=2026-03-14T02:10:24Z
+
+Goal:
+Implement: Harden watcher state sync in scripts/self_learning_loop.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
