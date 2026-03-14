@@ -1,46 +1,45 @@
-import os,time,sqlite3,datetime,json,requests
+import os
+import time
+import sqlite3
+import datetime
+import json
+import requests
 
-DB=os.environ.get("DB_PATH") or "data/openclaw.db"
-FACTORY_DB=os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "data/openclaw.db"
-OPENAI_API_KEY=(os.environ.get("OPENAI_API_KEY") or "").strip()
-OPENAI_MODEL=(os.environ.get("OPENAI_MODEL") or "gpt-4o-mini").strip()
-TG_TOKEN=(os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
+DB = os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+FACTORY_DB = os.environ.get("FACTORY_DB_PATH") or DB
+OPENAI_API_KEY = (os.environ.get("OPENAI_API_KEY") or "").strip()
+OPENAI_MODEL = (os.environ.get("OPENAI_MODEL") or "gpt-4o-mini").strip()
+TG_TOKEN = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
 
 def now():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def dconn():
-    c=sqlite3.connect(DB,timeout=30)
-    c.row_factory=sqlite3.Row
+    c = sqlite3.connect(DB, timeout=30)
+    c.row_factory = sqlite3.Row
+    c.execute("pragma busy_timeout=30000")
     try:
-        c.execute("PRAGMA busy_timeout=30000")
-    except Exception:
-        pass
-    try:
-        c.execute("PRAGMA journal_mode=WAL")
+        c.execute("pragma journal_mode=WAL")
     except Exception:
         pass
     return c
 
 def fconn():
-    c=sqlite3.connect(FACTORY_DB,timeout=30)
-    c.row_factory=sqlite3.Row
+    c = sqlite3.connect(FACTORY_DB, timeout=30)
+    c.row_factory = sqlite3.Row
+    c.execute("pragma busy_timeout=30000")
     try:
-        c.execute("PRAGMA busy_timeout=30000")
-    except Exception:
-        pass
-    try:
-        c.execute("PRAGMA journal_mode=WAL")
+        c.execute("pragma journal_mode=WAL")
     except Exception:
         pass
     return c
 
-def tg_send(chat_id,text):
+def tg_send(chat_id, text):
     if not TG_TOKEN:
         raise RuntimeError("TELEGRAM_BOT_TOKEN empty")
-    r=requests.post(
+    r = requests.post(
         f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
-        data={"chat_id":str(chat_id),"text":text},
+        data={"chat_id": str(chat_id), "text": text},
         timeout=20,
     )
     r.raise_for_status()
@@ -49,25 +48,26 @@ def tg_send(chat_id,text):
 def ask_llm(prompt):
     if not OPENAI_API_KEY:
         raise RuntimeError("OPENAI_API_KEY empty")
-    r=requests.post(
+    r = requests.post(
         "https://api.openai.com/v1/chat/completions",
         headers={
-            "Authorization":f"Bearer {OPENAI_API_KEY}",
-            "Content-Type":"application/json",
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
         },
         json={
-            "model":OPENAI_MODEL,
-            "temperature":0.4,
-            "messages":[
+            "model": OPENAI_MODEL,
+            "temperature": 0.4,
+            "messages": [
                 {
-                    "role":"system",
-                    "content":"You are an executive AI meeting facilitator for OpenClaw Factory. Reply in Japanese. Keep it concrete. Use sections: CEO, Scout, Research, Judge, Dev, NextAction."
+                    "role": "system",
+                    "content": (
+                        "You are an executive AI meeting facilitator for OpenClaw. "
+                        "Reply in Japanese. Keep it concrete and short. "
+                        "Use sections: 論点, 決定, 保留, 次アクション."
+                    ),
                 },
-                {
-                    "role":"user",
-                    "content":prompt
-                }
-            ]
+                {"role": "user", "content": prompt},
+            ],
         },
         timeout=120,
     )
@@ -76,28 +76,43 @@ def ask_llm(prompt):
 
 def build_context(topic):
     with fconn() as c:
-        props=c.execute(
-            """
-            select id,title,status,coalesce(spec_stage,''),coalesce(dev_stage,''),substr(coalesce(spec,''),1,1200) as spec
+        props = c.execute("""
+            select id,title,status,
+                   coalesce(spec_stage,'') as spec_stage,
+                   coalesce(dev_stage,'') as dev_stage,
+                   substr(coalesce(spec,''),1,800) as spec
             from dev_proposals
             order by id desc
             limit 8
-            """
-        ).fetchall()
-        states=c.execute(
-            """
-            select proposal_id,stage,substr(coalesce(pending_question,''),1,300) as pending_question,updated_at
-            from proposal_state
-            order by updated_at desc
-            limit 8
-            """
-        ).fetchall()
-    ptxt=[]
+        """).fetchall()
+
+        states = []
+        try:
+            states = c.execute("""
+                select proposal_id, stage,
+                       substr(coalesce(pending_question,''),1,200) as pending_question,
+                       updated_at
+                from proposal_state
+                order by updated_at desc
+                limit 8
+            """).fetchall()
+        except Exception:
+            states = []
+
+    ptxt = []
     for r in props:
-        ptxt.append(f"id={r[0]} title={r[1]} status={r[2]} spec_stage={r[3]} dev_stage={r[4]} spec={r[5]}")
-    stxt=[]
+        ptxt.append(
+            f"id={r['id']} title={r['title']} status={r['status']} "
+            f"spec_stage={r['spec_stage']} dev_stage={r['dev_stage']} spec={r['spec']}"
+        )
+
+    stxt = []
     for r in states:
-        stxt.append(f"proposal_id={r[0]} stage={r[1]} pending={r[2]} updated_at={r[3]}")
+        stxt.append(
+            f"proposal_id={r['proposal_id']} stage={r['stage']} "
+            f"pending={r['pending_question']} updated_at={r['updated_at']}"
+        )
+
     return f"""
 topic:
 {topic}
@@ -109,65 +124,85 @@ latest_proposal_states:
 {chr(10).join(stxt)}
 
 task:
-OpenClaw Factory の社内AI会議を短く行ってください。
-Output:
-CEO（社長）:
-秘書（ひしょりん）:
-スカウトマン（さがすけ）:
-調査員（しらべえ）:
-企画担当（かんがえもん）:
-設計士（きめたろう）:
-エンジニア（つくるぞう）:
-次アクション:
+OpenClaw の短い定例会議メモを作成してください。
+必ず以下の形式:
+【論点】
+・...
+【決定】
+・...
+【保留】
+・...
+【次アクション】
+・...
 """.strip()
 
+def save_event(c, title, body):
+    try:
+        c.execute("""
+            insert into ceo_hub_events(title, body, created_at)
+            values(?,?,?)
+        """, (title, body, now()))
+        return
+    except Exception:
+        pass
+    try:
+        c.execute("""
+            insert into ceo_hub_events(event_type, title, body, created_at)
+            values('meeting',?,?,?)
+        """, (title, body, now()))
+        return
+    except Exception:
+        pass
+    try:
+        c.execute("""
+            insert into ceo_hub_events(source, source_key, title, body, level, created_at)
+            values('meeting_orchestrator_v1', ?, ?, ?, 'info', ?)
+        """, (f"meeting:{int(time.time())}", title, body, now()))
+        return
+    except Exception:
+        pass
+
 def run_once():
-    done=0
+    done = 0
     with dconn() as c:
-        c.execute("""CREATE TABLE IF NOT EXISTS ceo_hub_events(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            source TEXT NOT NULL,
-            source_key TEXT NOT NULL,
-            title TEXT NOT NULL,
-            body TEXT NOT NULL,
-            level TEXT NOT NULL DEFAULT 'info',
-            created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            sent_at TEXT
-        )""")
-        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_ceo_hub_source_key ON ceo_hub_events(source,source_key)")
-        rows=c.execute(
-            """
-            select id,chat_id,text
+        rows = c.execute("""
+            select id, chat_id, text
             from inbox_commands
             where coalesce(processed,0)=0
               and trim(coalesce(text,'')) like '/meeting%'
             order by id asc
             limit 5
-            """
-        ).fetchall()
+        """).fetchall()
+
         for r in rows:
-            raw=(r["text"] or "").strip()
-            topic=raw[len("/meeting"):].strip() or "OpenClaw の次アクション"
+            raw = (r["text"] or "").strip()
+            topic = raw[len("/meeting"):].strip() or "OpenClaw の次アクション確認"
             try:
-                prompt=build_context(topic)
-                out=ask_llm(prompt)
+                prompt = build_context(topic)
+                out = ask_llm(prompt)
                 tg_send(r["chat_id"], out)
-                c.execute(
-                    "insert or ignore into ceo_hub_events(source,source_key,title,body,level,created_at) values(?,?,?,?,?,?)",
-                    ("meeting_orchestrator_v1", f"meeting:{int(r['id'])}", "AI会議結果", out, "info", now())
-                )
-                c.execute(
-                    "update inbox_commands set processed=1,status='meeting_done',applied_at=? where id=?",
-                    (now(), int(r["id"]))
-                )
+                save_event(c, "AI会議結果", out)
+                c.execute("""
+                    update inbox_commands
+                    set processed=1,
+                        status='meeting_done',
+                        applied_at=?
+                    where id=?
+                """, (now(), int(r["id"])))
             except Exception as e:
-                c.execute(
-                    "update inbox_commands set status='meeting_error', error=?, applied_at=? where id=?",
-                    (repr(e), now(), int(r["id"]))
-                )
+                c.execute("""
+                    update inbox_commands
+                    set processed=1,
+                        status='meeting_error',
+                        error=?,
+                        applied_at=?
+                    where id=?
+                """, (repr(e), now(), int(r["id"])))
             c.commit()
-            done+=1
+            done += 1
     print(f"meeting_done={done}", flush=True)
 
-if __name__=="__main__":
-    run_once()
+if __name__ == "__main__":
+    while True:
+        run_once()
+        time.sleep(60)
