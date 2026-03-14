@@ -396,6 +396,7 @@ def build_coo_plan(text, conn):
     return "\n".join(lines)
 
 def coo_to_proposal(conn, user_text, reply_text):
+    import re
     raw = normalize_user_text(user_text).strip()
     title = raw[:120] or "COO proposal"
     slug = re.sub(r"[^a-zA-Z0-9]+", "-", raw.lower()).strip("-")
@@ -404,40 +405,58 @@ def coo_to_proposal(conn, user_text, reply_text):
     branch_name = f"coo/{slug[:40]}"
 
     tl = raw.lower()
-    tc = re.sub(r"\s+", "", tl)
-
     category = "automation"
     target_system = "core"
     improvement_type = "automation"
     quality_score = 72
 
-    if "telegram" in tc or "通知" in tc or "送信" in tc:
+    if "telegram" in tl or "通 知 " in raw or "送 信 " in raw:
         target_system = "telegram"
-    elif "dashboard" in tc or "進捗" in tc:
+    elif "dashboard" in tl or "ダ ッ シ ュ ボ ー ド " in raw or "進 捗 " in raw:
         target_system = "dashboard"
-    elif "meeting" in tc or "会議" in tc or "digest" in tc:
+    elif "meeting" in tl or "会 議 " in raw:
         target_system = "meeting"
 
     cur = conn.cursor()
+
+    dup = cur.execute("""
+        select id
+        from dev_proposals
+        where coalesce(source_ai,'')='coo'
+          and coalesce(title,'')=?
+          and coalesce(status,'') in ('approved','new','pending')
+          and created_at >= datetime('now','-30 minutes')
+        order by id desc
+        limit 1
+    """, (title,)).fetchone()
+    if dup:
+        pid = int(dup[0])
+        print(f"[coo_proposal] duplicate id={pid}", flush=True)
+        return pid
+
     cur.execute("""
         insert into dev_proposals(
             title,
             description,
             branch_name,
             status,
+            project_decision,
             dev_stage,
+            guard_status,
             source_ai,
             category,
             target_system,
             improvement_type,
             quality_score
-        ) values(?,?,?,?,?,?,?,?,?,?)
+        ) values(?,?,?,?,?,?,?,?,?,?,?,?)
     """, (
         title,
         reply_text,
         branch_name,
         "approved",
-        "approved",
+        "execute_now",
+        "execute_now",
+        "safe",
         "coo",
         category,
         target_system,
@@ -446,8 +465,35 @@ def coo_to_proposal(conn, user_text, reply_text):
     ))
     conn.commit()
     pid = cur.lastrowid
-    print(f"[coo_proposal] inserted id={pid} status=approved target={target_system}", flush=True)
+    print(f"[coo_proposal] inserted id={pid} status=approved decision=execute_now stage=execute_now target={target_system}", flush=True)
     return pid
+
+def is_terminal_dump(text):
+    t = (text or "").strip()
+    if not t:
+        return False
+    keys = [
+        "Last login:",
+        "doyopc@",
+        "launchctl ",
+        "sqlite3 ",
+        "tail -n ",
+        "cd ~/AI/",
+        "python - <<'PY'",
+        "bootout ",
+        "bootstrap ",
+        "kickstart ",
+        "grep -Rni",
+        "echo '===",
+        "echo \"===",
+    ]
+    hit = sum(1 for k in keys if k in t)
+    if hit >= 2:
+        return True
+    if "\n" in t and ("launchctl" in t or "sqlite3" in t or "tail -n" in t):
+        return True
+    return False
+
 
 def route_special(text):
     t = normalize_user_text(text)
@@ -457,58 +503,54 @@ def route_special(text):
     if t in ["/start", "start"]:
         return "start"
 
+    if is_terminal_dump(text):
+        return "chat"
+
     dashboard_keys = [
-        "進捗は？", "進捗", "今どう？", "今どう", "ダッシュボード", "/進捗", "/dashboard"
+        "進 捗 は ？ ", "進 捗 ", "今 ど う ？ ", "今 ど う ",
+        "ダ ッ シ ュ ボ ー ド ", "/進 捗 ", "/dashboard"
     ]
-    if any(k in tc for k in dashboard_keys):
+    if any(k.lower() in tl for k in dashboard_keys):
         return "dashboard"
 
     next_keys = [
-        "次の作業は？", "次の作業", "次やること", "作業指示", "/次作業", "/next"
+        "次 の 作 業 は ？ ", "次 の 作 業 ", "次 や る こ と ",
+        "作 業 指 示 ", "/次 作 業 ", "/next"
     ]
-    if any(k in tc for k in next_keys):
+    if any(k.lower() in tl for k in next_keys):
         return "next_actions"
 
     coo_keys = [
-        "こんなん作って",
-        "これを自動化したい",
-        "この機能を追加したい",
-        "こういう仕組みにしたい",
-        "この案を実装したい",
-        "これ作って",
-        "自動化したい",
-        "機能追加したい",
-        "telegramに自動送信したい",
-        "telegram通知を自動送信したい",
-        "在庫通知をtelegramに自動送信したい",
-        "在庫通知を自動送信したい",
-        "telegramへ自動送信したい",
-        "telegramに通知したい",
+        "こ ん な ん 作 っ て ",
+        "こ れ を 自 動 化 し た い ",
+        "こ の 機 能 を 追 加 し た い ",
+        "こ う い う 仕 組 み に し た い ",
+        "こ の 案 を 実 装 し た い ",
+        "こ れ 作 っ て ",
+        "自 動 化 し た い ",
+        "機 能 追 加 し た い ",
+        "telegramに 自 動 送 信 し た い ",
+        "telegram通 知 を 自 動 送 信 し た い ",
+        "在 庫 通 知 を telegramに 自 動 送 信 し た い ",
+        "在 庫 通 知 を 自 動 送 信 し た い ",
+        "telegramへ 自 動 送 信 し た い ",
+        "telegramに 通 知 し た い ",
     ]
-    if any(k in tc for k in coo_keys):
+    if any(k.lower() in tl for k in coo_keys):
         return "coo_intake"
 
+    if "在庫通知をtelegramに自動送信したい" in tc:
+        return "coo_intake"
+    if "これを自動化したい" in tc:
+        return "coo_intake"
+    if "この機能を追加したい" in tc:
+        return "coo_intake"
+    if "進捗は？" in tc or "進捗" == tc:
+        return "dashboard"
+    if "次の作業は？" in tc or "次の作業" == tc:
+        return "next_actions"
+
     return "chat"
-
-def is_terminal_dump(text):
-    raw = text or ""
-    tc = re.sub(r"\s+", "", raw.lower())
-    hit = 0
-    for k in [
-        "lastlogin:",
-        "doyopc@",
-        "launchctl",
-        "sqlite3",
-        "tail-n",
-        "grep-rni",
-        "cd~/ai/openclaw-factory-daemon",
-        "echo'===",
-        "echo\"===",
-    ]:
-        if k in tc:
-            hit += 1
-    return len(raw) > 500 and hit >= 2
-
 
 def run_once():
     conn = sqlite3.connect(DB, timeout=30)

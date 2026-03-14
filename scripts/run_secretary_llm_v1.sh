@@ -1,20 +1,18 @@
 #!/bin/bash
 cd /Users/doyopc/AI/openclaw-factory-daemon || exit 1
+. .venv/bin/activate || exit 1
 set -a
-[ -f env/telegram.env ] && source env/telegram.env
-[ -f env/telegram_ceo.env ] && source env/telegram_ceo.env
-[ -f env/telegram_daemon.env ] && source env/telegram_daemon.env
-[ -f env/telegram_routing.env ] && source env/telegram_routing.env
-[ -f /Users/doyopc/AI/openclaw-factory-daemon/env/openai.env ] && source /Users/doyopc/AI/openclaw-factory-daemon/env/openai.env
+source env/telegram.env 2>/dev/null || true
+source env/telegram_routing.env 2>/dev/null || true
+source env/telegram_report.env 2>/dev/null || true
+source env/telegram_private.env 2>/dev/null || true
+source env/openai.env 2>/dev/null || true
 set +a
-
 export DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 export FACTORY_DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 export OCLAW_DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
-export TELEGRAM_BOT_TOKEN="${TELEGRAM_CEO_BOT_TOKEN:-$TELEGRAM_BOT_TOKEN}"
-export TELEGRAM_CHAT_ID="${TELEGRAM_CEO_CHAT_ID:-${CEO_CHAT_ID:-$TELEGRAM_CHAT_ID}}"
-
-echo "[secretary_runner] OPENAI_API_KEY_LEN=${#OPENAI_API_KEY}" >> logs/secretary_llm_v1.launchd.out
-echo "[secretary_runner] TELEGRAM_BOT_TOKEN_LEN=${#TELEGRAM_BOT_TOKEN}" >> logs/secretary_llm_v1.launchd.out
-
-exec /Users/doyopc/AI/openclaw-factory-daemon/.venv/bin/python -u bots/secretary_llm_v1.py >> logs/secretary_llm_v1.launchd.out 2>> logs/secretary_llm_v1.launchd.err
+echo "[secretary_runner] OPENAI_API_KEY_LEN=${#OPENAI_API_KEY}"
+echo "[secretary_runner] TELEGRAM_BOT_TOKEN_LEN=${#TELEGRAM_BOT_TOKEN}"
+echo "[secretary_runner] TELEGRAM_CEO_BOT_TOKEN_LEN=${#TELEGRAM_CEO_BOT_TOKEN}"
+echo "[secretary_runner] TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}"
+exec python -u bots/secretary_llm_v1.py
