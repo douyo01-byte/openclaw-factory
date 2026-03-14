@@ -1,0 +1,11 @@
+id=1965
+title=Improve error handling in bots/ingest_spec_answers_v1.py
+batch=1964-1965
+ts=2026-03-14T05:18:51Z
+
+Goal:
+Implement: Improve error handling in bots/ingest_spec_answers_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
