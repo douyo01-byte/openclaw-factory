@@ -1,0 +1,11 @@
+id=2046
+title=Improve proposal filtering in configs/sources.json.bak.20260227-011407
+batch=2047-2046
+ts=2026-03-14T07:31:34Z
+
+Goal:
+Implement: Improve proposal filtering in configs/sources.json.bak.20260227-011407
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
