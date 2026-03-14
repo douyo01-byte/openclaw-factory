@@ -1,0 +1,11 @@
+id=1953
+title=Reduce event summary drift in scripts/no.sh
+batch=1954-1955
+ts=2026-03-14T05:06:19Z
+
+Goal:
+Implement: Reduce event summary drift in scripts/no.sh
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
