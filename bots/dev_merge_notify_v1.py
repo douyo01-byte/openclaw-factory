@@ -199,24 +199,24 @@ def build_fallback(row: sqlite3.Row, pr: dict) -> str:
     lines = []
     lines.append("🧠 OpenClaw 自律開発")
     lines.append("")
-    lines.append("AIがシステムを改善しました")
+    lines.append("AIがシステムの改善を完了しました")
     lines.append("")
-    lines.append("■ 今回ひとことで言うと")
+    lines.append("■ まず結論")
     lines.append(one)
     lines.append("")
-    lines.append("■ 何が問題だった？")
+    lines.append("■ 直す前の課題")
     lines.append(f"・ {prob1}")
     lines.append(f"・ {prob2}")
     lines.append("")
-    lines.append("■ どう直した？")
+    lines.append("■ 今回やったこと")
     lines.append(f"・ {fix1}")
     lines.append(f"・ {fix2}")
     lines.append("")
-    lines.append("■ これで何が良くなる？")
+    lines.append("■ 良くなる点")
     lines.append(f"・ {eff1}")
     lines.append(f"・ {eff2}")
     lines.append("")
-    lines.append("■ たとえば何が起きにくくなる？")
+    lines.append("■ 防げるトラブル例")
     lines.append(f"・ {ex1}")
     lines.append(f"・ {ex2}")
     lines.append("")
@@ -349,25 +349,25 @@ def build_prompt(row: sqlite3.Row, pr: dict) -> str:
 
 🧠 OpenClaw 自律開発
 
-AIがシステムを改善しました
+AIがシステムの改善を完了しました
 
-■ 今回ひとことで言うと
+■ まず結論
 <初心者向けに1行>
 
-■ 何が問題だった？
+■ 直す前の課題
 ・ <変更前の困りごと1>
 ・ <変更前の困りごと2>
 
-■ どう直した？
+■ 今回やったこと
 ・ <修正1>
 ・ <修正2>
 ・ <必要なら修正3>
 
-■ これで何が良くなる？
+■ 良くなる点
 ・ <効果1>
 ・ <効果2>
 
-■ たとえば何が起きにくくなる？
+■ 防げるトラブル例
 ・ <具体例1>
 ・ <具体例2>
 
