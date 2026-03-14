@@ -1,0 +1,11 @@
+id=1943
+title=Improve logging coverage in bots/chat_router_v1.py
+batch=1944-1945
+ts=2026-03-14T04:53:42Z
+
+Goal:
+Implement: Improve logging coverage in bots/chat_router_v1.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable

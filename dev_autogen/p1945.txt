@@ -1,0 +1,11 @@
+id=1945
+title=Improve queue handling in oclibs/brain.py
+batch=1944-1945
+ts=2026-03-14T04:53:42Z
+
+Goal:
+Implement: Improve queue handling in oclibs/brain.py
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
