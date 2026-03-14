@@ -1,0 +1,11 @@
+id=2082
+title=Harden DB path handling in scripts/daily_text_example.txt
+batch=2083-2084
+ts=2026-03-14T08:17:08Z
+
+Goal:
+Implement: Harden DB path handling in scripts/daily_text_example.txt
+Acceptance:
+- code compiles
+- current pipeline remains operational
+- change is limited and reviewable
