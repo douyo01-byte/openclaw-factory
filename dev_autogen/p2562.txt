@@ -1,0 +1,6 @@
+id=2562
+title=Self improve cto loop
+batch=2561-2565
+ts=2026-03-14T22:04:48Z
+
+learning_patterns と supply_bias で cto が高重み。OpenClaw 自体の cto 系改善を優先し、成功パターン寄りの安定化・自動化を進める。
