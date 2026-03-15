@@ -200,33 +200,34 @@ def normalize_next_touch_rows(rows):
 
 def build_action_templates(next_touch):
     out = []
-    for r in rows:
+    for r in next_touch:
         pid = int(r["id"])
-        title = str(r["title"] or "")
-        src = str(r["source_ai"] or "")
-        dev_stage = str(r["dev_stage"] or "")
-        spec_stage = str(r["spec_stage"] or "")
-        pr_status = str(r["pr_status"] or "")
+        title = str(r["title"])
+        spec_stage = str(r["spec_stage"])
+        dev_stage = str(r["dev_stage"])
+        pr_status = str(r["pr_status"])
 
         if spec_stage == "raw":
-            action = f"proposal {pid} は raw のため spec_refiner_v2 の通過確認を優先"
-            command = f"sqlite3 /Users/doyopc/AI/openclaw-factory/data/openclaw.db \"select id,title,source_ai,dev_stage,spec_stage,pr_status from dev_proposals where id={pid};\""
+            action = "refine_spec"
+            cmd = f"proposal_id={pid} を確認し spec_refiner_v2 対象として扱う"
         elif spec_stage == "refined":
-            action = f"proposal {pid} は refined のため spec_decomposer_v1 の通過確認を優先"
-            command = f"sqlite3 /Users/doyopc/AI/openclaw-factory/data/openclaw.db \"select id,title,source_ai,dev_stage,spec_stage,pr_status from dev_proposals where id={pid};\""
-        elif spec_stage == "decomposed" and dev_stage in ("ready", "execute_now", "pr_created", "open"):
-            action = f"proposal {pid} は decomposed 済みのため creator/watcher 側の進行確認を優先"
-            command = f"sqlite3 /Users/doyopc/AI/openclaw-factory/data/openclaw.db \"select id,title,source_ai,dev_stage,spec_stage,pr_status,pr_number,pr_url from dev_proposals where id={pid};\""
+            action = "decompose_spec"
+            cmd = f"proposal_id={pid} を確認し spec_decomposer_v1 対象として扱う"
+        elif spec_stage == "decomposed" and pr_status == "open":
+            action = "watch_pr"
+            cmd = f"PR監視継続: proposal_id={pid}"
         else:
-            action = f"proposal {pid} の状態監査を優先"
-            command = f"sqlite3 /Users/doyopc/AI/openclaw-factory/data/openclaw.db \"select * from dev_proposals where id={pid};\""
+            action = "inspect"
+            cmd = f"proposal_id={pid} を手動確認"
 
         out.append({
             "id": pid,
             "title": title,
-            "source_ai": src,
             "action": action,
-            "command": command,
+            "command": cmd,
+            "spec_stage": spec_stage,
+            "dev_stage": dev_stage,
+            "pr_status": pr_status,
         })
     return out
 
