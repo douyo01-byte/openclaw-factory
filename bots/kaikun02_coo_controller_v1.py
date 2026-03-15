@@ -1,1 +1,338 @@
-import json\nimport os\nimport sqlite3\nimport subprocess\nfrom pathlib import Path\n\nDB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"\nROOT = Path("/Users/doyopc/AI/openclaw-factory-daemon")\nAUDIT = ROOT / "reports" / "audit_20260315"\nOUT_MD = AUDIT / "kaikun02_coo_decision.md"\nOUT_JSON = AUDIT / "kaikun02_coo_decision.json"\n\nSAFE_PROD = [\n    "open_pr_guard_v1",\n    "dev_pr_watcher_v1",\n    "dev_pr_creator_v1",\n    "proposal_promoter_v1",\n    "spec_refiner_v2",\n    "spec_decomposer_v1",\n    "proposal_throttle_engine_v1",\n    "learning_result_writer_v1",\n]\n\nBLOCKED = [\n    "innovation_engine_v1",\n    "strategy_engine_v1",\n    "proposal_builder_loop_v1",\n    "reasoning_engine_v1",\n]\n\nWATCH_COOLDOWN_SECONDS = 1800\n\nDOCS_PRIORITY = [\n    "docs/06_CURRENT_STATE.md",\n    "docs/10_RUNTIME_AUDIT_STATUS.md",\n    "docs/12_KAIKUN02_DECISION_PROTOCOL.md",\n    "docs/99_CONNECTED_RUNTIME_PATCH.md",\n    "../openclaw-factory-daemon/reports/audit_20260315/final_runtime_status.md",\n    "../openclaw-factory-daemon/reports/audit_20260315/final_task_completion.md",\n    "../openclaw-factory-daemon/reports/audit_20260315/kaikun02_runtime_memo.md",\n]\n\ndef launch_state(label: str):\n    full = f"jp.openclaw.{label}"\n    uid = subprocess.check_output(["id", "-u"], text=True).strip()\n    r = subprocess.run(\n        ["launchctl", "print", f"gui/{uid}/{full}"],\n        stdout=subprocess.PIPE,\n        stderr=subprocess.STDOUT,\n        text=True,\n    )\n    text = r.stdout or ""\n    if "could not find service" in text.lower():\n        return "stopped"\n    if "state = running" in text:\n        return "running"\n    if "state = spawn scheduled" in text:\n        return "spawn_scheduled"\n    return "stopped"\n\ndef stop_label(label: str):\n    full = f"jp.openclaw.{label}"\n    uid = subprocess.check_output(["id", "-u"], text=True).strip()\n    subprocess.run(["launchctl", "bootout", f"gui/{uid}/{full}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)\n    subprocess.run(["pkill", "-f", f"{label}.py"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)\n\n\ndef load_health_gate():\n    p = Path("reports/audit_20260315/kaikun02_health_gate.json")\n    if p.exists():\n        try:\n            return json.loads(p.read_text(encoding="utf-8"))\n        except Exception:\n            pass\n    return {\n        "gate_ok": False,\n        "reasons": ["health_gate_missing"],\n        "safe_prod_now": [],\n        "running_blocked": [],\n        "unique_open_prs": 999,\n        "duplicate_open_pr_url": 999,\n        "blank_source_open_rows": 999,\n        "open_pr_by_source": [],\n        "docs_gap_exists": 1,\n    }\n\ndef watched_recently(pid):\n    con = sqlite3.connect(DB)\n    try:\n        row = con.execute(\n            """\n            select 1\n            from kaikun02_actions\n            where proposal_id=?\n              and action='watch_pr'\n              and mode='execute'\n              and created_at >= datetime('now', ?)\n            order by id desc\n            limit 1\n            """,\n            (int(pid), f"-{int(WATCH_COOLDOWN_SECONDS)} seconds")\n        ).fetchone()\n        return row is not None\n    finally:\n        con.close()\n\ndef db_rows():\n    c = sqlite3.connect(DB, timeout=120)\n    c.row_factory = sqlite3.Row\n    c.execute("pragma busy_timeout=30000")\n\n    unique_open_prs = c.execute("""\n        select count(distinct pr_url)\n        from dev_proposals\n        where coalesce(pr_status,'')='open'\n          and coalesce(pr_url,'')<>''\n    """).fetchone()[0]\n\n    duplicate_open_pr_url = c.execute("""\n        select count(*)\n        from (\n          select pr_url\n          from dev_proposals\n          where coalesce(pr_status,'')='open'\n            and coalesce(pr_url,'')<>''\n          group by pr_url\n          having count(*) > 1\n        )\n    """).fetchone()[0]\n\n    blank_source_open_rows = c.execute("""\n        select count(*)\n        from dev_proposals\n        where coalesce(pr_status,'')='open'\n          and coalesce(pr_url,'')<>''\n          and coalesce(source_ai,'')=''\n    """).fetchone()[0]\n\n    open_pr_by_source = c.execute("""\n        select coalesce(source_ai,''), count(distinct pr_url)\n        from dev_proposals\n        where coalesce(pr_status,'')='open'\n          and coalesce(pr_url,'')<>''\n        group by 1\n        order by 2 desc, 1 asc\n    """).fetchall()\n\n    next_touch = c.execute("""\n        select\n          id as id,\n          coalesce(title,'') as title,\n          coalesce(source_ai,'') as source_ai,\n          coalesce(dev_stage,'') as dev_stage,\n          coalesce(spec_stage,'') as spec_stage,\n          coalesce(pr_status,'') as pr_status\n        from dev_proposals\n        where coalesce(pr_status,'')='open'\n          and coalesce(pr_url,'')<>''\n        order by\n          case\n            when coalesce(spec_stage,'')='decomposed' and coalesce(pr_status,'')='open' then 0\n            when coalesce(spec_stage,'')='raw' then 1\n            when coalesce(spec_stage,'')='refined' then 2\n            when coalesce(spec_stage,'')='decomposed' and coalesce(pr_status,'')='ready' then 3\n            else 9\n          end,\n          id desc\n        limit 3\n    """).fetchall()\n\n    c.close()\n    return {\n        "unique_open_prs": int(unique_open_prs),\n        "duplicate_open_pr_url": int(duplicate_open_pr_url),\n        "blank_source_open_rows": int(blank_source_open_rows),\n        "open_pr_by_source": [[str(r[0]), int(r[1])] for r in open_pr_by_source],\n        "next_touch": [\n            {\n                "id": int(r["id"]),\n                "title": str(r["title"]),\n                "source_ai": str(r["source_ai"]),\n                "dev_stage": str(r["dev_stage"]),\n                "spec_stage": str(r["spec_stage"]),\n                "pr_status": str(r["pr_status"]),\n            }\n            for r in next_touch\n        ],\n    }\n\ndef docs_gap_exists():\n    return 1 if (AUDIT / "docs_live_gap.md").exists() else 0\n\n\n\n\n\ndef normalize_next_touch_rows(rows):\n    if isinstance(rows, dict):\n        if isinstance(rows.get("next_touch"), list):\n            rows = rows.get("next_touch") or []\n        else:\n            rows = [rows]\n    elif rows is None:\n        rows = []\n\n    out = []\n    for r in rows:\n        if isinstance(r, dict):\n            pid = int(r.get("id", 0) or 0)\n            title = str(r.get("title", "") or "")\n            source_ai = str(r.get("source_ai", "") or "")\n            dev_stage = str(r.get("dev_stage", "") or "")\n            spec_stage = str(r.get("spec_stage", "") or "")\n            pr_status = str(r.get("pr_status", "") or "")\n        elif isinstance(r, sqlite3.Row):\n            pid = int(r["id"])\n            title = str(r["title"] or "")\n            source_ai = str(r["source_ai"] or "")\n            dev_stage = str(r["dev_stage"] or "")\n            spec_stage = str(r["spec_stage"] or "")\n            pr_status = str(r["pr_status"] or "")\n        elif isinstance(r, (list, tuple)) and len(r) >= 6:\n            pid = int(r[0] or 0)\n            title = str(r[1] or "")\n            source_ai = str(r[2] or "")\n            dev_stage = str(r[3] or "")\n            spec_stage = str(r[4] or "")\n            pr_status = str(r[5] or "")\n        else:\n            continue\n\n        if not pid:\n            continue\n\n        if spec_stage == "decomposed" and pr_status == "open" and watched_recently(pid):\n            continue\n\n        out.append({\n            "id": pid,\n            "title": title,\n            "source_ai": source_ai,\n            "dev_stage": dev_stage,\n            "spec_stage": spec_stage,\n            "pr_status": pr_status,\n        })\n    return out\ndef build_action_templates(next_touch):\n    out = []\n    for r in next_touch:\n        pid = int(r["id"])\n        title = str(r["title"])\n        spec_stage = str(r["spec_stage"])\n        dev_stage = str(r["dev_stage"])\n        pr_status = str(r["pr_status"])\n\n        if spec_stage == "raw":\n            action = "refine_spec"\n            cmd = f"proposal_id={pid} を確認し spec_refiner_v2 対象として扱う"\n        elif spec_stage == "refined":\n            action = "decompose_spec"\n            cmd = f"proposal_id={pid} を確認し spec_decomposer_v1 対象として扱う"\n        elif spec_stage == "decomposed" and pr_status == "open":\n            action = "watch_pr"\n            cmd = f"PR監視継続: proposal_id={pid}"\n        else:\n            action = "inspect"\n            cmd = f"proposal_id={pid} を手動確認"\n\n        out.append({\n            "id": pid,\n            "title": title,\n            "action": action,\n            "command": cmd,\n            "spec_stage": spec_stage,\n            "dev_stage": dev_stage,\n            "pr_status": pr_status,\n        })\n    return out\n\ndef main():\n    gate = load_health_gate()\n    AUDIT.mkdir(parents=True, exist_ok=True)\n\n    safe_state = {b: launch_state(b) for b in SAFE_PROD}\n    blocked_state = {b: launch_state(b) for b in BLOCKED}\n\n    rows = db_rows()\n    gate_ok = (\n        rows["unique_open_prs"] <= 15 and\n        rows["duplicate_open_pr_url"] == 0 and\n        rows["blank_source_open_rows"] == 0\n    )\n\n    reasons = []\n    if rows["unique_open_prs"] > 15:\n        reasons.append(f"unique_open_prs={rows['unique_open_prs']}>15")\n    if rows["duplicate_open_pr_url"] != 0:\n        reasons.append(f"duplicate_open_pr_url={rows['duplicate_open_pr_url']}")\n    if rows["blank_source_open_rows"] != 0:\n        reasons.append(f"blank_source_open_rows={rows['blank_source_open_rows']}")\n\n    if not gate_ok:\n        for b, st in blocked_state.items():\n            if st in ("running", "spawn_scheduled"):\n                stop_label(b)\n\n    blocked_now = {b: launch_state(b) for b in BLOCKED}\n    active_now = {b: launch_state(b) for b in SAFE_PROD}\n\n    action = "start_allowed" if gate_ok else "keep_stopped_only"\n    reason = "health gate pass" if gate_ok else ("; ".join(reasons) if reasons else "health gate fail")\n\n    next_touch = normalize_next_touch_rows(rows)\n\n    result = {\n        "gate_ok": gate.get("gate_ok", False),\n        "action": "start_allowed" if gate.get("gate_ok") else "keep_stopped_only",\n        "reason": "health gate pass" if gate.get("gate_ok") else "health gate fail",\n        "unique_open_prs": gate.get("unique_open_prs", 0),\n        "duplicate_open_pr_url": gate.get("duplicate_open_pr_url", 0),\n        "blank_source_open_rows": gate.get("blank_source_open_rows", 0),\n        "docs_gap_exists": gate.get("docs_gap_exists", 0),\n        "active_now": gate.get("safe_prod_now", []),\n        "blocked_now": gate.get("running_blocked", []),\n        "next_touch": next_touch,\n        "action_templates": build_action_templates(next_touch),\n        "open_pr_by_source": gate.get("open_pr_by_source", []),\n        "docs_priority": DOCS_PRIORITY,\n    }\n\n    OUT_JSON.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")\n\n    md = []\n    md.append("# KAIKUN02 COO DECISION")\n    md.append("")\n    md.append("## judgment")\n    md.append(f"- gate_ok: {'yes' if result['gate_ok'] else 'no'}")\n    md.append(f"- action: {result['action']}")\n    md.append(f"- reason: {result['reason']}")\n    md.append("")\n    md.append("## active_now")\n    if result["active_now"]:\n        for x in result["active_now"]:\n            md.append(f"- {x}")\n    else:\n        md.append("- none")\n    md.append("")\n    md.append("## blocked_now")\n    if result["blocked_now"]:\n        for x in result["blocked_now"]:\n            md.append(f"- {x}")\n    else:\n        md.append("- none")\n    md.append("")\n    md.append("## next_touch")\n    if result["next_touch"]:\n        for x in result["next_touch"]:\n            md.append(f"- {x['id']} | {x['title']} | {x['source_ai']} | {x['dev_stage']} | {x['spec_stage']} | {x['pr_status']}")\n    else:\n        md.append("- none")\n    md.append("")\n    md.append("## action_templates")\n    for x in result.get("action_templates", []):\n        md.append(f"- {x['id']} | {x['action']}")\n        md.append(f"  - cmd: {x['command']}")\n    md.append("")\n    md.append("## db_watch")\n    md.append(f"- unique_open_prs: {result['unique_open_prs']}")\n    md.append(f"- duplicate_open_pr_url: {result['duplicate_open_pr_url']}")\n    md.append(f"- blank_source_open_rows: {result['blank_source_open_rows']}")\n    md.append("")\n    md.append("## open_pr_by_source")\n    for k, v in result["open_pr_by_source"]:\n        md.append(f"- {k or '(blank)'}: {v}")\n    md.append("")\n    md.append("## docs_priority")\n    for x in result.get("docs_priority", []):\n        md.append(f"- {x}")\n\n    OUT_MD.write_text("\n".join(md) + "\n", encoding="utf-8")\n    print(json.dumps(result, ensure_ascii=False, indent=2))\n\nif __name__ == "__main__":\n    main()\n
+import json
+import os
+import sqlite3
+import subprocess
+from pathlib import Path
+
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+ROOT = Path("/Users/doyopc/AI/openclaw-factory-daemon")
+AUDIT = ROOT / "reports" / "audit_20260315"
+OUT_MD = AUDIT / "kaikun02_coo_decision.md"
+OUT_JSON = AUDIT / "kaikun02_coo_decision.json"
+
+SAFE_PROD = [
+    "open_pr_guard_v1",
+    "dev_pr_watcher_v1",
+    "dev_pr_creator_v1",
+    "proposal_promoter_v1",
+    "spec_refiner_v2",
+    "spec_decomposer_v1",
+    "proposal_throttle_engine_v1",
+    "learning_result_writer_v1",
+]
+
+BLOCKED = [
+    "innovation_engine_v1",
+    "strategy_engine_v1",
+    "proposal_builder_loop_v1",
+    "reasoning_engine_v1",
+]
+
+DOCS_PRIORITY = [
+    "docs/06_CURRENT_STATE.md",
+    "docs/10_RUNTIME_AUDIT_STATUS.md",
+    "docs/12_KAIKUN02_DECISION_PROTOCOL.md",
+    "docs/99_CONNECTED_RUNTIME_PATCH.md",
+    "../openclaw-factory-daemon/reports/audit_20260315/final_runtime_status.md",
+    "../openclaw-factory-daemon/reports/audit_20260315/final_task_completion.md",
+    "../openclaw-factory-daemon/reports/audit_20260315/kaikun02_runtime_memo.md",
+]
+
+def launch_state(label: str):
+    full = f"jp.openclaw.{label}"
+    uid = subprocess.check_output(["id", "-u"], text=True).strip()
+    r = subprocess.run(
+        ["launchctl", "print", f"gui/{uid}/{full}"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    text = r.stdout or ""
+    if "could not find service" in text.lower():
+        return "stopped"
+    if "state = running" in text:
+        return "running"
+    if "state = spawn scheduled" in text:
+        return "spawn_scheduled"
+    return "stopped"
+
+def stop_label(label: str):
+    full = f"jp.openclaw.{label}"
+    uid = subprocess.check_output(["id", "-u"], text=True).strip()
+    subprocess.run(["launchctl", "bootout", f"gui/{uid}/{full}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["pkill", "-f", f"{label}.py"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def load_health_gate():
+    p = Path("reports/audit_20260315/kaikun02_health_gate.json")
+    if p.exists():
+        try:
+            return json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {
+        "gate_ok": False,
+        "reasons": ["health_gate_missing"],
+        "safe_prod_now": [],
+        "running_blocked": [],
+        "unique_open_prs": 999,
+        "duplicate_open_pr_url": 999,
+        "blank_source_open_rows": 999,
+        "open_pr_by_source": [],
+        "docs_gap_exists": 1,
+    }
+
+def db_rows():
+    c = sqlite3.connect(DB, timeout=120)
+    c.row_factory = sqlite3.Row
+    c.execute("pragma busy_timeout=30000")
+
+    unique_open_prs = c.execute("""
+        select count(distinct pr_url)
+        from dev_proposals
+        where coalesce(pr_status,'')='open'
+          and coalesce(pr_url,'')<>''
+    """).fetchone()[0]
+
+    duplicate_open_pr_url = c.execute("""
+        select count(*)
+        from (
+          select pr_url
+          from dev_proposals
+          where coalesce(pr_status,'')='open'
+            and coalesce(pr_url,'')<>''
+          group by pr_url
+          having count(*) > 1
+        )
+    """).fetchone()[0]
+
+    blank_source_open_rows = c.execute("""
+        select count(*)
+        from dev_proposals
+        where coalesce(pr_status,'')='open'
+          and coalesce(pr_url,'')<>''
+          and coalesce(source_ai,'')=''
+    """).fetchone()[0]
+
+    open_pr_by_source = c.execute("""
+        select coalesce(source_ai,''), count(distinct pr_url)
+        from dev_proposals
+        where coalesce(pr_status,'')='open'
+          and coalesce(pr_url,'')<>''
+        group by 1
+        order by 2 desc, 1 asc
+    """).fetchall()
+
+    next_touch = c.execute("""
+        select
+          id as id,
+          coalesce(title,'') as title,
+          coalesce(source_ai,'') as source_ai,
+          coalesce(dev_stage,'') as dev_stage,
+          coalesce(spec_stage,'') as spec_stage,
+          coalesce(pr_status,'') as pr_status
+        from dev_proposals
+        where coalesce(pr_status,'')='open'
+          and coalesce(pr_url,'')<>''
+        order by
+          case
+            when coalesce(spec_stage,'')='raw' then 0
+            when coalesce(spec_stage,'')='refined' then 1
+            when coalesce(spec_stage,'')='decomposed' and coalesce(dev_stage,'') in ('ready','execute_now','pr_created','open') then 2
+            else 9
+          end,
+          id desc
+        limit 3
+    """).fetchall()
+
+    c.close()
+    return {
+        "unique_open_prs": int(unique_open_prs),
+        "duplicate_open_pr_url": int(duplicate_open_pr_url),
+        "blank_source_open_rows": int(blank_source_open_rows),
+        "open_pr_by_source": [[str(r[0]), int(r[1])] for r in open_pr_by_source],
+        "next_touch": [
+            {
+                "id": int(r["id"]),
+                "title": str(r["title"]),
+                "source_ai": str(r["source_ai"]),
+                "dev_stage": str(r["dev_stage"]),
+                "spec_stage": str(r["spec_stage"]),
+                "pr_status": str(r["pr_status"]),
+            }
+            for r in next_touch
+        ],
+    }
+
+def docs_gap_exists():
+    return 1 if (AUDIT / "docs_live_gap.md").exists() else 0
+
+
+
+
+def normalize_next_touch_rows(rows):
+    if isinstance(rows, dict):
+        rows = rows.get("next_touch", [])
+    out = []
+    for r in rows or []:
+        if isinstance(r, dict):
+            out.append({
+                "id": int(r.get("id") or 0),
+                "title": str(r.get("title") or ""),
+                "source_ai": str(r.get("source_ai") or ""),
+                "dev_stage": str(r.get("dev_stage") or ""),
+                "spec_stage": str(r.get("spec_stage") or ""),
+                "pr_status": str(r.get("pr_status") or ""),
+            })
+        else:
+            try:
+                out.append({
+                    "id": int(r["id"]),
+                    "title": str(r["title"] or ""),
+                    "source_ai": str(r["source_ai"] or ""),
+                    "dev_stage": str(r["dev_stage"] or ""),
+                    "spec_stage": str(r["spec_stage"] or ""),
+                    "pr_status": str(r["pr_status"] or ""),
+                })
+            except Exception:
+                continue
+    return out
+
+def build_action_templates(next_touch):
+    out = []
+    for r in next_touch:
+        pid = int(r["id"])
+        title = str(r["title"])
+        spec_stage = str(r["spec_stage"])
+        dev_stage = str(r["dev_stage"])
+        pr_status = str(r["pr_status"])
+
+        if spec_stage == "raw":
+            action = "refine_spec"
+            cmd = f"proposal_id={pid} を確認し spec_refiner_v2 対象として扱う"
+        elif spec_stage == "refined":
+            action = "decompose_spec"
+            cmd = f"proposal_id={pid} を確認し spec_decomposer_v1 対象として扱う"
+        elif spec_stage == "decomposed" and pr_status == "open":
+            action = "watch_pr"
+            cmd = f"PR監視継続: proposal_id={pid}"
+        else:
+            action = "inspect"
+            cmd = f"proposal_id={pid} を手動確認"
+
+        out.append({
+            "id": pid,
+            "title": title,
+            "action": action,
+            "command": cmd,
+            "spec_stage": spec_stage,
+            "dev_stage": dev_stage,
+            "pr_status": pr_status,
+        })
+    return out
+
+def main():
+    gate = load_health_gate()
+    AUDIT.mkdir(parents=True, exist_ok=True)
+
+    safe_state = {b: launch_state(b) for b in SAFE_PROD}
+    blocked_state = {b: launch_state(b) for b in BLOCKED}
+
+    rows = db_rows()
+    gate_ok = (
+        rows["unique_open_prs"] <= 15 and
+        rows["duplicate_open_pr_url"] == 0 and
+        rows["blank_source_open_rows"] == 0
+    )
+
+    reasons = []
+    if rows["unique_open_prs"] > 15:
+        reasons.append(f"unique_open_prs={rows['unique_open_prs']}>15")
+    if rows["duplicate_open_pr_url"] != 0:
+        reasons.append(f"duplicate_open_pr_url={rows['duplicate_open_pr_url']}")
+    if rows["blank_source_open_rows"] != 0:
+        reasons.append(f"blank_source_open_rows={rows['blank_source_open_rows']}")
+
+    if not gate_ok:
+        for b, st in blocked_state.items():
+            if st in ("running", "spawn_scheduled"):
+                stop_label(b)
+
+    blocked_now = {b: launch_state(b) for b in BLOCKED}
+    active_now = {b: launch_state(b) for b in SAFE_PROD}
+
+    action = "start_allowed" if gate_ok else "keep_stopped_only"
+    reason = "health gate pass" if gate_ok else ("; ".join(reasons) if reasons else "health gate fail")
+
+    next_touch = normalize_next_touch_rows(rows)
+
+    result = {
+        "gate_ok": gate.get("gate_ok", False),
+        "action": "start_allowed" if gate.get("gate_ok") else "keep_stopped_only",
+        "reason": "health gate pass" if gate.get("gate_ok") else "health gate fail",
+        "unique_open_prs": gate.get("unique_open_prs", 0),
+        "duplicate_open_pr_url": gate.get("duplicate_open_pr_url", 0),
+        "blank_source_open_rows": gate.get("blank_source_open_rows", 0),
+        "docs_gap_exists": gate.get("docs_gap_exists", 0),
+        "active_now": gate.get("safe_prod_now", []),
+        "blocked_now": gate.get("running_blocked", []),
+        "next_touch": next_touch,
+        "action_templates": build_action_templates(next_touch),
+        "open_pr_by_source": gate.get("open_pr_by_source", []),
+        "docs_priority": DOCS_PRIORITY,
+    }
+
+    OUT_JSON.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    md = []
+    md.append("# KAIKUN02 COO DECISION")
+    md.append("")
+    md.append("## judgment")
+    md.append(f"- gate_ok: {'yes' if result['gate_ok'] else 'no'}")
+    md.append(f"- action: {result['action']}")
+    md.append(f"- reason: {result['reason']}")
+    md.append("")
+    md.append("## active_now")
+    if result["active_now"]:
+        for x in result["active_now"]:
+            md.append(f"- {x}")
+    else:
+        md.append("- none")
+    md.append("")
+    md.append("## blocked_now")
+    if result["blocked_now"]:
+        for x in result["blocked_now"]:
+            md.append(f"- {x}")
+    else:
+        md.append("- none")
+    md.append("")
+    md.append("## next_touch")
+    if result["next_touch"]:
+        for x in result["next_touch"]:
+            md.append(f"- {x['id']} | {x['title']} | {x['source_ai']} | {x['dev_stage']} | {x['spec_stage']} | {x['pr_status']}")
+    else:
+        md.append("- none")
+    md.append("")
+    md.append("## action_templates")
+    for x in result.get("action_templates", []):
+        md.append(f"- {x['id']} | {x['action']}")
+        md.append(f"  - cmd: {x['command']}")
+    md.append("")
+    md.append("## db_watch")
+    md.append(f"- unique_open_prs: {result['unique_open_prs']}")
+    md.append(f"- duplicate_open_pr_url: {result['duplicate_open_pr_url']}")
+    md.append(f"- blank_source_open_rows: {result['blank_source_open_rows']}")
+    md.append("")
+    md.append("## open_pr_by_source")
+    for k, v in result["open_pr_by_source"]:
+        md.append(f"- {k or '(blank)'}: {v}")
+    md.append("")
+    md.append("## docs_priority")
+    for x in result.get("docs_priority", []):
+        md.append(f"- {x}")
+
+    OUT_MD.write_text("\n".join(md) + "\n", encoding="utf-8")
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+if __name__ == "__main__":
+    main()

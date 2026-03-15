@@ -19,55 +19,55 @@
   "blocked_now": [],
   "next_touch": [
     {
-      "id": 2633,
-      "title": "MotherShip: health CLI",
-      "source_ai": "mothership",
-      "dev_stage": "open",
-      "spec_stage": "decomposed",
-      "pr_status": "open"
-    },
-    {
-      "id": 2630,
-      "title": "Strategy innovation executor cd93f4",
+      "id": 2622,
+      "title": "Strategy innovation executor 646eb6",
       "source_ai": "strategy_engine",
       "dev_stage": "open",
-      "spec_stage": "decomposed",
+      "spec_stage": "refined",
       "pr_status": "open"
     },
     {
-      "id": 2629,
+      "id": 2618,
+      "title": "Innovation improvement executor a6da08",
+      "source_ai": "innovation_engine",
+      "dev_stage": "open",
+      "spec_stage": "refined",
+      "pr_status": "open"
+    },
+    {
+      "id": 2615,
       "title": "🧠 Kaikun04 CTOレビュー",
       "source_ai": "cto",
       "dev_stage": "open",
-      "spec_stage": "decomposed",
+      "spec_stage": "refined",
       "pr_status": "open"
     }
   ],
   "action_templates": [
     {
-      "id": 2633,
-      "title": "MotherShip: health CLI",
-      "action": "watch_pr",
-      "command": "PR監視継続: proposal_id=2633",
-      "spec_stage": "decomposed",
+      "id": 2622,
+      "title": "Strategy innovation executor 646eb6",
+      "action": "decompose_spec",
+      "command": "proposal_id=2622 を確認し spec_decomposer_v1 対象として扱う",
+      "spec_stage": "refined",
       "dev_stage": "open",
       "pr_status": "open"
     },
     {
-      "id": 2630,
-      "title": "Strategy innovation executor cd93f4",
-      "action": "watch_pr",
-      "command": "PR監視継続: proposal_id=2630",
-      "spec_stage": "decomposed",
+      "id": 2618,
+      "title": "Innovation improvement executor a6da08",
+      "action": "decompose_spec",
+      "command": "proposal_id=2618 を確認し spec_decomposer_v1 対象として扱う",
+      "spec_stage": "refined",
       "dev_stage": "open",
       "pr_status": "open"
     },
     {
-      "id": 2629,
+      "id": 2615,
       "title": "🧠 Kaikun04 CTOレビュー",
-      "action": "watch_pr",
-      "command": "PR監視継続: proposal_id=2629",
-      "spec_stage": "decomposed",
+      "action": "decompose_spec",
+      "command": "proposal_id=2615 を確認し spec_decomposer_v1 対象として扱う",
+      "spec_stage": "refined",
       "dev_stage": "open",
       "pr_status": "open"
     }
