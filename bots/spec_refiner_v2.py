@@ -1,6 +1,6 @@
-import os,time,sqlite3,requests,json
+import os,time,sqlite3,requests,json,sys
 
-DB="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+DB=(os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
 OPENAI_API_KEY=(os.environ.get("OPENAI_API_KEY") or "").strip()
 OPENAI_MODEL=(os.environ.get("OPENAI_MODEL") or "gpt-4o-mini").strip()
 
@@ -85,8 +85,26 @@ def render_conversation(c,pid:int)->str:
         out.append(f"[{r['created_at']}] {r['role']}: {r['message']}")
     return "\n".join(out).strip()
 
-def pick_rows(c):
+def pick_rows(c, target_pid=None):
     ensure_proposal_state(c)
+    if target_pid is not None:
+        return c.execute(
+            """
+            select
+              d.id as proposal_id,
+              coalesce(d.title,'') as title,
+              coalesce(d.description,'') as description,
+              coalesce(d.spec,'') as existing_spec,
+              coalesce(d.spec_stage,'') as spec_stage,
+              coalesce(d.dev_stage,'') as dev_stage,
+              coalesce(ps.stage,'') as proposal_stage,
+              coalesce(ps.pending_questions,'') as pending_questions
+            from dev_proposals d
+            left join proposal_state ps on ps.proposal_id=d.id
+            where d.id=?
+            """,
+            (target_pid,)
+        ).fetchall()
     return c.execute(
         """
         select
@@ -134,11 +152,11 @@ requirements:
 - plain text only
 """.strip()
 
-def refine_once():
+def refine_once(target_pid=None):
     done=0
     with conn() as c:
         ensure_proposal_state(c)
-        rows=pick_rows(c)
+        rows=pick_rows(c, target_pid)
         print(f"rows={len(rows)}", flush=True)
         for r in rows:
             pid=int(r["proposal_id"])
@@ -178,10 +196,18 @@ def refine_once():
     return done
 
 if __name__=="__main__":
-    while True:
+    target_pid = int(sys.argv[1]) if len(sys.argv) > 1 and str(sys.argv[1]).isdigit() else None
+    if target_pid is not None:
         try:
-            n=refine_once()
+            n=refine_once(target_pid)
             print(f"done={n}", flush=True)
         except Exception as e:
             print("REFINER ERROR:",repr(e), flush=True)
-        time.sleep(20)
+    else:
+        while True:
+            try:
+                n=refine_once()
+                print(f"done={n}", flush=True)
+            except Exception as e:
+                print("REFINER ERROR:",repr(e), flush=True)
+            time.sleep(20)
