@@ -28,6 +28,8 @@ BLOCKED = [
     "reasoning_engine_v1",
 ]
 
+WATCH_COOLDOWN_SECONDS = 1800
+
 DOCS_PRIORITY = [
     "docs/06_CURRENT_STATE.md",
     "docs/10_RUNTIME_AUDIT_STATUS.md",
@@ -81,6 +83,26 @@ def load_health_gate():
         "open_pr_by_source": [],
         "docs_gap_exists": 1,
     }
+
+def watched_recently(pid):
+    con = sqlite3.connect(DB)
+    try:
+        row = con.execute(
+            """
+            select 1
+            from kaikun02_actions
+            where proposal_id=?
+              and action='watch_pr'
+              and mode='execute'
+              and created_at >= datetime('now', ?)
+            order by id desc
+            limit 1
+            """,
+            (int(pid), f"-{int(WATCH_COOLDOWN_SECONDS)} seconds")
+        ).fetchone()
+        return row is not None
+    finally:
+        con.close()
 
 def db_rows():
     c = sqlite3.connect(DB, timeout=120)
@@ -136,9 +158,10 @@ def db_rows():
           and coalesce(pr_url,'')<>''
         order by
           case
-            when coalesce(spec_stage,'')='raw' then 0
-            when coalesce(spec_stage,'')='refined' then 1
-            when coalesce(spec_stage,'')='decomposed' and coalesce(dev_stage,'') in ('ready','execute_now','pr_created','open') then 2
+            when coalesce(spec_stage,'')='decomposed' and coalesce(pr_status,'')='open' then 0
+            when coalesce(spec_stage,'')='raw' then 1
+            when coalesce(spec_stage,'')='refined' then 2
+            when coalesce(spec_stage,'')='decomposed' and coalesce(pr_status,'')='ready' then 3
             else 9
           end,
           id desc
@@ -171,31 +194,34 @@ def docs_gap_exists():
 
 
 def normalize_next_touch_rows(rows):
-    if isinstance(rows, dict):
-        rows = rows.get("next_touch", [])
     out = []
-    for r in rows or []:
-        if isinstance(r, dict):
-            out.append({
-                "id": int(r.get("id") or 0),
-                "title": str(r.get("title") or ""),
-                "source_ai": str(r.get("source_ai") or ""),
-                "dev_stage": str(r.get("dev_stage") or ""),
-                "spec_stage": str(r.get("spec_stage") or ""),
-                "pr_status": str(r.get("pr_status") or ""),
-            })
+    for r in rows:
+        if isinstance(r, sqlite3.Row):
+            pid = int(r["id"])
+            title = str(r["title"] or "")
+            source_ai = str(r["source_ai"] or "")
+            dev_stage = str(r["dev_stage"] or "")
+            spec_stage = str(r["spec_stage"] or "")
+            pr_status = str(r["pr_status"] or "")
         else:
-            try:
-                out.append({
-                    "id": int(r["id"]),
-                    "title": str(r["title"] or ""),
-                    "source_ai": str(r["source_ai"] or ""),
-                    "dev_stage": str(r["dev_stage"] or ""),
-                    "spec_stage": str(r["spec_stage"] or ""),
-                    "pr_status": str(r["pr_status"] or ""),
-                })
-            except Exception:
-                continue
+            pid = int(r[0])
+            title = str(r[1] or "")
+            source_ai = str(r[2] or "")
+            dev_stage = str(r[3] or "")
+            spec_stage = str(r[4] or "")
+            pr_status = str(r[5] or "")
+
+        if spec_stage == "decomposed" and pr_status == "open" and watched_recently(pid):
+            continue
+
+        out.append({
+            "id": pid,
+            "title": title,
+            "source_ai": source_ai,
+            "dev_stage": dev_stage,
+            "spec_stage": spec_stage,
+            "pr_status": pr_status,
+        })
     return out
 
 def build_action_templates(next_touch):

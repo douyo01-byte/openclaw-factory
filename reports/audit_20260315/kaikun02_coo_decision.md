@@ -19,17 +19,17 @@
 - none
 
 ## next_touch
-- 2630 | Strategy innovation executor cd93f4 | strategy_engine | open | raw | open
-- 2628 | MotherShip: db check | mothership | open | raw | open
-- 2624 | Innovation improvement executor 077e49 | innovation_engine | open | refined | open
+- 2633 | MotherShip: health CLI | mothership | open | decomposed | open
+- 2630 | Strategy innovation executor cd93f4 | strategy_engine | open | decomposed | open
+- 2629 | 🧠 Kaikun04 CTOレビュー | cto | open | decomposed | open
 
 ## action_templates
-- 2630 | refine_spec
-  - cmd: proposal_id=2630 を確認し spec_refiner_v2 対象として扱う
-- 2628 | refine_spec
-  - cmd: proposal_id=2628 を確認し spec_refiner_v2 対象として扱う
-- 2624 | decompose_spec
-  - cmd: proposal_id=2624 を確認し spec_decomposer_v1 対象として扱う
+- 2633 | watch_pr
+  - cmd: PR監視継続: proposal_id=2633
+- 2630 | watch_pr
+  - cmd: PR監視継続: proposal_id=2630
+- 2629 | watch_pr
+  - cmd: PR監視継続: proposal_id=2629
 
 ## db_watch
 - unique_open_prs: 15
