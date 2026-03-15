@@ -24,9 +24,6 @@ def run_once():
             order by weight desc, sample_count desc, id desc
             limit 100
         """).fetchall()
-
-        return
-
         n = 0
         for r in rows:
             ptype = str(r["pattern_type"] or "").strip()
@@ -45,6 +42,10 @@ def run_once():
                   source_pattern_count,
                   updated_at
                 ) values(?,?,?,?,datetime('now'))
+                on conflict(bias_type, bias_key) do update set
+                  weight=excluded.weight,
+                  source_pattern_count=excluded.source_pattern_count,
+                  updated_at=datetime('now')
             """, (
                 ptype,
                 pkey,

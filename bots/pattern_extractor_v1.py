@@ -103,8 +103,6 @@ def run_once():
         """).fetchall()
 
         pats = rows_to_patterns(rows)
-
-        return
         for p in pats:
             c.execute("""
                 insert into learning_patterns(
@@ -117,6 +115,13 @@ def run_once():
                   weight,
                   updated_at
                 ) values(?,?,?,?,?,?,?,datetime('now'))
+                on conflict(pattern_type, pattern_key) do update set
+                  sample_count=excluded.sample_count,
+                  success_count=excluded.success_count,
+                  avg_impact_score=excluded.avg_impact_score,
+                  avg_result_score=excluded.avg_result_score,
+                  weight=excluded.weight,
+                  updated_at=datetime('now')
             """, p)
 
         c.commit()
