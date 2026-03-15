@@ -1,0 +1,33 @@
+import time
+import traceback
+import sqlite3
+import os
+
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+
+IDEAS = [
+    ("MotherShip: log cleanup", "Add daemon log rotation", "dev/mothership-log-clean"),
+    ("MotherShip: db check", "Add sqlite integrity_check", "dev/mothership-db-check"),
+    ("MotherShip: health CLI", "Improve daemon health CLI", "dev/mothership-health-cli"),
+    ("MotherShip: watcher monitor", "Add watcher monitoring", "dev/mothership-watch"),
+]
+
+def main():
+    i = 0
+    while True:
+        t, d, b = IDEAS[i % len(IDEAS)]
+        conn = sqlite3.connect(DB, timeout=30)
+        conn.execute("pragma busy_timeout=30000")
+        conn.execute(
+            "insert into dev_proposals(title,description,branch_name,status,spec,created_at) values(?,?,?,?,?,datetime('now'))",
+            (t, d, b, "approved", "auto generated spec"),
+        )
+        conn.commit()
+        conn.close()
+        print("proposal_created", flush=True)
+        i += 1
+        time.sleep(60)
+
+if __name__ == "__main__":
+    print("boot_ok", flush=True)
+    main()

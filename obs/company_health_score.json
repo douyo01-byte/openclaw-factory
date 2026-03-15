@@ -1,7 +1,7 @@
 {
-  "generated_at": 1773352932,
+  "generated_at": 1773525923,
   "db_path": "/Users/doyopc/AI/openclaw-factory/data/openclaw.db",
-  "maturity_percent": 70,
+  "maturity_percent": 65,
   "detail": {
     "autonomous_dev_loop": {
       "max": 20,
@@ -17,7 +17,7 @@
     },
     "learning_pattern": {
       "max": 10,
-      "score": 6
+      "score": 3
     },
     "kpi_company_health": {
       "max": 10,
@@ -29,7 +29,7 @@
     },
     "supply_separation": {
       "max": 10,
-      "score": 2
+      "score": 0
     },
     "notification_cleanup": {
       "max": 5,

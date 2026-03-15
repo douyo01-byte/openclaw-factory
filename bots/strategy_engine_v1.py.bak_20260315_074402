@@ -1,0 +1,56 @@
+import sqlite3,time,os,random
+import traceback
+
+DB="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+
+def get_strategy(conn):
+    return conn.execute("""
+    select bias_key,weight
+    from supply_bias
+    where bias_type='reasoning'
+    order by weight desc
+    """).fetchall()
+
+def choose(rows):
+    total=sum(r[1] for r in rows)
+    r=random.uniform(0,total)
+    upto=0
+    for k,w in rows:
+        if upto+w>=r:
+            return k
+        upto+=w
+    return rows[0][0]
+
+def create(conn,key):
+    conn.execute("""
+    insert into dev_proposals
+    (title,target_system,improvement_type,source_ai,status,dev_stage,created_at)
+    values(
+    'Strategy innovation '+?,
+    ?,
+    'auto_strategy',
+    'strategy_engine',
+    'new',
+    'idea',
+    datetime('now')
+    )
+    """,(key,key))
+
+def main():
+    while True:
+        try:
+            conn=sqlite3.connect(DB,timeout=30)
+            rows=get_strategy(conn)
+            if rows:
+                key=choose(rows)
+                create(conn,key)
+                conn.commit()
+            conn.close()
+        except Exception as e:
+            print(repr(e), flush=True)
+            print(traceback.format_exc(), flush=True)
+        time.sleep(900)
+
+if __name__=="__main__":
+    print("boot_ok", flush=True)
+    main()

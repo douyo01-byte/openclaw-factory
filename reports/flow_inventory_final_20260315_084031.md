@@ -1,0 +1,104 @@
+# OpenClaw final flow inventory
+
+- generated_at: 2026-03-15T08:40:31.234252
+- total_rows: 90
+- 本流: 21 (running 16)
+- 補助流: 32 (running 0)
+- 停止流: 37 (running 0)
+
+## 本流
+- brain_supply_v1 | plist=yes | running=yes | core
+- ceo_decision_layer_v1 | plist=yes | running=yes | core
+- cto_review_v1 | plist=yes | running=yes | core
+- dev_command_executor_v1 | plist=yes | running=yes | core
+- dev_pr_creator_v1 | plist=yes | running=no | core
+- dev_pr_watcher_v1 | plist=yes | running=yes | core
+- dev_router_v1 | plist=yes | running=yes | core
+- impact_judge_v1 | plist=yes | running=no | core
+- innovation_engine_v1 | plist=yes | running=yes | core
+- learning_result_writer_v1 | plist=yes | running=yes | core
+- pattern_extractor_v1 | plist=yes | running=yes | core
+- proposal_builder_loop_v1 | plist=yes | running=yes | core
+- proposal_dedupe_v1 | plist=yes | running=no | core
+- proposal_promoter_v1 | plist=yes | running=yes | core
+- proposal_ranking_v1 | plist=yes | running=no | core
+- proposal_throttle_engine_v1 | plist=yes | running=yes | core
+- reasoning_engine_v1 | plist=yes | running=no | core
+- spec_decomposer_v1 | plist=yes | running=yes | core
+- spec_refiner_v2 | plist=yes | running=yes | core
+- strategy_engine_v1 | plist=yes | running=yes | core
+- supply_bias_updater_v1 | plist=yes | running=yes | core
+
+## 補助流
+- ai_ceo_engine_v1 | plist=no | running=no | support
+- ai_employee_factory_v1 | plist=no | running=no | support
+- ai_employee_manager_v1 | plist=yes | running=no | support
+- ai_meeting_digest_v1 | plist=yes | running=no | support
+- ai_meeting_engine_v1 | plist=no | running=no | support
+- ceo_hub_sender_v1 | plist=yes | running=no | support
+- ceo_priority_scorer_v1 | plist=yes | running=no | support
+- chat_research_v1 | plist=yes | running=no | support
+- command_apply_daemon_v1 | plist=yes | running=no | support
+- company_health_score_v1 | plist=yes | running=no | support
+- db_integrity_check_v1 | plist=yes | running=no | support
+- db_integrity_watchdog_v1 | plist=yes | running=no | support
+- dev_meeting_telegram_bridge_v1 | plist=yes | running=no | support
+- dev_merge_notify_v1 | plist=yes | running=no | support
+- executor_audit_v1 | plist=yes | running=no | support
+- executor_guard_v2 | plist=yes | running=no | support
+- healthcheck_v1 | plist=yes | running=no | support
+- kaikun02_router_worker_v1 | plist=yes | running=no | support
+- kaikun04_router_worker_v1 | plist=yes | running=no | support
+- meeting_orchestrator_v1 | plist=yes | running=no | support
+- private_reply_to_inbox_v1 | plist=yes | running=no | support
+- router_reply_finisher_v1 | plist=yes | running=no | support
+- router_timeout_watchdog_v1 | plist=yes | running=no | support
+- schema_guardian_v1 | plist=yes | running=no | support
+- schema_migration_engine_v1 | plist=yes | running=no | support
+- secretary_llm_v1 | plist=yes | running=no | support
+- self_healing_v2 | plist=yes | running=no | support
+- self_improvement_engine_v2 | plist=yes | running=no | support
+- self_strength_watchdog_v1 | plist=yes | running=no | support
+- target_policy_guard_v1 | plist=yes | running=no | support
+- task_router_v1 | plist=yes | running=no | support
+- tg_poll_loop_v2 | plist=yes | running=no | support
+
+## 停止流
+- __init__ | plist=no | running=no | legacy_or_manual
+- auto_execute_now_v1 | plist=yes | running=no | legacy_or_manual
+- build_decision_patterns | plist=no | running=no | legacy_or_manual
+- chat_router_v1 | plist=no | running=no | legacy_or_manual
+- code_review_engine_v1 | plist=no | running=no | legacy_or_manual
+- command_apply_v1 | plist=no | running=no | legacy_or_manual
+- dev_auto_execute_v1 | plist=no | running=no | legacy_or_manual
+- dev_executor_v1 | plist=no | running=no | legacy_or_manual
+- dev_pr_automerge_v1 | plist=yes | running=no | legacy_or_manual
+- dev_proposal_notify_daemon_v1 | plist=no | running=no | legacy_or_manual
+- dev_proposal_notify_v1 | plist=yes | running=no | legacy_or_manual
+- dev_reviewer_v1 | plist=no | running=no | legacy_or_manual
+- enrich_contacts_v1 | plist=no | running=no | legacy_or_manual
+- executor_guard_v1 | plist=no | running=no | legacy_or_manual
+- ingest_private_replies_v1 | plist=yes | running=no | legacy_or_manual
+- ingest_spec_answers_v1 | plist=no | running=no | legacy_or_manual
+- ingest_spec_reply_v1 | plist=no | running=no | legacy_or_manual
+- ingest_telegram_replies_v1 | plist=no | running=no | legacy_or_manual
+- innovation_llm_engine_v1 | plist=yes | running=no | legacy_or_manual
+- learning_brain_v1 | plist=yes | running=no | legacy_or_manual
+- mainstream_fallback_supply_v1 | plist=no | running=no | legacy_or_manual
+- meeting_from_db_v1 | plist=no | running=no | legacy_or_manual
+- parse_dev_reply_v1 | plist=yes | running=no | legacy_or_manual
+- proposal_cluster_v1 | plist=yes | running=no | legacy_or_manual
+- reflection_v1 | plist=yes | running=no | legacy_or_manual
+- reflection_worker_v1 | plist=yes | running=no | legacy_or_manual
+- scout_market_v2 | plist=yes | running=no | legacy_or_manual
+- self_repair_engine_v1 | plist=no | running=no | legacy_or_manual
+- spec_notify_v1 | plist=yes | running=no | legacy_or_manual
+- supply_adoption_metrics_v1 | plist=yes | running=no | legacy_or_manual
+- sync_execute_stage_v1 | plist=no | running=no | legacy_or_manual
+- sync_executor_ready_v1 | plist=no | running=no | legacy_or_manual
+- sync_pr_ready_v1 | plist=no | running=no | legacy_or_manual
+- tg_inbox_poll_daemon_v1 | plist=no | running=no | legacy_or_manual
+- tg_inbox_poll_v1 | plist=no | running=no | legacy_or_manual
+- tg_send_reflection_v1 | plist=yes | running=no | legacy_or_manual
+- watchdog_v1 | plist=yes | running=no | legacy_or_manual
+

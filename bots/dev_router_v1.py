@@ -33,7 +33,7 @@ def main():
             route_once()
         except Exception as e:
             print(repr(e), flush=True)
-        time.sleep(5)
+        time.sleep(20)
 
 if __name__ == "__main__":
     main()

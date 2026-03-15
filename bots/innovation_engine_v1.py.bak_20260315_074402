@@ -1,0 +1,42 @@
+import sqlite3,time,os,uuid
+import traceback
+
+DB="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+
+def get_strategy(conn):
+    return conn.execute("""
+    select bias_key,weight
+    from supply_bias
+    where bias_type='reasoning'
+    order by weight desc
+    limit 5
+    """).fetchall()
+
+def create_proposal(conn,key):
+    title=f"Innovation improvement {key} {uuid.uuid4().hex[:6]}"
+    conn.execute("""
+    insert into dev_proposals
+    (title,target_system,improvement_type,source_ai,status,dev_stage,created_at)
+    values(?,?,?,'innovation_engine','new','idea',datetime('now'))
+    """,(title,key,"auto_innovation"))
+
+def main():
+    while True:
+        try:
+            conn=sqlite3.connect(DB,timeout=30)
+            rows=get_strategy(conn)
+
+            for r in rows:
+                create_proposal(conn,r[0])
+
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(repr(e), flush=True)
+            print(traceback.format_exc(), flush=True)
+
+        time.sleep(600)
+
+if __name__=="__main__":
+    print("boot_ok", flush=True)
+    main()

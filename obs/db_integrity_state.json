@@ -1,15 +1,17 @@
 {
-  "last_daily_sent_date": "2026-03-13",
-  "last_result": {
-    "pr_created_without_merged": 123,
-    "merged_without_learning_result": 78,
-    "status_mismatch": 0,
-    "lifecycle_anomaly_count": 0,
-    "missing_source_category_target_system": 1770,
-    "checked_at": 1773352932,
-    "db_path": "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+  "checked_at": 1773525927,
+  "db_path": "/Users/doyopc/AI/openclaw-factory/data/openclaw.db",
+  "merged_without_learning_result": 396,
+  "status_mismatch": 19,
+  "lifecycle_anomaly_count": 2,
+  "mismatch_counts": {
+    "status=merged but others mismatch": 0,
+    "dev_stage=merged but others mismatch": 0,
+    "pr_status=merged but others mismatch": 0,
+    "status=closed but others mismatch": 1,
+    "dev_stage=closed but others mismatch": 1,
+    "pr_status=closed but others mismatch": 0
   },
-  "last_changed": {
-    "checked_at": 1773352932
-  }
+  "pr_created_without_merged": 5,
+  "missing_source_category_target_system": 2263
 }

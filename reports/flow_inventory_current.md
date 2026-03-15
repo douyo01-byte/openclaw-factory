@@ -1,0 +1,102 @@
+# OpenClaw flow inventory
+
+- generated_at: 2026-03-15T07:29:51.569203
+- total_rows: 88
+- 本流: 17 (running 3)
+- 補助流: 42 (running 1)
+- 停止流: 29 (running 0)
+
+## 本流
+- brain_supply_v1 | code=yes | agents=0 | running=no | core
+- ceo_decision_layer_v1 | code=yes | agents=0 | running=no | core
+- cto_review_v1 | code=yes | agents=0 | running=no | core
+- dev_command_executor_v1 | code=yes | agents=0 | running=no | core
+- dev_pr_creator_v1 | code=yes | agents=0 | running=no | core
+- dev_pr_watcher_v1 | code=yes | agents=0 | running=no | core
+- dev_router_v1 | code=yes | agents=0 | running=no | core
+- impact_judge_v1 | code=yes | agents=0 | running=no | core
+- innovation_engine_v1 | code=yes | agents=1 | running=yes | core
+- learning_result_writer_v1 | code=yes | agents=0 | running=no | core
+- pattern_extractor_v1 | code=yes | agents=0 | running=no | core
+- proposal_builder_loop_v1 | code=yes | agents=0 | running=no | core
+- proposal_dedupe_v1 | code=yes | agents=0 | running=no | core
+- proposal_ranking_v1 | code=yes | agents=0 | running=no | core
+- reasoning_engine_v1 | code=yes | agents=1 | running=yes | core
+- strategy_engine_v1 | code=yes | agents=1 | running=yes | core
+- supply_bias_updater_v1 | code=yes | agents=0 | running=no | core
+
+## 補助流
+- ai_ceo_engine_v1 | code=yes | agents=0 | running=no | support
+- ai_employee_factory_v1 | code=yes | agents=0 | running=no | support
+- ai_employee_manager_v1 | code=yes | agents=0 | running=no | support
+- ai_meeting_digest_v1 | code=yes | agents=0 | running=no | support
+- ai_meeting_engine_v1 | code=yes | agents=0 | running=no | support
+- ceo_hub_sender_v1 | code=yes | agents=0 | running=no | support
+- ceo_priority_scorer_v1 | code=yes | agents=0 | running=no | support
+- chat_research_v1 | code=yes | agents=0 | running=no | support
+- command_apply_daemon_v1 | code=yes | agents=0 | running=no | support
+- company_health_score_v1 | code=yes | agents=0 | running=no | support
+- db_integrity_check_v1 | code=yes | agents=0 | running=no | support
+- db_integrity_watchdog_v1 | code=yes | agents=0 | running=no | support
+- dev_meeting_telegram_bridge_v1 | code=yes | agents=0 | running=no | support
+- dev_merge_notify_v1 | code=yes | agents=0 | running=no | support
+- executor_audit_v1 | code=yes | agents=0 | running=no | support
+- executor_guard_v2 | code=yes | agents=0 | running=no | support
+- healthcheck_v1 | code=yes | agents=0 | running=no | support
+- ingest_private_replies_v1 | code=yes | agents=1 | running=no | unmapped
+- kaikun02_router_worker_v1 | code=yes | agents=0 | running=no | support
+- kaikun04_router_worker_v1 | code=yes | agents=0 | running=no | support
+- learning_brain_v1 | code=yes | agents=0 | running=no | support
+- meeting_orchestrator_v1 | code=yes | agents=0 | running=no | support
+- private_reply_to_inbox_v1 | code=yes | agents=0 | running=no | support
+- proposal_cluster_v1 | code=yes | agents=0 | running=no | support
+- proposal_throttle_engine_v1 | code=yes | agents=1 | running=yes | unmapped
+- reflection_v1 | code=yes | agents=0 | running=no | support
+- reflection_worker_v1 | code=yes | agents=0 | running=no | support
+- router_reply_finisher_v1 | code=yes | agents=0 | running=no | support
+- router_timeout_watchdog_v1 | code=yes | agents=0 | running=no | support
+- schema_guardian_v1 | code=yes | agents=0 | running=no | support
+- schema_migration_engine_v1 | code=yes | agents=0 | running=no | support
+- scout_market_v2 | code=yes | agents=0 | running=no | support
+- secretary_llm_v1 | code=yes | agents=0 | running=no | support
+- self_healing_v2 | code=yes | agents=0 | running=no | support
+- self_improvement_engine_v2 | code=yes | agents=0 | running=no | support
+- self_repair_engine_v1 | code=yes | agents=0 | running=no | support
+- self_strength_watchdog_v1 | code=yes | agents=0 | running=no | support
+- spec_notify_v1 | code=yes | agents=0 | running=no | support
+- spec_refiner_v2 | code=yes | agents=0 | running=no | support
+- target_policy_guard_v1 | code=yes | agents=0 | running=no | support
+- task_router_v1 | code=yes | agents=0 | running=no | support
+- tg_send_reflection_v1 | code=yes | agents=0 | running=no | support
+
+## 停止流
+- __init__ | code=yes | agents=0 | running=no | legacy_or_manual
+- auto_execute_now_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- build_decision_patterns | code=yes | agents=0 | running=no | legacy_or_manual
+- chat_router_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- code_review_engine_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- command_apply_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- dev_auto_execute_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- dev_executor_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- dev_pr_automerge_v1 | code=yes | agents=0 | running=no | unmapped
+- dev_proposal_notify_daemon_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- dev_proposal_notify_v1 | code=yes | agents=0 | running=no | unmapped
+- dev_reviewer_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- enrich_contacts_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- executor_guard_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- ingest_spec_answers_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- ingest_spec_reply_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- ingest_telegram_replies_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- innovation_llm_engine_v1 | code=yes | agents=0 | running=no | unmapped
+- mainstream_fallback_supply_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- meeting_from_db_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- parse_dev_reply_v1 | code=yes | agents=0 | running=no | unmapped
+- supply_adoption_metrics_v1 | code=yes | agents=0 | running=no | unmapped
+- sync_execute_stage_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- sync_executor_ready_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- sync_pr_ready_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- tg_inbox_poll_daemon_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- tg_inbox_poll_v1 | code=yes | agents=0 | running=no | legacy_or_manual
+- tg_poll_loop_v2 | code=yes | agents=0 | running=no | unmapped
+- watchdog_v1 | code=yes | agents=0 | running=no | unmapped
+

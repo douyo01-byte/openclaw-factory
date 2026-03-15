@@ -1,6 +1,6 @@
 import os,time,sqlite3,requests,json
 
-DB="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+DB=os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "data/openclaw.db"
 OPENAI_API_KEY=(os.environ.get("OPENAI_API_KEY") or "").strip()
 OPENAI_MODEL=(os.environ.get("OPENAI_MODEL") or "gpt-4o-mini").strip()
 
@@ -16,29 +16,6 @@ def conn():
     except Exception:
         pass
     return c
-
-def proposal_state_cols(c):
-    try:
-        return {r["name"] for r in c.execute("pragma table_info(proposal_state)").fetchall()}
-    except Exception:
-        return set()
-
-def ensure_proposal_state(c):
-    cols = proposal_state_cols(c)
-    if not cols:
-        c.execute("""
-        create table if not exists proposal_state (
-          proposal_id integer primary key,
-          stage text,
-          pending_questions text,
-          updated_at text default (datetime('now'))
-        )
-        """)
-        cols = proposal_state_cols(c)
-    if "pending_questions" not in cols:
-        c.execute("alter table proposal_state add column pending_questions text default ''")
-    if "updated_at" not in cols:
-        c.execute("alter table proposal_state add column updated_at text default (datetime('now'))")
 
 def ask_llm(prompt:str)->str:
     if not OPENAI_API_KEY:
@@ -86,7 +63,6 @@ def render_conversation(c,pid:int)->str:
     return "\n".join(out).strip()
 
 def pick_rows(c):
-    ensure_proposal_state(c)
     return c.execute(
         """
         select
@@ -97,15 +73,26 @@ def pick_rows(c):
           coalesce(d.spec_stage,'') as spec_stage,
           coalesce(d.dev_stage,'') as dev_stage,
           coalesce(ps.stage,'') as proposal_stage,
+          coalesce(ps.pending_question,'') as pending_question,
           coalesce(ps.pending_questions,'') as pending_questions
         from dev_proposals d
         left join proposal_state ps on ps.proposal_id=d.id
-        where coalesce(d.status,'')='approved'
-          and coalesce(d.project_decision,'')='execute_now'
-          and coalesce(d.dev_stage,'')='execute_now'
-          and coalesce(d.spec_stage,'') in ('','raw','approved')
-        order by d.id asc
-        limit 5
+        where d.status='approved'
+          and (
+            (
+              (
+                coalesce(d.spec_stage,'')=''
+                or coalesce(d.spec_stage,'') in ('approved','raw')
+                or coalesce(d.spec,'')=''
+              )
+              and coalesce(ps.stage,'') in ('','approved','refined','waiting_answer')
+            )
+            or coalesce(ps.stage,'')='answer_received'
+          )
+        order by
+          case when coalesce(ps.stage,'')='answer_received' then 0 else 1 end,
+          d.id asc
+        limit 3
         """
     ).fetchall()
 
@@ -113,22 +100,34 @@ def build_prompt(r,conversation:str)->str:
     return f"""
 proposal_id:
 {r["proposal_id"]}
+
 title:
 {r["title"]}
+
 description:
 {r["description"]}
+
 existing_spec:
 {r["existing_spec"]}
+
 proposal_state.stage:
 {r["proposal_stage"]}
+
+pending_question:
+{r["pending_question"]}
+
 pending_questions:
 {r["pending_questions"]}
+
 conversation:
 {conversation}
+
 task:
 Refine this into a single implementation-ready development specification.
+
 requirements:
-- absorb the latest user answers from conversation if present
+- absorb the latest user answers from conversation
+- if the user answered a pending question, reflect that answer directly
 - keep the spec actionable for implementation
 - include goal, scope, behavior, inputs/outputs, edge cases, logging policy, files to change, and acceptance criteria
 - plain text only
@@ -137,7 +136,6 @@ requirements:
 def refine_once():
     done=0
     with conn() as c:
-        ensure_proposal_state(c)
         rows=pick_rows(c)
         print(f"rows={len(rows)}", flush=True)
         for r in rows:
@@ -156,14 +154,15 @@ def refine_once():
             )
             c.execute(
                 """
-                insert into proposal_state(proposal_id,stage,pending_questions,updated_at)
-                values(?,?,?,datetime('now'))
+                insert into proposal_state(proposal_id,stage,pending_question,pending_questions,updated_at)
+                values(?,?,?, ?,datetime('now'))
                 on conflict(proposal_id) do update set
                   stage=excluded.stage,
+                  pending_question=excluded.pending_question,
                   pending_questions=excluded.pending_questions,
                   updated_at=datetime('now')
                 """,
-                (pid,"refined",""),
+                (pid,"refined","",""),
             )
             c.execute(
                 """

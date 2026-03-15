@@ -1,0 +1,59 @@
+import sqlite3, time, uuid, traceback
+
+DB="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+
+def get_strategy(conn):
+    return conn.execute("""
+    select bias_key, weight
+    from supply_bias
+    where bias_type='reasoning'
+    order by weight desc
+    limit 5
+    """).fetchall()
+
+def write_once(key):
+    conn = sqlite3.connect(DB, timeout=30)
+    conn.execute("pragma busy_timeout=30000")
+    conn.execute("pragma journal_mode=WAL")
+    title = f"Innovation improvement {key} {uuid.uuid4().hex[:6]}"
+    conn.execute("""
+    insert into dev_proposals
+    (title,target_system,improvement_type,source_ai,status,dev_stage,created_at)
+    values(?,?,?,'innovation_engine','approved','idea',datetime('now'))
+    """, (title, key, "auto_innovation"))
+    conn.commit()
+    conn.close()
+    print(f"created {title}", flush=True)
+
+def tick():
+    conn = sqlite3.connect(DB, timeout=30)
+    conn.execute("pragma busy_timeout=30000")
+    conn.execute("pragma journal_mode=WAL")
+    rows = get_strategy(conn)
+    conn.close()
+    print(f"strategy_rows={len(rows)} rows={rows}", flush=True)
+    for key, _ in rows:
+        ok = False
+        for i in range(10):
+            try:
+                write_once(key)
+                ok = True
+                break
+            except sqlite3.OperationalError as e:
+                print(f"retry key={key} i={i} err={e!r}", flush=True)
+                time.sleep(1.5)
+        if not ok:
+            raise RuntimeError(f"innovation_write_failed key={key}")
+
+def main():
+    print("boot_ok", flush=True)
+    while True:
+        try:
+            tick()
+        except Exception as e:
+            print(repr(e), flush=True)
+            print(traceback.format_exc(), flush=True)
+        time.sleep(600)
+
+if __name__=="__main__":
+    main()

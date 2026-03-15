@@ -1,0 +1,56 @@
+import sqlite3, time, random, traceback
+
+DB="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+
+def get_strategy(conn):
+    return conn.execute("""
+    select bias_key, weight
+    from supply_bias
+    where bias_type='reasoning'
+    order by weight desc
+    """).fetchall()
+
+def choose(rows):
+    total = sum(r[1] for r in rows)
+    r = random.uniform(0, total)
+    upto = 0
+    for k, w in rows:
+        if upto + w >= r:
+            return k
+        upto += w
+    return rows[0][0]
+
+def create(conn, key):
+    title = f"Strategy innovation {key}"
+    conn.execute("""
+    insert into dev_proposals
+    (title,target_system,improvement_type,source_ai,status,dev_stage,created_at)
+    values(?,?,?,'strategy_engine','approved','idea',datetime('now'))
+    """, (title, key, "auto_strategy"))
+    print(f"created {title}", flush=True)
+
+def tick():
+    conn = sqlite3.connect(DB, timeout=30)
+    conn.execute("pragma busy_timeout=30000")
+    conn.execute("pragma journal_mode=WAL")
+    rows = get_strategy(conn)
+    print(f"strategy_rows={len(rows)} rows={rows[:10]}", flush=True)
+    if rows:
+        key = choose(rows)
+        print(f"chosen={key}", flush=True)
+        create(conn, key)
+    conn.commit()
+    conn.close()
+
+def main():
+    print("boot_ok", flush=True)
+    while True:
+        try:
+            tick()
+        except Exception as e:
+            print(repr(e), flush=True)
+            print(traceback.format_exc(), flush=True)
+        time.sleep(900)
+
+if __name__=="__main__":
+    main()

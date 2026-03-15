@@ -5,7 +5,7 @@ import time
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 
 def conn():
-    c = sqlite3.connect(DB, timeout=30)
+    c = sqlite3.connect(DB, timeout=120)
     c.row_factory = sqlite3.Row
     c.execute("pragma busy_timeout=30000")
     return c
@@ -97,4 +97,4 @@ def run_once():
 if __name__ == "__main__":
     while True:
         run_once()
-        time.sleep(120)
+        time.sleep(180)
