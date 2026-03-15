@@ -138,6 +138,7 @@ def ensure_aux_tables(conn):
     """)
 
 def tick_once(conn: sqlite3.Connection, target_pid=None):
+    one_shot = target_pid is not None
     dirty_head=False
     conn.execute("update dev_proposals set dev_stage='merged' where status='merged' and coalesce(pr_status,'')='merged' and coalesce(dev_stage,'')=''")
     dirty_head=True
