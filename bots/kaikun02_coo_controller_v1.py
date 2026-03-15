@@ -196,7 +196,14 @@ def docs_gap_exists():
 def normalize_next_touch_rows(rows):
     out = []
     for r in rows:
-        if isinstance(r, sqlite3.Row):
+        if isinstance(r, dict):
+            pid = int(r.get("id", 0) or 0)
+            title = str(r.get("title", "") or "")
+            source_ai = str(r.get("source_ai", "") or "")
+            dev_stage = str(r.get("dev_stage", "") or "")
+            spec_stage = str(r.get("spec_stage", "") or "")
+            pr_status = str(r.get("pr_status", "") or "")
+        elif isinstance(r, sqlite3.Row):
             pid = int(r["id"])
             title = str(r["title"] or "")
             source_ai = str(r["source_ai"] or "")
@@ -211,6 +218,9 @@ def normalize_next_touch_rows(rows):
             spec_stage = str(r[4] or "")
             pr_status = str(r[5] or "")
 
+        if not pid:
+            continue
+
         if spec_stage == "decomposed" and pr_status == "open" and watched_recently(pid):
             continue
 
@@ -223,7 +233,6 @@ def normalize_next_touch_rows(rows):
             "pr_status": pr_status,
         })
     return out
-
 def build_action_templates(next_touch):
     out = []
     for r in next_touch:
