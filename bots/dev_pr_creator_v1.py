@@ -53,6 +53,9 @@ def main():
         title = (r["title"] or f"proposal-{pid}").strip()
         body = (r["description"] or "").strip()
         branch = (r["branch_name"] or f"dev/proposal-{pid}").strip()
+        if not branch.endswith(f"-p{pid}"):
+            branch = f"{branch}-p{pid}"
+        branch = f"{branch}-p{pid}" if not branch.endswith(f"-p{pid}") else branch
 
         conn = sqlite3.connect(DB, timeout=30)
         conn.execute("pragma busy_timeout=30000")
