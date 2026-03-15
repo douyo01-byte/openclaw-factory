@@ -25,7 +25,7 @@ def write_once(key):
     conn.execute("""
     insert into dev_proposals
     (title,branch_name,target_system,improvement_type,source_ai,status,dev_stage,created_at)
-    values(?,?,?,?,'innovation_engine','approved','idea',datetime('now'))
+    values(?,?,?,?,'innovation_engine','backlog','idea',datetime('now'))
     """, (title, branch, key, "auto_innovation"))
     conn.commit()
     conn.close()
