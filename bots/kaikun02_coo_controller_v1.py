@@ -147,6 +147,40 @@ def db_rows():
 def docs_gap_exists():
     return 1 if (AUDIT / "docs_live_gap.md").exists() else 0
 
+
+
+def build_action_templates(rows):
+    out = []
+    for r in rows:
+        pid = int(r["id"])
+        title = str(r["title"] or "")
+        src = str(r["source_ai"] or "")
+        dev_stage = str(r["dev_stage"] or "")
+        spec_stage = str(r["spec_stage"] or "")
+        pr_status = str(r["pr_status"] or "")
+
+        if spec_stage == "raw":
+            action = f"proposal {pid} は raw のため spec_refiner_v2 の通過確認を優先"
+            command = f"sqlite3 /Users/doyopc/AI/openclaw-factory/data/openclaw.db \"select id,title,source_ai,dev_stage,spec_stage,pr_status from dev_proposals where id={pid};\""
+        elif spec_stage == "refined":
+            action = f"proposal {pid} は refined のため spec_decomposer_v1 の通過確認を優先"
+            command = f"sqlite3 /Users/doyopc/AI/openclaw-factory/data/openclaw.db \"select id,title,source_ai,dev_stage,spec_stage,pr_status from dev_proposals where id={pid};\""
+        elif spec_stage == "decomposed" and dev_stage in ("ready", "execute_now", "pr_created", "open"):
+            action = f"proposal {pid} は decomposed 済みのため creator/watcher 側の進行確認を優先"
+            command = f"sqlite3 /Users/doyopc/AI/openclaw-factory/data/openclaw.db \"select id,title,source_ai,dev_stage,spec_stage,pr_status,pr_number,pr_url from dev_proposals where id={pid};\""
+        else:
+            action = f"proposal {pid} の状態監査を優先"
+            command = f"sqlite3 /Users/doyopc/AI/openclaw-factory/data/openclaw.db \"select * from dev_proposals where id={pid};\""
+
+        out.append({
+            "id": pid,
+            "title": title,
+            "source_ai": src,
+            "action": action,
+            "command": command,
+        })
+    return out
+
 def main():
     AUDIT.mkdir(parents=True, exist_ok=True)
 
@@ -224,6 +258,11 @@ def main():
             md.append(f"- {x['id']} | {x['title']} | {x['source_ai']} | {x['dev_stage']} | {x['spec_stage']} | {x['pr_status']}")
     else:
         md.append("- none")
+    md.append("")
+    md.append("## action_templates")
+    for x in result["action_templates"]:
+        md.append(f"- {x['id']} | {x['action']}")
+        md.append(f"  - cmd: {x['command']}")
     md.append("")
     md.append("## db_watch")
     md.append(f"- unique_open_prs: {result['unique_open_prs']}")
