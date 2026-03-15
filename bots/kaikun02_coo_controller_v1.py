@@ -149,7 +149,36 @@ def docs_gap_exists():
 
 
 
-def build_action_templates(rows):
+
+def normalize_next_touch_rows(rows):
+    if isinstance(rows, dict):
+        rows = rows.get("next_touch", [])
+    out = []
+    for r in rows or []:
+        if isinstance(r, dict):
+            out.append({
+                "id": int(r.get("id") or 0),
+                "title": str(r.get("title") or ""),
+                "source_ai": str(r.get("source_ai") or ""),
+                "dev_stage": str(r.get("dev_stage") or ""),
+                "spec_stage": str(r.get("spec_stage") or ""),
+                "pr_status": str(r.get("pr_status") or ""),
+            })
+        else:
+            try:
+                out.append({
+                    "id": int(r["id"]),
+                    "title": str(r["title"] or ""),
+                    "source_ai": str(r["source_ai"] or ""),
+                    "dev_stage": str(r["dev_stage"] or ""),
+                    "spec_stage": str(r["spec_stage"] or ""),
+                    "pr_status": str(r["pr_status"] or ""),
+                })
+            except Exception:
+                continue
+    return out
+
+def build_action_templates(next_touch):
     out = []
     for r in rows:
         pid = int(r["id"])
@@ -213,18 +242,31 @@ def main():
     action = "start_allowed" if gate_ok else "keep_stopped_only"
     reason = "health gate pass" if gate_ok else ("; ".join(reasons) if reasons else "health gate fail")
 
+    next_touch = [
+        {
+            "id": int(r["id"]),
+            "title": str(r["title"] or ""),
+            "source_ai": str(r["source_ai"] or ""),
+            "dev_stage": str(r["dev_stage"] or ""),
+            "spec_stage": str(r["spec_stage"] or ""),
+            "pr_status": str(r["pr_status"] or ""),
+        }
+        for r in rows
+    ]
+
     result = {
-        "gate_ok": gate_ok,
-        "action": action,
-        "reason": reason,
-        "unique_open_prs": rows["unique_open_prs"],
-        "duplicate_open_pr_url": rows["duplicate_open_pr_url"],
-        "blank_source_open_rows": rows["blank_source_open_rows"],
-        "docs_gap_exists": docs_gap_exists(),
-        "active_now": [b for b, st in active_now.items() if st in ("running", "spawn_scheduled")],
-        "blocked_now": [b for b, st in blocked_now.items() if st in ("running", "spawn_scheduled")],
-        "next_touch": rows["next_touch"],
-        "open_pr_by_source": rows["open_pr_by_source"],
+        "gate_ok": gate.get("gate_ok", False),
+        "action": "start_allowed" if gate.get("gate_ok") else "keep_stopped_only",
+        "reason": "health gate pass" if gate.get("gate_ok") else "health gate fail",
+        "unique_open_prs": gate.get("unique_open_prs", 0),
+        "duplicate_open_pr_url": gate.get("duplicate_open_pr_url", 0),
+        "blank_source_open_rows": gate.get("blank_source_open_rows", 0),
+        "docs_gap_exists": gate.get("docs_gap_exists", 0),
+        "active_now": gate.get("safe_prod_now", []),
+        "blocked_now": gate.get("running_blocked", []),
+        "next_touch": next_touch,
+        "action_templates": build_action_templates(next_touch),
+        "open_pr_by_source": gate.get("open_pr_by_source", []),
         "docs_priority": DOCS_PRIORITY,
     }
 
@@ -260,7 +302,7 @@ def main():
         md.append("- none")
     md.append("")
     md.append("## action_templates")
-    for x in result["action_templates"]:
+    for x in result.get("action_templates", []):
         md.append(f"- {x['id']} | {x['action']}")
         md.append(f"  - cmd: {x['command']}")
     md.append("")
@@ -274,7 +316,7 @@ def main():
         md.append(f"- {k or '(blank)'}: {v}")
     md.append("")
     md.append("## docs_priority")
-    for x in result["docs_priority"]:
+    for x in result.get("docs_priority", []):
         md.append(f"- {x}")
 
     OUT_MD.write_text("\n".join(md) + "\n", encoding="utf-8")
