@@ -12,10 +12,10 @@ def sh(cmd, cwd=None):
     return r.stdout.strip()
 
 def ensure_main_clean():
-    sh(["git", "reset", "--hard"], cwd=FACTORY)
-    sh(["git", "clean", "-fd"], cwd=FACTORY)
-    sh(["git", "checkout", "-f", "main"], cwd=FACTORY)
-    sh(["git", "pull", "--ff-only", "origin", "main"], cwd=FACTORY)
+    sh(["git", "fetch", "origin", "main"], cwd=FACTORY)
+    sh(["git", "checkout", "main"], cwd=FACTORY)
+    sh(["git", "reset", "--hard", "origin/main"], cwd=FACTORY)
+
 
 def get_existing_pr(branch):
     try:
@@ -55,7 +55,6 @@ def main():
         branch = (r["branch_name"] or f"dev/proposal-{pid}").strip()
         if not branch.endswith(f"-p{pid}"):
             branch = f"{branch}-p{pid}"
-        branch = f"{branch}-p{pid}" if not branch.endswith(f"-p{pid}") else branch
 
         conn = sqlite3.connect(DB, timeout=30)
         conn.execute("pragma busy_timeout=30000")

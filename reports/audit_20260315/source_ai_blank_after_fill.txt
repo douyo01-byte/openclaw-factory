@@ -1,0 +1,120 @@
+2284|Watcher recovery sweep 214802|merged|merged|refined|merged
+2165|Improve lifecycle event safety in scripts/set_telegram_token_shell.sh|merged|merged|refined|merged
+2159|Harden DB path handling in scripts/set_telegram_token_launchctl.sh|merged|merged|refined|merged
+2157|Reduce event summary drift in bots/company_dashboard_v1.py|throttled|blocked_target_policy|refined|
+2121|Improve retry logic in scripts/go_queue.sh|merged|merged|refined|merged
+2119|Improve logging coverage in oclibs/human/reply.py|merged|merged|refined|merged
+2117|Optimize database queries in scripts/print_audit.sh|merged|merged|refined|merged
+2115|Improve retry logic in config/feeds/miho.txt|merged|merged|refined|merged
+2113|Improve executor stability in scripts/set_telegram_token_launchctl.sh|merged|merged|refined|merged
+2111|Harden DB path handling in bots/dev_executor_v1.py|merged|merged|refined|merged
+2109|Refactor duplicated logic in bots/employee_registry_v1.py|merged|merged|refined|merged
+2107|Harden DB path handling in config/feeds/kenji.txt|merged|merged|refined|merged
+2105|Reduce event summary drift in scripts/meet_close.sh|merged|merged|refined|merged
+2103|Improve logging coverage in bots/ceo_help_v1.py|throttled|blocked_target_policy|refined|
+2101|Improve retry logic in scripts/no.sh|merged|merged|refined|merged
+2099|Reduce event summary drift in config/personas/kenji.txt|merged|merged|refined|merged
+2096|Improve error handling in oclibs/telegram.py|merged|merged|refined|merged
+2094|Harden DB path handling in configs/sources.json.bak.20260227-011407|merged|merged|refined|merged
+2092|Improve executor stability in bots/spec_notify_v1.py|merged|merged|refined|merged
+2090|Improve lifecycle event safety in config/personas/daiki.txt|merged|merged|refined|merged
+2088|Optimize database queries in bots/ceo_noise_cleanup_v1.py|merged|merged|refined|merged
+2086|Improve executor stability in scripts/meeting_once.sh|merged|merged|refined|merged
+2084|Improve error handling in scripts/meeting_once.sh|merged|merged|refined|merged
+2082|Harden DB path handling in scripts/daily_text_example.txt|merged|merged|refined|merged
+2080|Strengthen launchd recovery in bots/ops_brain_v2.py|throttled|blocked_target_policy|refined|
+2077|Optimize database queries in scripts/run_daemon.sh|merged|merged|refined|merged
+2074|Improve lifecycle event safety in bots/spec_notify_v1.py|merged|merged|refined|merged
+2072|Reduce duplicate writes in scripts/contacts_backfill_basic.sh|merged|merged|refined|merged
+2070|Improve proposal filtering in bots/dev_guardrails_v1.py|merged|merged|refined|merged
+2068|Reduce API latency in scripts/project_decider_loop.sh|merged|merged|refined|merged
+2066|Improve proposal filtering in scripts/run_daemon.sh|merged|merged|refined|merged
+2064|Harden DB path handling in scripts/brain_supply_loop.sh|merged|merged|refined|merged
+2062|Harden DB path handling in bots/pipeline_hn_to_outreach.py|merged|merged|refined|merged
+2060|Improve proposal filtering in docs/gates.md|merged|merged|refined|merged
+2058|Reduce duplicate writes in scripts/auto_pr_entry.sh|merged|merged|refined|merged
+2056|Improve queue handling in bots/self_healing_v2.py|merged|merged|refined|merged
+2054|Harden DB path handling in bots/command_apply_daemon_v1.py|merged|merged|refined|merged
+2052|Improve logging coverage in bots/dev_pr_creator_v1.py|merged|merged|refined|merged
+2050|Improve executor stability in scripts/set_telegram_token_shell.sh|merged|merged|refined|merged
+2048|Improve proposal filtering in scripts/go.sh|merged|merged|refined|merged
+2046|Improve proposal filtering in configs/sources.json.bak.20260227-011407|merged|merged|refined|merged
+2044|Optimize database queries in bots/dev_proposal_notify_v1.py|merged|merged|refined|merged
+2038|Improve retry logic in scripts/env_check.sh|merged|merged|refined|merged
+2036|Improve error handling in bots/spec_refiner_v2.py|merged|merged|refined|merged
+1996|Improve retry logic in scripts/meet_queue.sh|merged|merged|refined|merged
+1994|Improve lifecycle event safety in bots/daily_cycle_v1.py|merged|merged|refined|merged
+1992|Optimize database queries in scripts/self_learning_loop.sh|merged|merged|refined|merged
+1990|Improve proposal filtering in scripts/meet_open.sh|merged|merged|refined|merged
+1988|Optimize database queries in bots/command_apply_daemon_v1.py|merged|merged|refined|merged
+1987|Harden watcher state sync in bots/chat_router_v1.py|merged|merged|refined|merged
+1985|Improve proposal filtering in scripts/dev_auto_execute_v1.sh|merged|merged|refined|merged
+1983|Improve retry logic in scripts/review_many.sh|merged|merged|refined|merged
+1981|Reduce duplicate writes in config/personas/core.txt|merged|merged|refined|merged
+1979|Improve executor stability in scripts/go_queue.sh|merged|merged|refined|merged
+1977|Reduce duplicate writes in bots/ingest_telegram_replies_v1.py|merged|merged|refined|merged
+1975|Improve queue handling in scripts/opportunity_promote.sh|merged|merged|refined|merged
+1973|Refactor duplicated logic in scripts/tg_poll_loop.sh|merged|merged|refined|merged
+1971|Improve lifecycle event safety in bots/tg_inbox_poll_v1.py|merged|merged|refined|merged
+1969|Optimize database queries in bots/dev_executor_v1.py|merged|merged|refined|merged
+1967|Reduce event summary drift in bots/chat_research_v1.py|throttled|blocked_target_policy|refined|
+1965|Improve error handling in bots/ingest_spec_answers_v1.py|merged|merged|refined|merged
+1963|Harden DB path handling in scripts/run_py.sh|merged|merged|refined|merged
+1961|Improve queue handling in scripts/go_queue.sh|merged|merged|refined|merged
+1959|Reduce event summary drift in config/feeds/daiki.txt|merged|merged|refined|merged
+1957|Reduce duplicate writes in scripts/review_many.sh|merged|merged|refined|merged
+1955|Improve executor stability in configs/sources.json.bak.20260227-011407|merged|merged|refined|merged
+1953|Reduce event summary drift in scripts/no.sh|merged|merged|refined|merged
+1951|Improve executor stability in scripts/launch_executor.sh|merged|merged|refined|merged
+1949|Optimize database queries in scripts/ingest_replies_loop.sh|merged|merged|refined|merged
+1947|Improve executor stability in scripts/launch_pr_watcher.sh|merged|merged|refined|merged
+1945|Improve queue handling in oclibs/brain.py|merged|merged|refined|merged
+1943|Improve logging coverage in bots/chat_router_v1.py|merged|merged|refined|merged
+1941|Improve proposal filtering in scripts/merge_if_clean.sh|merged|merged|refined|merged
+1939|Harden watcher state sync in scripts/fix_print_in_branch.sh|merged|merged|refined|merged
+1937|Harden watcher state sync in scripts/log_rotate_safe.sh|merged|merged|refined|merged
+1935|Optimize database queries in scripts/set_telegram_token_launchctl.sh|merged|merged|refined|merged
+1933|Reduce event summary drift in bots/role_training_v1.py|merged|merged|refined|merged
+1931|Improve logging coverage in scripts/auto_meet_cycle.sh|merged|merged|refined|merged
+1929|Reduce event summary drift in scripts/env_check.sh|merged|merged|refined|merged
+1927|Reduce duplicate writes in scripts/auto_meet_loop.sh|merged|merged|refined|merged
+1925|Reduce duplicate writes in oclibs/telegram.py|merged|merged|refined|merged
+1923|Harden watcher state sync in bots/ingest_telegram_replies_v1.py|merged|merged|refined|merged
+1917|Improve executor stability in configs/ks_storage_state.json|merged|merged|refined|merged
+1915|Improve proposal filtering in scripts/daily_text_example.txt|merged|merged|refined|merged
+1875|Harden watcher state sync in bots/scout_market_v2.py|merged|merged|refined|merged
+1873|Harden watcher state sync in bots/ingest_private_replies_v1.py|merged|merged|refined|merged
+1871|Optimize database queries in config/personas/daiki.txt|merged|merged|refined|merged
+1869|Improve logging coverage in bots/dev_guardrails_v1.py|merged|merged|refined|merged
+1867|Improve executor stability in bots/ops_brain_v1.py|throttled|blocked_target_policy|refined|
+1865|Improve executor stability in scripts/daily_digest_now.sh|merged|merged|refined|merged
+1863|Improve logging coverage in scripts/backfill_opportunity_from_items.sh|merged|merged|refined|merged
+1861|Improve retry logic in scripts/plan_set.sh|merged|merged|refined|merged
+1860|Improve lifecycle event safety in scripts/follow_main.sh|merged|merged|refined|merged
+1858|Refactor duplicated logic in oclibs/contact_finder.py|merged|merged|refined|merged
+1856|Optimize database queries in bots/dev_guardrails_v1.py|merged|merged|refined|merged
+1854|Improve queue handling in bots/web_enrich_v1.py|merged|merged|refined|merged
+1852|Improve lifecycle event safety in bots/dev_schema_apply.py|merged|merged|refined|merged
+1850|Refactor duplicated logic in bots/browser_smoke.py|throttled|blocked_target_policy|refined|
+1848|Harden watcher state sync in scripts/launch_executor.sh|merged|merged|refined|merged
+1846|Improve executor stability in scripts/self_learning_loop.sh|merged|merged|refined|merged
+1844|Improve queue handling in scripts/go_next_step.sh|merged|merged|refined|merged
+1842|Reduce API latency in .gitignore|merged|merged|refined|merged
+1840|Reduce event summary drift in bots/build_decision_patterns.py|merged|merged|refined|merged
+1838|Improve retry logic in scripts/daily_text_example.txt|merged|merged|refined|merged
+1836|Harden watcher state sync in scripts/self_learning_loop.sh|merged|merged|refined|merged
+1834|Improve logging coverage in executor_test_131.txt|merged|merged|refined|merged
+1832|Reduce API latency in bots/self_healing_v2.py|merged|merged|refined|merged
+1830|Improve executor stability in scripts/review_run_one.sh|merged|merged|refined|merged
+1828|Reduce event summary drift in scripts/exec_pack.sh|merged|merged|refined|merged
+1826|Harden watcher state sync in oclibs/__init__.py|merged|merged|refined|merged
+1824|Optimize database queries in oclibs/human/reply.py|merged|merged|refined|merged
+1822|Reduce event summary drift in scripts/daily_text_example.txt|merged|merged|refined|merged
+1820|Refactor duplicated logic in scripts/meet_open.sh|merged|merged|refined|merged
+1818|Improve queue handling in scripts/set_telegram_token_launchagent.sh|merged|merged|refined|merged
+1816|Refactor duplicated logic in bots/dev_pr_sync_v1.py|merged|merged|refined|merged
+1814|Optimize database queries in scripts/jobs_apply_scout_contacts.sh|merged|merged|refined|merged
+1812|Strengthen launchd recovery in docs/gates.md|merged|merged|refined|merged
+1810|Reduce API latency in scripts/go.sh|merged|merged|refined|merged
+1808|Refactor duplicated logic in scripts/daemon_selfcheck.sh|merged|merged|refined|merged
+1806|Refactor duplicated logic in scripts/opportunity_meeting_now.sh|merged|merged|refined|merged

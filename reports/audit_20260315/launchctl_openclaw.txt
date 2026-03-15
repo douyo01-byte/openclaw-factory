@@ -1,0 +1,3 @@
+-	0	jp.openclaw.dev_pr_creator_v1
+59325	-15	jp.openclaw.open_pr_guard_v1
+59327	-15	jp.openclaw.dev_pr_watcher_v1

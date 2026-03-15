@@ -1,0 +1,8 @@
+0|id|INTEGER|0||1
+1|event_type|TEXT|0||0
+2|title|TEXT|0||0
+3|body|TEXT|0||0
+4|proposal_id|INTEGER|0||0
+5|pr_url|TEXT|0||0
+6|created_at|TEXT|0|datetime('now')|0
+7|sent_at|TEXT|0||0

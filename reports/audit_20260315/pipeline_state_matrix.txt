@@ -1,0 +1,14 @@
+execute_now|merged|decomposed|merged|1301
+execute_now|merged|refined|merged|816
+execute_now|merged||merged|376
+execute_now|closed|decomposed|closed|88
+execute_now|blocked_target_policy|refined||11
+execute_now|open|decomposed|open|8
+backlog||raw||6
+execute_now|open|refined|open|4
+blocked_target_policy|blocked_target_policy|||2
+execute_now|closed||closed|2
+execute_now|open|raw|open|2
+||||1
+|closed|||1
+execute_now|open||open|1

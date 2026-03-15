@@ -1,0 +1,14 @@
+ai_employee_scores          proposal_clusters         
+ai_intelligence             proposal_conversation     
+ceo_decision_layer_results  proposal_state            
+ceo_hub_events              proposal_strategy         
+company_orders              reflection_requests       
+decision_patterns           retrospectives            
+decisions                   router_tasks              
+dev_events                  success_patterns          
+dev_proposals               supply_bias               
+inbox_commands              system_metrics            
+kv                          tg_kv                     
+learning_patterns           tg_private_chat_log       
+learning_results            tg_prompt_map             
+proposal_cluster_stats    

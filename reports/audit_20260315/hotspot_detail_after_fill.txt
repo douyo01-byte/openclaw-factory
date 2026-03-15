@@ -1,0 +1,33 @@
+2633|MotherShip: health CLI|mothership|open|execute_now|open|decomposed|open|0|dev/mothership-health-cli-e61cca|https://github.com/douyo01-byte/openclaw-factory/pull/2353
+2630|Strategy innovation executor cd93f4|strategy_engine|open|execute_now|open|raw|open|0|dev/batch-2630-2632|https://github.com/douyo01-byte/openclaw-factory/pull/2347
+2629|🧠 Kaikun04 CTOレビュー|cto|open|execute_now|open|decomposed|open|0|dev/batch-2629-2629|https://github.com/douyo01-byte/openclaw-factory/pull/2346
+2628|MotherShip: db check|mothership|open|execute_now|open|raw|open|0|dev/batch-2628-2628|https://github.com/douyo01-byte/openclaw-factory/pull/2345
+2626|Innovation improvement self_improve 7635f1|innovation_engine|open|execute_now|open|decomposed|open|0|dev/innovation-self-improve-7635f1|https://github.com/douyo01-byte/openclaw-factory/pull/2350
+2624|Innovation improvement executor 077e49|innovation_engine|open|execute_now|open|refined|open|0|dev/batch-2624-2627|https://github.com/douyo01-byte/openclaw-factory/pull/2344
+2622|Strategy innovation executor 646eb6|strategy_engine|open|execute_now|open|refined|open|0|dev/batch-2622-2623|https://github.com/douyo01-byte/openclaw-factory/pull/2343
+2620|Innovation improvement self_improve d50f8b|innovation_engine|open|execute_now|open|decomposed|open|0|dev/batch-2620-2620|https://github.com/douyo01-byte/openclaw-factory/pull/2342
+2618|Innovation improvement executor a6da08|innovation_engine|open|execute_now|open|refined|open|0|dev/batch-2618-2621|https://github.com/douyo01-byte/openclaw-factory/pull/2341
+2615|🧠 Kaikun04 CTOレビュー|cto|open|execute_now|open|refined|open|0|dev/batch-2615-2615|https://github.com/douyo01-byte/openclaw-factory/pull/2339
+2613|MotherShip: log cleanup|mothership|open|execute_now|open|decomposed|open|0|dev/mothership-log-clean-ca0604|https://github.com/douyo01-byte/openclaw-factory/pull/2351
+2609|MotherShip: log cleanup|mothership|open|execute_now|open|decomposed|open|0|dev/mothership-log-clean-fd6d17|https://github.com/douyo01-byte/openclaw-factory/pull/2334
+2599|MotherShip: db check|mothership|open|execute_now|open|decomposed|open|0|dev/mothership-db-check-8f855c|https://github.com/douyo01-byte/openclaw-factory/pull/2349
+2575|MotherShip: log cleanup|mothership|open|execute_now|open|decomposed|open|0|dev/mothership-log-clean|https://github.com/douyo01-byte/openclaw-factory/pull/2352
+2555|AI meeting improvement 2153 [phased]|ai_meeting_engine_v1|idea|backlog||raw||0|ai-meeting-20260314_215322|
+2494|AI meeting improvement 1953 [phased]|ai_meeting_engine_v1|idea|backlog||raw||0|ai-meeting-20260314_195321|
+2437|AI meeting improvement 1753 [phased]|ai_meeting_engine_v1|idea|backlog||raw||0|ai-meeting-20260314_175319|
+2375|AI meeting improvement 1553 [phased]|ai_meeting_engine_v1|idea|backlog||raw||0|ai-meeting-20260314_155306|
+2319|AI meeting improvement 1353 [phased]|ai_meeting_engine_v1|idea|backlog||raw||0|ai-meeting-20260314_135305|
+2318|AI meeting improvement 1352 [phased]|ai_meeting_engine_v1|idea|backlog||raw||0|ai-meeting-20260314_135207|
+2157|Reduce event summary drift in bots/company_dashboard_v1.py||throttled|execute_now|blocked_target_policy|refined||0|code-review/1773483250|
+2103|Improve logging coverage in bots/ceo_help_v1.py||throttled|execute_now|blocked_target_policy|refined||0|code-review/1773477532|
+2080|Strengthen launchd recovery in bots/ops_brain_v2.py||throttled|execute_now|blocked_target_policy|refined||0|code-review/1773475863|
+1967|Reduce event summary drift in bots/chat_research_v1.py||throttled|execute_now|blocked_target_policy|refined||0|code-review/1773465545|
+1867|Improve executor stability in bots/ops_brain_v1.py||throttled|execute_now|blocked_target_policy|refined||0|code-review/1773456200|
+1850|Refactor duplicated logic in bots/browser_smoke.py||throttled|execute_now|blocked_target_policy|refined||0|code-review/1773455010|
+1728|Reduce API latency in bots/report_orchestrator_v1.py||throttled|execute_now|blocked_target_policy|refined||0|code-review/1773444217|
+1722|Improve lifecycle event safety in bots/openai_smoke.py||throttled|execute_now|blocked_target_policy|refined||0|code-review/1773443934|
+1707|Reduce event summary drift in bots/explain_orchestrator_v1.py||throttled|execute_now|blocked_target_policy|refined||0|code-review/1773442998|
+1703|Reduce API latency in bots/auto_pr_v1.py||throttled|execute_now|blocked_target_policy|refined||0|code-review/1773442732|
+1685|Reduce duplicate writes in bots/auto_merge_v1.py||throttled|execute_now|blocked_target_policy|refined||0|code-review/1773441506|
+1640|Normalize DB path with expanduser and abspath before connecting|innovation_llm_engine_v1|throttled|blocked_target_policy|blocked_target_policy|||0||
+1639|Introduce module-level NOISE_COMMANDS and normalize_text helper|innovation_llm_engine_v1|throttled|blocked_target_policy|blocked_target_policy|||0||
