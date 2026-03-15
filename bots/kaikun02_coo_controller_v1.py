@@ -242,17 +242,7 @@ def main():
     action = "start_allowed" if gate_ok else "keep_stopped_only"
     reason = "health gate pass" if gate_ok else ("; ".join(reasons) if reasons else "health gate fail")
 
-    next_touch = [
-        {
-            "id": int(r["id"]),
-            "title": str(r["title"] or ""),
-            "source_ai": str(r["source_ai"] or ""),
-            "dev_stage": str(r["dev_stage"] or ""),
-            "spec_stage": str(r["spec_stage"] or ""),
-            "pr_status": str(r["pr_status"] or ""),
-        }
-        for r in rows
-    ]
+    next_touch = normalize_next_touch_rows(rows)
 
     result = {
         "gate_ok": gate.get("gate_ok", False),
