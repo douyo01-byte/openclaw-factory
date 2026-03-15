@@ -1,4 +1,9 @@
 #!/bin/bash
+DB="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+export DB_PATH="$DB"
+export OCLAW_DB_PATH="$DB"
+export FACTORY_DB_PATH="$DB"
+
 set -euo pipefail
 
 DB="${DB_PATH:-/Users/doyopc/AI/openclaw-factory/data/openclaw.db}"
