@@ -1,0 +1,102 @@
+{
+  "gate_ok": true,
+  "action": "start_allowed",
+  "reason": "health gate pass",
+  "unique_open_prs": 15,
+  "duplicate_open_pr_url": 0,
+  "blank_source_open_rows": 0,
+  "docs_gap_exists": 1,
+  "active_now": [
+    "open_pr_guard_v1",
+    "dev_pr_watcher_v1",
+    "dev_pr_creator_v1",
+    "proposal_promoter_v1",
+    "spec_refiner_v2",
+    "spec_decomposer_v1",
+    "proposal_throttle_engine_v1",
+    "learning_result_writer_v1"
+  ],
+  "blocked_now": [],
+  "next_touch": [
+    {
+      "id": 2630,
+      "title": "Strategy innovation executor cd93f4",
+      "source_ai": "strategy_engine",
+      "dev_stage": "open",
+      "spec_stage": "raw",
+      "pr_status": "open"
+    },
+    {
+      "id": 2628,
+      "title": "MotherShip: db check",
+      "source_ai": "mothership",
+      "dev_stage": "open",
+      "spec_stage": "raw",
+      "pr_status": "open"
+    },
+    {
+      "id": 2624,
+      "title": "Innovation improvement executor 077e49",
+      "source_ai": "innovation_engine",
+      "dev_stage": "open",
+      "spec_stage": "refined",
+      "pr_status": "open"
+    }
+  ],
+  "action_templates": [
+    {
+      "id": 2630,
+      "title": "Strategy innovation executor cd93f4",
+      "action": "refine_spec",
+      "command": "proposal_id=2630 を確認し spec_refiner_v2 対象として扱う",
+      "spec_stage": "raw",
+      "dev_stage": "open",
+      "pr_status": "open"
+    },
+    {
+      "id": 2628,
+      "title": "MotherShip: db check",
+      "action": "refine_spec",
+      "command": "proposal_id=2628 を確認し spec_refiner_v2 対象として扱う",
+      "spec_stage": "raw",
+      "dev_stage": "open",
+      "pr_status": "open"
+    },
+    {
+      "id": 2624,
+      "title": "Innovation improvement executor 077e49",
+      "action": "decompose_spec",
+      "command": "proposal_id=2624 を確認し spec_decomposer_v1 対象として扱う",
+      "spec_stage": "refined",
+      "dev_stage": "open",
+      "pr_status": "open"
+    }
+  ],
+  "open_pr_by_source": [
+    [
+      "mothership",
+      6
+    ],
+    [
+      "innovation_engine",
+      4
+    ],
+    [
+      "cto",
+      3
+    ],
+    [
+      "strategy_engine",
+      2
+    ]
+  ],
+  "docs_priority": [
+    "docs/06_CURRENT_STATE.md",
+    "docs/10_RUNTIME_AUDIT_STATUS.md",
+    "docs/12_KAIKUN02_DECISION_PROTOCOL.md",
+    "docs/99_CONNECTED_RUNTIME_PATCH.md",
+    "../openclaw-factory-daemon/reports/audit_20260315/final_runtime_status.md",
+    "../openclaw-factory-daemon/reports/audit_20260315/final_task_completion.md",
+    "../openclaw-factory-daemon/reports/audit_20260315/kaikun02_runtime_memo.md"
+  ]
+}
