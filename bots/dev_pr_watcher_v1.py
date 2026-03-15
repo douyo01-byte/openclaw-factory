@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys
 import os, re, sqlite3, time, shutil, requests
 
 print("[WATCHER_BOOT] start", flush=True)
@@ -136,7 +137,7 @@ def ensure_aux_tables(conn):
         )
     """)
 
-def tick_once(conn: sqlite3.Connection):
+def tick_once(conn: sqlite3.Connection, target_pid=None):
     dirty_head=False
     conn.execute("update dev_proposals set dev_stage='merged' where status='merged' and coalesce(pr_status,'')='merged' and coalesce(dev_stage,'')=''")
     dirty_head=True
@@ -178,12 +179,21 @@ def tick_once(conn: sqlite3.Connection):
             hub_event(conn, "merged", f"統 合 完 了 : {r[1]}", "PRが mainへ 統 合 さ れ ま し た ", int(r[0]), r[2])
 
 
-    rows = conn.execute(
-        "select id, pr_number, pr_url, coalesce(pr_status,'') pr_status, coalesce(status,'') status, coalesce(dev_stage,'') dev_stage "
-        "from dev_proposals "
-        "where (pr_number is null or pr_number='' or pr_number=0 or coalesce(pr_status,'') in ('','ready','pr_created','open','closed')) "
-        "order by id desc limit 500"
-    ).fetchall()
+    if target_pid is None:
+        rows = conn.execute(
+            "select id, pr_number, pr_url, coalesce(pr_status,\'\') pr_status, coalesce(status,\'\') status, coalesce(dev_stage,\'\') dev_stage "
+            "from dev_proposals "
+            "where (pr_number is null or pr_number=\'\' or pr_number=0 or coalesce(pr_status,\'\') in (\'\',\'ready\',\'pr_created\',\'open\',\'closed\')) "
+            "order by id desc limit 500"
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "select id, pr_number, pr_url, coalesce(pr_status,\'\') pr_status, coalesce(status,\'\') status, coalesce(dev_stage,\'\') dev_stage "
+            "from dev_proposals "
+            "where id=? and coalesce(pr_url,\'\')<>\'\' "
+            "order by id desc limit 1",
+            (target_pid,)
+        ).fetchall()
 
     dirty = False
     notify = []
@@ -251,8 +261,32 @@ def tick_once(conn: sqlite3.Connection):
 
 def main():
     os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
-    while True:
-        print("[watcher] tick", flush=True)
+    target_pid = int(sys.argv[1]) if len(sys.argv) > 1 and str(sys.argv[1]).isdigit() else None
+    if target_pid is None:
+        while True:
+            print("[watcher] tick", flush=True)
+            conn = sqlite3.connect(DB_PATH, timeout=30)
+            try:
+                try:
+                    conn.execute("PRAGMA busy_timeout=30000")
+                except Exception:
+                    pass
+                try:
+                    conn.execute("PRAGMA journal_mode=WAL")
+                except Exception:
+                    pass
+                conn.row_factory = sqlite3.Row
+                print("[watcher] tick_once enter", flush=True)
+                ensure_aux_tables(conn)
+                tick_once(conn)
+                print("[watcher] tick_once exit", flush=True)
+            finally:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+            time.sleep(SLEEP)
+    else:
         conn = sqlite3.connect(DB_PATH, timeout=30)
         try:
             try:
@@ -266,14 +300,12 @@ def main():
             conn.row_factory = sqlite3.Row
             print("[watcher] tick_once enter", flush=True)
             ensure_aux_tables(conn)
-            tick_once(conn)
+            tick_once(conn, target_pid=target_pid)
             print("[watcher] tick_once exit", flush=True)
         finally:
             try:
                 conn.close()
             except Exception:
                 pass
-        time.sleep(SLEEP)
-
 if __name__ == "__main__":
     main()

@@ -59,8 +59,26 @@ def run_decompose(pid):
     subprocess.run(cmd,cwd=ROOT)
 
 def run_watch(pid):
-    cmd = [PYTHON,"bots/dev_pr_watcher_v1.py"]
-    subprocess.run(cmd,cwd=ROOT)
+    env = os.environ.copy()
+    env["DB_PATH"] = str(DB)
+    env["OCLAW_DB_PATH"] = str(DB)
+    env["FACTORY_DB_PATH"] = str(DB)
+    gh = (env.get("GH_TOKEN") or env.get("GITHUB_TOKEN") or "").strip()
+    if not gh:
+        github_env = ROOT / "env" / "github.env"
+        if github_env.exists():
+            for line in github_env.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line.startswith("export GH_TOKEN="):
+                    env["GH_TOKEN"] = line.split("=",1)[1].strip().strip('"')
+                if line.startswith("export GITHUB_TOKEN="):
+                    env["GITHUB_TOKEN"] = line.split("=",1)[1].strip().strip('"')
+    subprocess.run(
+        [PYTHON, "bots/dev_pr_watcher_v1.py", str(pid)],
+        cwd=ROOT,
+        env=env,
+        check=True,
+    )
 
 def main():
 
