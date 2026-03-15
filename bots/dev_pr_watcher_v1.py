@@ -35,7 +35,7 @@ def tg_send(text: str):
     except Exception as e:
         print("[watcher] tg_send failed:", repr(e), flush=True)
 
-def gh_api(path: str):
+def gh_api(path: str, no_sleep=False):
     global _warned_no_gh
     tok = (os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN") or "").strip()
     if not tok:
@@ -65,6 +65,8 @@ def gh_api(path: str):
                 except Exception:
                     wait = 60
                 print("[watcher] rate_limited sleep", wait, flush=True)
+                if no_sleep:
+                    return None
                 time.sleep(wait)
                 return None
         if r.status_code >= 300:
