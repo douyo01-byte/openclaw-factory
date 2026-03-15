@@ -62,6 +62,26 @@ def stop_label(label: str):
     subprocess.run(["launchctl", "bootout", f"gui/{uid}/{full}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     subprocess.run(["pkill", "-f", f"{label}.py"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+
+def load_health_gate():
+    p = Path("reports/audit_20260315/kaikun02_health_gate.json")
+    if p.exists():
+        try:
+            return json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {
+        "gate_ok": False,
+        "reasons": ["health_gate_missing"],
+        "safe_prod_now": [],
+        "running_blocked": [],
+        "unique_open_prs": 999,
+        "duplicate_open_pr_url": 999,
+        "blank_source_open_rows": 999,
+        "open_pr_by_source": [],
+        "docs_gap_exists": 1,
+    }
+
 def db_rows():
     c = sqlite3.connect(DB, timeout=120)
     c.row_factory = sqlite3.Row
@@ -211,6 +231,7 @@ def build_action_templates(next_touch):
     return out
 
 def main():
+    gate = load_health_gate()
     AUDIT.mkdir(parents=True, exist_ok=True)
 
     safe_state = {b: launch_state(b) for b in SAFE_PROD}
