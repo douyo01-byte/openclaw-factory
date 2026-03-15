@@ -181,7 +181,6 @@ def main():
 
     action = pick_action(decision)
     if not action:
-        log("no action")
         return
 
     pid = int(action["id"])
