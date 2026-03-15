@@ -19,17 +19,17 @@
 - none
 
 ## next_touch
-- 2622 | Strategy innovation executor 646eb6 | strategy_engine | open | refined | open
-- 2618 | Innovation improvement executor a6da08 | innovation_engine | open | refined | open
-- 2615 | 🧠 Kaikun04 CTOレビュー | cto | open | refined | open
+- 2633 | MotherShip: health CLI | mothership | open | decomposed | open
+- 2630 | Strategy innovation executor cd93f4 | strategy_engine | open | decomposed | open
+- 2629 | 🧠 Kaikun04 CTOレビュー | cto | open | decomposed | open
 
 ## action_templates
-- 2622 | decompose_spec
-  - cmd: proposal_id=2622 を確認し spec_decomposer_v1 対象として扱う
-- 2618 | decompose_spec
-  - cmd: proposal_id=2618 を確認し spec_decomposer_v1 対象として扱う
-- 2615 | decompose_spec
-  - cmd: proposal_id=2615 を確認し spec_decomposer_v1 対象として扱う
+- 2633 | watch_pr
+  - cmd: PR監視継続: proposal_id=2633
+- 2630 | watch_pr
+  - cmd: PR監視継続: proposal_id=2630
+- 2629 | watch_pr
+  - cmd: PR監視継続: proposal_id=2629
 
 ## db_watch
 - unique_open_prs: 15

@@ -136,9 +136,10 @@ def db_rows():
           and coalesce(pr_url,'')<>''
         order by
           case
-            when coalesce(spec_stage,'')='raw' then 0
+            when coalesce(spec_stage,'')='decomposed' and coalesce(pr_status,'')='ready' then 0
             when coalesce(spec_stage,'')='refined' then 1
-            when coalesce(spec_stage,'')='decomposed' and coalesce(dev_stage,'') in ('ready','execute_now','pr_created','open') then 2
+            when coalesce(spec_stage,'')='raw' then 2
+            when coalesce(spec_stage,'')='decomposed' and coalesce(pr_status,'')='open' then 3
             else 9
           end,
           id desc
