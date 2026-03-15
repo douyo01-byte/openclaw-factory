@@ -1,25 +1,32 @@
-import sqlite3,time,traceback
+import sqlite3,time,traceback,os,sys
 
-DB="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+DB=(os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
 SLEEP=20
 
-def tick():
+def tick(target_pid=None):
     conn=sqlite3.connect(DB,timeout=30)
     conn.row_factory=sqlite3.Row
     conn.execute("pragma busy_timeout=30000")
     conn.execute("pragma journal_mode=WAL")
 
-    rows=conn.execute("""
-    select id,title,coalesce(spec,'') as spec
-    from dev_proposals
-    where coalesce(status,'')='approved'
-      and coalesce(project_decision,'')='execute_now'
-      and coalesce(dev_stage,'')='execute_now'
-      and coalesce(spec_stage,'')='refined'
-      and coalesce(pr_status,'')=''
-    order by id asc
-    limit 10
-    """).fetchall()
+    if target_pid is not None:
+        rows=conn.execute("""
+        select id,title,coalesce(spec,'') as spec
+        from dev_proposals
+        where id=?
+        """, (target_pid,)).fetchall()
+    else:
+        rows=conn.execute("""
+        select id,title,coalesce(spec,'') as spec
+        from dev_proposals
+        where coalesce(status,'')='approved'
+          and coalesce(project_decision,'')='execute_now'
+          and coalesce(dev_stage,'')='execute_now'
+          and coalesce(spec_stage,'')='refined'
+          and coalesce(pr_status,'')=''
+        order by id asc
+        limit 10
+        """).fetchall()
 
     done=0
     for r in rows:
@@ -51,13 +58,21 @@ def tick():
 
 def main():
     print("boot_ok", flush=True)
-    while True:
+    target_pid = int(sys.argv[1]) if len(sys.argv) > 1 and str(sys.argv[1]).isdigit() else None
+    if target_pid is not None:
         try:
-            tick()
+            tick(target_pid)
         except Exception as e:
             print(repr(e), flush=True)
             print(traceback.format_exc(), flush=True)
-        time.sleep(SLEEP)
+    else:
+        while True:
+            try:
+                tick()
+            except Exception as e:
+                print(repr(e), flush=True)
+                print(traceback.format_exc(), flush=True)
+            time.sleep(SLEEP)
 
 if __name__=="__main__":
     main()
