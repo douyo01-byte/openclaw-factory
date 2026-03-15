@@ -213,7 +213,7 @@ def tick_once(conn: sqlite3.Connection, target_pid=None):
         if not prn:
             continue
 
-        pr = gh_api(f"/repos/{REPO}/pulls/{prn}")
+        pr = gh_api(f"/repos/{REPO}/pulls/{prn}", no_sleep=one_shot)
         if not pr:
             print(f"[watcher] PR skipped proposal={pid} reason=gh_api_none", flush=True)
             continue
@@ -262,6 +262,7 @@ def tick_once(conn: sqlite3.Connection, target_pid=None):
 def main():
     os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
     target_pid = int(sys.argv[1]) if len(sys.argv) > 1 and str(sys.argv[1]).isdigit() else None
+    one_shot = target_pid is not None
     if target_pid is None:
         while True:
             print("[watcher] tick", flush=True)
