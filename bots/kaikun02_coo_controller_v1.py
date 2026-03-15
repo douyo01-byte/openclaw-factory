@@ -137,7 +137,7 @@ def db_rows():
         order by
           case
             when coalesce(spec_stage,'')='decomposed' and coalesce(pr_status,'')='ready' then 0
-            when coalesce(spec_stage,'')='refined' then 1
+            when coalesce(spec_stage,'')='refined' and coalesce(pr_status,'')='open' then 1
             when coalesce(spec_stage,'')='raw' then 2
             when coalesce(spec_stage,'')='decomposed' and coalesce(pr_status,'')='open' then 3
             else 9

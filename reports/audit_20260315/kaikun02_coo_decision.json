@@ -2,7 +2,7 @@
   "gate_ok": true,
   "action": "start_allowed",
   "reason": "health gate pass",
-  "unique_open_prs": 15,
+  "unique_open_prs": 0,
   "duplicate_open_pr_url": 0,
   "blank_source_open_rows": 0,
   "docs_gap_exists": 1,
@@ -17,79 +17,9 @@
     "learning_result_writer_v1"
   ],
   "blocked_now": [],
-  "next_touch": [
-    {
-      "id": 2633,
-      "title": "MotherShip: health CLI",
-      "source_ai": "mothership",
-      "dev_stage": "open",
-      "spec_stage": "decomposed",
-      "pr_status": "open"
-    },
-    {
-      "id": 2630,
-      "title": "Strategy innovation executor cd93f4",
-      "source_ai": "strategy_engine",
-      "dev_stage": "open",
-      "spec_stage": "decomposed",
-      "pr_status": "open"
-    },
-    {
-      "id": 2629,
-      "title": "🧠 Kaikun04 CTOレビュー",
-      "source_ai": "cto",
-      "dev_stage": "open",
-      "spec_stage": "decomposed",
-      "pr_status": "open"
-    }
-  ],
-  "action_templates": [
-    {
-      "id": 2633,
-      "title": "MotherShip: health CLI",
-      "action": "watch_pr",
-      "command": "PR監視継続: proposal_id=2633",
-      "spec_stage": "decomposed",
-      "dev_stage": "open",
-      "pr_status": "open"
-    },
-    {
-      "id": 2630,
-      "title": "Strategy innovation executor cd93f4",
-      "action": "watch_pr",
-      "command": "PR監視継続: proposal_id=2630",
-      "spec_stage": "decomposed",
-      "dev_stage": "open",
-      "pr_status": "open"
-    },
-    {
-      "id": 2629,
-      "title": "🧠 Kaikun04 CTOレビュー",
-      "action": "watch_pr",
-      "command": "PR監視継続: proposal_id=2629",
-      "spec_stage": "decomposed",
-      "dev_stage": "open",
-      "pr_status": "open"
-    }
-  ],
-  "open_pr_by_source": [
-    [
-      "mothership",
-      6
-    ],
-    [
-      "innovation_engine",
-      4
-    ],
-    [
-      "cto",
-      3
-    ],
-    [
-      "strategy_engine",
-      2
-    ]
-  ],
+  "next_touch": [],
+  "action_templates": [],
+  "open_pr_by_source": [],
   "docs_priority": [
     "docs/06_CURRENT_STATE.md",
     "docs/10_RUNTIME_AUDIT_STATUS.md",
