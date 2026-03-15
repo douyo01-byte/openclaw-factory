@@ -1,107 +1,42 @@
 # OpenClaw Current State
 
 ## 現在地
-
 開発AI:
-Lv6〜Lv7（自律開発ループ成立）
+Lv6〜Lv7
 
-理由:
+## 実働最小系
+- open_pr_guard_v1
+- dev_pr_watcher_v1
+- dev_pr_creator_v1
 
-- jp.openclaw.dev_command_executor_v1 稼働
-- jp.openclaw.dev_pr_watcher_v1 稼働
-- jp.openclaw.dev_pr_automerge_v1 稼働
-- jp.openclaw.spec_refiner_v2 稼働
-- jp.openclaw.spec_reply_v1 稼働
-- jp.openclaw.spec_notify_v1 稼働
-- jp.openclaw.tg_poll_loop 稼働
-- jp.openclaw.self_healing_v2 稼働
+## 段階起動対象
+- proposal_promoter_v1
+- spec_refiner_v2
+- spec_decomposer_v1
 
-### 自律開発ループ
+## 要監査
+- innovation_engine_v1
+- strategy_engine_v1
+- proposal_builder_loop_v1
+- reasoning_engine_v1
+- proposal_throttle_engine_v1
+- learning_result_writer_v1
+- pattern_extractor_v1
+- supply_bias_updater_v1
 
-proposal生成  
-↓  
-spec refinement  
-↓  
-code generation  
-↓  
-PR作成  
-↓  
-PR merge  
-↓  
-learning反映  
+## 現在のlive運用判断
+- dev_proposals が中核DB
+- proposal_state は pending_question 列を含む
+- source_ai 空欄の旧履歴は残る
+- 本番に近いのは最小系 + 段階起動対象
+- producer群は open PR 15 以下維持を条件に再開する
 
-この主幹ループが実運用で成立。
+## 現在の open PR 健康条件
+- unique open pr_url <= 15 を維持目標
+- duplicate open pr_url = 0
+- closed / merged と pr_status の不整合を増やさない
 
-### 補助エンジン
-
-- innovation_engine
-- code_review_engine
-- business_engine
-- revenue_engine
-- ai_employee_factory
-
-### 経営層
-
-- ai_meeting_engine
-- ai_ceo_engine
-- ceo_dashboard
-
-### 自己修復
-
-- self_repair_engine
-- self_healing_v2
-
-### DB実測値
-
-dev_proposals
-
-approved : 4  
-archived : 152  
-closed : 198  
-hold : 61  
-idea : 1  
-merged : 455  
-open : 1  
-
-proposal_state
-
-closed : 2  
-merged : 61  
-pr_created : 1  
-refined : 4  
-
-ceo_hub_events
-
-ai_employee : 6  
-learning_result : 79  
-merged : 125  
-pr_created : 75  
-revenue : 5  
-
----
-
-## 現状の課題
-
-1. proposal供給量の不足
-2. learning評価軸の強化余地
-3. CEO判断の質向上
-4. 収益化ロジックの深掘り
-5. 長期安定運用の継続確認
-
-## 現在の評価
-
-OpenClawは
-
-自律開発ループが成立した  
-**AI開発会社OS**
-
-の状態。
-
-## 次フェーズ
-
-Lv8〜Lv10
-
-- learning強化
-- proposal ranking強化
-- CEO decision強化
-- revenue / AI company 強化
+## 参照
+- docs/08_HANDOVER.md
+- docs/10_RUNTIME_AUDIT_STATUS.md
+- docs/99_CONNECTED_RUNTIME_PATCH.md
