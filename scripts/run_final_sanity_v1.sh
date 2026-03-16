@@ -33,11 +33,11 @@ limit 10;
 
 echo
 echo '===== SECRETARY ROUTE CHECK ====='
-grep -n 'return "ai_employee_ranking"\|elif route == "ai_employee_ranking"' bots/secretary_llm_v1.py || true
+grep -n 'return "ai_employee_ranking"\|elif route == "ai_employee_ranking"\|return "runtime_classification"\|elif route == "runtime_classification"' bots/secretary_llm_v1.py || true
 
 echo
 echo '===== KAIKUN02 ROUTE CHECK ====='
-grep -n 'quick_ai_employee_ranking\|quick_ai_employee_ranking_sent' bots/kaikun02_router_worker_v1.py || true
+grep -n 'quick_ai_employee_ranking\|quick_ai_employee_ranking_sent\|quick_runtime_classification\|quick_runtime_classification_sent' bots/kaikun02_router_worker_v1.py || true
 
 echo
 echo '===== WORKTREE ====='
