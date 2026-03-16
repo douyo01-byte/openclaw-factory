@@ -191,10 +191,16 @@ def tick_once(conn: sqlite3.Connection, target_pid=None):
 
     if target_pid is None:
         rows = conn.execute(
-            "select id, pr_number, pr_url, coalesce(pr_status,\'\') pr_status, coalesce(status,\'\') status, coalesce(dev_stage,\'\') dev_stage "
+            "select id, pr_number, pr_url, coalesce(pr_status,'') pr_status, coalesce(status,'') status, coalesce(dev_stage,'') dev_stage "
             "from dev_proposals "
-            "where (pr_number is null or pr_number=\'\' or pr_number=0 or coalesce(pr_status,\'\') in (\'\',\'ready\',\'pr_created\',\'open\',\'closed\')) "
-            "order by id desc limit 500"
+            "where coalesce(pr_url,'')<>'' "
+            "and ("
+            "  coalesce(pr_status,'') in ('','ready','pr_created','open') "
+            "  or (coalesce(pr_status,'')='merged' and (coalesce(status,'')!='merged' or coalesce(dev_stage,'')!='merged')) "
+            "  or (coalesce(pr_status,'')='closed' and (coalesce(status,'')!='closed' or coalesce(dev_stage,'')!='closed')) "
+            "  or (pr_number is null or pr_number='' or pr_number=0) "
+            ") "
+            "order by id desc limit 200"
         ).fetchall()
     else:
         rows = conn.execute(
