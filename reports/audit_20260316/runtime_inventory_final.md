@@ -1,0 +1,392 @@
+# RUNTIME INVENTORY FINAL 2026-03-16
+
+## ACTIVE
+- auto_merge_cleaner_v1.py
+  - runner: run_auto_merge_cleaner_v1.sh
+  - plist: jp.openclaw.auto_merge_cleaner_v1.plist
+  - active: jp.openclaw.auto_merge_cleaner_v1
+- dev_pr_creator_v1.py
+  - runner: run_dev_pr_creator_v1.sh
+  - plist: jp.openclaw.dev_pr_creator_v1.plist
+  - active: jp.openclaw.dev_pr_creator_v1
+- dev_pr_watcher_v1.py
+  - runner: run_dev_pr_watcher_v1.sh
+  - plist: jp.openclaw.dev_pr_watcher_v1.plist
+  - active: jp.openclaw.dev_pr_watcher_v1
+- kaikun02_coo_controller_v1.py
+  - runner: run_kaikun02_coo_controller_v1.sh
+  - plist: jp.openclaw.kaikun02_coo_controller_v1.plist
+  - active: jp.openclaw.kaikun02_coo_controller_v1
+- kaikun02_executor_bridge_v2.py
+  - runner: run_kaikun02_executor_bridge_v2.sh
+  - plist: jp.openclaw.kaikun02_executor_bridge_v2.plist
+  - active: jp.openclaw.kaikun02_executor_bridge_v2
+- kaikun02_health_gate_v1.py
+  - runner: run_kaikun02_health_gate_v1.sh
+  - plist: jp.openclaw.kaikun02_health_gate_v1.plist
+  - active: jp.openclaw.kaikun02_health_gate_v1
+- open_pr_guard_v1.py
+  - runner: run_open_pr_guard_v1.sh
+  - plist: jp.openclaw.open_pr_guard_v1.plist
+  - active: jp.openclaw.open_pr_guard_v1
+- proposal_promoter_v1.py
+  - runner: run_proposal_promoter_v1.sh
+  - plist: jp.openclaw.proposal_promoter_v1.plist
+  - active: jp.openclaw.proposal_promoter_v1
+- proposal_throttle_engine_v1.py
+  - runner: run_proposal_throttle_engine_v1.sh
+  - plist: jp.openclaw.proposal_throttle_engine_v1.plist
+  - active: jp.openclaw.proposal_throttle_engine_v1
+- spec_decomposer_v1.py
+  - runner: run_spec_decomposer_v1.sh
+  - plist: jp.openclaw.spec_decomposer_v1.plist
+  - active: jp.openclaw.spec_decomposer_v1
+- spec_refiner_v2.py
+  - runner: run_spec_refiner_v2.sh
+  - plist: jp.openclaw.spec_refiner_v2.plist
+  - active: jp.openclaw.spec_refiner_v2
+
+## RESERVE_IMPLEMENTED
+- ai_employee_manager_v1.py
+  - runner: run_ai_employee_manager_v1.sh
+  - plist: jp.openclaw.ai_employee_manager_v1.plist
+  - active: -
+- ai_meeting_digest_v1.py
+  - runner: run_ai_meeting_digest_v1.sh
+  - plist: jp.openclaw.ai_meeting_digest_v1.plist
+  - active: -
+- auto_execute_now_v1.py
+  - runner: run_auto_execute_now_v1.sh
+  - plist: jp.openclaw.auto_execute_now_v1.plist
+  - active: -
+- ceo_hub_sender_v1.py
+  - runner: run_ceo_hub_sender_v1.sh
+  - plist: jp.openclaw.ceo_hub_sender_v1.plist
+  - active: -
+- ceo_priority_scorer_v1.py
+  - runner: run_ceo_priority_scorer_v1.sh
+  - plist: jp.openclaw.ceo_priority_scorer_v1.plist
+  - active: -
+- chat_research_v1.py
+  - runner: run_chat_research_v1.sh
+  - plist: jp.openclaw.chat_research_v1.plist
+  - active: -
+- command_apply_daemon_v1.py
+  - runner: run_command_apply_daemon_v1.sh
+  - plist: jp.openclaw.command_apply_daemon_v1.plist
+  - active: -
+- company_health_score_v1.py
+  - runner: run_company_health_score_v1.sh
+  - plist: jp.openclaw.company_health_score_v1.plist
+  - active: -
+- cto_review_v1.py
+  - runner: run_cto_review_v1.sh
+  - plist: jp.openclaw.cto_review_v1.plist
+  - active: -
+- db_integrity_check_v1.py
+  - runner: run_db_integrity_check_v1.sh
+  - plist: jp.openclaw.db_integrity_check_v1.plist
+  - active: -
+- db_integrity_watchdog_v1.py
+  - runner: run_db_integrity_watchdog_v1.sh
+  - plist: jp.openclaw.db_integrity_watchdog_v1.plist
+  - active: -
+- dev_meeting_telegram_bridge_v1.py
+  - runner: run_dev_meeting_telegram_bridge_v1.sh
+  - plist: jp.openclaw.dev_meeting_telegram_bridge_v1.plist
+  - active: -
+- dev_merge_notify_v1.py
+  - runner: run_dev_merge_notify_v1.sh
+  - plist: jp.openclaw.dev_merge_notify_v1.plist
+  - active: -
+- dev_pr_automerge_v1.py
+  - runner: run_dev_pr_automerge_v1.sh
+  - plist: jp.openclaw.dev_pr_automerge_v1.plist
+  - active: -
+- dev_proposal_notify_v1.py
+  - runner: run_dev_proposal_notify_v1.sh
+  - plist: jp.openclaw.dev_proposal_notify_v1.plist
+  - active: -
+- dev_router_v1.py
+  - runner: run_dev_router_v1.sh
+  - plist: jp.openclaw.dev_router_v1.plist
+  - active: -
+- executor_audit_v1.py
+  - runner: run_executor_audit_v1.sh
+  - plist: jp.openclaw.executor_audit_v1.plist
+  - active: -
+- executor_guard_v2.py
+  - runner: run_executor_guard_v2.sh
+  - plist: jp.openclaw.executor_guard_v2.plist
+  - active: -
+- healthcheck_v1.py
+  - runner: run_healthcheck_v1.sh
+  - plist: jp.openclaw.healthcheck_v1.plist
+  - active: -
+- impact_judge_v1.py
+  - runner: run_impact_judge_v1.sh
+  - plist: jp.openclaw.impact_judge_v1.plist
+  - active: -
+- innovation_engine_v1.py
+  - runner: run_innovation_engine_v1.sh
+  - plist: jp.openclaw.innovation_engine_v1.plist
+  - active: -
+- innovation_llm_engine_v1.py
+  - runner: run_innovation_llm_engine_v1.sh
+  - plist: jp.openclaw.innovation_llm_engine_v1.plist
+  - active: -
+- learning_brain_v1.py
+  - runner: run_learning_brain_v1.sh
+  - plist: jp.openclaw.learning_brain_v1.plist
+  - active: -
+- learning_result_writer_v1.py
+  - runner: run_learning_result_writer_v1.sh
+  - plist: jp.openclaw.learning_result_writer_v1.plist
+  - active: -
+- meeting_orchestrator_v1.py
+  - runner: run_meeting_orchestrator_v1.sh
+  - plist: jp.openclaw.meeting_orchestrator_v1.plist
+  - active: -
+- parse_dev_reply_v1.py
+  - runner: run_parse_dev_reply_v1.sh
+  - plist: jp.openclaw.parse_dev_reply_v1.plist
+  - active: -
+- pattern_extractor_v1.py
+  - runner: run_pattern_extractor_v1.sh
+  - plist: jp.openclaw.pattern_extractor_v1.plist
+  - active: -
+- proposal_builder_loop_v1.py
+  - runner: run_proposal_builder_loop_v1.sh
+  - plist: jp.openclaw.proposal_builder_loop_v1.plist
+  - active: -
+- proposal_cluster_v1.py
+  - runner: run_proposal_cluster_v1.sh
+  - plist: jp.openclaw.proposal_cluster_v1.plist
+  - active: -
+- proposal_dedupe_v1.py
+  - runner: run_proposal_dedupe_v1.sh
+  - plist: jp.openclaw.proposal_dedupe_v1.plist
+  - active: -
+- proposal_ranking_v1.py
+  - runner: run_proposal_ranking_v1.sh
+  - plist: jp.openclaw.proposal_ranking_v1.plist
+  - active: -
+- reflection_v1.py
+  - runner: run_reflection_v1.sh
+  - plist: jp.openclaw.reflection_v1.plist,jp.openclaw.tg_send_reflection_v1.plist
+  - active: -
+- reflection_worker_v1.py
+  - runner: run_reflection_worker_v1.sh
+  - plist: jp.openclaw.reflection_worker_v1.plist
+  - active: -
+- schema_guardian_v1.py
+  - runner: run_schema_guardian_v1.sh
+  - plist: jp.openclaw.schema_guardian_v1.plist
+  - active: -
+- schema_migration_engine_v1.py
+  - runner: run_schema_migration_engine_v1.sh
+  - plist: jp.openclaw.schema_migration_engine_v1.plist
+  - active: -
+- scout_market_v2.py
+  - runner: run_scout_market_v2.sh
+  - plist: jp.openclaw.scout_market_v2.plist
+  - active: -
+- secretary_llm_v1.py
+  - runner: run_secretary_llm_v1.sh
+  - plist: jp.openclaw.secretary_llm_v1.plist
+  - active: -
+- self_improvement_engine_v2.py
+  - runner: run_self_improvement_engine_v2.sh
+  - plist: jp.openclaw.self_improvement_engine_v2.plist
+  - active: -
+- self_strength_watchdog_v1.py
+  - runner: run_self_strength_watchdog_v1.sh
+  - plist: jp.openclaw.self_strength_watchdog_v1.plist
+  - active: -
+- spec_notify_v1.py
+  - runner: run_spec_notify_v1.sh
+  - plist: jp.openclaw.spec_notify_v1.plist
+  - active: -
+- supply_adoption_metrics_v1.py
+  - runner: run_supply_adoption_metrics_v1.sh
+  - plist: jp.openclaw.supply_adoption_metrics_v1.plist
+  - active: -
+- supply_bias_updater_v1.py
+  - runner: run_supply_bias_updater_v1.sh
+  - plist: jp.openclaw.supply_bias_updater_v1.plist
+  - active: -
+- target_policy_guard_v1.py
+  - runner: run_target_policy_guard_v1.sh
+  - plist: jp.openclaw.target_policy_guard_v1.plist
+  - active: -
+- tg_poll_loop_v2.py
+  - runner: run_tg_poll_loop_v2.sh
+  - plist: jp.openclaw.tg_poll_loop_v2.plist
+  - active: -
+- tg_send_reflection_v1.py
+  - runner: run_tg_send_reflection_v1.sh
+  - plist: jp.openclaw.tg_send_reflection_v1.plist
+  - active: -
+- watchdog_v1.py
+  - runner: run_watchdog_v1.sh
+  - plist: jp.openclaw.db_integrity_watchdog_v1.plist,jp.openclaw.router_timeout_watchdog_v1.plist,jp.openclaw.self_strength_watchdog_v1.plist,jp.openclaw.watchdog_v1.plist
+  - active: -
+
+## PARTIAL
+- brain_supply_v1.py
+  - runner: -
+  - plist: jp.openclaw.brain_supply_v1.plist
+  - active: -
+- ceo_decision_layer_v1.py
+  - runner: -
+  - plist: jp.openclaw.ceo_decision_layer_v1.plist
+  - active: -
+- dev_auto_execute_v1.py
+  - runner: dev_auto_execute_v1.sh
+  - plist: -
+  - active: -
+- dev_command_executor_v1.py
+  - runner: -
+  - plist: jp.openclaw.dev_command_executor_v1.plist
+  - active: -
+- kaikun02_router_worker_v1.py
+  - runner: -
+  - plist: jp.openclaw.kaikun02_router_worker_v1.plist
+  - active: -
+- kaikun04_router_worker_v1.py
+  - runner: -
+  - plist: jp.openclaw.kaikun04_router_worker_v1.plist
+  - active: -
+- private_reply_to_inbox_v1.py
+  - runner: -
+  - plist: jp.openclaw.private_reply_to_inbox_v1.plist
+  - active: -
+- reasoning_engine_v1.py
+  - runner: -
+  - plist: jp.openclaw.reasoning_engine_v1.plist
+  - active: -
+- router_reply_finisher_v1.py
+  - runner: -
+  - plist: jp.openclaw.router_reply_finisher_v1.plist
+  - active: -
+- router_timeout_watchdog_v1.py
+  - runner: -
+  - plist: jp.openclaw.router_timeout_watchdog_v1.plist
+  - active: -
+- self_healing_v2.py
+  - runner: -
+  - plist: jp.openclaw.self_healing_v2.plist
+  - active: -
+- strategy_engine_v1.py
+  - runner: -
+  - plist: jp.openclaw.strategy_engine_v1.plist
+  - active: -
+- sync_execute_stage_v1.py
+  - runner: run_sync_execute_stage_v1.sh
+  - plist: -
+  - active: -
+- sync_executor_ready_v1.py
+  - runner: run_sync_executor_ready_v1.sh
+  - plist: -
+  - active: -
+- sync_pr_ready_v1.py
+  - runner: run_sync_pr_ready_v1.sh
+  - plist: -
+  - active: -
+- task_router_v1.py
+  - runner: -
+  - plist: jp.openclaw.task_router_v1.plist
+  - active: -
+
+## LEGACY_OR_ARCHIVED
+- dev_executor_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- ingest_private_replies_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+
+## CODE_ONLY
+- ai_ceo_engine_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- ai_employee_factory_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- ai_meeting_engine_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- build_decision_patterns.py
+  - runner: -
+  - plist: -
+  - active: -
+- chat_router_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- code_review_engine_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- command_apply_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- dev_proposal_notify_daemon_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- dev_reviewer_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- enrich_contacts_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- executor_guard_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- ingest_spec_answers_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- ingest_spec_reply_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- ingest_telegram_replies_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- mainstream_fallback_supply_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- meeting_from_db_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- open_pr_blocked_report_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- self_repair_engine_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- tg_inbox_poll_daemon_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- tg_inbox_poll_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+

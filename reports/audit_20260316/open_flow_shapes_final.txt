@@ -1,0 +1,5 @@
+status     project_decision       dev_stage              spec_stage  pr_status  n 
+---------  ---------------------  ---------------------  ----------  ---------  --
+throttled  execute_now            blocked_target_policy  refined                11
+throttled  blocked_target_policy  blocked_target_policy                         2 
+throttled                                                                       1 
