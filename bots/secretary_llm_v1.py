@@ -555,7 +555,7 @@ def is_terminal_dump(text):
 
 
 def route_special(text):
-    tc = re.sub(r"\s+", "", text or "")
+    tc = re.sub(r"\s+", "", text or "").lower()
     if (text or "").strip() in ("/start", "start"):
         return "start"
     if (
