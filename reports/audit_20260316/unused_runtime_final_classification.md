@@ -35,7 +35,6 @@
 - learning_brain_v1.py
 - ai_meeting_digest_v1.py
 - meeting_orchestrator_v1.py
-- executor_guard_v2.py
 - healthcheck_v1.py
 - db_integrity_watchdog_v1.py
 
