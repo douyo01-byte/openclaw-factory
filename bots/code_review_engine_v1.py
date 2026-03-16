@@ -5,8 +5,28 @@ import time
 import subprocess
 try:
     from bots.proposal_dedupe_v1 import should_skip, approved_idea_cap
-except ModuleNotFoundError:
-    from proposal_dedupe_v1 import should_skip, approved_idea_cap
+except Exception:
+    def approved_idea_cap(conn, limit):
+        try:
+            n = conn.execute("""
+                select count(*)
+                from dev_proposals
+                where coalesce(status,'') in ('new','approved','pending','open')
+            """).fetchone()[0]
+            return n >= int(limit)
+        except Exception:
+            return False
+
+    def should_skip(conn, title, category, target_system, improvement_type):
+        row = conn.execute("""
+            select 1
+            from dev_proposals
+            where coalesce(title,'')=?
+            limit 1
+        """, (title,)).fetchone()
+        if row:
+            return True, 'duplicate_title'
+        return False, ''
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or os.path.expanduser("/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
 REPO = "/Users/doyopc/AI/openclaw-factory"
