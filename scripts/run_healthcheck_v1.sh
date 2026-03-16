@@ -1,22 +1,12 @@
 #!/bin/bash
+set -euo pipefail
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+export HOME="/Users/doyopc"
 cd /Users/doyopc/AI/openclaw-factory-daemon || exit 1
-export PYTHONPATH=/Users/doyopc/AI/openclaw-factory-daemon
-. .venv/bin/activate || exit 1
-
-set -a
-source env/telegram_kaikun03.env 2>/dev/null || true
-source env/telegram.env 2>/dev/null || true
-set +a
-
-if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CEO_BOT_TOKEN:-}" ]; then
-  export TELEGRAM_BOT_TOKEN="$TELEGRAM_CEO_BOT_TOKEN"
-fi
-if [ -z "${BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_BOT_TOKEN:-}" ]; then
-  export BOT_TOKEN="$TELEGRAM_BOT_TOKEN"
-fi
-
-export DB_PATH="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
-export FACTORY_DB_PATH="$DB_PATH"
-export OCLAW_DB_PATH="$DB_PATH"
-
-exec python -u bots/healthcheck_v1.py
+source .venv/bin/activate || exit 1
+DB="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+export DB_PATH="$DB"
+export OCLAW_DB_PATH="$DB"
+export FACTORY_DB_PATH="$DB"
+export PYTHONPATH="/Users/doyopc/AI/openclaw-factory-daemon"
+exec /Users/doyopc/AI/openclaw-factory-daemon/.venv/bin/python -u bots/healthcheck_v1.py
