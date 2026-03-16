@@ -113,31 +113,11 @@ def quick_ai_employee_ranking(c):
     return "\n".join(out)
 
 def quick_runtime_classification():
-    p = Path("/Users/doyopc/AI/openclaw-factory-daemon/reports/audit_20260316/runtime_classification_20260316.md")
-    out = ["🗂 OpenClaw Runtime分類", ""]
+    p = Path("/Users/doyopc/AI/openclaw-factory-daemon/reports/audit_20260317/runtime_classification_merged.md")
     try:
-        text = p.read_text(encoding="utf-8")
-    except Exception:
-        out.append("runtime classification file が 見 つ か り ま せ ん 。")
-        return "\n".join(out)
-    lines = [x.rstrip() for x in text.splitlines()]
-    mode = ""
-    for line in lines:
-        if line.startswith("## ACTIVE"):
-            mode = "active"
-            out.append("ACTIVE")
-            continue
-        if line.startswith("## RESERVE_IMPLEMENTED"):
-            mode = "reserve"
-            out.append("")
-            out.append("RESERVE_IMPLEMENTED")
-            continue
-        if line.startswith("## JUDGMENT"):
-            break
-        if mode and line.strip():
-            out.append(line)
-    return "\n".join(out[:40])
-
+        return p.read_text(encoding="utf-8")[:3500]
+    except Exception as e:
+        return f"Runtime classification 読 み 込 み 失 敗 : {e}"
 def normalize_text(s: str) -> str:
     return "".join((s or "").lower().split())
 
