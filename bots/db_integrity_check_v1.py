@@ -54,7 +54,7 @@ select
     from dev_proposals
     where coalesce(status,'')='merged'
       and (result_type is null or coalesce(result_type,'')='')
-  ) as merged_without_learning_result,
+  ) as merged_without_result_type,
   (
     select count(*)
     from dev_proposals
@@ -70,7 +70,7 @@ select
           and coalesce(status,'')!=coalesce(pr_status,'')
         )
       )
-  ) as status_mismatch,
+  ) as stage_divergence_count,
   (
     select coalesce(sum(cnt),0)
     from mismatch_counts
@@ -101,8 +101,8 @@ def main():
     state = {
         "checked_at": int(time.time()),
         "db_path": DB,
-        "merged_without_learning_result": int(row["merged_without_learning_result"] or 0),
-        "status_mismatch": int(row["status_mismatch"] or 0),
+        "merged_without_result_type": int(row["merged_without_result_type"] or 0),
+        "stage_divergence_count": int(row["stage_divergence_count"] or 0),
         "lifecycle_anomaly_count": int(row["lifecycle_anomaly_count"] or 0),
         "mismatch_counts": json.loads(row["mismatch_counts_json"] or "{}"),
         "pr_created_without_merged": int(row["pr_created_without_merged"] or 0),
@@ -114,8 +114,8 @@ def main():
         f.write(
             "[db_integrity] "
             f"pr_created_without_merged={state['pr_created_without_merged']} "
-            f"merged_without_learning_result={state['merged_without_learning_result']} "
-            f"status_mismatch={state['status_mismatch']} "
+            f"merged_without_result_type={state['merged_without_result_type']} "
+            f"stage_divergence_count={state['stage_divergence_count']} "
             f"lifecycle_anomaly_count={state['lifecycle_anomaly_count']} "
             f"missing_source_category_target_system={state['missing_source_category_target_system']}\n"
         )
