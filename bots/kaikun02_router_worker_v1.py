@@ -3,6 +3,7 @@ import os
 import time
 import sqlite3
 import requests
+from pathlib import Path
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 SLEEP = float(os.environ.get("KAIKUN02_ROUTER_WORKER_SLEEP", "8"))
@@ -111,6 +112,32 @@ def quick_ai_employee_ranking(c):
         )
     return "\n".join(out)
 
+def quick_runtime_classification():
+    p = Path("/Users/doyopc/AI/openclaw-factory-daemon/reports/audit_20260316/runtime_classification_20260316.md")
+    out = ["🗂 OpenClaw Runtime分類", ""]
+    try:
+        text = p.read_text(encoding="utf-8")
+    except Exception:
+        out.append("runtime classification file が 見 つ か り ま せ ん 。")
+        return "\n".join(out)
+    lines = [x.rstrip() for x in text.splitlines()]
+    mode = ""
+    for line in lines:
+        if line.startswith("## ACTIVE"):
+            mode = "active"
+            out.append("ACTIVE")
+            continue
+        if line.startswith("## RESERVE_IMPLEMENTED"):
+            mode = "reserve"
+            out.append("")
+            out.append("RESERVE_IMPLEMENTED")
+            continue
+        if line.startswith("## JUDGMENT"):
+            break
+        if mode and line.strip():
+            out.append(line)
+    return "\n".join(out[:40])
+
 def normalize_text(s: str) -> str:
     return "".join((s or "").lower().split())
 
@@ -131,7 +158,6 @@ def tick():
             txt_raw = r["task_text"] or ""
             txt = normalize_text(txt_raw)
             quick_done = False
-
             if "進捗" in txt or "status" in txt:
                 body = quick_dashboard(c)
                 sent_message_id = tg_send(body)
@@ -159,11 +185,24 @@ def tick():
                 sent_message_id = tg_send(body)
                 result = f"quick_ai_employee_ranking_sent: {body[:120]}"
                 quick_done = True
+            elif (
+                "active本流" in txt
+                or "runtime分類" in txt
+                or "reserve_implemented" in txt
+                or "reserveimplemented" in txt
+                or "未接続" in txt
+                or "使えてないプログラム" in txt
+                or "現役と予備" in txt
+                or "activeとreserve" in txt
+            ):
+                body = quick_runtime_classification()
+                sent_message_id = tg_send(body)
+                result = f"quick_runtime_classification_sent: {body[:120]}"
+                quick_done = True
             else:
-                routed_text = f"[TASK_ID:{r['id']}]\n{txt_raw}\n\n返信の先頭に [TASK_ID:{r['id']}] を付けてください。"
+                routed_text = f"[TASK_ID:{r['id']}]\n{txt_raw}\n\n返 信 の 先 頭 に [TASK_ID:{r['id']}] を 付 け て く だ さ い 。"
                 sent_message_id = tg_send(routed_text)
                 result = f"sent_to_kaikun02: {routed_text[:120]}"
-
             if quick_done:
                 c.execute("""
                     update router_tasks
@@ -186,7 +225,6 @@ def tick():
                     where id=?
                 """, (result, sent_message_id, r["id"]))
             done += 1
-
         if done:
             c.commit()
         print(f"[kaikun02_router_worker_v1] done={done}", flush=True)

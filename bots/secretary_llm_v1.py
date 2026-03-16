@@ -547,12 +547,9 @@ def is_terminal_dump(text):
 
 
 def route_special(text):
-    tl = (text or "").lower()
     tc = re.sub(r"\s+", "", text or "")
-
-    if text.strip() in ("/start", "start"):
+    if (text or "").strip() in ("/start", "start"):
         return "start"
-
     if (
         "ai社員ランキング" in tc
         or "社員ランキング" in tc
@@ -561,21 +558,27 @@ def route_special(text):
         or "誰が強い" in tc
     ):
         return "ai_employee_ranking"
-
+    if (
+        "active本流" in tc
+        or "runtime分類" in tc
+        or "reserve_implemented" in tc
+        or "reserveimplemented" in tc
+        or "未接続" in tc
+        or "使えてないプログラム" in tc
+        or "現役と予備" in tc
+        or "activeとreserve" in tc
+    ):
+        return "runtime_classification"
     dashboard_keys = [
-        "進捗は？", "進捗", "今どう？", "今どう",
-        "ダッシュボード", "/進捗", "/dashboard"
+        "進捗は？", "進捗", "今どう？", "今どう", "ダッシュボード", "/進捗", "/dashboard"
     ]
     if any(k in tc for k in dashboard_keys):
         return "dashboard"
-
     next_keys = [
-        "次の作業は？", "次の作業", "次やること",
-        "作業指示", "/次作業", "/next"
+        "次の作業は？", "次の作業", "次やること", "作業指示", "/次作業", "/next"
     ]
     if any(k in tc for k in next_keys):
         return "next_actions"
-
     coo_keys = [
         "こんなん作って",
         "これを自動化したい",
@@ -593,11 +596,9 @@ def route_special(text):
     ]
     if any(k in tc for k in coo_keys):
         return "coo_intake"
-
     return "chat"
 
 def run_once():
-
     conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
     conn.execute("pragma busy_timeout=30000")
@@ -613,46 +614,44 @@ def run_once():
         if not row:
             print("secretary_done=0", flush=True)
             return
-
         rid = int(row["id"])
         chat_id = str(row["chat_id"] or "").strip()
         text = str(row["text"] or "")
-
         if is_terminal_dump(text):
             mark(conn, rid, "closed", "terminal_dump_skip")
             print("secretary_done=0", flush=True)
             return
-
         if text.strip().startswith("/meeting"):
             mark(conn, rid, "meeting_done", None)
             print("secretary_done=1", flush=True)
             return
-
         route = route_special(text)
         print(f"[secretary_route] text={text!r} route={route}", flush=True)
-
         if route == "start":
             reply = (
-                "OpenClaw COOで   す   。   \n"
-                "・   進   捗   は   ？   → CEOダ  ッ  シ  ュ  ボ  ー  ド   \n"
-                "・   次   の   作   業   は   ？   → 作  業  チ  ャ  ッ  ト  指  示   \n"
-                "・   AI社   員   ラ  ン  キ  ン  グ   → 実データ返答   \n"
-                "・   こ   ん   な   ん   作   っ   て   → COO整  理  で  返  答   \n"
-                "・   そ   れ   以   外   → 通  常  相  談  に  返  答   "
+                "OpenClaw COOです。\n"
+                "・ 進捗は？ → CEOダッシュボード\n"
+                "・ 次の作業は？ → 作業チャット指示\n"
+                "・ AI社員ランキング → 実データ返答\n"
+                "・ ACTIVE本流 / RESERVE_IMPLEMENTED → runtime分類返答\n"
+                "・ こんなん作って → COO整理で返答\n"
+                "・ それ以外 → 通常相談に返答"
             )
         elif route == "dashboard":
             reply = build_dashboard(conn)
         elif route == "ai_employee_ranking":
-            reply = "OpenClaw AI社 員 ラ ン キ ン グ\n━━━━━━━━━━━━━━━━━━\n" + ai_employee_ranking_block(conn)
+            reply = "OpenClaw AI社員ランキング\n━━━━━━━━━━━━━━━━━━\n" + ai_employee_ranking_block(conn)
+        elif route == "runtime_classification":
+            reply = runtime_classification_block()
         elif route == "next_actions":
             reply = (
-                "OpenClaw 次   の   作   業   \n"
-                "1. executor安  定  性  チ  ェ  ッ  ク   \n"
-                "2. PR backlog確  認   \n"
-                "3. supply生  成  状  況  確  認   \n"
-                "4. learning反  映  確  認   \n"
-                "5. AI会  議  ロ  グ  確  認   \n\n"
-                "作  業  チ  ャ  ッ  ト  指  示  例   \n"
+                "OpenClaw 次の作業\n"
+                "1. executor安定性チェック\n"
+                "2. PR backlog確認\n"
+                "3. supply生成状況確認\n"
+                "4. learning反映確認\n"
+                "5. AI会議ログ確認\n\n"
+                "作業チャット指示例\n"
                 "cd ~/AI/openclaw-factory-daemon\n"
                 "launchctl list | grep openclaw\n"
                 "sqlite3 data/openclaw.db \"select count(*) from dev_proposals;\""
@@ -666,7 +665,6 @@ def run_once():
         else:
             context_text = build_context(conn)
             reply = ask_llm(text, context_text)
-
         ok, err = send(chat_id, reply)
         if ok:
             mark(conn, rid, "secretary_done", None)
@@ -674,7 +672,6 @@ def run_once():
         else:
             mark(conn, rid, "secretary_error", err)
             print(f"secretary_error={err}", flush=True)
-
     except Exception as e:
         if rid is not None:
             try:
@@ -686,6 +683,7 @@ def run_once():
         conn.close()
 
 if __name__ == "__main__":
+
 
     while True:
         run_once()
