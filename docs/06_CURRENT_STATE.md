@@ -24,6 +24,8 @@
 - supply_bias_updater_v1
 - self_improvement_engine_v2
 - cto_review_v1
+- ai_employee_manager_v1
+- ai_employee_ranking_v1
 
 ## Current active control / safety
 - command_apply_daemon_v1

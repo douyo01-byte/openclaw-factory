@@ -22,6 +22,8 @@ proposal_ranking_v1
 -> proposal_cluster_v1
 -> supply_bias_updater_v1
 -> self_improvement_engine_v2
+-> ai_employee_manager_v1
+-> ai_employee_ranking_v1
 
 ### Router / reply
 task_router_v1
