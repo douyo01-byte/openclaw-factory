@@ -130,19 +130,23 @@ def tick():
         for r in rows:
             txt_raw = r["task_text"] or ""
             txt = normalize_text(txt_raw)
+            quick_done = False
 
             if "進捗" in txt or "status" in txt:
                 body = quick_dashboard(c)
                 sent_message_id = tg_send(body)
                 result = f"quick_dashboard_sent: {body[:120]}"
+                quick_done = True
             elif "次の作業" in txt or "next" in txt:
                 body = quick_next_tasks(c)
                 sent_message_id = tg_send(body)
                 result = f"quick_next_sent: {body[:120]}"
+                quick_done = True
             elif "弱点" in txt or "problem" in txt:
                 body = quick_weak_points(c)
                 sent_message_id = tg_send(body)
                 result = f"quick_weak_sent: {body[:120]}"
+                quick_done = True
             elif (
                 "社員ランキング" in txt
                 or "ai社員ランキング" in txt
@@ -154,20 +158,33 @@ def tick():
                 body = quick_ai_employee_ranking(c)
                 sent_message_id = tg_send(body)
                 result = f"quick_ai_employee_ranking_sent: {body[:120]}"
+                quick_done = True
             else:
-                routed_text = f"[TASK_ID:{r['id']}]\n{txt_raw}\n\n返信の先頭に[TASK_ID:{r['id']}]を付けてください。"
+                routed_text = f"[TASK_ID:{r['id']}]\n{txt_raw}\n\n返信の先頭に [TASK_ID:{r['id']}] を付けてください。"
                 sent_message_id = tg_send(routed_text)
                 result = f"sent_to_kaikun02: {routed_text[:120]}"
 
-            c.execute("""
-                update router_tasks
-                set status='started',
-                    started_at=datetime('now'),
-                    updated_at=datetime('now'),
-                    result_text=?,
-                    sent_message_id=?
-                where id=?
-            """, (result, sent_message_id, r["id"]))
+            if quick_done:
+                c.execute("""
+                    update router_tasks
+                    set status='done',
+                        started_at=coalesce(nullif(started_at,''), datetime('now')),
+                        finished_at=datetime('now'),
+                        updated_at=datetime('now'),
+                        result_text=?,
+                        sent_message_id=?
+                    where id=?
+                """, (result, sent_message_id, r["id"]))
+            else:
+                c.execute("""
+                    update router_tasks
+                    set status='started',
+                        started_at=datetime('now'),
+                        updated_at=datetime('now'),
+                        result_text=?,
+                        sent_message_id=?
+                    where id=?
+                """, (result, sent_message_id, r["id"]))
             done += 1
 
         if done:
@@ -175,6 +192,7 @@ def tick():
         print(f"[kaikun02_router_worker_v1] done={done}", flush=True)
     finally:
         c.close()
+
 
 def main():
     while True:
