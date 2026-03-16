@@ -1,0 +1,5 @@
+status  project_decision  dev_stage  spec_stage  pr_status  n   
+------  ----------------  ---------  ----------  ---------  ----
+merged  execute_now       merged     decomposed  merged     1320
+merged  execute_now       merged     refined     merged     816 
+merged  execute_now       merged                 merged     377 

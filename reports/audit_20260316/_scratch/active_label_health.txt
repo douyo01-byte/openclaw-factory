@@ -1,0 +1,59 @@
+--- jp.openclaw.dev_pr_watcher_v1 ---
+	state = running
+	pid = 69967
+		state = active
+		state = active
+--- jp.openclaw.spec_refiner_v2 ---
+	state = running
+	pid = 32791
+	last exit code = (never exited)
+		state = active
+		state = active
+--- jp.openclaw.spec_decomposer_v1 ---
+	state = running
+	pid = 32793
+	last exit code = (never exited)
+		state = active
+		state = active
+--- jp.openclaw.dev_pr_creator_v1 ---
+	state = spawn scheduled
+	last exit code = 0
+		state = active
+		state = active
+--- jp.openclaw.auto_merge_cleaner_v1 ---
+	state = spawn scheduled
+	last exit code = 0
+		state = active
+		state = active
+--- jp.openclaw.proposal_promoter_v1 ---
+	state = running
+	pid = 32797
+	last exit code = (never exited)
+		state = active
+		state = active
+--- jp.openclaw.proposal_throttle_engine_v1 ---
+	state = running
+	pid = 32799
+	last exit code = (never exited)
+		state = active
+		state = active
+--- jp.openclaw.kaikun02_coo_controller_v1 ---
+	state = spawn scheduled
+	last exit code = 0
+		state = active
+		state = active
+--- jp.openclaw.kaikun02_executor_bridge_v2 ---
+	state = spawn scheduled
+	last exit code = 0
+		state = active
+		state = active
+--- jp.openclaw.kaikun02_health_gate_v1 ---
+	state = spawn scheduled
+	last exit code = 0
+		state = active
+		state = active
+--- jp.openclaw.open_pr_guard_v1 ---
+	state = running
+	pid = 59325
+		state = active
+		state = active
