@@ -60,3 +60,8 @@ kaikun02_health_gate_v1
 - canonical fix file: `reports/audit_20260317/reserve_reclassification.md`
 - `chat_research_v1.py`, `db_integrity_check_v1.py`, `healthcheck_v1.py`, `open_pr_guard_v1.py` are runtime-connected and must not be treated as reserve-only
 - current true reserve keep set is limited to 7 files under old command/meeting/team paths
+
+## Reserve final decision
+- canonical file: `reports/audit_20260317/reserve_final_decision.md`
+- current reserve set is KEEP_NOT_ACTIVE, not archive
+- these files are implemented assets kept in repo but excluded from active runtime count
