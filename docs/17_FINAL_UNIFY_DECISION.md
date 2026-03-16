@@ -84,3 +84,8 @@
 - canonical file: `reports/audit_20260317/keep_not_active_reactivation_guide.md`
 - reserve keep set should only be re-enabled with explicit DB / LaunchAgent / I/O checks
 - do not restore these 7 files directly into ACTIVE without a per-file reactivation pass
+
+## Active runtime flow table
+- canonical file: `reports/audit_20260317/active_runtime_flow_table.md`
+- use this as the single operational map of ACTIVE bots
+- Kaikun02 / mother chat should explain runtime using this table first
