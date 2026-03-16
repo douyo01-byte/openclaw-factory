@@ -10,6 +10,7 @@ import requests
 
 DB = os.environ.get("DB_PATH", "/Users/doyopc/AI/openclaw-factory/data/openclaw.db")
 BOT_TOKEN = (os.environ.get("TELEGRAM_CEO_BOT_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
+DEFAULT_CHAT_ID = (os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CEO_CHAT_ID") or "").strip()
 OPENAI_API_KEY = (os.environ.get("OPENAI_API_KEY") or "").strip()
 print(f"[secretary_boot] OPENAI_API_KEY_LEN={len(OPENAI_API_KEY)}", flush=True)
 OPENAI_MODEL = (os.environ.get("OPENAI_MODEL") or "gpt-4o-mini").strip()
@@ -126,6 +127,7 @@ def ask_llm(user_text, context_text):
     return data["choices"][0]["message"]["content"].strip()
 
 def send(chat_id, text):
+    chat_id = str(chat_id or "").strip() or DEFAULT_CHAT_ID
     if not BOT_TOKEN or not chat_id:
         print(f"[secretary_send] missing token/chat bot_len={len(BOT_TOKEN)} chat_id={chat_id}", flush=True)
         return False, "missing_token_or_chat"
