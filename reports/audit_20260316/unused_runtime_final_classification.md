@@ -33,7 +33,6 @@
 
 ## CONDITIONAL_CANDIDATES
 - learning_brain_v1.py
-- command_apply_daemon_v1.py
 - cto_review_v1.py
 - ai_meeting_digest_v1.py
 - meeting_orchestrator_v1.py
