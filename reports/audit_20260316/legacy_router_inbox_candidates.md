@@ -28,3 +28,6 @@
 - targets old label: jp.kuu.openclaw.tg_poll
 - kills old poller patterns
 - not part of current router / private-reply primary path
+
+## Archive action
+- moved to archive/legacy_runtime on 2026-03-16
