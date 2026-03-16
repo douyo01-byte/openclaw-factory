@@ -138,6 +138,7 @@ c.execute("""
 insert into dev_proposals(
   title,
   description,
+  source_ai,
   branch_name,
   spec,
   status,
