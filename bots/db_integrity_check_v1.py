@@ -63,6 +63,25 @@ select
       and coalesce(dev_stage,'')='pr_created'
       and coalesce(pr_status,'') in ('', 'pr_created')
     )
+      and not (
+        coalesce(status,'')='approved'
+        and coalesce(project_decision,'')='execute_now'
+        and coalesce(dev_stage,'')='execute_now'
+        and coalesce(pr_status,'')=''
+      )
+      and not (
+        coalesce(status,'')='idea'
+        and coalesce(project_decision,'')='backlog'
+        and coalesce(dev_stage,'')=''
+        and coalesce(spec_stage,'')='raw'
+        and coalesce(pr_status,'')=''
+      )
+      and not (
+        coalesce(status,'')='throttled'
+        and coalesce(dev_stage,'')='blocked_target_policy'
+        and coalesce(spec_stage,'')='refined'
+        and coalesce(pr_status,'')=''
+      )
       and (
         coalesce(status,'')!=coalesce(dev_stage,'')
         or (
