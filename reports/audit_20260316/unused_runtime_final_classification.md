@@ -1,10 +1,14 @@
 # UNUSED/RESERVE FINAL CLASSIFICATION 2026-03-16
-
 ## ACTIVE_CONFIRMED
 - dev_pr_automerge_v1.py
 - ceo_hub_sender_v1.py
 - ceo_priority_scorer_v1.py
 - proposal_ranking_v1.py
+- impact_judge_v1.py
+- pattern_extractor_v1.py
+- proposal_cluster_v1.py
+- supply_bias_updater_v1.py
+- self_improvement_engine_v2.py
 - auto_merge_cleaner_v1.py
 - brain_supply_v1.py
 - ceo_decision_layer_v1.py
@@ -33,7 +37,6 @@
 - cto_review_v1.py
 - ai_meeting_digest_v1.py
 - meeting_orchestrator_v1.py
-- impact_judge_v1.py
 - executor_guard_v2.py
 - healthcheck_v1.py
 - db_integrity_watchdog_v1.py
