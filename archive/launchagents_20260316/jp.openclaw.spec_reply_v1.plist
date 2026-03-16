@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+<key>Label</key>
+<string>jp.openclaw.spec_reply_v1</string>
+<key>ProgramArguments</key>
+<array>
+<string>/bin/bash</string>
+<string>-lc</string>
+<string>cd "$HOME/AI/openclaw-factory-daemon" || exit 1; source .venv/bin/activate || exit 1; export PYTHONPATH="$HOME/AI/openclaw-factory-daemon"; export DB_PATH="$HOME/AI/openclaw-factory-daemon/data/openclaw_real.db"; set -a; if [ -f env/telegram_daemon.env ]; then source env/telegram_daemon.env; elif [ -f env/telegram.env ]; then source env/telegram.env; fi; set +a; exec "$HOME/AI/openclaw-factory-daemon/scripts/spec_reply_loop.sh"</string>
+</array>
+<key>RunAtLoad</key>
+<true/>
+<key>KeepAlive</key>
+<true/>
+<key>StandardOutPath</key>
+<string>/Users/doyopc/AI/openclaw-factory-daemon/logs/spec_reply_v1.launchd.out</string>
+<key>StandardErrorPath</key>
+<string>/Users/doyopc/AI/openclaw-factory-daemon/logs/spec_reply_v1.launchd.err</string>
+</dict>
+</plist>

@@ -5,6 +5,18 @@
   - runner: run_auto_merge_cleaner_v1.sh
   - plist: jp.openclaw.auto_merge_cleaner_v1.plist
   - active: jp.openclaw.auto_merge_cleaner_v1
+- brain_supply_v1.py
+  - runner: run_brain_supply_v1.sh
+  - plist: jp.openclaw.brain_supply_v1.plist,jp.openclaw.brain_supply_v1.plist.save
+  - active: jp.openclaw.brain_supply_v1
+- ceo_decision_layer_v1.py
+  - runner: run_ceo_decision_layer_v1.sh
+  - plist: jp.openclaw.ceo_decision_layer_v1.plist
+  - active: jp.openclaw.ceo_decision_layer_v1
+- dev_command_executor_v1.py
+  - runner: run_dev_command_executor_v1.sh
+  - plist: jp.openclaw.dev_command_executor_v1.plist
+  - active: jp.openclaw.dev_command_executor_v1
 - dev_pr_creator_v1.py
   - runner: run_dev_pr_creator_v1.sh
   - plist: jp.openclaw.dev_pr_creator_v1.plist
@@ -25,10 +37,22 @@
   - runner: run_kaikun02_health_gate_v1.sh
   - plist: jp.openclaw.kaikun02_health_gate_v1.plist
   - active: jp.openclaw.kaikun02_health_gate_v1
+- kaikun02_router_worker_v1.py
+  - runner: run_kaikun02_router_worker_v1.sh
+  - plist: jp.openclaw.kaikun02_router_worker_v1.plist
+  - active: jp.openclaw.kaikun02_router_worker_v1
+- kaikun04_router_worker_v1.py
+  - runner: run_kaikun04_router_worker_v1.sh
+  - plist: jp.openclaw.kaikun04_router_worker_v1.plist
+  - active: jp.openclaw.kaikun04_router_worker_v1
 - open_pr_guard_v1.py
   - runner: run_open_pr_guard_v1.sh
   - plist: jp.openclaw.open_pr_guard_v1.plist
   - active: jp.openclaw.open_pr_guard_v1
+- private_reply_to_inbox_v1.py
+  - runner: run_private_reply_to_inbox_v1.sh
+  - plist: jp.openclaw.private_reply_to_inbox_v1.plist
+  - active: jp.openclaw.private_reply_to_inbox_v1
 - proposal_promoter_v1.py
   - runner: run_proposal_promoter_v1.sh
   - plist: jp.openclaw.proposal_promoter_v1.plist
@@ -37,6 +61,10 @@
   - runner: run_proposal_throttle_engine_v1.sh
   - plist: jp.openclaw.proposal_throttle_engine_v1.plist
   - active: jp.openclaw.proposal_throttle_engine_v1
+- router_reply_finisher_v1.py
+  - runner: run_router_reply_finisher_v1.sh
+  - plist: jp.openclaw.router_reply_finisher_v1.plist
+  - active: jp.openclaw.router_reply_finisher_v1
 - spec_decomposer_v1.py
   - runner: run_spec_decomposer_v1.sh
   - plist: jp.openclaw.spec_decomposer_v1.plist
@@ -45,6 +73,10 @@
   - runner: run_spec_refiner_v2.sh
   - plist: jp.openclaw.spec_refiner_v2.plist
   - active: jp.openclaw.spec_refiner_v2
+- task_router_v1.py
+  - runner: run_task_router_v1.sh
+  - plist: jp.openclaw.task_router_v1.plist
+  - active: jp.openclaw.task_router_v1
 
 ## RESERVE_IMPLEMENTED
 - ai_employee_manager_v1.py
@@ -233,41 +265,13 @@
   - active: -
 
 ## PARTIAL
-- brain_supply_v1.py
-  - runner: -
-  - plist: jp.openclaw.brain_supply_v1.plist
-  - active: -
-- ceo_decision_layer_v1.py
-  - runner: -
-  - plist: jp.openclaw.ceo_decision_layer_v1.plist
-  - active: -
 - dev_auto_execute_v1.py
   - runner: dev_auto_execute_v1.sh
   - plist: -
   - active: -
-- dev_command_executor_v1.py
-  - runner: -
-  - plist: jp.openclaw.dev_command_executor_v1.plist
-  - active: -
-- kaikun02_router_worker_v1.py
-  - runner: -
-  - plist: jp.openclaw.kaikun02_router_worker_v1.plist
-  - active: -
-- kaikun04_router_worker_v1.py
-  - runner: -
-  - plist: jp.openclaw.kaikun04_router_worker_v1.plist
-  - active: -
-- private_reply_to_inbox_v1.py
-  - runner: -
-  - plist: jp.openclaw.private_reply_to_inbox_v1.plist
-  - active: -
 - reasoning_engine_v1.py
   - runner: -
   - plist: jp.openclaw.reasoning_engine_v1.plist
-  - active: -
-- router_reply_finisher_v1.py
-  - runner: -
-  - plist: jp.openclaw.router_reply_finisher_v1.plist
   - active: -
 - router_timeout_watchdog_v1.py
   - runner: -
@@ -293,22 +297,18 @@
   - runner: run_sync_pr_ready_v1.sh
   - plist: -
   - active: -
-- task_router_v1.py
-  - runner: -
-  - plist: jp.openclaw.task_router_v1.plist
-  - active: -
 
 ## LEGACY_OR_ARCHIVED
-- dev_executor_v1.py
-  - runner: -
-  - plist: -
-  - active: -
 - ingest_private_replies_v1.py
   - runner: -
   - plist: -
   - active: -
 
 ## CODE_ONLY
+- __init__.py
+  - runner: -
+  - plist: -
+  - active: -
 - ai_ceo_engine_v1.py
   - runner: -
   - plist: -
@@ -334,6 +334,10 @@
   - plist: -
   - active: -
 - command_apply_v1.py
+  - runner: -
+  - plist: -
+  - active: -
+- dev_executor_v1.py
   - runner: -
   - plist: -
   - active: -

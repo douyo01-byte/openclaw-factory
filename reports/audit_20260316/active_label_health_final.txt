@@ -1,16 +1,16 @@
 --- jp.openclaw.dev_pr_watcher_v1 ---
 	state = running
-	pid = 90487
+	pid = 56767
 		state = active
 		state = active
 --- jp.openclaw.spec_refiner_v2 ---
 	state = running
-	pid = 90491
+	pid = 56769
 		state = active
 		state = active
 --- jp.openclaw.spec_decomposer_v1 ---
 	state = running
-	pid = 90495
+	pid = 56772
 		state = active
 		state = active
 --- jp.openclaw.dev_pr_creator_v1 ---
@@ -25,12 +25,12 @@
 		state = active
 --- jp.openclaw.proposal_promoter_v1 ---
 	state = running
-	pid = 90787
+	pid = 57088
 		state = active
 		state = active
 --- jp.openclaw.proposal_throttle_engine_v1 ---
 	state = running
-	pid = 90791
+	pid = 57092
 		state = active
 		state = active
 --- jp.openclaw.kaikun02_coo_controller_v1 ---
@@ -50,6 +50,46 @@
 		state = active
 --- jp.openclaw.open_pr_guard_v1 ---
 	state = running
-	pid = 91119
+	pid = 57401
+		state = active
+		state = active
+--- jp.openclaw.brain_supply_v1 ---
+	state = running
+	pid = 57406
+		state = active
+		state = active
+--- jp.openclaw.ceo_decision_layer_v1 ---
+	state = running
+	pid = 57408
+		state = active
+		state = active
+--- jp.openclaw.dev_command_executor_v1 ---
+	state = running
+	pid = 57410
+		state = active
+		state = active
+--- jp.openclaw.kaikun02_router_worker_v1 ---
+	state = running
+	pid = 57412
+		state = active
+		state = active
+--- jp.openclaw.kaikun04_router_worker_v1 ---
+	state = running
+	pid = 57417
+		state = active
+		state = active
+--- jp.openclaw.private_reply_to_inbox_v1 ---
+	state = running
+	pid = 57421
+		state = active
+		state = active
+--- jp.openclaw.router_reply_finisher_v1 ---
+	state = running
+	pid = 57424
+		state = active
+		state = active
+--- jp.openclaw.task_router_v1 ---
+	state = running
+	pid = 57428
 		state = active
 		state = active

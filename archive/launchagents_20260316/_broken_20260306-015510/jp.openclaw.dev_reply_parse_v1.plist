@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+<key>Label</key>
+<string>jp.openclaw.dev_reply_parse_v1</string>
+
+<key>ProgramArguments</key>
+<array>
+<string>/bin/bash</string>
+<string>-lc</string>
+<string>cd ~/AI/openclaw-factory-daemon && source .venv/bin/activate && export PYTHONPATH=~/AI/openclaw-factory-daemon && export DB_PATH=~/AI/openclaw-factory-daemon/data/openclaw_real.db && exec python -u bots/parse_dev_reply_v1.py</string>
+</array>
+
+<key>RunAtLoad</key>
+<true/>
+
+<key>KeepAlive</key>
+<true/>
+
+</dict>
+</plist>

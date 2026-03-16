@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+cd /Users/doyopc/AI/openclaw-factory-daemon || exit 1
+source .venv/bin/activate || exit 1
+DB="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+export DB_PATH="$DB"
+export OCLAW_DB_PATH="$DB"
+export FACTORY_DB_PATH="$DB"
+export PYTHONPATH="/Users/doyopc/AI/openclaw-factory-daemon"
+while true; do
+  /Users/doyopc/AI/openclaw-factory-daemon/.venv/bin/python -u bots/dev_command_executor_v1.py >> logs/dev_command_executor_v1.out 2>> logs/dev_command_executor_v1.err || true
+  sleep 2
+done

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>KeepAlive</key>
+	<true/>
+	<key>Label</key>
+	<string>jp.openclaw.dev_executor_daemon_v1</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>-lc</string>
+		<string>cd "$HOME/AI/openclaw-factory" || exit 1; export HOME="/Users/doyopc"; export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"; export GIT_TERMINAL_PROMPT=0; mkdir -p logs; source .venv/bin/activate || exit 1; export PYTHONPATH="$HOME/AI/openclaw-factory"; export DB_PATH="$HOME/AI/openclaw-factory-daemon/data/openclaw_real.db"; export DEV_REPO_PATH="$HOME/AI/openclaw-factory"; exec python -u bots/dev_executor_v1.py &gt;&gt; logs/dev_executor_daemon_v1.out 2&gt;&gt; logs/dev_executor_daemon_v1.err</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+</dict>
+</plist>
