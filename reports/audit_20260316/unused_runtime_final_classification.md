@@ -36,7 +36,6 @@
 - cto_review_v1.py
 - ai_meeting_digest_v1.py
 - meeting_orchestrator_v1.py
-- dev_pr_automerge_v1.py
 - impact_judge_v1.py
 - executor_guard_v2.py
 - healthcheck_v1.py
