@@ -82,6 +82,19 @@ select
         and coalesce(spec_stage,'')='refined'
         and coalesce(pr_status,'')=''
       )
+      and not (
+        coalesce(status,'')='throttled'
+        and coalesce(project_decision,'')=''
+        and coalesce(dev_stage,'')=''
+        and coalesce(spec_stage,'')=''
+        and coalesce(pr_status,'')=''
+      )
+      and not (
+        coalesce(status,'')='throttled'
+        and coalesce(project_decision,'')='blocked_target_policy'
+        and coalesce(dev_stage,'')='blocked_target_policy'
+        and coalesce(pr_status,'')=''
+      )
       and (
         coalesce(status,'')!=coalesce(dev_stage,'')
         or (
