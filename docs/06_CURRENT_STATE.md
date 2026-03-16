@@ -58,3 +58,4 @@
 - old router / inbox line was moved to archive/legacy_runtime and is not current primary path
 - docs older than 2026-03-16 may contain pre-router-refresh state
 - Kaikun02 should treat this file as highest-priority runtime summary
+- secretary_llm_v1 dashboard now includes ai employee ranking from ai_employee_rankings

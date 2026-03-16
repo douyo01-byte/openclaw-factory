@@ -34,6 +34,8 @@ task_router_v1
 
 ### Control
 kaikun02_health_gate_v1
+-> ai_employee_manager_v1
+-> ai_employee_ranking_v1
 -> kaikun02_coo_controller_v1
 -> kaikun02_executor_bridge_v2
 

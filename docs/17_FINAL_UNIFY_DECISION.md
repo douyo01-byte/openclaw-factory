@@ -33,6 +33,8 @@
 - router_reply_finisher_v1
 - router_timeout_watchdog_v1
 - dev_merge_notify_v1
+- ai_employee_manager_v1
+- ai_employee_ranking_v1
 
 ## Keep but non-primary / reserve / historical
 - archive/legacy_runtime/bots/chat_router_v1.py
