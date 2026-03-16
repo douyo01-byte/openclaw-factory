@@ -54,7 +54,7 @@ load_dotenv()
 client = OpenAI()
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 
-DB_PATH = "data/openclaw.db"
+DB_PATH = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 SOURCES_PATH = "configs/sources.json"
 
 
