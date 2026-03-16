@@ -1,6 +1,7 @@
 # UNUSED/RESERVE FINAL CLASSIFICATION 2026-03-16
 
 ## ACTIVE_CONFIRMED
+- dev_pr_automerge_v1.py
 - ceo_hub_sender_v1.py
 - ceo_priority_scorer_v1.py
 - proposal_ranking_v1.py
