@@ -15,7 +15,7 @@ def tick():
            coalesce(spec_stage,'') as spec_stage,
            coalesce(pr_status,'') as pr_status
     from dev_proposals
-    where coalesce(status,'')='approved'
+    where coalesce(status,'') in ('approved','backlog')
       and (
         coalesce(source_ai,'') in ('innovation_engine','strategy_engine')
         or title like 'MotherShip:%'
@@ -43,7 +43,8 @@ def tick():
     for r in rows:
         conn.execute("""
         update dev_proposals
-        set project_decision='execute_now',
+        set status='open',
+            project_decision='execute_now',
             dev_stage='execute_now',
             spec_stage='raw'
         where id=?

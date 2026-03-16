@@ -1,7 +1,7 @@
 # KAIKUN02 HEALTH GATE
 
 - gate_ok: yes
-- unique_open_prs: 15
+- unique_open_prs: 0
 - duplicate_open_pr_url: 0
 - blank_source_open_rows: 0
 - docs_gap_exists: 1
@@ -19,16 +19,11 @@
 - spec_refiner_v2
 - spec_decomposer_v1
 - proposal_throttle_engine_v1
-- learning_result_writer_v1
 
 ## running_blocked
 - none
 
 ## open_pr_by_source
-- mothership: 6
-- innovation_engine: 4
-- cto: 3
-- strategy_engine: 2
 
 ## docs_priority
 - docs/06_CURRENT_STATE.md

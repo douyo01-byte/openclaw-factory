@@ -118,7 +118,7 @@ def pick_rows(c, target_pid=None):
           coalesce(ps.pending_questions,'') as pending_questions
         from dev_proposals d
         left join proposal_state ps on ps.proposal_id=d.id
-        where coalesce(d.status,'')='approved'
+        where coalesce(d.status,'') in ('approved','open')
           and coalesce(d.project_decision,'')='execute_now'
           and coalesce(d.dev_stage,'')='execute_now'
           and coalesce(d.spec_stage,'') in ('','raw','approved')
