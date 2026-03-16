@@ -539,15 +539,58 @@ def is_terminal_dump(text):
 
 
 def route_special(text):
-    t = normalize_user_text(text)
-    tl = t.lower()
-    tc = re.sub(r"\s+", "", tl)
+    tl = (text or "").lower()
+    tc = re.sub(r"\s+", "", text or "")
 
-    if t in ["/start", "start"]:
+    if text.strip() in ("/start", "start"):
         return "start"
 
-    if is_terminal_dump(text):
-        return "chat"
+    if (
+        "ai社員ランキング" in tc
+        or "社員ランキング" in tc
+        or "source_ai" in tc
+        or "誰が一番強い" in tc
+        or "誰が強い" in tc
+    ):
+        return "ai_employee_ranking"
+
+    next_keys = [
+        "次  の  作  業  は  ？  ", "次  の  作  業  ", "次  や  る  こ  と  ",
+        "作  業  指  示  ", "/次  作  業  ", "/next"
+    ]
+    if any(k.lower() in tl for k in next_keys):
+        return "next_actions"
+
+    coo_keys = [
+        "こ  ん  な  ん  作  っ  て  ",
+        "こ  れ  を  自  動  化  し  た  い  ",
+        "こ  の  機  能  を  追  加  し  た  い  ",
+        "こ  う  い  う  仕  組  み  に  し  た  い  ",
+        "こ  の  案  を  実  装  し  た  い  ",
+        "こ  れ  作  っ  て  ",
+        "自  動  化  し  た  い  ",
+        "機  能  追  加  し  た  い  ",
+        "telegramに  自  動  送  信  し  た  い  ",
+        "telegram通  知  を  自  動  送  信  し  た  い  ",
+        "在  庫  通  知  を  telegramに  自  動  送  信  し  た  い  ",
+        "在  庫  通  知  を  自  動  送  信  し  た  い  ",
+        "telegramへ  自  動  送  信  し  た  い  ",
+        "telegramに  通  知  し  た  い  ",
+    ]
+    if any(k.lower() in tl for k in coo_keys):
+        return "coo_intake"
+    if "在庫通知をtelegramに自動送信したい" in tc:
+        return "coo_intake"
+    if "これを自動化したい" in tc:
+        return "coo_intake"
+    if "この機能を追加したい" in tc:
+        return "coo_intake"
+    if "進捗は？" in tc or tc == "進捗":
+        return "dashboard"
+    if "次の作業は？" in tc or tc == "次の作業":
+        return "next_actions"
+    return "chat"
+
 
     dashboard_keys = [
         "進 捗 は ？ ", "進 捗 ", "今 ど う ？ ", "今 ど う ",
@@ -631,23 +674,26 @@ def run_once():
 
         if route == "start":
             reply = (
-                "OpenClaw COOで  す  。  \n"
-                "・  進  捗  は  ？  → CEOダ ッ シ ュ ボ ー ド  \n"
-                "・  次  の  作  業  は  ？  → 作 業 チ ャ ッ ト 指 示  \n"
-                "・  こ  ん  な  ん  作  っ  て  → COO整 理 で 返 答  \n"
-                "・  そ  れ  以  外  → 通 常 相 談 に 返 答  "
+                "OpenClaw COOで   す   。   \n"
+                "・   進   捗   は   ？   → CEOダ  ッ  シ  ュ  ボ  ー  ド   \n"
+                "・   次   の   作   業   は   ？   → 作  業  チ  ャ  ッ  ト  指  示   \n"
+                "・   AI社   員   ラ  ン  キ  ン  グ   → 実データ返答   \n"
+                "・   こ   ん   な   ん   作   っ   て   → COO整  理  で  返  答   \n"
+                "・   そ   れ   以   外   → 通  常  相  談  に  返  答   "
             )
         elif route == "dashboard":
             reply = build_dashboard(conn)
+        elif route == "ai_employee_ranking":
+            reply = "OpenClaw AI社 員 ラ ン キ ン グ\n━━━━━━━━━━━━━━━━━━\n" + ai_employee_ranking_block(conn)
         elif route == "next_actions":
             reply = (
-                "OpenClaw 次  の  作  業  \n"
-                "1. executor安 定 性 チ ェ ッ ク  \n"
-                "2. PR backlog確 認  \n"
-                "3. supply生 成 状 況 確 認  \n"
-                "4. learning反 映 確 認  \n"
-                "5. AI会 議 ロ グ 確 認  \n\n"
-                "作 業 チ ャ ッ ト 指 示 例  \n"
+                "OpenClaw 次   の   作   業   \n"
+                "1. executor安  定  性  チ  ェ  ッ  ク   \n"
+                "2. PR backlog確  認   \n"
+                "3. supply生  成  状  況  確  認   \n"
+                "4. learning反  映  確  認   \n"
+                "5. AI会  議  ロ  グ  確  認   \n\n"
+                "作  業  チ  ャ  ッ  ト  指  示  例   \n"
                 "cd ~/AI/openclaw-factory-daemon\n"
                 "launchctl list | grep openclaw\n"
                 "sqlite3 data/openclaw.db \"select count(*) from dev_proposals;\""
@@ -681,6 +727,7 @@ def run_once():
         conn.close()
 
 if __name__ == "__main__":
+
     while True:
         run_once()
         time.sleep(5)
