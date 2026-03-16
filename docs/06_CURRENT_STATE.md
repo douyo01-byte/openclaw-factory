@@ -53,6 +53,6 @@
 - missing_source_category_target_system = 0
 
 ## Current reality note
-- old router / inbox line still exists in source tree, but is not current primary path
+- old router / inbox line was moved to archive/legacy_runtime and is not current primary path
 - docs older than 2026-03-16 may contain pre-router-refresh state
 - Kaikun02 should treat this file as highest-priority runtime summary

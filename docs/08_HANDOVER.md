@@ -36,10 +36,10 @@ kaikun02_health_gate_v1
 -> kaikun02_executor_bridge_v2
 
 ## Known non-primary legacy line
-- chat_router_v1
-- dev_router_v1
-- tg_inbox_poll_v1
-- tg_inbox_poll_daemon_v1
+- archive/legacy_runtime/bots/chat_router_v1.py
+- archive/legacy_runtime/bots/dev_router_v1.py
+- archive/legacy_runtime/bots/tg_inbox_poll_v1.py
+- archive/legacy_runtime/bots/tg_inbox_poll_daemon_v1.py
 
 ## Handover rule
 - prefer runtime reality over older historical docs

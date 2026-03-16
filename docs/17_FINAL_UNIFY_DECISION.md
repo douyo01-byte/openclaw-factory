@@ -33,10 +33,10 @@
 - dev_merge_notify_v1
 
 ## Keep but non-primary / reserve / historical
-- chat_router_v1
-- dev_router_v1
-- tg_inbox_poll_v1
-- tg_inbox_poll_daemon_v1
+- archive/legacy_runtime/bots/chat_router_v1.py
+- archive/legacy_runtime/bots/dev_router_v1.py
+- archive/legacy_runtime/bots/tg_inbox_poll_v1.py
+- archive/legacy_runtime/bots/tg_inbox_poll_daemon_v1.py
 - chat_research_v1
 - scout_market_v1
 - scout_market_v2
