@@ -172,31 +172,20 @@ def docs_gap_exists():
 
 
 def normalize_next_touch_rows(rows):
-    if isinstance(rows, dict):
-        rows = rows.get("next_touch", [])
     out = []
-    for r in rows or []:
-        if isinstance(r, dict):
-            out.append({
-                "id": int(r.get("id") or 0),
-                "title": str(r.get("title") or ""),
-                "source_ai": str(r.get("source_ai") or ""),
-                "dev_stage": str(r.get("dev_stage") or ""),
-                "spec_stage": str(r.get("spec_stage") or ""),
-                "pr_status": str(r.get("pr_status") or ""),
-            })
-        else:
-            try:
-                out.append({
-                    "id": int(r["id"]),
-                    "title": str(r["title"] or ""),
-                    "source_ai": str(r["source_ai"] or ""),
-                    "dev_stage": str(r["dev_stage"] or ""),
-                    "spec_stage": str(r["spec_stage"] or ""),
-                    "pr_status": str(r["pr_status"] or ""),
-                })
-            except Exception:
-                continue
+    for r in rows:
+        try:
+            raw_pid = r[0]
+            pid = int(raw_pid)
+        except Exception:
+            continue
+        action = str(r[1] or "").strip() if len(r) > 1 else ""
+        reason = str(r[2] or "").strip() if len(r) > 2 else ""
+        out.append({
+            "proposal_id": pid,
+            "action": action,
+            "reason": reason,
+        })
     return out
 
 def build_action_templates(next_touch):
