@@ -1,6 +1,7 @@
 # UNUSED/RESERVE FINAL CLASSIFICATION 2026-03-16
 
 ## ACTIVE_CONFIRMED
+- ceo_priority_scorer_v1.py
 - proposal_ranking_v1.py
 - auto_merge_cleaner_v1.py
 - brain_supply_v1.py
@@ -23,7 +24,6 @@
 - task_router_v1.py
 
 ## RECONNECT_NOW_TOP3
-- ceo_priority_scorer_v1.py
 - ceo_hub_sender_v1.py
 
 ## CONDITIONAL_CANDIDATES
