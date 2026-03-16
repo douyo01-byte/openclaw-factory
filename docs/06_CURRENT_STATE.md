@@ -59,3 +59,9 @@
 - docs older than 2026-03-16 may contain pre-router-refresh state
 - Kaikun02 should treat this file as highest-priority runtime summary
 - secretary_llm_v1 dashboard now includes ai employee ranking from ai_employee_rankings
+
+## Runtime classification
+- canonical file: `reports/audit_20260316/runtime_classification_20260316.md`
+- ACTIVE = current production/runtime path
+- RESERVE_IMPLEMENTED = code exists but is not connected to current production path
+- reserve files with unknown/legacy table refs must not be treated as active runtime

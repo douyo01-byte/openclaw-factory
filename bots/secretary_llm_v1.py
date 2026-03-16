@@ -75,17 +75,25 @@ def build_context(conn):
     health = load_json(OBS / "company_health_score.json")
     supply = load_json(OBS / "supply_adoption_metrics.json")
     integrity_lines = []
+    runtime_classification = ""
     try:
         p = LOGS / "db_integrity_check_v1.log"
         if p.exists():
             integrity_lines = p.read_text(encoding="utf-8").splitlines()[-5:]
     except Exception:
         integrity_lines = []
+    try:
+        rc = ROOT / "reports" / "audit_20260316" / "runtime_classification_20260316.md"
+        if rc.exists():
+            runtime_classification = rc.read_text(encoding="utf-8")
+    except Exception:
+        runtime_classification = ""
     ctx = {
         "company_health": health,
         "supply_adoption": supply,
         "db_integrity_recent": integrity_lines,
         "dashboard_facts": fetch_dashboard_facts(conn),
+        "runtime_classification": runtime_classification,
     }
     return json.dumps(ctx, ensure_ascii=False, indent=2)
 

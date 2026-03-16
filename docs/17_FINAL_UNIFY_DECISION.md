@@ -63,3 +63,9 @@
   2. docs/08_HANDOVER.md
   3. docs/14_ACTIVE_AGENTS_FINAL.md
 - older audit docs are historical support only
+
+## Runtime classification
+- canonical file: `reports/audit_20260316/runtime_classification_20260316.md`
+- ACTIVE = current production/runtime path
+- RESERVE_IMPLEMENTED = code exists but is not connected to current production path
+- reserve files with unknown/legacy table refs must not be treated as active runtime

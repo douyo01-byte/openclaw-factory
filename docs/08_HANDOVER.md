@@ -49,3 +49,9 @@ kaikun02_health_gate_v1
 - prefer runtime reality over older historical docs
 - prefer active router line over old inbox/router line
 - prefer absolute canonical DB over relative `data/openclaw.db`
+
+## Runtime classification
+- canonical file: `reports/audit_20260316/runtime_classification_20260316.md`
+- ACTIVE = current production/runtime path
+- RESERVE_IMPLEMENTED = code exists but is not connected to current production path
+- reserve files with unknown/legacy table refs must not be treated as active runtime
