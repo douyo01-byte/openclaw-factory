@@ -212,6 +212,33 @@ Kaikun03_bot
 ・なおし丸（自己修復）
 ・みはりん（監視）"""
 
+
+def ai_employee_ranking_block(conn):
+    try:
+        rows = conn.execute("""
+            select
+              rank_no,
+              coalesce(source_ai,'') as source_ai,
+              coalesce(total_count,0) as total_count,
+              coalesce(merged_count,0) as merged_count,
+              coalesce(merge_rate,0) as merge_rate,
+              coalesce(score,0) as score
+            from ai_employee_rankings
+            order by rank_no asc
+            limit 10
+        """).fetchall()
+    except Exception:
+        rows = []
+    out = []
+    if not rows:
+        out.append("ラ ン キ ン グ デ ー タ な し ")
+        return "\n".join(out)
+    for r in rows:
+        out.append(
+            f"{r[0]}. {r[1]} | proposals={r[2]} | merged={r[3]} | rate={float(r[4]):.4f} | score={float(r[5]):.4f}"
+        )
+    return "\n".join(out)
+
 def bot_status_block():
     labels = [
         ("secretary_llm_v1", "jp.openclaw.secretary_llm_v1"),
