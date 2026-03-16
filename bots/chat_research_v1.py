@@ -92,13 +92,13 @@ def summarize(signals_by_path: List[Tuple[str, int, Dict[str, Any]]]) -> Dict[st
 
 def get_item(conn: sqlite3.Connection, item_id: int) -> Optional[sqlite3.Row]:
     return conn.execute(
-        "SELECT id, title, url FROM items WHERE id=? LIMIT 1", (item_id,)
+        "SELECT id, title, url FROM market_items WHERE id=? LIMIT 1", (item_id,)
     ).fetchone()
 
 
 def set_ctx_last_item(conn: sqlite3.Connection, chat_id: str, item_id: int) -> None:
     conn.execute(
-        "INSERT INTO bot_state(k, v) VALUES(?, ?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",
+        "INSERT INTO market_state(k, v) VALUES(?, ?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",
         (f"ctx:last_item:{chat_id}", str(item_id)),
     )
 
@@ -108,7 +108,7 @@ def enqueue_contact(
 ) -> None:
     try:
         conn.execute(
-            "INSERT INTO contacts(item_id, email, source, created_at) VALUES(?,?,?,datetime('now'))",
+            "INSERT INTO market_contacts(item_id, email, source, created_at) VALUES(?,?,?,datetime('now'))",
             (item_id, email, source),
         )
     except Exception:
@@ -124,7 +124,7 @@ def upsert_role_brief(
         return
     summary = text
     conn.execute(
-        "INSERT INTO role_briefs(role, topic, source_url, title, summary, fetched_at) "
+        "INSERT INTO market_role_briefs(role, topic, source_url, title, summary, fetched_at) "
         "VALUES(?,?,?,?,?,datetime('now')) "
         "ON CONFLICT(role,topic,source_url) DO UPDATE SET "
         "title=excluded.title, summary=excluded.summary, fetched_at=datetime('now')",
@@ -179,7 +179,7 @@ def main() -> None:
     conn = connect_db(args.db)
 
     jobs = conn.execute(
-        "SELECT id, chat_id, item_id, role, query FROM chat_jobs WHERE status='new' LIMIT ?",
+        "SELECT id, chat_id, item_id, role, query FROM market_chat_jobs WHERE status='new' LIMIT ?",
         (args.limit,),
     ).fetchall()
 
@@ -192,7 +192,7 @@ def main() -> None:
 
         if not item_id:
             conn.execute(
-                "UPDATE chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
+                "UPDATE market_chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
                 ("missing item_id", job_id),
             )
             continue
@@ -200,7 +200,7 @@ def main() -> None:
         item = get_item(conn, int(item_id))
         if not item:
             conn.execute(
-                "UPDATE chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
+                "UPDATE market_chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
                 ("item not found", job_id),
             )
             continue
@@ -208,7 +208,7 @@ def main() -> None:
         base = normalize_base(item["url"])
         if not base:
             conn.execute(
-                "UPDATE chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
+                "UPDATE market_chat_jobs SET status='error', updated_at=datetime('now'), error=? WHERE id=?",
                 ("missing url", job_id),
             )
             continue

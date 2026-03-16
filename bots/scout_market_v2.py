@@ -29,7 +29,7 @@ def save_item(conn, url: str, title: str, source: str):
     """
     conn.execute(
         """
-        INSERT INTO items (url, title, source, first_seen_at, last_seen_at, status)
+        INSERT INTO market_items (url, title, source, first_seen_at, last_seen_at, status)
         VALUES (?, ?, ?, datetime('now'), datetime('now'), 'new')
         ON CONFLICT(url) DO UPDATE SET
             title=excluded.title,
@@ -78,7 +78,7 @@ def db():
         "CREATE TABLE IF NOT EXISTS seen (key TEXT PRIMARY KEY, url TEXT, title TEXT, source TEXT, ts INTEGER)"
     )
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS contacts (url TEXT PRIMARY KEY, emails TEXT, pages TEXT, notes TEXT, ts INTEGER)"
+        "CREATE TABLE IF NOT EXISTS scout_seen_contacts (url TEXT PRIMARY KEY, emails TEXT, pages TEXT, notes TEXT, ts INTEGER)"
     )
     conn.commit()
     return conn, cur
@@ -102,7 +102,7 @@ def mark_seen(cur, it: Item):
 
 def save_contacts(cur, it: Item):
     cur.execute(
-        "INSERT OR REPLACE INTO contacts(url,emails,pages,notes,ts) VALUES(?,?,?,?,strftime('%s','now'))",
+        "INSERT OR REPLACE INTO scout_seen_contacts(url,emails,pages,notes,ts) VALUES(?,?,?,?,strftime('%s','now'))",
         (
             it.url,
             json.dumps(it.emails or []),
