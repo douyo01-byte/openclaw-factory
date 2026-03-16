@@ -554,91 +554,42 @@ def route_special(text):
     ):
         return "ai_employee_ranking"
 
-    next_keys = [
-        "次  の  作  業  は  ？  ", "次  の  作  業  ", "次  や  る  こ  と  ",
-        "作  業  指  示  ", "/次  作  業  ", "/next"
-    ]
-    if any(k.lower() in tl for k in next_keys):
-        return "next_actions"
-
-    coo_keys = [
-        "こ  ん  な  ん  作  っ  て  ",
-        "こ  れ  を  自  動  化  し  た  い  ",
-        "こ  の  機  能  を  追  加  し  た  い  ",
-        "こ  う  い  う  仕  組  み  に  し  た  い  ",
-        "こ  の  案  を  実  装  し  た  い  ",
-        "こ  れ  作  っ  て  ",
-        "自  動  化  し  た  い  ",
-        "機  能  追  加  し  た  い  ",
-        "telegramに  自  動  送  信  し  た  い  ",
-        "telegram通  知  を  自  動  送  信  し  た  い  ",
-        "在  庫  通  知  を  telegramに  自  動  送  信  し  た  い  ",
-        "在  庫  通  知  を  自  動  送  信  し  た  い  ",
-        "telegramへ  自  動  送  信  し  た  い  ",
-        "telegramに  通  知  し  た  い  ",
-    ]
-    if any(k.lower() in tl for k in coo_keys):
-        return "coo_intake"
-    if "在庫通知をtelegramに自動送信したい" in tc:
-        return "coo_intake"
-    if "これを自動化したい" in tc:
-        return "coo_intake"
-    if "この機能を追加したい" in tc:
-        return "coo_intake"
-    if "進捗は？" in tc or tc == "進捗":
-        return "dashboard"
-    if "次の作業は？" in tc or tc == "次の作業":
-        return "next_actions"
-    return "chat"
-
-
     dashboard_keys = [
-        "進 捗 は ？ ", "進 捗 ", "今 ど う ？ ", "今 ど う ",
-        "ダ ッ シ ュ ボ ー ド ", "/進 捗 ", "/dashboard"
+        "進捗は？", "進捗", "今どう？", "今どう",
+        "ダッシュボード", "/進捗", "/dashboard"
     ]
-    if any(k.lower() in tl for k in dashboard_keys):
+    if any(k in tc for k in dashboard_keys):
         return "dashboard"
 
     next_keys = [
-        "次 の 作 業 は ？ ", "次 の 作 業 ", "次 や る こ と ",
-        "作 業 指 示 ", "/次 作 業 ", "/next"
+        "次の作業は？", "次の作業", "次やること",
+        "作業指示", "/次作業", "/next"
     ]
-    if any(k.lower() in tl for k in next_keys):
+    if any(k in tc for k in next_keys):
         return "next_actions"
 
     coo_keys = [
-        "こ ん な ん 作 っ て ",
-        "こ れ を 自 動 化 し た い ",
-        "こ の 機 能 を 追 加 し た い ",
-        "こ う い う 仕 組 み に し た い ",
-        "こ の 案 を 実 装 し た い ",
-        "こ れ 作 っ て ",
-        "自 動 化 し た い ",
-        "機 能 追 加 し た い ",
-        "telegramに 自 動 送 信 し た い ",
-        "telegram通 知 を 自 動 送 信 し た い ",
-        "在 庫 通 知 を telegramに 自 動 送 信 し た い ",
-        "在 庫 通 知 を 自 動 送 信 し た い ",
-        "telegramへ 自 動 送 信 し た い ",
-        "telegramに 通 知 し た い ",
+        "こんなん作って",
+        "これを自動化したい",
+        "この機能を追加したい",
+        "こういう仕組みにしたい",
+        "この案を実装したい",
+        "自動化したい",
+        "機能追加したい",
+        "telegramに自動送信したい",
+        "telegram通知を自動送信したい",
+        "在庫通知をtelegramに自動送信したい",
+        "在庫通知を自動送信したい",
+        "telegramへ自動送信したい",
+        "telegramに通知したい",
     ]
-    if any(k.lower() in tl for k in coo_keys):
+    if any(k in tc for k in coo_keys):
         return "coo_intake"
-
-    if "在庫通知をtelegramに自動送信したい" in tc:
-        return "coo_intake"
-    if "これを自動化したい" in tc:
-        return "coo_intake"
-    if "この機能を追加したい" in tc:
-        return "coo_intake"
-    if "進捗は？" in tc or "進捗" == tc:
-        return "dashboard"
-    if "次の作業は？" in tc or "次の作業" == tc:
-        return "next_actions"
 
     return "chat"
 
 def run_once():
+
     conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
     conn.execute("pragma busy_timeout=30000")
