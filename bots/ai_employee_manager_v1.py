@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from datetime import datetime
+from datetime import datetime, UTC
 
 DB=os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 
@@ -44,7 +44,7 @@ def main():
     order by merged_count desc, total_count desc, source_ai asc
     """).fetchall()
 
-    now=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    now=datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
     conn.execute("delete from ai_employee_scores")
     conn.executemany("""
     insert into ai_employee_scores(source_ai,total_count,merged_count,updated_at)
