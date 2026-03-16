@@ -162,17 +162,15 @@ def tick_once(conn: sqlite3.Connection, target_pid=None):
     if dirty_head:
         conn.commit()
 
-    rows = conn.execute(
-        "select id, pr_number, pr_url, coalesce(pr_status,'') pr_status, coalesce(status,'') status, coalesce(dev_stage,'') dev_stage "
-        "from dev_proposals "
-        "where coalesce(pr_url,'')<>'' "
-        "and ("
-        "  coalesce(pr_status,'') in ('','ready','pr_created','open') "
-        "  or (coalesce(pr_status,'')='merged' and (coalesce(status,'')!='merged' or coalesce(dev_stage,'')!='merged')) "
-        "  or (coalesce(pr_status,'')='closed' and (coalesce(status,'')!='closed' or coalesce(dev_stage,'')!='closed')) "
-        "  or (pr_number is null or pr_number='' or pr_number=0) "
-        ") "
-        "order by id desc limit 200"
+    merged_rows = conn.execute(
+        """
+        select id, title, pr_url
+        from dev_proposals
+        where coalesce(status,'')='merged'
+          and coalesce(pr_status,'')='merged'
+        order by id desc
+        limit 200
+        """
     ).fetchall()
     for r in merged_rows:
         exists = conn.execute(
