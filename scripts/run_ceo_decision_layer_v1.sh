@@ -8,4 +8,4 @@ export DB_PATH="$DB"
 export OCLAW_DB_PATH="$DB"
 export FACTORY_DB_PATH="$DB"
 export PYTHONPATH="/Users/doyopc/AI/openclaw-factory-daemon"
-exec /Users/doyopc/AI/openclaw-factory-daemon/.venv/bin/python -u bots/ceo_decision_layer_v1.py
+exec /Users/doyopc/AI/openclaw-factory-daemon/.venv/bin/python -u bots/ceo_decision_layer_v1.py --once
