@@ -1,5 +1,8 @@
 from __future__ import annotations
-import os, time, sqlite3, requests
+import os
+import time
+import sqlite3
+import requests
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 SLEEP = float(os.environ.get("KAIKUN02_ROUTER_WORKER_SLEEP", "8"))
@@ -85,6 +88,29 @@ def quick_weak_points(c):
         "大きな異常はありません。" if stalled == 0 and nostart < 20 else "処理滞留を確認してください。"
     ])
 
+def quick_ai_employee_ranking(c):
+    rows = c.execute("""
+        select
+          rank_no,
+          coalesce(source_ai,'') as source_ai,
+          coalesce(total_count,0) as total_count,
+          coalesce(merged_count,0) as merged_count,
+          coalesce(merge_rate,0) as merge_rate,
+          coalesce(score,0) as score
+        from ai_employee_rankings
+        order by rank_no asc
+        limit 10
+    """).fetchall()
+    out = ["📊 OpenClaw AI社員ランキング", ""]
+    if not rows:
+        out.append("ランキングデータはまだありません。")
+        return "\n".join(out)
+    for r in rows:
+        out.append(
+            f"{r['rank_no']}. {r['source_ai']} proposals={r['total_count']} merged={r['merged_count']} merge_rate={float(r['merge_rate']):.4f} score={float(r['score']):.4f}"
+        )
+    return "\n".join(out)
+
 def normalize_text(s: str) -> str:
     return "".join((s or "").lower().split())
 
@@ -117,8 +143,19 @@ def tick():
                 body = quick_weak_points(c)
                 sent_message_id = tg_send(body)
                 result = f"quick_weak_sent: {body[:120]}"
+            elif (
+                "社員ランキング" in txt
+                or "ai社員ランキング" in txt
+                or ("ランキング" in txt and "社員" in txt)
+                or "source_ai" in txt
+                or "誰が一番強い" in txt
+                or "誰が強い" in txt
+            ):
+                body = quick_ai_employee_ranking(c)
+                sent_message_id = tg_send(body)
+                result = f"quick_ai_employee_ranking_sent: {body[:120]}"
             else:
-                routed_text = f"[TASK_ID:{r['id']}]\n{txt_raw}\n\n返信の先頭に [TASK_ID:{r['id']}] を付けてください。"
+                routed_text = f"[TASK_ID:{r['id']}]\n{txt_raw}\n\n返信の先頭に[TASK_ID:{r['id']}]を付けてください。"
                 sent_message_id = tg_send(routed_text)
                 result = f"sent_to_kaikun02: {routed_text[:120]}"
 
