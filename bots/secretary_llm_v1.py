@@ -249,6 +249,14 @@ def ai_employee_ranking_block(conn):
         )
     return "\n".join(out)
 
+
+def runtime_classification_block():
+    p = ROOT / "reports" / "audit_20260316" / "runtime_classification_20260316.md"
+    try:
+        return p.read_text(encoding="utf-8").strip()
+    except Exception:
+        return "runtime classification file not found"
+
 def bot_status_block():
     labels = [
         ("secretary_llm_v1", "jp.openclaw.secretary_llm_v1"),
@@ -683,6 +691,7 @@ def run_once():
         conn.close()
 
 if __name__ == "__main__":
+
 
 
     while True:
