@@ -29,7 +29,6 @@
 
 ## CONDITIONAL_CANDIDATES
 - learning_brain_v1.py
-- pattern_extractor_v1.py
 - proposal_cluster_v1.py
 - supply_bias_updater_v1.py
 - self_improvement_engine_v2.py
