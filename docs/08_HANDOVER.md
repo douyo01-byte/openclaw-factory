@@ -65,3 +65,8 @@ kaikun02_health_gate_v1
 - canonical file: `reports/audit_20260317/reserve_final_decision.md`
 - current reserve set is KEEP_NOT_ACTIVE, not archive
 - these files are implemented assets kept in repo but excluded from active runtime count
+
+## KEEP_NOT_ACTIVE reactivation guide
+- canonical file: `reports/audit_20260317/keep_not_active_reactivation_guide.md`
+- reserve keep set should only be re-enabled with explicit DB / LaunchAgent / I/O checks
+- do not restore these 7 files directly into ACTIVE without a per-file reactivation pass
