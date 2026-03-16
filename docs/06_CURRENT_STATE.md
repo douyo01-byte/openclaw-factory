@@ -65,3 +65,8 @@
 - ACTIVE = current production/runtime path
 - RESERVE_IMPLEMENTED = code exists but is not connected to current production path
 - reserve files with unknown/legacy table refs must not be treated as active runtime
+
+## Reserve reclassification update
+- canonical fix file: `reports/audit_20260317/reserve_reclassification.md`
+- `chat_research_v1.py`, `db_integrity_check_v1.py`, `healthcheck_v1.py`, `open_pr_guard_v1.py` are runtime-connected and must not be treated as reserve-only
+- current true reserve keep set is limited to 7 files under old command/meeting/team paths
