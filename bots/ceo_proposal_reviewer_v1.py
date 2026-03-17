@@ -122,7 +122,7 @@ def main():
                 new_priority, decision, note = classify(r, recent)
                 c.execute("""
                     update dev_proposals
-                    set priority=?,
+                    set priority=case when coalesce(priority,0) < ? then ? else priority end,
                         decision_note=?,
                         project_decision=?
                     where id=?
