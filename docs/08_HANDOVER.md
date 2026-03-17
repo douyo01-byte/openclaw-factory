@@ -148,3 +148,12 @@ kaikun02_health_gate_v1
 - 役割資産 / source_ai資産 / persona資産 として再利用する
 - canonical plan:
   - reports/audit_20260317/team_role_asset_plan.md
+
+## Four-question final audit
+- 未接続実装はあるが、不要ではなく再責務化対象として整理済み
+- canonical DB は openclaw-factory/data/openclaw.db
+- 現在のACTIVE mainline pipelines are healthy
+- Kaikun02 は quick operational responder として有効
+- Kaikun02 はまだ full internal-understanding implementation agent ではない
+- canonical audit:
+  - reports/audit_20260317/four_question_final_audit.md
