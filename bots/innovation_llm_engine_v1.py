@@ -23,9 +23,16 @@ def list_targets():
     files = [x for x in out.splitlines() if x.endswith(".py") and not x.endswith("__init__.py") and (x.startswith("bots/") or x.startswith("scripts/"))]
     deny = (
         ".bak", "__pycache__", "archive/", "logs/", "tmp/",
-        "innovation_engine_v1.py", "innovation_llm_engine_v1.py"
+        "innovation_engine_v1.py", "innovation_llm_engine_v1.py",
+        ".txt", ".md", ".json", ".csv",
+        "tg_test.py",
+        "/test_", "test/", "/tests/", "_test.py",
+        "docs/", "reports/", "obs/", "config/feeds/",
+        ".dev_agent_test", "tmp_", "sample", "example"
     )
     files = [x for x in files if not any(d in x for d in deny)]
+    allow_prefix = ("bots/", "scripts/")
+    files = [x for x in files if x.startswith(allow_prefix)]
     return files[:300]
 
 def read_text(path, limit=7000):
