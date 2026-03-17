@@ -350,10 +350,7 @@ def tick():
                 quick_done = True
 
             else:
-                routed_text = f"[TASK_ID:{r['id']}]
-{txt_raw}
-
-返 信 の 先 頭 に [TASK_ID:{r['id']}] を 付 け て く だ さ い 。"
+                routed_text = f"[TASK_ID:{r['id']}]\n{txt_raw}\n\n返  信  の  先  頭  に  [TASK_ID:{r['id']}] を  付  け  て  く  だ  さ  い  。 "
                 sent_message_id = tg_send(routed_text)
                 result = f"sent_to_kaikun02: {routed_text[:120]}"
 
