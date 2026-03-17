@@ -65,11 +65,11 @@ def main():
                 new_priority, decision, note = classify(r)
                 c.execute("""
                     update dev_proposals
-                    set priority=?,
+                    set priority=case when coalesce(priority,0) < ? then ? else priority end,
                         project_decision=?,
                         decision_note=?
                     where id=?
-                """, (new_priority, decision, note, r["id"]))
+                """, (new_priority, new_priority, decision, note, r["id"]))
                 reviewed += 1
 
             con.commit()
