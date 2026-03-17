@@ -198,6 +198,63 @@ def quick_flow_bottleneck(c):
         out.append("reason=単一点ボトルネックは弱い")
 
     return "\n".join(out)
+
+def quick_top_watchpoints(c):
+    open_pr = c.execute("""
+        select count(*) from dev_proposals
+        where coalesce(pr_status,'')='open'
+          and coalesce(pr_url,'')<>''
+    """).fetchone()[0]
+    router_new = c.execute("""
+        select count(*) from router_tasks
+        where coalesce(status,'')='new'
+    """).fetchone()[0]
+    router_started = c.execute("""
+        select count(*) from router_tasks
+        where coalesce(status,'')='started'
+    """).fetchone()[0]
+    router_timeout = c.execute("""
+        select count(*) from router_tasks
+        where coalesce(status,'')='timeout'
+    """).fetchone()[0]
+    inbox_waiting = c.execute("""
+        select count(*) from inbox_commands
+        where coalesce(processed,0)=0
+    """).fetchone()[0]
+    executor_wait = c.execute("""
+        select count(*) from dev_proposals
+        where coalesce(status,'') in ('decomposed','executor_ready','execute_now','approved','pr_created')
+          and coalesce(pr_status,'')<>'merged'
+    """).fetchone()[0]
+    refined_wait = c.execute("""
+        select count(*) from dev_proposals
+        where coalesce(status,'') in ('promoted','refining','refined')
+    """).fetchone()[0]
+
+    rows = [
+        ("router_queue", router_new + router_started + router_timeout),
+        ("executor_band", executor_wait),
+        ("refiner_band", refined_wait),
+        ("open_pr_band", open_pr),
+        ("inbox_waiting", inbox_waiting),
+    ]
+    rows.sort(key=lambda x: x[1], reverse=True)
+
+    out = []
+    out.append("👀 OpenClaw 上位3監視ポイント")
+    out.append("")
+    for i, (name, val) in enumerate(rows[:3], start=1):
+        out.append(f"{i}. {name} = {val}")
+    out.append("")
+    out.append(f"open_pr={open_pr}")
+    out.append(f"router_new={router_new}")
+    out.append(f"router_started={router_started}")
+    out.append(f"router_timeout={router_timeout}")
+    out.append(f"inbox_waiting={inbox_waiting}")
+    out.append(f"executor_wait={executor_wait}")
+    out.append(f"refined_wait={refined_wait}")
+    return "\n".join(out)
+
 def normalize_text(s: str) -> str:
     return "".join((s or "").lower().split())
 
@@ -265,6 +322,18 @@ def tick():
                 quick_done = True
 
             elif (
+                "上位3監視ポイント" in txt
+                or "監視ポイント" in txt
+                or "今見るべき" in txt
+                or "どこを見ればいい" in txt
+                or "watchpoint" in txt
+            ):
+                body = quick_top_watchpoints(c)
+                sent_message_id = tg_send(body)
+                result = f"quick_top_watchpoints_sent: {body[:120]}"
+                quick_done = True
+
+            elif (
                 "active本流" in txt
                 or "runtime分類" in txt
                 or "reserve_implemented" in txt
@@ -281,7 +350,10 @@ def tick():
                 quick_done = True
 
             else:
-                routed_text = f"[TASK_ID:{r['id']}]\n{txt_raw}\n\n返 信 の 先 頭 に [TASK_ID:{r['id']}] を 付 け て く だ さ い 。"
+                routed_text = f"[TASK_ID:{r['id']}]
+{txt_raw}
+
+返 信 の 先 頭 に [TASK_ID:{r['id']}] を 付 け て く だ さ い 。"
                 sent_message_id = tg_send(routed_text)
                 result = f"sent_to_kaikun02: {routed_text[:120]}"
 
@@ -313,6 +385,7 @@ def tick():
         print(f"[kaikun02_router_worker_v1] done={done}", flush=True)
     finally:
         c.close()
+
 
 def main():
 
