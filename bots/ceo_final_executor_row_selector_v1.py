@@ -77,13 +77,22 @@ def main():
                 lines.append(f"| {i} | {s} | {r['id']} | {r['source_ai']} | {int(r['priority'] or 0)} | {r['title']} |")
             OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-            if selected and "final_executor_row_selected" not in (selected["decision_note"] or ""):
+            if selected:
+                note = selected["decision_note"] or ""
+                if "final_executor_row_selected" not in note:
+                    note = (note + " | final_executor_row_selected").strip(" |")
+                if "final_executor_row_priority_synced" not in note:
+                    note = (note + " | final_executor_row_priority_synced").strip(" |")
                 c.execute("""
                     update dev_proposals
                     set project_decision='selected_now',
-                        decision_note=coalesce(decision_note,'') || ' | final_executor_row_selected'
+                        priority=case
+                          when cast(coalesce(priority,0) as integer) < 85 then 85
+                          else cast(coalesce(priority,0) as integer)
+                        end,
+                        decision_note=?
                     where id=?
-                """, (selected["id"],))
+                """, (note, selected["id"]))
                 con.commit()
 
             con.close()
