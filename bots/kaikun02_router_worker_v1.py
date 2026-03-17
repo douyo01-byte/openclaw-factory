@@ -1,16 +1,3 @@
-
-def get_recent_thoughts(c, limit=3):
-    try:
-        rows = c.execute("""
-        select thought
-        from ai_thought_log
-        order by id desc
-        limit ?
-        """, (limit,)).fetchall()
-        return [r[0] for r in rows if r[0]]
-    except:
-        return []
-
 from __future__ import annotations
 import os
 import time
@@ -371,12 +358,7 @@ def tick():
                 or "activeとreserve" in txt
                 or "activeとkeep_not_active" in txt
             ):
-                
-thoughts = get_recent_thoughts(c)
-body = quick_runtime_classification()
-if thoughts:
-    body = body + "\n\n[参考思考]\n" + "\n---\n".join(thoughts[:2])
-
+                body = quick_runtime_classification()
                 sent_message_id = tg_send(body)
                 result = f"quick_runtime_classification_sent: {body[:120]}"
                 quick_done = True
