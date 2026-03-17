@@ -112,3 +112,8 @@ kaikun02_health_gate_v1
 - remaining implemented_unconnected focus:
   - secretary_llm_v1
   - chat_research_v1
+
+## Secretary decision
+- secretary_llm_v1 は current policy では hold
+- 理由: Kaikun02 quick routes と責務重複、かつ inbox_commands直読の旧経路で現 router policy と衝突
+- 復帰条件: CEO向け統合要約専任として責務を再設計した場合のみ conditional_restore
