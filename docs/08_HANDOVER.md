@@ -80,3 +80,8 @@ kaikun02_health_gate_v1
 - canonical file: `reports/audit_20260317/kaikun02_quick_routes.md`
 - quick reply active: dashboard / next_tasks / weak_points / ai_employee_ranking / runtime_classification / flow_bottleneck / top_watchpoints
 - anything else should be treated as normal relay task
+
+## Kaikun02 route policy
+- canonical file: `reports/audit_20260317/kaikun02_route_policy.md`
+- quick reply と relay の境界はこのファイルを正とする
+- quick route 追加時は cleanup条件と final sanity grep を同時更新する
