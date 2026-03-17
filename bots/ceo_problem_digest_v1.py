@@ -27,7 +27,7 @@ def main():
                   coalesce(decision_note,'') as decision_note,
                   coalesce(target_system,'') as target_system,
                   coalesce(improvement_type,'') as improvement_type,
-                  coalesce(priority,0) as priority,
+                  cast(coalesce(priority,0) as integer) as priority,
                   coalesce(created_at,'') as created_at
                 from dev_proposals
                 where coalesce(source_ai,'')='ceo_problem_detector_v1'
@@ -43,8 +43,9 @@ def main():
             for r in rows:
                 title = r["title"].replace("|", "/")
                 note = r["decision_note"].replace("|", "/")
+                prio = int(r["priority"]) if r["priority"] is not None else 0
                 lines.append(
-                    f"| {r['id']} | {int(r['priority'] or 0)} | {r['project_decision']} | {r['target_system']} | {r['improvement_type']} | {title} | {note} | {r['created_at']} |"
+                    f"| {r['id']} | {prio} | {r['project_decision']} | {r['target_system']} | {r['improvement_type']} | {title} | {note} | {r['created_at']} |"
                 )
 
             OUT.parent.mkdir(parents=True, exist_ok=True)
