@@ -91,3 +91,9 @@ kaikun02_health_gate_v1
 - Kaikun04 = THINK / deep analysis / relay-only
 - Kaikun04 must not receive quick routes under current policy
 - quick reply responsibility stays on Kaikun02
+
+## Task router policy
+- canonical file: `reports/audit_20260317/task_router_policy.md`
+- task_router_v1 must classify quick operational questions to Kaikun02
+- task_router_v1 must classify THINK / heavy analysis to Kaikun04
+- router policy changes must be reflected in both docs and runtime cleanup rules
