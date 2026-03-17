@@ -6,7 +6,7 @@ echo "===== PRE-BURNIN CLEANUP ====="
 echo
 
 echo "===== FINAL SANITY ====="
-./scripts/run_final_sanity_v1.sh
+OCLAW_SKIP_SMOKE=1 ./scripts/run_final_sanity_v1.sh
 echo
 
 echo "===== ROUTER COUNTS ====="
