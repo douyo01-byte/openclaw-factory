@@ -240,11 +240,22 @@ def quick_top_watchpoints(c):
     ]
     rows.sort(key=lambda x: x[1], reverse=True)
 
+    explain = {
+        "router_queue": ("router_tasks滞留", "task_router_v1 / kaikun02_router_worker_v1 を見る"),
+        "executor_band": ("executor_ready以降が滞留", "dev_pr_creator_v1 / executor系を先に見る"),
+        "refiner_band": ("仕様具体化帯が滞留", "spec_refiner_v2 / spec_decomposer_v1 を先に見る"),
+        "open_pr_band": ("PR監視帯が滞留", "dev_pr_watcher_v1 / dev_pr_automerge_v1 を見る"),
+        "inbox_waiting": ("入力滞留", "inbox_commands起点を先に見る"),
+    }
+
     out = []
-    out.append("👀 OpenClaw 上位3監視ポイント")
+    out.append("👀 OpenClaw 上 位 3監 視 ポ イ ン ト ")
     out.append("")
     for i, (name, val) in enumerate(rows[:3], start=1):
+        reason, action = explain.get(name, ("監視", "関連botを確認"))
         out.append(f"{i}. {name} = {val}")
+        out.append(f"   reason={reason}")
+        out.append(f"   next={action}")
     out.append("")
     out.append(f"open_pr={open_pr}")
     out.append(f"router_new={router_new}")
@@ -256,6 +267,7 @@ def quick_top_watchpoints(c):
     return "\n".join(out)
 
 def normalize_text(s: str) -> str:
+
     return "".join((s or "").lower().split())
 
 def tick():
