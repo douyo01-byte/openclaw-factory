@@ -94,6 +94,24 @@ def tick():
                 updated_at=datetime('now')
             where id=?
             """, (r["id"],))
+
+            try:
+                c.execute("""
+                create table if not exists ai_thought_log(
+                  id integer primary key autoincrement,
+                  task_id integer,
+                  thought text,
+                  created_at text default (datetime('now'))
+                )
+                """)
+                if (task["target_bot"] or "") == "kaikun04" and (r["text"] or "").strip():
+                    c.execute(
+                        "insert into ai_thought_log(task_id, thought) values(?, ?)",
+                        (task["id"], (r["text"] or "")[:2000])
+                    )
+            except Exception as e:
+                print(f"[router_reply_finisher_v1] thought_log_err={e!r}", flush=True)
+
             done += 1
             touched += 1
         if touched:
