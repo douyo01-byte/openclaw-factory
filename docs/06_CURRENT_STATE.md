@@ -127,3 +127,11 @@
 - secretary_llm_v1 は current policy では hold
 - 理由: Kaikun02 quick routes と責務重複、かつ inbox_commands直読の旧経路で現 router policy と衝突
 - 復帰条件: CEO向け統合要約専任として責務を再設計した場合のみ conditional_restore
+
+## Innovation restore decision
+- innovation_llm_engine_v1 is ACTIVE under launchd
+- runner loads env/openai.env and env/innovation.env
+- target filter excludes docs/reports/tests/tg_test and non-runtime noise
+- canonical inventories:
+  - reports/audit_20260317/runtime_unified_inventory_v2.md
+  - reports/audit_20260317/unconnected_resolution_plan.md
