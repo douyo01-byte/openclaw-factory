@@ -48,6 +48,12 @@ echo
 echo '===== TASK ROUTER CODE CHECK ====='
 grep -n 'def classify\|\[think\]\|\[deep\]\|\[fast\]\|schema\|pipeline\|db\|docs\|handover\|readme' bots/task_router_v1.py || true
 echo
+if [ "${OCLAW_SKIP_SMOKE:-0}" = "1" ]; then
+echo '===== TASK ROUTER SMOKE CHECK ====='
+echo 'SKIPPED'
+echo '===== TASK ROUTER SMOKE JUDGMENT ====='
+echo 'SKIPPED'
+else
 echo '===== TASK ROUTER SMOKE CHECK ====='
 ./scripts/run_task_router_smoke_v1.sh | tail -n 3
 
@@ -56,6 +62,8 @@ git restore \
   obs/db_integrity_state.json \
   reports/audit_20260315/kaikun02_health_gate.json \
   reports/audit_20260315/kaikun02_health_gate.md
+
+fi
 
 echo '===== WORKTREE ====='
 git status --short
