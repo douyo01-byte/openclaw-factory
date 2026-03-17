@@ -11,3 +11,9 @@
 | bots/team/kenji_researcher.py | REPURPOSE | 役割資産として再利用候補 | yes | c0a39a3 ci: auto fix (20260302-224953) | bot単体運用ではなく役割定義/source_ai資産として再配置 |
 | bots/team/miho_finder.py | REPURPOSE | 役割資産として再利用候補 | yes | c0a39a3 ci: auto fix (20260302-224953) | bot単体運用ではなく役割定義/source_ai資産として再配置 |
 | bots/team/sakura_scout.py | REPURPOSE | 役割資産として再利用候補 | yes | c0a39a3 ci: auto fix (20260302-224953) | bot単体運用ではなく役割定義/source_ai資産として再配置 |
+
+## Team asset decision
+- team系botは未使用コードではなく role asset として扱う
+- 単体復帰ではなく source_ai / persona / role prompt として再配置する
+- canonical team asset plan:
+  - reports/audit_20260317/team_role_asset_plan.md

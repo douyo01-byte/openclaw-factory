@@ -142,3 +142,9 @@ kaikun02_health_gate_v1
 - canonical specs:
   - reports/audit_20260317/secretary_repurpose_spec.md
   - reports/audit_20260317/chat_research_repurpose_spec.md
+
+## Team role asset decision
+- bots/team/* は standalone bot としては戻さない
+- 役割資産 / source_ai資産 / persona資産 として再利用する
+- canonical plan:
+  - reports/audit_20260317/team_role_asset_plan.md
