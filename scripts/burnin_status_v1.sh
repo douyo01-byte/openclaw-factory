@@ -1,13 +1,16 @@
 #!/bin/bash
 set -euo pipefail
-DB="/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+
+echo "===== PRE-BURNIN CLEANUP ====="
+./scripts/pre_burnin_cleanup_v1.sh || true
+echo
 
 echo "===== FINAL SANITY ====="
 ./scripts/run_final_sanity_v1.sh
-
 echo
+
 echo "===== ROUTER COUNTS ====="
-sqlite3 -cmd ".headers on" -cmd ".mode column" "$DB" "
+sqlite3 -cmd ".headers on" -cmd ".mode column" /Users/doyopc/AI/openclaw-factory/data/openclaw.db "
 select
   coalesce(target_bot,'') as target_bot,
   coalesce(status,'') as status,
@@ -16,17 +19,17 @@ from router_tasks
 group by 1,2
 order by 1,2;
 "
-
 echo
+
 echo "===== OPEN PR ====="
-sqlite3 -cmd ".headers on" -cmd ".mode column" "$DB" "
+sqlite3 -cmd ".headers on" -cmd ".mode column" /Users/doyopc/AI/openclaw-factory/data/openclaw.db "
 select count(*) as open_pr
 from dev_proposals
 where coalesce(pr_status,'')='open'
   and coalesce(pr_url,'')<>'';
 "
-
 echo
+
 echo "===== ACTIVE LAUNCHAGENTS ====="
 uid=$(id -u)
 for lb in \
@@ -50,7 +53,3 @@ do
   echo "--- $lb"
   launchctl print "gui/$uid/$lb" 2>/dev/null | egrep 'state =|pid =|last exit code =' || echo "missing"
 done
-
-echo
-echo "===== PRE-BURNIN CLEANUP ====="
-./scripts/pre_burnin_cleanup_v1.sh
