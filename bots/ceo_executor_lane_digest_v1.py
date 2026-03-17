@@ -23,7 +23,7 @@ def main():
             rows = c.execute("""
                 select
                   id,
-                  coalesce(priority,0) as priority,
+                  cast(coalesce(priority,0) as integer) as priority,
                   coalesce(project_decision,'') as project_decision,
                   coalesce(target_system,'') as target_system,
                   coalesce(improvement_type,'') as improvement_type,
@@ -47,7 +47,7 @@ def main():
                 note = (r["decision_note"] or "").replace("|", "/")
                 title = (r["title"] or "").replace("\n", " ")
                 lines.append(
-                    f"| {r['id']} | {int(r['priority'] or 0)} | {r['project_decision']} | "
+                    f"| {r['id']} | {int(r['priority'])} | {r['project_decision']} | "
                     f"{r['target_system']} | {r['improvement_type']} | {title} | {note} | {r['created_at']} |"
                 )
             OUT.parent.mkdir(parents=True, exist_ok=True)
