@@ -332,9 +332,12 @@ def tick():
                 sent_message_id = tg_send(body)
                 result = f"quick_flow_bottleneck_sent: {body[:120]}"
                 quick_done = True
+
             elif (
-                "上 位 3 監 視 ポ イ ン ト " in txt
-                or "監 視 ポ イ ン ト " in txt
+                "上位3監視ポイント" in txt
+                or "監視ポイント" in txt
+                or "今見るべき" in txt
+                or "どこを見ればいい" in txt
                 or "watchpoint" in txt
                 or "watchpoints" in txt
             ):
@@ -342,7 +345,6 @@ def tick():
                 sent_message_id = tg_send(body)
                 result = f"quick_top_watchpoints_sent: {body[:120]}"
                 quick_done = True
-
 
             elif (
                 "active本流" in txt
@@ -354,6 +356,7 @@ def tick():
                 or "使えてないプログラム" in txt
                 or "現役と予備" in txt
                 or "activeとreserve" in txt
+                or "activeとkeep_not_active" in txt
             ):
                 body = quick_runtime_classification()
                 sent_message_id = tg_send(body)
@@ -361,7 +364,7 @@ def tick():
                 quick_done = True
 
             else:
-                routed_text = f"[TASK_ID:{r['id']}]\n{txt_raw}\n\n返  信  の  先  頭  に  [TASK_ID:{r['id']}] を  付  け  て  く  だ  さ  い  。 "
+                routed_text = f"[TASK_ID:{r['id']}]\n{txt_raw}\n\n返信の先頭に [TASK_ID:{r['id']}] を付けてください。"
                 sent_message_id = tg_send(routed_text)
                 result = f"sent_to_kaikun02: {routed_text[:120]}"
 
@@ -394,8 +397,8 @@ def tick():
     finally:
         c.close()
 
-
 def main():
+
 
     while True:
         try:
