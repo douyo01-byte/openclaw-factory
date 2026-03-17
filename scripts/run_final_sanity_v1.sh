@@ -41,6 +41,9 @@ grep -n 'quick_ai_employee_ranking\|quick_ai_employee_ranking_sent\|quick_runtim
 echo
 echo '===== KAIKUN02 CLEANUP CHECK ====='
 launchctl print "gui/$(id -u)/jp.openclaw.kaikun02_router_cleanup_v1" 2>/dev/null | egrep 'state =|pid =|last exit code =' || true
+echo
+echo '===== KAIKUN04 CLEANUP CHECK ====='
+launchctl print "gui/$(id -u)/jp.openclaw.kaikun04_router_cleanup_v1" 2>/dev/null | egrep 'state =|pid =|last exit code =' || true
 
 echo
 echo '===== WORKTREE ====='
