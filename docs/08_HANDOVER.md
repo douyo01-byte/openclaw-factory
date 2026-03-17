@@ -125,3 +125,12 @@ kaikun02_health_gate_v1
 - canonical inventories:
   - reports/audit_20260317/runtime_unified_inventory_v2.md
   - reports/audit_20260317/unconnected_resolution_plan.md
+
+## Asset reuse decision
+- 未接続/保留資産は捨てずに再責務化する
+- secretary_llm_v1 は 将来 CEO向け統合要約専任 に限定して復帰候補
+- chat_research_v1 は 将来 補助調査専任 に限定して復帰候補
+- team系 bot は 単体実行より 役割資産/source_ai資産 として再配置候補
+- 現時点では 本流を崩さず ACTIVE pipeline を優先する
+- canonical reuse inventory:
+  - reports/audit_20260317/asset_reuse_master_plan.md
