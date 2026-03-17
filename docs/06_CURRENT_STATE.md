@@ -112,3 +112,13 @@
 - canonical file: `reports/audit_20260317/runtime_unified_inventory.md`
 - ACTIVE / ACTIVE_RELAY_ONLY / KEEP_NOT_ACTIVE / IMPLEMENTED_UNCONNECTED / UNCONFIRMED をこの表で一元管理する
 - 新bot追加時はこの棚卸し表も更新する
+
+## Runtime inventory v2
+- canonical file: `reports/audit_20260317/runtime_unified_inventory_v2.md`
+- current active restores on 2026-03-17:
+  - ai_employee_manager_v1
+  - ai_employee_ranking_v1
+  - innovation_llm_engine_v1
+- remaining implemented_unconnected focus:
+  - secretary_llm_v1
+  - chat_research_v1

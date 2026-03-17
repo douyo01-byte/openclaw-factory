@@ -17,11 +17,11 @@
 | bots/kaikun02_executor_bridge_v2.py | ACTIVE | jp.openclaw.kaikun02_executor_bridge_v2.plist | no | no | no | no | yes | c446a4f Stabilize post-backlog zero state and reduce idle executor noise |
 | bots/kaikun04_router_worker_v1.py | ACTIVE_RELAY_ONLY | jp.openclaw.kaikun04_router_worker_v1.plist | no | yes | no | no | yes | d477583 Stabilize router worker and reply finisher |
 | bots/kaikun04_router_cleanup_v1.py | ACTIVE | jp.openclaw.kaikun04_router_cleanup_v1.plist | no | no | yes | yes | yes | bea23a5 Add kaikun04 cleanup and sanity checks |
-| bots/ai_employee_manager_v1.py | IMPLEMENTED_UNCONNECTED | - | no | no | no | no | yes | ca380bf Use timezone aware UTC in ai employee manager |
-| bots/ai_employee_ranking_v1.py | IMPLEMENTED_UNCONNECTED | - | no | no | no | no | yes | 056cc73 Add tracked ai employee ranking bot and runner |
+| bots/ai_employee_manager_v1.py | ACTIVE | jp.openclaw.ai_employee_manager_v1.plist | no | no | no | no | yes | ca380bf Use timezone aware UTC in ai employee manager |
+| bots/ai_employee_ranking_v1.py | ACTIVE | jp.openclaw.ai_employee_ranking_v1.plist | no | no | no | no | yes | 056cc73 Add tracked ai employee ranking bot and runner |
 | bots/dev_pr_automerge_v1.py | ACTIVE | jp.openclaw.dev_pr_automerge_v1.plist | no | no | no | no | yes | ae2066a Restore CEO reply loop and executor auto-flow |
 | bots/learning_brain_v1.py | ACTIVE | jp.openclaw.learning_brain_v1.plist | no | no | no | no | yes | 21c506f pr5: guard learning_result ordering after merged event |
-| bots/innovation_llm_engine_v1.py | IMPLEMENTED_UNCONNECTED | - | no | no | no | no | yes | e42febe Tune innovation target rotation and supply rate |
+| bots/innovation_llm_engine_v1.py | ACTIVE | jp.openclaw.innovation_llm_engine_v1.plist | no | no | no | no | yes | 1cebf28 Tighten innovation target filtering for runtime-safe files |
 | bots/chat_research_v1.py | IMPLEMENTED_UNCONNECTED | - | no | no | no | no | yes | 2d85838 Reconnect code review and migrate business bots to market tables |
 | bots/db_integrity_check_v1.py | ACTIVE | jp.openclaw.db_integrity_check_v1.plist | no | no | no | no | yes | 1644802 Exclude normal throttled states from db integrity metric |
 | bots/healthcheck_v1.py | ACTIVE | jp.openclaw.healthcheck_v1.plist | no | no | no | no | yes | fa17fb2 Fix learning results schema and wire priority scoring |
@@ -35,8 +35,8 @@
 | bots/team/sakura_scout.py | KEEP_NOT_ACTIVE | - | no | no | no | no | yes | c0a39a3 ci: auto fix (20260302-224953) |
 
 ## Summary
-- ACTIVE: 18
+- ACTIVE: 21
 - ACTIVE_RELAY_ONLY: 1
 - KEEP_NOT_ACTIVE: 7
-- IMPLEMENTED_UNCONNECTED: 5
+- IMPLEMENTED_UNCONNECTED: 2
 - UNCONFIRMED: 0
