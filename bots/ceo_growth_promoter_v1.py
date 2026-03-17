@@ -67,7 +67,7 @@ def main():
                         f"ceo-growth-promoted-{row['id']}",
                         row["target_system"] or "ceo_decision_layer_v1",
                         row["improvement_type"] or "autonomous_planning",
-                        int(row["priority"] or 0),
+                        max(int(row["priority"] or 0), 80),
                         f"promoted_from={row['id']} | {row['decision_note'] or ''}",
                     ))
                     inserted = 1
