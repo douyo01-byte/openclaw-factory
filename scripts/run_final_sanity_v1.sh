@@ -44,6 +44,9 @@ launchctl print "gui/$(id -u)/jp.openclaw.kaikun02_router_cleanup_v1" 2>/dev/nul
 echo
 echo '===== KAIKUN04 CLEANUP CHECK ====='
 launchctl print "gui/$(id -u)/jp.openclaw.kaikun04_router_cleanup_v1" 2>/dev/null | egrep 'state =|pid =|last exit code =' || true
+echo
+echo '===== TASK ROUTER CODE CHECK ====='
+grep -n 'def classify\|\[think\]\|\[deep\]\|\[fast\]\|schema\|pipeline\|db\|docs\|handover\|readme' bots/task_router_v1.py || true
 
 echo
 echo '===== WORKTREE ====='
