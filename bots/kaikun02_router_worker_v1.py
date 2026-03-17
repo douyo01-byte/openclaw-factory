@@ -331,17 +331,6 @@ def tick():
                 result = f"quick_top_watchpoints_sent: {body[:120]}"
                 quick_done = True
 
-            elif (
-                "上位3監視ポイント" in txt
-                or "監視ポイント" in txt
-                or "今見るべき" in txt
-                or "どこを見ればいい" in txt
-                or "watchpoint" in txt
-            ):
-                body = quick_top_watchpoints(c)
-                sent_message_id = tg_send(body)
-                result = f"quick_top_watchpoints_sent: {body[:120]}"
-                quick_done = True
 
             elif (
                 "active本流" in txt
