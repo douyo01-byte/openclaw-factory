@@ -148,3 +148,11 @@
 - 現時点では 本流を崩さず ACTIVE pipeline を優先する
 - canonical reuse inventory:
   - reports/audit_20260317/asset_reuse_master_plan.md
+
+## Dormant bot repurpose specs
+- secretary_llm_v1 is reserved for future CEO summary-only return
+- chat_research_v1 is reserved for future support-research-only return
+- both should return only with separated responsibility and no overlap with current quick/deep routing
+- canonical specs:
+  - reports/audit_20260317/secretary_repurpose_spec.md
+  - reports/audit_20260317/chat_research_repurpose_spec.md
