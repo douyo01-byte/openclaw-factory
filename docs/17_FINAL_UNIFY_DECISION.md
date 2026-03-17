@@ -111,3 +111,8 @@
 - task_router_v1 must classify quick operational questions to Kaikun02
 - task_router_v1 must classify THINK / heavy analysis to Kaikun04
 - router policy changes must be reflected in both docs and runtime cleanup rules
+
+## Runtime unified inventory
+- canonical file: `reports/audit_20260317/runtime_unified_inventory.md`
+- ACTIVE / ACTIVE_RELAY_ONLY / KEEP_NOT_ACTIVE / IMPLEMENTED_UNCONNECTED / UNCONFIRMED をこの表で一元管理する
+- 新bot追加時はこの棚卸し表も更新する
