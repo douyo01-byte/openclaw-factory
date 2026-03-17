@@ -85,3 +85,8 @@
 - canonical file: `reports/audit_20260317/active_runtime_flow_table.md`
 - use this as the single operational map of ACTIVE bots
 - Kaikun02 / mother chat should explain runtime using this table first
+
+## Kaikun02 quick routes
+- canonical file: `reports/audit_20260317/kaikun02_quick_routes.md`
+- quick reply active: dashboard / next_tasks / weak_points / ai_employee_ranking / runtime_classification / flow_bottleneck / top_watchpoints
+- anything else should be treated as normal relay task
