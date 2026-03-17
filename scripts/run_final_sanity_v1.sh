@@ -52,5 +52,10 @@ echo '===== TASK ROUTER SMOKE CHECK ====='
 ./scripts/run_task_router_smoke_v1.sh | tail -n 3
 
 echo
+git restore \
+  obs/db_integrity_state.json \
+  reports/audit_20260315/kaikun02_health_gate.json \
+  reports/audit_20260315/kaikun02_health_gate.md
+
 echo '===== WORKTREE ====='
 git status --short
