@@ -320,6 +320,16 @@ def tick():
                 sent_message_id = tg_send(body)
                 result = f"quick_flow_bottleneck_sent: {body[:120]}"
                 quick_done = True
+            elif (
+                "上 位 3 監 視 ポ イ ン ト " in txt
+                or "監 視 ポ イ ン ト " in txt
+                or "watchpoint" in txt
+                or "watchpoints" in txt
+            ):
+                body = quick_top_watchpoints(c)
+                sent_message_id = tg_send(body)
+                result = f"quick_top_watchpoints_sent: {body[:120]}"
+                quick_done = True
 
             elif (
                 "上位3監視ポイント" in txt
