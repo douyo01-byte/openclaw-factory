@@ -85,3 +85,9 @@ kaikun02_health_gate_v1
 - canonical file: `reports/audit_20260317/kaikun02_route_policy.md`
 - quick reply と relay の境界はこのファイルを正とする
 - quick route 追加時は cleanup条件と final sanity grep を同時更新する
+
+## Kaikun04 role policy
+- canonical file: `reports/audit_20260317/kaikun04_role_policy.md`
+- Kaikun04 = THINK / deep analysis / relay-only
+- Kaikun04 must not receive quick routes under current policy
+- quick reply responsibility stays on Kaikun02
