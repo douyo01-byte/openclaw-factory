@@ -23,7 +23,10 @@ def main():
             rows = c.execute("""
                 select
                   id,
-                  cast(coalesce(priority,0) as integer) as priority,
+                  case
+                    when coalesce(decision_note,'') like '%priority_fixed_85%' then 85
+                    else cast(coalesce(priority,0) as integer)
+                  end as priority,
                   coalesce(project_decision,'') as project_decision,
                   coalesce(status,'') as status,
                   coalesce(source_ai,'') as source_ai,
