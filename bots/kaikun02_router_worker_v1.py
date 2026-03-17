@@ -118,6 +118,86 @@ def quick_runtime_classification():
         return p.read_text(encoding="utf-8")[:3500]
     except Exception as e:
         return f"Runtime classification 読 み 込 み 失 敗 : {e}"
+
+
+def quick_flow_bottleneck(c):
+    total = c.execute("select count(*) from dev_proposals").fetchone()[0]
+    merged = c.execute("""
+        select count(*) from dev_proposals
+        where coalesce(status,'')='merged'
+          and coalesce(dev_stage,'')='merged'
+          and coalesce(pr_status,'')='merged'
+    """).fetchone()[0]
+    open_pr = c.execute("""
+        select count(*) from dev_proposals
+        where coalesce(pr_status,'')='open'
+          and coalesce(pr_url,'')<>''
+    """).fetchone()[0]
+    waiting_inbox = c.execute("""
+        select count(*) from inbox_commands
+        where coalesce(processed,0)=0
+    """).fetchone()[0]
+    router_new = c.execute("""
+        select count(*) from router_tasks
+        where coalesce(status,'')='new'
+    """).fetchone()[0]
+    router_started = c.execute("""
+        select count(*) from router_tasks
+        where coalesce(status,'')='started'
+    """).fetchone()[0]
+    router_timeout = c.execute("""
+        select count(*) from router_tasks
+        where coalesce(status,'')='timeout'
+    """).fetchone()[0]
+    refined_wait = c.execute("""
+        select count(*) from dev_proposals
+        where coalesce(status,'') in ('promoted','refining','refined')
+    """).fetchone()[0]
+    executor_wait = c.execute("""
+        select count(*) from dev_proposals
+        where coalesce(status,'') in ('decomposed','executor_ready','execute_now','approved','pr_created')
+          and coalesce(pr_status,'')<>'merged'
+    """).fetchone()[0]
+
+    stages = [
+        ("task_router_v1", waiting_inbox + router_new),
+        ("kaikun02_router_worker_v1", router_started),
+        ("dev_pr_watcher_v1", open_pr),
+        ("spec_refiner_v2", refined_wait),
+        ("dev_pr_creator_v1", executor_wait),
+    ]
+    stages.sort(key=lambda x: x[1], reverse=True)
+    top_name, top_count = stages[0]
+
+    out = []
+    out.append("🚦 OpenClaw 本流ボトルネック")
+    out.append("")
+    out.append(f"total={total}")
+    out.append(f"merged={merged}")
+    out.append(f"open_pr={open_pr}")
+    out.append(f"inbox_waiting={waiting_inbox}")
+    out.append(f"router_new={router_new}")
+    out.append(f"router_started={router_started}")
+    out.append(f"router_timeout={router_timeout}")
+    out.append(f"refined_wait={refined_wait}")
+    out.append(f"executor_wait={executor_wait}")
+    out.append("")
+    out.append(f"top_bottleneck={top_name} ({top_count})")
+
+    if top_name == "task_router_v1":
+        out.append("reason=inbox/router 側の未処理が最も多い")
+    elif top_name == "kaikun02_router_worker_v1":
+        out.append("reason=kaikun02 started タスク滞留")
+    elif top_name == "dev_pr_watcher_v1":
+        out.append("reason=open PR の監視・同期帯が残っている")
+    elif top_name == "spec_refiner_v2":
+        out.append("reason=promoted/refined 帯が滞留")
+    elif top_name == "dev_pr_creator_v1":
+        out.append("reason=executor_ready〜PR作成帯が滞留")
+    else:
+        out.append("reason=単一点ボトルネックは弱い")
+
+    return "\n".join(out)
 def normalize_text(s: str) -> str:
     return "".join((s or "").lower().split())
 
@@ -138,21 +218,25 @@ def tick():
             txt_raw = r["task_text"] or ""
             txt = normalize_text(txt_raw)
             quick_done = False
+
             if "進捗" in txt or "status" in txt:
                 body = quick_dashboard(c)
                 sent_message_id = tg_send(body)
                 result = f"quick_dashboard_sent: {body[:120]}"
                 quick_done = True
+
             elif "次の作業" in txt or "next" in txt:
                 body = quick_next_tasks(c)
                 sent_message_id = tg_send(body)
                 result = f"quick_next_sent: {body[:120]}"
                 quick_done = True
+
             elif "弱点" in txt or "problem" in txt:
                 body = quick_weak_points(c)
                 sent_message_id = tg_send(body)
                 result = f"quick_weak_sent: {body[:120]}"
                 quick_done = True
+
             elif (
                 "社員ランキング" in txt
                 or "ai社員ランキング" in txt
@@ -165,11 +249,27 @@ def tick():
                 sent_message_id = tg_send(body)
                 result = f"quick_ai_employee_ranking_sent: {body[:120]}"
                 quick_done = True
+
+            elif (
+                "本流ボトルネック" in txt
+                or "ボトルネック" in txt
+                or "どこで詰まってる" in txt
+                or "どこが詰まってる" in txt
+                or "詰まり" in txt
+                or "bottleneck" in txt
+                or "flow" in txt
+            ):
+                body = quick_flow_bottleneck(c)
+                sent_message_id = tg_send(body)
+                result = f"quick_flow_bottleneck_sent: {body[:120]}"
+                quick_done = True
+
             elif (
                 "active本流" in txt
                 or "runtime分類" in txt
                 or "reserve_implemented" in txt
-                or "reserveimplemented" in txt
+                or "keep_not_active" in txt
+                or "reserve" in txt
                 or "未接続" in txt
                 or "使えてないプログラム" in txt
                 or "現役と予備" in txt
@@ -179,10 +279,12 @@ def tick():
                 sent_message_id = tg_send(body)
                 result = f"quick_runtime_classification_sent: {body[:120]}"
                 quick_done = True
+
             else:
                 routed_text = f"[TASK_ID:{r['id']}]\n{txt_raw}\n\n返 信 の 先 頭 に [TASK_ID:{r['id']}] を 付 け て く だ さ い 。"
                 sent_message_id = tg_send(routed_text)
                 result = f"sent_to_kaikun02: {routed_text[:120]}"
+
             if quick_done:
                 c.execute("""
                     update router_tasks
@@ -205,14 +307,15 @@ def tick():
                     where id=?
                 """, (result, sent_message_id, r["id"]))
             done += 1
+
         if done:
             c.commit()
         print(f"[kaikun02_router_worker_v1] done={done}", flush=True)
     finally:
         c.close()
 
-
 def main():
+
     while True:
         try:
             tick()
