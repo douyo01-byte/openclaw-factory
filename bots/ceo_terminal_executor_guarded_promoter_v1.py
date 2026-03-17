@@ -32,7 +32,7 @@ def main():
                   coalesce(status,'') as status
                 from dev_proposals
                 where coalesce(source_ai,'')='ceo_terminal_executor_bridge_v1'
-                  and coalesce(project_decision,'')='selected_now'
+                  and coalesce(project_decision,'') in ('selected_now','go')
                   and coalesce(decision_note,'') like '%terminal_executor_selected%'
                   and coalesce(decision_note,'') not like '%terminal_guard_promoted%'
                 order by id desc
