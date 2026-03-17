@@ -34,8 +34,11 @@
 | bots/team/miho_finder.py | KEEP_NOT_ACTIVE | - | no | no | no | no | yes | c0a39a3 ci: auto fix (20260302-224953) |
 | bots/team/sakura_scout.py | KEEP_NOT_ACTIVE | - | no | no | no | no | yes | c0a39a3 ci: auto fix (20260302-224953) |
 
+| bots/db_lock_watchdog_v1.py | ACTIVE | jp.openclaw.db_lock_watchdog_v1.plist | no | no | no | no | yes | e68019f Add burn-in watchdog runners and bots |
+| bots/router_stall_watchdog_v1.py | ACTIVE | jp.openclaw.router_stall_watchdog_v1.plist | no | no | no | no | yes | e68019f Add burn-in watchdog runners and bots |
+| bots/pr_stall_watchdog_v1.py | ACTIVE | jp.openclaw.pr_stall_watchdog_v1.plist | no | no | no | no | yes | e68019f Add burn-in watchdog runners and bots |
 ## Summary
-- ACTIVE: 21
+- ACTIVE: 24
 - ACTIVE_RELAY_ONLY: 1
 - KEEP_NOT_ACTIVE: 7
 - IMPLEMENTED_UNCONNECTED: 2

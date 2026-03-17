@@ -174,3 +174,10 @@
 - dormant assets は 再利用計画化済みで、burn-in中 は 復帰しない
 - canonical decision:
   - reports/audit_20260317/pre_burnin_go_nogo.md
+
+## Burn-in watchdog decision
+- db_lock_watchdog_v1 / router_stall_watchdog_v1 / pr_stall_watchdog_v1 を burn-in監視用に追加
+- ingest_private_replies_kaikun04 は 復旧済み
+- kaikun04 timeout=1 は 2026-03-14 の timeout test 履歴であり 現本流異常ではない
+- manual smoke由来の残骸は burn-in前に整理対象
+- canonical DB は /Users/doyopc/AI/openclaw-factory/data/openclaw.db を正本とする
