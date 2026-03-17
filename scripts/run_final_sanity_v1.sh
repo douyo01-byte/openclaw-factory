@@ -37,7 +37,7 @@ grep -n 'return "ai_employee_ranking"\|elif route == "ai_employee_ranking"\|retu
 
 echo
 echo '===== KAIKUN02 ROUTE CHECK ====='
-grep -n 'quick_ai_employee_ranking\|quick_ai_employee_ranking_sent\|quick_runtime_classification\|quick_runtime_classification_sent\|quick_flow_bottleneck\|quick_flow_bottleneck_sent' bots/kaikun02_router_worker_v1.py || true
+grep -n 'quick_ai_employee_ranking\|quick_ai_employee_ranking_sent\|quick_runtime_classification\|quick_runtime_classification_sent\|quick_flow_bottleneck\|quick_flow_bottleneck_sent\|quick_top_watchpoints\|quick_top_watchpoints_sent' bots/kaikun02_router_worker_v1.py || true
 
 echo
 echo '===== WORKTREE ====='
