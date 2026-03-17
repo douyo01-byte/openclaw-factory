@@ -171,3 +171,10 @@
 - Kaikun02 はまだ full internal-understanding implementation agent ではない
 - canonical audit:
   - reports/audit_20260317/four_question_final_audit.md
+
+## Pre burn-in go/no-go
+- judgment: GO
+- burn-in は 現 ACTIVE本流 を 崩 さ ず 実 施
+- dormant assets は 再利用計画化済みで、burn-in中 は 復帰しない
+- canonical decision:
+  - reports/audit_20260317/pre_burnin_go_nogo.md
