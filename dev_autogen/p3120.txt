@@ -1,0 +1,1 @@
+Modify innovation_llm_engine_v1 so its proposal prompt, ranking logic, and acceptance bias explicitly prioritize architecture expansion, runtime topology changes, multi-agent systems, business bridges, and organization-scale evolution over isolated safe local fixes when final sanity is healthy.
