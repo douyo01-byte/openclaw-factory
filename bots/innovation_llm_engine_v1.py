@@ -121,10 +121,10 @@ def render_history(history):
         )
     return "\n".join(lines)
 
-def ask_llm(path, code, history_text):
+def ask_llm(path, code, history_text, structural_context, force_structural):
     prompt = f"""
 You are improving an autonomous AI software company.
-Read the target file and propose ONE concrete, low-risk improvement.
+Read the target file and propose ONE concrete improvement.
 
 Return strict JSON only:
 {{
@@ -139,18 +139,42 @@ Return strict JSON only:
 
 Rules:
 - Be specific to the file content.
-- Prefer a small concrete change.
 - Avoid duplicate-like titles.
 - If prior proposals exist for this target, choose a meaningfully different angle from recent ones.
 - Do not repeat the latest proposal's title or same lane unless clearly justified by the code.
 - No markdown.
 - JSON only.
+- Prefer proposals that change system behavior, orchestration, routing, lifecycle, runtime topology, AI employee behavior, business execution bridges, or cross-component automation.
+
+When force_structural is true:
+- Do NOT propose small local fixes.
+- Do NOT propose logging-only, parsing-only, env-only, timeout-only, guard-only, or single-function micro improvements.
+- Prefer architecture-first evolution.
+- Prefer multi-component changes over isolated tweaks.
+- Prefer proposals that can create follow-up runtime work.
+
+Allowed structural concepts include:
+- AI employee
+- runtime loop
+- routing
+- orchestration
+- business execution
+- cross-agent coordination
+- topology
+- lifecycle
+- autonomous expansion
+- follow-up generation
 
 Target path:
 {path}
 
 Recent target history:
 {history_text}
+
+Recent merged structural context:
+{structural_context}
+
+force_structural={force_structural}
 
 Code:
 {code}
@@ -159,7 +183,7 @@ Code:
     r = client.chat.completions.create(
         model=MODEL,
         messages=[
-            {"role": "system", "content": "You generate precise engineering improvement proposals in strict JSON."},
+            {"role": "system", "content": "You generate precise engineering improvement proposals in strict JSON. Prefer system evolution over local safe fixes when requested."},
             {"role": "user", "content": prompt},
         ],
         response_format={"type": "json_object"},
@@ -195,7 +219,94 @@ def same_lane(a, b):
         (a.get("category", "") or "").strip().lower() == (b["category"] or "").strip().lower()
     )
 
+STRUCTURAL_KEYWORDS = (
+    "ai employee", "runtime loop", "routing", "orchestration",
+    "business execution", "cross-agent", "cross agent",
+    "topology", "lifecycle", "autonomous", "follow-up",
+    "follow up", "multi-component", "multi component",
+    "organization-scale", "organization scale", "architecture"
+)
 
+SMALL_FIX_KEYWORDS = (
+    "logging", "log ", "parse", "parsing", "env ", ".env", "timeout",
+    "guard", "wrapper", "retry", "truncate", "coerce", "decode",
+    "split", "mail", "http fetch", "single-function", "single function",
+    "micro", "small fix", "small local", "lightweight logging"
+)
+
+def final_sanity_healthy(con):
+    row = con.execute("""
+    select
+      sum(case when coalesce(pr_status,'')='open' then 1 else 0 end) as open_pr,
+      sum(case when coalesce(source_ai,'')='' then 1 else 0 end) as blank_source_ai,
+      sum(case
+            when coalesce(status,'')='merged'
+             and (coalesce(result_type,'')='' or result_type is null)
+            then 1 else 0 end) as merged_without_result_type,
+      sum(case
+            when coalesce(status,'')='merged'
+             and coalesce(dev_stage,'')<>'merged'
+            then 1 else 0 end) as stage_divergence
+    from dev_proposals
+    """).fetchone()
+    if not row:
+        return False
+    vals = [int(row[i] or 0) for i in range(4)]
+    return vals == [0, 0, 0, 0]
+
+def recent_structural_context(con, limit_n=8):
+    rows = con.execute("""
+    select coalesce(title,''), coalesce(description,'')
+    from dev_proposals
+    where coalesce(status,'')='merged'
+      and coalesce(source_ai,'') in ('mothership','innovation_llm_engine_v1')
+    order by id desc
+    limit ?
+    """, (limit_n,)).fetchall()
+    out = []
+    for r in rows:
+        title = (r[0] or "").strip()
+        desc = (r[1] or "").strip()
+        text = f"{title} {desc}".lower()
+        if any(k in text for k in STRUCTURAL_KEYWORDS):
+            out.append(f"- {title}: {desc[:220]}")
+    return "\n".join(out[:limit_n]) or "None"
+
+def has_structural_signal(row):
+    text = f"{row.get('title','')} {row.get('description','')}".lower()
+    return any(k in text for k in STRUCTURAL_KEYWORDS)
+
+def is_small_fix(row):
+    text = f"{row.get('title','')} {row.get('description','')}".lower()
+    if any(k in text for k in SMALL_FIX_KEYWORDS):
+        return True
+    imp = (row.get("improvement_type","") or "").strip().lower()
+    cat = (row.get("category","") or "").strip().lower()
+    if imp in ("logging", "guard", "diagnostics"):
+        return True
+    if cat in ("observability",) and not has_structural_signal(row):
+        return True
+    return False
+
+def score_boost_for_strategy(row, force_structural):
+    if not force_structural:
+        return row
+    text = f"{row.get('title','')} {row.get('description','')}".lower()
+    score = float(row.get("score", 0) or 0)
+    priority = int(row.get("priority", 0) or 0)
+    quality = float(row.get("quality_score", 0) or 0)
+    if has_structural_signal(row):
+        score += 18
+        priority += 15
+        quality += 0.08
+    if "business execution" in text or "ai employee" in text or "runtime loop" in text:
+        score += 8
+        priority += 8
+        quality += 0.04
+    row["score"] = score
+    row["priority"] = priority
+    row["quality_score"] = quality
+    return clamp(row)
 
 def total_count(con, path):
     row = con.execute("""
@@ -309,7 +420,11 @@ def main():
     seen_titles = recent_titles(con)
     targets = sorted(list_targets(), key=lambda x: target_rank(con, x), reverse=True)
     inserted = 0
+    force_structural = final_sanity_healthy(con)
+    structural_context = recent_structural_context(con, 8)
 
+    print("[innovation] force_structural=", force_structural, flush=True)
+    print("[innovation] structural_context=", structural_context[:500], flush=True)
     print("[innovation] ranked_targets_top=", [(x, target_rank(con, x), closed_count(con, x), total_count(con, x)) for x in targets[:12]], flush=True)
     for path in targets:
         code = read_text(path, 7000)
@@ -323,13 +438,20 @@ def main():
             continue
 
         try:
-            row = clamp(ask_llm(path, code, render_history(history)))
+            row = clamp(ask_llm(path, code, render_history(history), structural_context, force_structural))
+            row = score_boost_for_strategy(row, force_structural)
         except Exception as e:
             print(repr(e), flush=True)
             continue
 
         if row["title"].lower() in seen_titles:
             print(f"[skip] target={path} reason=duplicate_title", flush=True)
+            continue
+        if force_structural and is_small_fix(row):
+            print(f"[skip] target={path} reason=small_fix_blocked", flush=True)
+            continue
+        if force_structural and not has_structural_signal(row):
+            print(f"[skip] target={path} reason=missing_structural_signal", flush=True)
             continue
         ok2, reason2 = improvement_allowed(con, path, row)
         if not ok2:
