@@ -251,9 +251,11 @@ def main() -> None:
             "UPDATE market_chat_jobs SET status='done', updated_at=datetime('now'), error=NULL WHERE id=?",
             (job_id,),
         )
+        conn.commit()
         processed += 1
         time.sleep(0.2)
 
+    conn.commit()
     conn.close()
     print(f"Done. processed={processed}")
 
