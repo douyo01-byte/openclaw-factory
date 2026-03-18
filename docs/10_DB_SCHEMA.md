@@ -1,6 +1,6 @@
 # OpenClaw DB Schema
 
-- generated_at: 2026-03-18T11:58:17.860673+00:00
+- generated_at: 2026-03-18T12:39:53.246220+00:00
 - canonical_db: /Users/doyopc/AI/openclaw-factory/data/openclaw.db
 
 ## ai_employee_rankings
