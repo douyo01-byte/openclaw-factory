@@ -1,0 +1,1 @@
+After strategic mothership proposals merge, automatically create concrete runtime execution proposals targeting actual files, services, and loops so that strategy becomes implementation waves instead of stopping at text-level merges.
