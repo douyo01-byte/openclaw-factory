@@ -1,0 +1,16 @@
+The file ends mid-line in main(), leaving the loop incomplete. Make a minimal, low-risk fix: replace the truncated tail with a complete loop that (1) wraps tick_once(conn) in try/except to log exceptions without crashing the process, (2) ensures conn.close() runs in a finally block so SQLite connections are always closed, and (3) sleeps SLEEP seconds between iterations. Also handle KeyboardInterrupt to exit cleanly. Example concrete changes: after setting conn.row_factory and before calling tick_once, call:
+
+try:
+    print("[watcher] tick_once enter", flush=True)
+    try:
+        tick_once(conn)
+        print("[watcher] tick_once exit", flush=True)
+    except Exception as e:
+        print("[watcher] tick_once exception", repr(e), flush=True)
+finally:
+    try:
+        conn.close()
+    except Exception:
+        pass
+
+then time.sleep(SLEEP) and continue the while loop; catch KeyboardInterrupt outside the loop to break. This is a small, concrete bugfix that prevents leaked DB connections and avoids an incomplete / syntax-broken main loop.
