@@ -1,0 +1,1 @@
+Implement the first production MVP of the AI employee system by creating employee registry, task routing, worker heartbeat, and lifecycle status management. Scope to minimal working flow first, with extensible schema for future scaling and performance tracking.
