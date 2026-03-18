@@ -1,0 +1,1 @@
+Reduce SQLite lock contention in dev_pr_creator and related support bots by introducing safer transaction scope, retry with backoff, shorter write windows, and lock-aware update ordering.
