@@ -1,0 +1,1 @@
+Upgrade Telegram evolution trace from simple status reporting into a structured digest showing why proposals were generated, what changed, what merged, and what execution direction OpenClaw selected.
