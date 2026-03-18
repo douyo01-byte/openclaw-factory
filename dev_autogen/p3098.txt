@@ -1,0 +1,1 @@
+Implement an MVP bridge that converts selected merged development proposals into business execution candidates, lead generation actions, and revenue experiment records. Include routing, status tracking, and minimal audit trail without external auto-contracting or auto-payment.
