@@ -564,7 +564,6 @@ def route_special(text):
         or "誰が一番強い" in tc
         or "誰が強い" in tc
     ):
-        return "ai_employee_ranking"
     if (
         "active本流" in tc
         or "runtime分類" in tc
@@ -575,7 +574,6 @@ def route_special(text):
         or "現役と予備" in tc
         or "activeとreserve" in tc
     ):
-        return "runtime_classification"
     coo_keys = [
         "こんなん作って",
         "これを自動化したい",
@@ -633,21 +631,6 @@ def run_once():
                 "・ ACTIVE本流 / RESERVE_IMPLEMENTED → runtime分類返答\n"
                 "・ こんなん作って → COO整理で返答\n"
                 "・ それ以外 → 通常相談に返答"
-            )
-        elif route == "ai_employee_ranking":
-            reply = "OpenClaw AI社員ランキング\n━━━━━━━━━━━━━━━━━━\n" + ai_employee_ranking_block(conn)
-        elif route == "next_actions":
-            reply = (
-                "OpenClaw 次の作業\n"
-                "1. executor安定性チェック\n"
-                "2. PR backlog確認\n"
-                "3. supply生成状況確認\n"
-                "4. learning反映確認\n"
-                "5. AI会議ログ確認\n\n"
-                "作業チャット指示例\n"
-                "cd ~/AI/openclaw-factory-daemon\n"
-                "launchctl list | grep openclaw\n"
-                "sqlite3 data/openclaw.db \"select count(*) from dev_proposals;\""
             )
         elif route == "coo_intake":
             reply = build_coo_plan(text, conn)
