@@ -1,0 +1,1 @@
+Implement a hard gate in the real innovation_llm_engine_v1 code path: if final sanity is healthy, reject or heavily down-rank proposals focused only on logging tweaks, parsing tweaks, env safety, guard clauses, timeout wrappers, micro optimizations, or single-function local fixes. Only allow them when system health is degraded or there is explicit failure evidence.
