@@ -1,0 +1,1 @@
+When a merged mothership proposal contains structural evolution themes, automatically generate concrete follow-up implementation proposals that modify runtime code, routing, innovation bias, SQLite concurrency handling, and Telegram reasoning digest behavior.
