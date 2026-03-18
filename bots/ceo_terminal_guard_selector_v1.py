@@ -70,7 +70,7 @@ def main():
         con.commit()
         selected_id = selected["id"]
 
-    path = "reports/audit_20260317/ceo_terminal_guard_selection.md"
+    path = "obs/runtime_generated/ceo_terminal_guard_selection.md"
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
     with open(path, "w", encoding="utf-8") as f:

@@ -64,7 +64,7 @@ def stop_label(label: str):
 
 
 def load_health_gate():
-    p = Path("reports/audit_20260315/kaikun02_health_gate.json")
+    p = Path("obs/runtime_generated/kaikun02_health_gate.json")
     if p.exists():
         try:
             return json.loads(p.read_text(encoding="utf-8"))

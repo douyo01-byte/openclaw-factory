@@ -151,7 +151,7 @@ def main():
     }
 
     Path("reports/audit_20260315").mkdir(parents=True, exist_ok=True)
-    Path("reports/audit_20260315/kaikun02_health_gate.json").write_text(
+    Path("obs/runtime_generated/kaikun02_health_gate.json").write_text(
         json.dumps(result, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
@@ -193,7 +193,7 @@ def main():
     lines.append("## docs_priority")
     for x in DOCS_PRIORITY:
         lines.append(f"- {x}")
-    Path("reports/audit_20260315/kaikun02_health_gate.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    Path("obs/runtime_generated/kaikun02_health_gate.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     print(json.dumps(result, ensure_ascii=False, indent=2))
 

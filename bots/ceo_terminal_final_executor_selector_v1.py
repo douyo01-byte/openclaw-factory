@@ -69,7 +69,7 @@ def main():
         con.commit()
         selected_id = str(selected["id"])
 
-    path = "reports/audit_20260317/ceo_terminal_final_executor_selection.md"
+    path = "obs/runtime_generated/ceo_terminal_final_executor_selection.md"
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(f"# CEO Terminal Final Executor Selection ({datetime.datetime.now()})\n")

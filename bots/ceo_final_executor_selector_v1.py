@@ -7,7 +7,7 @@ from pathlib import Path
 
 DB = os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 SLEEP = 180
-OUT = Path("/Users/doyopc/AI/openclaw-factory-daemon/reports/audit_20260317/ceo_final_executor_selection.md")
+OUT = Path("/Users/doyopc/AI/openclaw-factory-daemon/obs/runtime_generated/ceo_final_executor_selection.md")
 
 def conn():
     con = sqlite3.connect(DB, timeout=30)

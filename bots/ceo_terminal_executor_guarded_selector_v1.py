@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
-REPORT = Path("reports/audit_20260317/ceo_terminal_executor_guarded_selection.md")
+REPORT = Path("obs/runtime_generated/ceo_terminal_executor_guarded_selection.md")
 LOG = "logs/ceo_terminal_executor_guarded_selector_v1.out"
 
 def score_row(priority, note):

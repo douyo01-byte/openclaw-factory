@@ -60,8 +60,8 @@ echo '===== TASK ROUTER SMOKE CHECK ====='
 echo
 git restore \
   obs/db_integrity_state.json \
-  reports/audit_20260315/kaikun02_health_gate.json \
-  reports/audit_20260315/kaikun02_health_gate.md
+  obs/runtime_generated/kaikun02_health_gate.json \
+  obs/runtime_generated/kaikun02_health_gate.md
 
 fi
 

@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 DB = os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
-OUT = Path("/Users/doyopc/AI/openclaw-factory-daemon/reports/audit_20260317/ceo_terminal_executor_selection.md")
+OUT = Path("/Users/doyopc/AI/openclaw-factory-daemon/obs/runtime_generated/ceo_terminal_executor_selection.md")
 SLEEP = 120
 
 def connect():

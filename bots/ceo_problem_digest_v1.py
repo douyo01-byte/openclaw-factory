@@ -6,7 +6,7 @@ from pathlib import Path
 from datetime import datetime
 
 DB = os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
-OUT = Path("/Users/doyopc/AI/openclaw-factory-daemon/reports/audit_20260317/ceo_problem_digest.md")
+OUT = Path("/Users/doyopc/AI/openclaw-factory-daemon/obs/runtime_generated/ceo_problem_digest.md")
 SLEEP = 300
 
 def main():
