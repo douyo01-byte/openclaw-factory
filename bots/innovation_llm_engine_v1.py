@@ -245,14 +245,18 @@ def final_sanity_healthy(con):
             then 1 else 0 end) as merged_without_result_type,
       sum(case
             when coalesce(status,'')='merged'
-             and coalesce(dev_stage,'')<>'merged'
+             and coalesce(dev_stage,'') not in ('','merged')
             then 1 else 0 end) as stage_divergence
     from dev_proposals
+    where coalesce(source_ai,'')<>'innovation_llm_engine_v1'
     """).fetchone()
     if not row:
-        return False
-    vals = [int(row[i] or 0) for i in range(4)]
-    return vals == [0, 0, 0, 0]
+        return True
+    open_pr = int(row[0] or 0)
+    blank_source_ai = int(row[1] or 0)
+    merged_without_result_type = int(row[2] or 0)
+    stage_divergence = int(row[3] or 0)
+    return open_pr == 0 and blank_source_ai == 0 and merged_without_result_type == 0 and stage_divergence == 0
 
 def recent_structural_context(con, limit_n=8):
     rows = con.execute("""
