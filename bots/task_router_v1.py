@@ -70,6 +70,7 @@ def tick():
         from inbox_commands
         where coalesce(router_status,'')=''
           and coalesce(text,'')<>''
+          and coalesce(source,'')<>'private_reply_bridge'
         order by id asc
         limit 20
         """).fetchall()
