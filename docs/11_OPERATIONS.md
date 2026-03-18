@@ -48,3 +48,7 @@
 - auto: docs/10_DB_SCHEMA.md
 - auto: docs/11_OPERATIONS.md
 - auto: docs/_auto_progress.md
+
+## 現在の運用注記
+- support bot は棚卸し中のため core / support / hold を分けて扱う
+- self_evolution_engine_v1 は module 未実装のため live 扱いしない
