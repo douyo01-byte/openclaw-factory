@@ -1,267 +1,346 @@
-# OpenClaw DB Schema Notes
+# OpenClaw DB Schema
 
-自動生成。手修正しない。
+- generated_at: 2026-03-18T11:58:17.860673+00:00
+- canonical_db: /Users/doyopc/AI/openclaw-factory/data/openclaw.db
 
-- generated_at: `2026-03-10 00:01:41`
-- branch: `dev/self-watch-recovery`
-- db: `/Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db`
+## ai_employee_rankings
+- rank_no | INTEGER
+- source_ai | TEXT
+- total_count | INTEGER
+- merged_count | INTEGER
+- merge_rate | REAL
+- score | REAL
+- updated_at | TEXT
 
-## table list
-- ai_employees
-- ceo_hub_events
-- ceo_hub_events_old_20260308_1
-- decision_patterns
-- decisions
-- decisions_old_20260306_095604
-- dev_events
-- dev_execution_log
-- dev_proposals
-- explain_sent
-- inbox_commands
-- kv
-- proposal_conversation
-- proposal_state
-- reflection_requests
-- report_sent
-- retrospectives
-- sent_questions
-- sqlite_sequence
-- tg_command_log
-- tg_ingest_state
-- tg_kv
-- tg_private_chat_log
-- tg_prompt_map
+## ai_employee_scores
+- source_ai | TEXT
+- total_count | INTEGER
+- merged_count | INTEGER
+- updated_at | TEXT
 
-## current counts
-- dev_proposals: 872
-- proposal_state: 68
-- proposal_conversation: 13481
-- inbox_commands: 475
-- decisions: 3
-- ceo_hub_events: 290
+## ai_intelligence
+- metric | TEXT
+- value | REAL
 
-## proposal_state status counts
-- closed: 2
-- merged: 61
-- pr_created: 1
-- refined: 4
+## ai_thought_log
+- id | INTEGER
+- task_id | INTEGER
+- thought | TEXT
+- created_at | TEXT
 
-## ceo_hub_events event counts
-- ai_employee: 6
-- learning_result: 79
-- merged: 125
-- pr_created: 75
-- revenue: 5
+## ceo_decision_layer_results
+- proposal_id | INTEGER
+- rank_score | REAL
+- meeting_needed | INTEGER
+- decision_bucket | TEXT
+- summary | TEXT
+- source_snapshot | TEXT
+- updated_at | TEXT
 
-## columns
-### ai_employees
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- employee_key | TEXT | notnull=1 | pk=0 | default=None
-- display_name | TEXT | notnull=1 | pk=0 | default=None
-- role_name | TEXT | notnull=1 | pk=0 | default=None
-- mission | TEXT | notnull=1 | pk=0 | default=None
-- is_enabled | INTEGER | notnull=1 | pk=0 | default=1
-- created_at | TEXT | notnull=1 | pk=0 | default=datetime('now')
+## ceo_hub_events
+- id | INTEGER
+- event_type | TEXT
+- title | TEXT
+- body | TEXT
+- proposal_id | INTEGER
+- pr_url | TEXT
+- created_at | TEXT
+- sent_at | TEXT
 
-### ceo_hub_events
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- event_type | TEXT | notnull=0 | pk=0 | default=None
-- title | TEXT | notnull=0 | pk=0 | default=None
-- body | TEXT | notnull=0 | pk=0 | default=None
-- proposal_id | INTEGER | notnull=0 | pk=0 | default=None
-- pr_url | TEXT | notnull=0 | pk=0 | default=None
-- created_at | TEXT | notnull=0 | pk=0 | default=datetime('now')
-- sent_at | TEXT | notnull=0 | pk=0 | default=None
+## company_orders
+- id | INTEGER
+- source | TEXT
+- command | TEXT
+- status | TEXT
+- created_at | TEXT
+- updated_at | TEXT
 
-### ceo_hub_events_old_20260308_1
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- source | TEXT | notnull=1 | pk=0 | default=None
-- source_key | TEXT | notnull=1 | pk=0 | default=None
-- title | TEXT | notnull=1 | pk=0 | default=None
-- body | TEXT | notnull=1 | pk=0 | default=None
-- level | TEXT | notnull=1 | pk=0 | default='info'
-- created_at | TEXT | notnull=1 | pk=0 | default=datetime('now')
-- sent_at | TEXT | notnull=0 | pk=0 | default=None
+## contacts
+- url | TEXT
+- emails | TEXT
+- pages | TEXT
+- notes | TEXT
+- ts | INTEGER
 
-### decision_patterns
-- token | TEXT | notnull=0 | pk=1 | default=None
-- weight | REAL | notnull=1 | pk=0 | default=None
-- updated_at | TEXT | notnull=0 | pk=0 | default=datetime('now')
+## decision_patterns
+- token | TEXT
+- weight | REAL
+- updated_at | TEXT
 
-### decisions
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- run_id | TEXT | notnull=0 | pk=0 | default=None
-- target | TEXT | notnull=0 | pk=0 | default=None
-- decision | TEXT | notnull=1 | pk=0 | default=None
-- reason | TEXT | notnull=0 | pk=0 | default=None
-- meta_json | TEXT | notnull=0 | pk=0 | default=None
-- created_at | TEXT | notnull=1 | pk=0 | default=datetime('now')
+## decisions
+- id | INTEGER
+- run_id | TEXT
+- target | TEXT
+- decision | TEXT
+- reason | TEXT
+- meta_json | TEXT
+- created_at | TEXT
 
-### decisions_old_20260306_095604
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- run_id | TEXT | notnull=0 | pk=0 | default=None
-- created_at | TEXT | notnull=0 | pk=0 | default=datetime('now')
-- target | TEXT | notnull=0 | pk=0 | default=None
-- meta_json | TEXT | notnull=0 | pk=0 | default=None
+## dev_events
+- id | INTEGER
+- proposal_id | INTEGER
+- event_type | TEXT
+- payload | TEXT
+- created_at | DATETIME
 
-### dev_events
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- proposal_id | INTEGER | notnull=1 | pk=0 | default=None
-- event_type | TEXT | notnull=1 | pk=0 | default=None
-- payload | TEXT | notnull=0 | pk=0 | default=None
-- created_at | TEXT | notnull=0 | pk=0 | default=datetime('now')
+## dev_proposals
+- id | INTEGER
+- title | TEXT
+- description | TEXT
+- branch_name | TEXT
+- status | TEXT
+- risk_level | TEXT
+- created_at | DATETIME
+- processing | INTEGER
+- project_decision | TEXT
+- dev_stage | TEXT
+- pr_status | TEXT
+- pr_url | TEXT
+- pr_number | INTEGER
+- spec_stage | TEXT
+- spec | TEXT
+- category | TEXT
+- target_system | TEXT
+- improvement_type | TEXT
+- quality_score | REAL
+- priority | INTEGER
+- score | REAL
+- result_type | TEXT
+- guard_status | TEXT
+- guard_reason | TEXT
+- decision_note | TEXT
+- dev_attempts | INTEGER
+- last_error | TEXT
+- executed_at | TEXT
+- source_ai | TEXT
+- confidence | REAL
+- result_score | REAL
+- result_note | TEXT
+- notified_at | TEXT
+- notified_msg_id | TEXT
+- impact_score | REAL
+- impact_level | TEXT
+- impact_reason | TEXT
+- impact_updated_at | TEXT
+- target_policy | TEXT
 
-### dev_execution_log
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- proposal_id | INTEGER | notnull=0 | pk=0 | default=None
-- status | TEXT | notnull=0 | pk=0 | default=None
-- message | TEXT | notnull=0 | pk=0 | default=None
-- created_at | datetime | notnull=0 | pk=0 | default=current_timestamp
+## inbox_commands
+- id | INTEGER
+- source | TEXT
+- text | TEXT
+- status | TEXT
+- result | TEXT
+- created_at | TEXT
+- updated_at | TEXT
+- chat_id | TEXT
+- message_id | INTEGER
+- reply_to_message_id | INTEGER
+- from_username | TEXT
+- from_name | TEXT
+- received_at | TEXT
+- applied_at | TEXT
+- error | TEXT
+- update_id | INTEGER
+- processed | INTEGER
+- router_status | TEXT
+- router_target | TEXT
+- router_mode | TEXT
+- router_finish_status | TEXT
 
-### dev_proposals
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- status | TEXT | notnull=0 | pk=0 | default=None
-- dev_stage | TEXT | notnull=0 | pk=0 | default=None
-- pr_status | TEXT | notnull=0 | pk=0 | default=None
-- pr_number | INTEGER | notnull=0 | pk=0 | default=None
-- pr_url | TEXT | notnull=0 | pk=0 | default=None
-- title | TEXT | notnull=0 | pk=0 | default=None
-- description | TEXT | notnull=0 | pk=0 | default=None
-- branch_name | TEXT | notnull=0 | pk=0 | default=None
-- dev_attempts | INTEGER | notnull=0 | pk=0 | default=0
-- spec_stage | TEXT | notnull=0 | pk=0 | default=None
-- created_at | TEXT | notnull=0 | pk=0 | default=None
-- notified_at | TEXT | notnull=0 | pk=0 | default=None
-- notified_msg_id | TEXT | notnull=0 | pk=0 | default=None
-- spec | TEXT | notnull=0 | pk=0 | default=None
-- decided_at | TEXT | notnull=0 | pk=0 | default=None
-- decided_by | TEXT | notnull=0 | pk=0 | default=None
-- decision_note | TEXT | notnull=0 | pk=0 | default=None
-- risk_level | TEXT | notnull=0 | pk=0 | default='low'
-- source_ai | TEXT | notnull=0 | pk=0 | default=None
-- brain_type | TEXT | notnull=0 | pk=0 | default=None
-- confidence | REAL | notnull=0 | pk=0 | default=None
-- category | TEXT | notnull=0 | pk=0 | default=None
-- priority | INTEGER | notnull=0 | pk=0 | default=0
-- project_decision | TEXT | notnull=0 | pk=0 | default=''
-- duplicate_of | INTEGER | notnull=0 | pk=0 | default=None
-- guard_status | TEXT | notnull=0 | pk=0 | default='pending'
-- guard_reason | TEXT | notnull=0 | pk=0 | default=None
-- infra_status | TEXT | notnull=0 | pk=0 | default=''
-- infra_note | TEXT | notnull=0 | pk=0 | default=None
-- cluster_id | TEXT | notnull=0 | pk=0 | default=None
-- cluster_role | TEXT | notnull=0 | pk=0 | default=''
-- guard_level | TEXT | notnull=0 | pk=0 | default=''
-- result_type | TEXT | notnull=0 | pk=0 | default=None
-- result_score | REAL | notnull=0 | pk=0 | default=None
-- result_note | TEXT | notnull=0 | pk=0 | default=None
-- target_system | TEXT | notnull=0 | pk=0 | default=None
-- improvement_type | TEXT | notnull=0 | pk=0 | default=None
-- explain | TEXT | notnull=0 | pk=0 | default=None
-- explain_stage | TEXT | notnull=0 | pk=0 | default=None
-- quality_score | INTEGER | notnull=0 | pk=0 | default=0
+## kaikun02_actions
+- id | INTEGER
+- proposal_id | INTEGER
+- action | TEXT
+- created_at | TEXT
+- mode | TEXT
 
-### explain_sent
-- k | TEXT | notnull=0 | pk=1 | default=None
-- sent_at | TEXT | notnull=1 | pk=0 | default=datetime('now')
+## kv
+- k | TEXT
+- v | TEXT
+- updated_at | TEXT
 
-### inbox_commands
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- status | TEXT | notnull=0 | pk=0 | default=None
-- text | TEXT | notnull=0 | pk=0 | default=None
-- created_at | TEXT | notnull=0 | pk=0 | default=datetime('now')
-- processed | INTEGER | notnull=0 | pk=0 | default=0
-- applied_at | TEXT | notnull=0 | pk=0 | default=None
-- source | TEXT | notnull=0 | pk=0 | default=None
-- update_id | INTEGER | notnull=0 | pk=0 | default=None
-- chat_id | TEXT | notnull=0 | pk=0 | default=None
-- user_id | TEXT | notnull=0 | pk=0 | default=None
-- username | TEXT | notnull=0 | pk=0 | default=None
-- error | TEXT | notnull=0 | pk=0 | default=None
-- message_id | INTEGER | notnull=0 | pk=0 | default=None
-- reply_to_message_id | INTEGER | notnull=0 | pk=0 | default=None
-- from_username | TEXT | notnull=0 | pk=0 | default=None
-- from_name | TEXT | notnull=0 | pk=0 | default=None
-- received_at | TEXT | notnull=0 | pk=0 | default=None
+## learning_patterns
+- id | INTEGER
+- pattern_type | TEXT
+- pattern_key | TEXT
+- sample_count | INTEGER
+- success_count | INTEGER
+- avg_impact_score | REAL
+- avg_result_score | REAL
+- weight | REAL
+- updated_at | TEXT
 
-### kv
-- k | TEXT | notnull=0 | pk=1 | default=None
-- v | TEXT | notnull=1 | pk=0 | default=None
-- updated_at | TEXT | notnull=0 | pk=0 | default=None
+## learning_results
+- id | INTEGER
+- proposal_id | INTEGER
+- title | TEXT
+- source_ai | TEXT
+- target_system | TEXT
+- improvement_type | TEXT
+- impact_score | REAL
+- impact_level | TEXT
+- impact_reason | TEXT
+- result_score | REAL
+- result_type | TEXT
+- result_note | TEXT
+- success_flag | INTEGER
+- learning_summary | TEXT
+- merged_at | TEXT
+- created_at | TEXT
 
-### proposal_conversation
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- proposal_id | INTEGER | notnull=0 | pk=0 | default=None
-- role | TEXT | notnull=0 | pk=0 | default=None
-- message | TEXT | notnull=0 | pk=0 | default=None
-- created_at | datetime | notnull=0 | pk=0 | default=current_timestamp
+## market_chat_jobs
+- id | INTEGER
+- chat_id | TEXT
+- item_id | INTEGER
+- role | TEXT
+- query | TEXT
+- status | TEXT
+- error | TEXT
+- created_at | TEXT
+- updated_at | TEXT
 
-### proposal_state
-- proposal_id | INTEGER | notnull=0 | pk=1 | default=None
-- stage | TEXT | notnull=0 | pk=0 | default=None
-- pending_questions | TEXT | notnull=0 | pk=0 | default=None
-- updated_at | datetime | notnull=0 | pk=0 | default=current_timestamp
-- pending_question | TEXT | notnull=0 | pk=0 | default=None
-- notified_at | TEXT | notnull=0 | pk=0 | default=None
+## market_contacts
+- id | INTEGER
+- item_id | INTEGER
+- email | TEXT
+- source | TEXT
+- created_at | TEXT
 
-### reflection_requests
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- window_n | INTEGER | notnull=1 | pk=0 | default=50
-- status | TEXT | notnull=1 | pk=0 | default='new'
-- result | TEXT | notnull=0 | pk=0 | default=None
-- error | TEXT | notnull=0 | pk=0 | default=None
-- processed_at | TEXT | notnull=0 | pk=0 | default=None
-- created_at | TEXT | notnull=1 | pk=0 | default=datetime('now')
+## market_items
+- id | INTEGER
+- url | TEXT
+- title | TEXT
+- source | TEXT
+- status | TEXT
+- first_seen_at | TEXT
+- last_seen_at | TEXT
+- created_at | TEXT
 
-### report_sent
-- k | TEXT | notnull=0 | pk=1 | default=None
-- sent_at | TEXT | notnull=1 | pk=0 | default=datetime('now')
+## market_role_briefs
+- id | INTEGER
+- role | TEXT
+- topic | TEXT
+- source_url | TEXT
+- title | TEXT
+- summary | TEXT
+- fetched_at | TEXT
 
-### retrospectives
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- chat_id | TEXT | notnull=0 | pk=0 | default=None
-- from_username | TEXT | notnull=0 | pk=0 | default=None
-- text | TEXT | notnull=1 | pk=0 | default=None
-- created_at | TEXT | notnull=1 | pk=0 | default=datetime('now')
+## market_state
+- k | TEXT
+- v | TEXT
 
-### sent_questions
-- proposal_id | INTEGER | notnull=0 | pk=1 | default=None
-- chat_id | TEXT | notnull=1 | pk=0 | default=None
-- message_id | INTEGER | notnull=1 | pk=0 | default=None
-- sent_at | TEXT | notnull=1 | pk=0 | default=datetime('now')
+## proposal_cluster_stats
+- cluster | TEXT
+- count | INTEGER
 
-### sqlite_sequence
-- name |  | notnull=0 | pk=0 | default=None
-- seq |  | notnull=0 | pk=0 | default=None
+## proposal_clusters
+- id | INTEGER
+- cluster_key | TEXT
+- proposal_id | INTEGER
+- title | TEXT
+- status | TEXT
+- source_ai | TEXT
+- created_at | TEXT
 
-### tg_command_log
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- chat_id | TEXT | notnull=0 | pk=0 | default=None
-- user_id | TEXT | notnull=0 | pk=0 | default=None
-- text | TEXT | notnull=0 | pk=0 | default=None
-- created_at | TEXT | notnull=0 | pk=0 | default=None
+## proposal_conversation
+- id | INTEGER
+- proposal_id | INTEGER
+- role | TEXT
+- message | TEXT
+- created_at | DATETIME
 
-### tg_ingest_state
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- last_update_id | INTEGER | notnull=1 | pk=0 | default=None
+## proposal_state
+- proposal_id | INTEGER
+- stage | TEXT
+- pending_questions | TEXT
+- updated_at | DATETIME
+- pending_question | TEXT
 
-### tg_kv
-- k | TEXT | notnull=0 | pk=1 | default=None
-- v | TEXT | notnull=0 | pk=0 | default=None
-- updated_at | TEXT | notnull=0 | pk=0 | default=None
+## reflection_requests
+- id | INTEGER
+- window_n | INTEGER
+- status | TEXT
+- result | TEXT
+- error | TEXT
+- processed_at | TEXT
 
-### tg_private_chat_log
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- message_id | INTEGER | notnull=0 | pk=0 | default=None
-- chat_id | INTEGER | notnull=0 | pk=0 | default=None
-- text | TEXT | notnull=0 | pk=0 | default=None
-- created_at | datetime | notnull=0 | pk=0 | default=current_timestamp
-- update_id | INTEGER | notnull=0 | pk=0 | default=None
+## retrospectives
+- id | INTEGER
+- chat_id | TEXT
+- from_username | TEXT
+- text | TEXT
+- created_at | TEXT
 
-### tg_prompt_map
-- id | INTEGER | notnull=0 | pk=1 | default=None
-- chat_id | TEXT | notnull=1 | pk=0 | default=None
-- message_id | INTEGER | notnull=1 | pk=0 | default=None
-- proposal_id | INTEGER | notnull=1 | pk=0 | default=None
-- kind | TEXT | notnull=1 | pk=0 | default='spec_question'
-- created_at | TEXT | notnull=1 | pk=0 | default=datetime('now')
+## router_tasks
+- id | INTEGER
+- source_command_id | INTEGER
+- mode | TEXT
+- target_bot | TEXT
+- task_text | TEXT
+- status | TEXT
+- created_at | TEXT
+- updated_at | TEXT
+- started_at | TEXT
+- finished_at | TEXT
+- result_text | TEXT
+- timeout_sec | INTEGER
+- reply_text | TEXT
+- sent_message_id | TEXT
+
+## scout_seen_contacts
+- url | TEXT
+- emails | TEXT
+- pages | TEXT
+- notes | TEXT
+- ts | INTEGER
+
+## seen
+- key | TEXT
+- url | TEXT
+- title | TEXT
+- source | TEXT
+- ts | INTEGER
+
+## sqlite_sequence
+- name | 
+- seq | 
+
+## success_patterns
+- pattern | TEXT
+- score | REAL
+- updated_at | TEXT
+
+## supply_bias
+- id | INTEGER
+- bias_type | TEXT
+- bias_key | TEXT
+- weight | REAL
+- source_pattern_count | INTEGER
+- updated_at | TEXT
+
+## system_metrics
+- key | TEXT
+- value | TEXT
+- updated_at | TEXT
+
+## tg_kv
+- k | TEXT
+- v | TEXT
+
+## tg_private_chat_log
+- id | INTEGER
+- update_id | INTEGER
+- message_id | INTEGER
+- chat_id | INTEGER
+- text | TEXT
+- created_at | TEXT
+- router_ingested | TEXT
+- router_ingested_at | TEXT
+
+## tg_prompt_map
+- id | INTEGER
+- chat_id | TEXT
+- message_id | INTEGER
+- proposal_id | INTEGER
+- kind | TEXT
+- created_at | TEXT
