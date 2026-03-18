@@ -1,0 +1,1 @@
+Design and implement a system where OpenClaw automatically creates specialized AI employees based on detected needs, assigns them tasks, and integrates their outputs into the main execution loop. This includes role definition, task routing, performance tracking, and lifecycle management.
