@@ -165,4 +165,10 @@ def main():
             print(traceback.format_exc(), flush=True)
 
 if __name__ == "__main__":
-    main()
+    while True:
+        try:
+            main()
+        except Exception:
+            print(traceback.format_exc(), flush=True)
+        import time
+        time.sleep(20)

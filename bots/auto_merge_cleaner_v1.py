@@ -66,7 +66,7 @@ def sync_db(conn, pid, pr):
     state = str(pr.get("state") or "").upper()
     merged_at = pr.get("mergedAt")
     if merged_at:
-        conn.execute("update dev_proposals set pr_status='merged', status='merged', dev_stage='merged' where id=?", (pid,))
+        conn.execute("update dev_proposals set pr_status='merged', status='merged', dev_stage='merged', result_type=coalesce(nullif(result_type,''),'code_change') where id=?", (pid,))
         conn.execute("update proposal_state set stage='merged', updated_at=datetime('now') where proposal_id=?", (pid,))
         return "merged"
     if state == "CLOSED":

@@ -260,7 +260,7 @@ def tick_once(conn: sqlite3.Connection, target_pid=None):
             dirty = True
 
         if new == "merged":
-            conn.execute("update dev_proposals set status='merged' where id=? and coalesce(status,'')!='merged'", (pid,))
+            conn.execute("update dev_proposals set status='merged', result_type=coalesce(nullif(result_type,''),'code_change') where id=? and coalesce(status,'')!='merged'", (pid,))
             conn.execute("update dev_proposals set dev_stage='merged' where id=? and coalesce(dev_stage,'')!='merged'", (pid,))
             dirty = True
 
