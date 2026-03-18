@@ -8,9 +8,9 @@
 
 ## 今回の自動要約
 
-- generated_at: 2026-03-10 00:01:41
+- generated_at: 2026-03-18T12:27:42.416666+00:00
 - branch: dev/self-watch-recovery
-- head: 03c4733
+- head: 8bd79f6
 - db: /Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db
 
 ## 現在の本当の状態

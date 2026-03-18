@@ -1,16 +1,16 @@
 # OpenClaw Current State
-- generated_at: 2026-03-11T09:41:04.613651+00:00
+- generated_at: 2026-03-18T12:27:42.414180+00:00
 - canonical_db: /Users/doyopc/AI/openclaw-factory/data/openclaw.db
 ## 現在地
 - AI企業レベル : Lv7〜Lv8
 - maturity: 自己進化本線へ再編中
 - burn-in: 前段整理中
 ## live counters
-- proposals: 1108
-- merged: 645
-- open_pr: 1
+- proposals: 3069
+- merged: 2561
+- open_pr: 0
 - waiting_answer: 0
-- ceo_events: 1512
+- ceo_events: 27365
 ## 稼働中の主幹
 - jp.openclaw.dev_merge_notify_v1
 - jp.openclaw.log_rotate_safe_v1
