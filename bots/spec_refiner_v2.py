@@ -51,7 +51,6 @@ def ask_llm(prompt:str)->str:
         },
         json={
             "model":OPENAI_MODEL,
-            "temperature":0.2,
             "messages":[
                 {
                     "role":"system",
@@ -65,7 +64,10 @@ def ask_llm(prompt:str)->str:
         },
         timeout=120,
     )
-    r.raise_for_status()
+    if not r.ok:
+        print("OPENAI_STATUS=", r.status_code, flush=True)
+        print("OPENAI_BODY=", r.text[:4000], flush=True)
+        r.raise_for_status()
     j=r.json()
     return j["choices"][0]["message"]["content"].strip()
 
@@ -121,6 +123,7 @@ def pick_rows(c, target_pid=None):
         where coalesce(d.status,'') in ('approved','open')
           and coalesce(d.project_decision,'')='execute_now'
           and coalesce(d.dev_stage,'')='execute_now'
+          and coalesce(d.spec_stage,'') in ('', 'raw', 'refined')
           and coalesce(d.spec_stage,'') in ('','raw','approved')
         order by d.id asc
         limit 5

@@ -5,6 +5,31 @@ FACTORY = "/Users/doyopc/AI/openclaw-factory"
 REPO = os.environ.get("GITHUB_REPO", "douyo01-byte/openclaw-factory")
 GH = "/opt/homebrew/bin/gh"
 
+def db_exec(sql, params=(), fetch=False, tries=20, sleep_sec=0.5):
+    last = None
+    for _ in range(tries):
+        conn = None
+        try:
+            conn = sqlite3.connect(DB, timeout=30)
+            conn.execute("pragma busy_timeout=30000")
+            cur = conn.execute(sql, params)
+            rows = cur.fetchall() if fetch else None
+            conn.commit()
+            conn.close()
+            return rows
+        except sqlite3.OperationalError as e:
+            last = e
+            try:
+                if conn:
+                    conn.close()
+            except:
+                pass
+            if "locked" not in str(e).lower():
+                raise
+            import time
+            time.sleep(sleep_sec)
+    raise last
+
 def sh(cmd, cwd=None):
     r = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     if r.returncode != 0:
