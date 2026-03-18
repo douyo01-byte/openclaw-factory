@@ -1,0 +1,1 @@
+Change innovation proposal scoring and selection so architecture evolution, AI employee expansion, business-loop creation, and multi-agent system growth rank above minor safety-only fixes. Keep safety checks, but prioritize proposals that evolve OpenClaw structure and capability.
