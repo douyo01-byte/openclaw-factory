@@ -35,6 +35,7 @@ def tick():
         select id, coalesce(text,'') as text
         from inbox_commands
         where coalesce(router_finish_status,'')=''
+          and coalesce(source,'')='private_reply_bridge'
           and coalesce(text,'')<>''
         order by id asc
         limit 20
