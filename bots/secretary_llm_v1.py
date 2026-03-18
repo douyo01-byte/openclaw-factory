@@ -576,16 +576,6 @@ def route_special(text):
         or "activeとreserve" in tc
     ):
         return "runtime_classification"
-    dashboard_keys = [
-        "進捗は？", "進捗", "今どう？", "今どう", "ダッシュボード", "/進捗", "/dashboard"
-    ]
-    if any(k in tc for k in dashboard_keys):
-        return "dashboard"
-    next_keys = [
-        "次の作業は？", "次の作業", "次やること", "作業指示", "/次作業", "/next"
-    ]
-    if any(k in tc for k in next_keys):
-        return "next_actions"
     coo_keys = [
         "こんなん作って",
         "これを自動化したい",
@@ -644,12 +634,8 @@ def run_once():
                 "・ こんなん作って → COO整理で返答\n"
                 "・ それ以外 → 通常相談に返答"
             )
-        elif route == "dashboard":
-            reply = build_dashboard(conn)
         elif route == "ai_employee_ranking":
             reply = "OpenClaw AI社員ランキング\n━━━━━━━━━━━━━━━━━━\n" + ai_employee_ranking_block(conn)
-        elif route == "runtime_classification":
-            reply = runtime_classification_block()
         elif route == "next_actions":
             reply = (
                 "OpenClaw 次の作業\n"
