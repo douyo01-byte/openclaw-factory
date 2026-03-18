@@ -1,0 +1,1 @@
+Modify the real proposal generation pipeline so merged mothership and merged innovation strategic proposals automatically seed the next innovation generation cycle with concrete runtime follow-up themes. Use merged structural proposals as upstream context for future proposal creation.
