@@ -88,7 +88,6 @@ echo "preferred_mode=$preferred"
 echo "mode_selected=$next_mode"
 
 if [ "$next_mode" = "code_review" ]; then
-  run_one bots/code_review_engine_v1.py
 else
   python bots/mainstream_fallback_supply_v1.py || true
 fi
