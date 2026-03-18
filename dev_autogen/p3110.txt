@@ -1,0 +1,1 @@
+Apply lock-aware DB access patterns across dev_pr_creator, proposal_ranking, and support bots using short transactions, retry with backoff, busy_timeout, WAL verification, and safer write ordering to reduce recurring database is locked failures.
