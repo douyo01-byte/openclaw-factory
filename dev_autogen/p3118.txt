@@ -1,0 +1,1 @@
+Override innovation_llm_engine proposal bias so that it prioritizes multi-component architecture changes, AI employee expansion, runtime loop evolution, and business execution bridges instead of small isolated bug fixes when system health is stable.
