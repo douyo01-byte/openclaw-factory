@@ -1,0 +1,1 @@
+Add a small guard that verifies the GITHUB_REPO env value contains a slash and non-empty owner and repo parts before attempting owner, name = REPO.split('/', 1). If invalid, print a clear error message (including the bad value) and exit early. This prevents an uncaught ValueError on malformed env input and makes failures actionable.
