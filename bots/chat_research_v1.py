@@ -248,7 +248,7 @@ def main() -> None:
         tg_send(reply)
 
         conn.execute(
-            "UPDATE chat_jobs SET status='done', updated_at=datetime('now'), error=NULL WHERE id=?",
+            "UPDATE market_chat_jobs SET status='done', updated_at=datetime('now'), error=NULL WHERE id=?",
             (job_id,),
         )
         processed += 1
