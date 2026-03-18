@@ -1,0 +1,1 @@
+Extend evolution trace into a reasoning digest that reports selected proposals, why they were prioritized, what merged, and how the runtime direction changed so CEO can follow OpenClaw evolution at a glance.
