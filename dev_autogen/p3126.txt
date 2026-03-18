@@ -1,0 +1,1 @@
+When final sanity is healthy, prevent innovation_llm_engine_v1 from generating proposals categorized as small local fixes (e.g. logging tweaks, parsing fixes, env safety, micro optimizations). Force generation toward multi-component, system-level, or cross-loop evolution proposals only.
