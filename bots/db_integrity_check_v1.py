@@ -10,44 +10,62 @@ with mismatch_counts as (
   select 'status=merged but others mismatch' as kind, count(*) as cnt
   from dev_proposals
   where coalesce(status,'')='merged'
-    and (coalesce(dev_stage,'')!='merged' or coalesce(pr_status,'')!='merged')
+    and (
+      coalesce(dev_stage,'')!='merged'
+      or coalesce(pr_status,'') not in ('', 'merged')
+    )
 
   union all
   select 'dev_stage=merged but others mismatch' as kind, count(*) as cnt
   from dev_proposals
   where coalesce(dev_stage,'')='merged'
-    and (coalesce(status,'')!='merged' or coalesce(pr_status,'')!='merged')
+    and (
+      coalesce(status,'')!='merged'
+      or coalesce(pr_status,'') not in ('', 'merged')
+    )
 
   union all
   select 'pr_status=merged but others mismatch' as kind, count(*) as cnt
   from dev_proposals
   where coalesce(pr_status,'')='merged'
-    and (coalesce(status,'')!='merged' or coalesce(dev_stage,'')!='merged')
+    and (
+      coalesce(status,'')!='merged'
+      or coalesce(dev_stage,'')!='merged'
+    )
 
   union all
   select 'status=closed but others mismatch' as kind, count(*) as cnt
   from dev_proposals
   where coalesce(status,'')='closed'
-    and (coalesce(dev_stage,'')!='closed' or coalesce(pr_status,'')!='closed')
+    and (
+      coalesce(dev_stage,'')!='closed'
+      or coalesce(pr_status,'') not in ('', 'closed')
+    )
 
   union all
   select 'dev_stage=closed but others mismatch' as kind, count(*) as cnt
   from dev_proposals
   where coalesce(dev_stage,'')='closed'
-    and (coalesce(status,'')!='closed' or coalesce(pr_status,'')!='closed')
+    and (
+      coalesce(status,'')!='closed'
+      or coalesce(pr_status,'') not in ('', 'closed')
+    )
 
   union all
   select 'pr_status=closed but others mismatch' as kind, count(*) as cnt
   from dev_proposals
   where coalesce(pr_status,'')='closed'
-    and (coalesce(status,'')!='closed' or coalesce(dev_stage,'')!='closed')
+    and (
+      coalesce(status,'')!='closed'
+      or coalesce(dev_stage,'')!='closed'
+    )
 )
 select
   (
     select count(*)
     from dev_proposals
     where coalesce(status,'')='pr_created'
-      and coalesce(dev_stage,'')!='merged'
+      and coalesce(dev_stage,'') not in ('pr_created','merged')
   ) as pr_created_without_merged,
   (
     select count(*)
@@ -58,49 +76,22 @@ select
   (
     select count(*)
     from dev_proposals
-    where not (
-      coalesce(status,'')='pr_created'
-      and coalesce(dev_stage,'')='pr_created'
-      and coalesce(pr_status,'') in ('', 'pr_created')
-    )
-      and not (
+    where
+      (
         coalesce(status,'')='approved'
-        and coalesce(project_decision,'')='execute_now'
-        and coalesce(dev_stage,'')='execute_now'
-        and coalesce(pr_status,'')=''
+        and coalesce(dev_stage,'') not in ('', 'execute_now', 'pr_created', 'merged')
       )
-      and not (
-        coalesce(status,'')='idea'
-        and coalesce(project_decision,'')='backlog'
-        and coalesce(dev_stage,'')=''
-        and coalesce(spec_stage,'')='raw'
-        and coalesce(pr_status,'')=''
+      or (
+        coalesce(status,'')='merged'
+        and coalesce(dev_stage,'')!='merged'
       )
-      and not (
-        coalesce(status,'')='throttled'
-        and coalesce(dev_stage,'')='blocked_target_policy'
-        and coalesce(spec_stage,'')='refined'
-        and coalesce(pr_status,'')=''
+      or (
+        coalesce(dev_stage,'')='merged'
+        and coalesce(status,'')!='merged'
       )
-      and not (
-        coalesce(status,'')='throttled'
-        and coalesce(project_decision,'')=''
-        and coalesce(dev_stage,'')=''
-        and coalesce(spec_stage,'')=''
-        and coalesce(pr_status,'')=''
-      )
-      and not (
-        coalesce(status,'')='throttled'
-        and coalesce(project_decision,'')='blocked_target_policy'
-        and coalesce(dev_stage,'')='blocked_target_policy'
-        and coalesce(pr_status,'')=''
-      )
-      and (
-        coalesce(status,'')!=coalesce(dev_stage,'')
-        or (
-          coalesce(pr_status,'')!=''
-          and coalesce(status,'')!=coalesce(pr_status,'')
-        )
+      or (
+        coalesce(pr_status,'')='open'
+        and coalesce(pr_url,'')=''
       )
   ) as stage_divergence_count,
   (
