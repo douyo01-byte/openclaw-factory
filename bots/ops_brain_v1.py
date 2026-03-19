@@ -158,35 +158,53 @@ def plist_path_for_label(label):
 def restart_label(label):
     if not label.startswith("jp.openclaw."):
         return {"ok": False, "error": "invalid_label"}
-    domain = f"gui/{os.getuid()}/{label}"
-    code, out = sh(["launchctl", "print", domain])
-    service_exists = code == 0
-    if service_exists:
-        code, out = sh(["launchctl", "kickstart", "-k", domain])
-        ok = code == 0
-        body = {"ok": ok, "label": label, "mode": "kickstart", "output": out[-1000:]}
-        write_event("restart", body)
-        return body
-    pl = plist_path_for_label(label)
-    if not os.path.exists(pl):
-        body = {"ok": False, "label": label, "mode": "bootstrap", "error": "plist_not_found", "plist": pl}
-        write_event("restart", body)
-        return body
-    sh(["launchctl", "bootout", f"gui/{os.getuid()}", pl])
-    code1, out1 = sh(["launchctl", "bootstrap", f"gui/{os.getuid()}", pl])
-    code2, out2 = sh(["launchctl", "enable", domain])
-    code3, out3 = sh(["launchctl", "kickstart", "-k", domain])
-    ok = code1 == 0 and code3 == 0
+
+    plist = os.path.expanduser(f"~/Library/LaunchAgents/{label}.plist")
+    mode = "kickstart"
+    bootstrap_output = ""
+    enable_output = ""
+    kickstart_output = ""
+
+    st0 = service_status(label)
+
+    if not st0["exists"] and os.path.exists(plist):
+        mode = "bootstrap"
+        c1, o1 = sh(["launchctl", "bootstrap", f"gui/{os.getuid()}", plist])
+        bootstrap_output = o1[-1000:]
+        c2, o2 = sh(["launchctl", "enable", f"gui/{os.getuid()}/{label}"])
+        enable_output = o2[-1000:]
+        c3, o3 = sh(["launchctl", "kickstart", "-k", f"gui/{os.getuid()}/{label}"])
+        kickstart_output = o3[-1000:]
+        ok = c3 == 0
+    else:
+        c3, o3 = sh(["launchctl", "kickstart", "-k", f"gui/{os.getuid()}/{label}"])
+        kickstart_output = o3[-1000:]
+        ok = c3 == 0
+
+    time.sleep(3)
+    st1 = service_status(label)
+
+    if ok and st1["running"]:
+        restart_result = "running_restored"
+    elif ok and st1["exists"]:
+        restart_result = "bootstrapped_only"
+    else:
+        restart_result = "failed"
+
     body = {
-        "ok": ok,
+        "ok": ok and st1["exists"],
         "label": label,
-        "mode": "bootstrap",
-        "bootstrap_output": out1[-1000:],
-        "enable_output": out2[-1000:],
-        "kickstart_output": out3[-1000:]
+        "mode": mode,
+        "restart_result": restart_result,
+        "service_exists_after": st1["exists"],
+        "service_running_after": st1["running"],
+        "bootstrap_output": bootstrap_output,
+        "enable_output": enable_output,
+        "kickstart_output": kickstart_output,
     }
     write_event("restart", body)
     return body
+
 
 class Handler(BaseHTTPRequestHandler):
     def _send(self, code, payload):
