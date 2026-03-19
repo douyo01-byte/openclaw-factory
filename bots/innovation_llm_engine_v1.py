@@ -264,6 +264,21 @@ def path_structural_score(path):
         score -= 8
     return score
 
+def should_skip_target_in_structural_mode(path):
+    t = (path or "").lower()
+    if t.startswith("scripts/") and not any(x in t for x in (
+        "router", "orchestr", "queue", "proposal", "decision", "runtime", "bridge"
+    )):
+        return True
+    if any(x in t for x in (
+        "smoke", "test", "example", "sample", "tmp_", "get_chat_id",
+        "save_ks_session", "browser_smoke", "openai_smoke"
+    )):
+        return True
+    if path_structural_score(path) < 0:
+        return True
+    return False
+
 def final_sanity_healthy(con):
     row = con.execute("""
     select
@@ -462,6 +477,9 @@ def main():
     print("[innovation] structural_context=", structural_context[:500], flush=True)
     print("[innovation] ranked_targets_top=", [(x, target_rank(con, x), path_structural_score(x), closed_count(con, x), total_count(con, x)) for x in targets[:12]], flush=True)
     for path in targets:
+        if force_structural and should_skip_target_in_structural_mode(path):
+            print(f"[skip] target={path} reason=utility_target_blocked", flush=True)
+            continue
         code = read_text(path, 7000)
         if not code.strip():
             continue
