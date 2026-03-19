@@ -1,0 +1,17 @@
+id=3234
+title=Investigate repeated ops restart escalation: jp.openclaw.db_integrity_watchdog_v1
+ts=2026-03-19T10:07:41Z
+
+Auto-generated from ops watcher escalation.
+label=jp.openclaw.db_integrity_watchdog_v1
+reason=restart_streak
+streak_count=3
+last_severity=cooldown
+restart_result=
+service_exists_after=True
+service_running_after=False
+
+Expected action:
+- inspect launch agent / runtime state
+- identify root cause of repeated restart or cooldown loop
+- propose low-risk fix
