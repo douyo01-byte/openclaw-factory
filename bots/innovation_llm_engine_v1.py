@@ -234,6 +234,36 @@ SMALL_FIX_KEYWORDS = (
     "micro", "small fix", "small local", "lightweight logging"
 )
 
+
+UTILITY_PATH_KEYWORDS = (
+    "smoke", "test", "example", "sample", "tmp", "helper", "helpers",
+    "get_chat_id", "openai_smoke", "browser_smoke", "cleanup",
+)
+
+STRUCTURAL_PATH_KEYWORDS = (
+    "router", "routing", "orchestr", "employee", "registry", "queue",
+    "worker", "lifecycle", "bridge", "proposal", "decision", "spec",
+    "runtime", "executor", "watcher", "hub", "meeting", "brain",
+    "supply", "self_healing", "self_healing_v2", "coord", "manager",
+)
+
+def path_structural_score(path):
+    t = (path or "").lower()
+    score = 0
+    for k in STRUCTURAL_PATH_KEYWORDS:
+        if k in t:
+            score += 18
+    for k in UTILITY_PATH_KEYWORDS:
+        if k in t:
+            score -= 22
+    if t.startswith("bots/team/"):
+        score += 8
+    if "/chat_to_dev/" in t:
+        score += 10
+    if t.startswith("scripts/"):
+        score -= 8
+    return score
+
 def final_sanity_healthy(con):
     row = con.execute("""
     select
@@ -348,7 +378,7 @@ def target_rank(con, path):
     limit 1
     """, (path,)).fetchone()
     if not row:
-        return 0
+        return path_structural_score(path) * 1000
     try:
         last_id = int(row["id"])
         last_status = (row["status"] or "").lower()
@@ -359,12 +389,13 @@ def target_rank(con, path):
     tcount = total_count(con, path)
     closed_bonus = min(ccount * 2500, 15000)
     total_penalty = min(max(tcount - 3, 0) * 3500, 28000)
+    structural_bonus = path_structural_score(path) * 1000
     base = last_id
     if last_status == "closed":
-        return 900000 + closed_bonus - total_penalty - base
+        return 900000 + closed_bonus + structural_bonus - total_penalty - base
     if last_status == "merged":
-        return 500000 + closed_bonus - total_penalty - base
-    return 100000 + closed_bonus - total_penalty - base
+        return 500000 + closed_bonus + structural_bonus - total_penalty - base
+    return 100000 + closed_bonus + structural_bonus - total_penalty - base
 
 def recent_improvement_types(con, path, limit_n=3):
     rows = con.execute("""
@@ -429,7 +460,7 @@ def main():
 
     print("[innovation] force_structural=", force_structural, flush=True)
     print("[innovation] structural_context=", structural_context[:500], flush=True)
-    print("[innovation] ranked_targets_top=", [(x, target_rank(con, x), closed_count(con, x), total_count(con, x)) for x in targets[:12]], flush=True)
+    print("[innovation] ranked_targets_top=", [(x, target_rank(con, x), path_structural_score(x), closed_count(con, x), total_count(con, x)) for x in targets[:12]], flush=True)
     for path in targets:
         code = read_text(path, 7000)
         if not code.strip():
