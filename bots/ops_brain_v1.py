@@ -234,7 +234,6 @@ def recent_escalation_notified(label, seconds=900):
         return False
 
 def notify_escalations(escalations):
-    import requests
     out = []
     for e in escalations:
         label = e.get("label", "")
@@ -247,24 +246,48 @@ def notify_escalations(escalations):
                 "blocked": "dedupe"
             })
             continue
+
         sent = False
         err = ""
         if not TG_TOKEN or not TG_CHAT_ID:
-            out.append({**e, "sent": False, "error": "missing_env"})
+            body = {
+                "type": "escalation",
+                "label": e.get("label", ""),
+                "reason": e.get("reason", ""),
+                "severity": e.get("last_severity", ""),
+                "restart_result": e.get("restart_result", ""),
+                "streak_count": e.get("streak_count", 0),
+                "sent": False,
+                "error": "missing_env"
+            }
+            write_event("notify", body)
+            out.append({
+                **e,
+                "sent": False,
+                "error": "missing_env"
+            })
             continue
-        text = f"[OPS ESCALATION]\n{e['label']}\nreason={e['reason']}\nstreak={e['streak_count']}"
+
+        text = f"[OPS ESCALATION]\n{e.get('label','')}\nreason={e.get('reason','')}\nstreak={e.get('streak_count',0)}"
         try:
-            r = requests.post(
+            data = urllib.parse.urlencode({
+                "chat_id": TG_CHAT_ID,
+                "text": text
+            }).encode("utf-8")
+            req = urllib.request.Request(
                 f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
-                data={"chat_id": TG_CHAT_ID, "text": text},
-                timeout=5,
+                data=data,
+                method="POST"
             )
-            if r.status_code == 200:
-                sent = True
-            else:
-                err = f"status={r.status_code} body={r.text[:100]}"
+            with urllib.request.urlopen(req, timeout=15) as r:
+                raw = r.read().decode("utf-8", errors="replace")
+                if getattr(r, "status", 200) == 200:
+                    sent = True
+                else:
+                    err = f"status={getattr(r,'status','')} body={raw[:100]}"
         except Exception as ex:
             err = str(ex)
+
         body = {
             "type": "escalation",
             "label": e.get("label", ""),
