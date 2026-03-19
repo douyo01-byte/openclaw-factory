@@ -307,12 +307,30 @@ def run_watcher():
 
             if failed and policy == "required":
                 if recent_restart_blocked(label, cooldown):
-                    restarted.append({"ok": False, "label": label, "blocked": "cooldown"})
+                    restarted.append({
+                        "ok": False,
+                        "label": label,
+                        "blocked": "cooldown",
+                        "severity": "cooldown"
+                    })
                 else:
                     try:
-                        restarted.append(restart_label(label))
+                        rr = restart_label(label)
+                        restart_result = rr.get("restart_result", "")
+                        if restart_result == "running_restored":
+                            rr["severity"] = "success"
+                        elif restart_result == "bootstrapped_only":
+                            rr["severity"] = "warning"
+                        else:
+                            rr["severity"] = "failed"
+                        restarted.append(rr)
                     except Exception as e:
-                        restarted.append({"ok": False, "label": label, "error": repr(e)})
+                        restarted.append({
+                            "ok": False,
+                            "label": label,
+                            "error": repr(e),
+                            "severity": "failed"
+                        })
             results.append(item)
         body = {
             "mode": "watcher",
