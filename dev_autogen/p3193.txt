@@ -1,0 +1,10 @@
+Current file is a single-process script that polls inbox_commands, directly updates proposal_state and proposal_conversation, and marks rows processed in-place. This creates a brittle topology: no durable handoff, no worker partitioning, potential duplicate/blocked processing under load, no explicit routing to the AI employee responsible for a proposal, and no coordinated retries or leader election. Propose an architecture-first overhaul that introduces a durable inbox task table + claim/lease semantics and an explicit router component that publishes per-inbox-task messages to AI employee workers (or a message broker). Concrete changes: 
+
+1) Schema & migration
+   - Add table inbox_tasks(task_id TEXT PRIMARY KEY, inbox_id INTEGER UNIQUE NOT NULL, chat_id TEXT, payload TEXT, created_at TEXT, claimed_by TEXT NULL, claim_expires_at TEXT NULL, status TEXT CHECK(status IN ('pending','claimed','acked','failed','skipped')) DEFAULT 'pending', attempt_count INTEGER DEFAULT 0) and add task_id UUID column to inbox_commands (nullable for backfill). This enables durable handoff and idempotent processing. 
+
+2) Claim/lease orchestrator
+   - Replace main polling loop with an orchestrator that atomically moves rows from inbox_commands -> inbox_tasks (INSERT ... SELECT ... WHERE processed=0 RETURNING) inside a short transaction, or simply creates an inbox_tasks row referencing inbox_id and payload, then sets processed=0 -> processed=-1 (claimed) to avoid races. Implement a claim API: workers request the next pending task for which claim_expires_at < now() and atomically set claimed_by and claim_expires_at = now()+lease_seconds. This avoids long DB locks and lets multiple workers run in parallel.
+
+3) Routing to AI employees
+   - Introduce a router that uses a deterministic partitioning strategy (consistent hash on chat_id or proposal_id) to select the responsible AI employee service instance or queue topic. The router publishes a message (task_id, inbox_id, chat_id, text, received_at,
