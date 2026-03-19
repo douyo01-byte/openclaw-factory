@@ -468,14 +468,19 @@ def main():
         pass
 
     seen_titles = recent_titles(con)
-    targets = sorted(list_targets(), key=lambda x: target_rank(con, x), reverse=True)
-    inserted = 0
     force_structural = final_sanity_healthy(con)
     structural_context = recent_structural_context(con, 8)
+    targets = sorted(list_targets(), key=lambda x: target_rank(con, x), reverse=True)
+    if force_structural:
+        pos = [x for x in targets if path_structural_score(x) > 0]
+        zero = [x for x in targets if path_structural_score(x) == 0]
+        neg = [x for x in targets if path_structural_score(x) < 0]
+        targets = pos + zero + neg
+    inserted = 0
 
     print("[innovation] force_structural=", force_structural, flush=True)
     print("[innovation] structural_context=", structural_context[:500], flush=True)
-    print("[innovation] ranked_targets_top=", [(x, target_rank(con, x), path_structural_score(x), closed_count(con, x), total_count(con, x)) for x in targets[:12]], flush=True)
+    print("[innovation] ranked_targets_top=", [(x, target_rank(con, x), path_structural_score(x), closed_count(con, x), total_count(con, x)) for x in targets[:20]], flush=True)
     for path in targets:
         if force_structural and should_skip_target_in_structural_mode(path):
             print(f"[skip] target={path} reason=utility_target_blocked", flush=True)
