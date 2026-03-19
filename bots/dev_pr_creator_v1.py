@@ -73,7 +73,7 @@ def pick_one():
     return rows[0] if rows else None
 
 def claim_pid(pid):
-    db_exec(
+    rows = db_exec(
         """
         update dev_proposals
         set processing=1
@@ -83,16 +83,12 @@ def claim_pid(pid):
           and coalesce(dev_stage,'')='execute_now'
           and coalesce(spec_stage,'')='decomposed'
           and coalesce(pr_status,'')='ready'
+        returning id
         """,
-        (pid,)
+        (pid,),
+        fetch=True
     )
-    rows = db_exec("select changes() as n", fetch=True)
-    if not rows:
-        return False
-    try:
-        return int(rows[0]["n"]) == 1
-    except Exception:
-        return int(rows[0][0]) == 1
+    return bool(rows)
 
 def release_pid(pid):
     db_exec("update dev_proposals set processing=0 where id=?", (pid,))
