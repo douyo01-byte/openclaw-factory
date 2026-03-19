@@ -22,6 +22,9 @@ WATCHER_TARGETS_RAW = os.environ.get(
     "jp.openclaw.kaikun02_coo_controller_v1||120"
 ).strip()
 AUTH_TOKEN = os.environ.get("OPS_BRAIN_TOKEN", "").strip()
+TG_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+TG_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+
 
 def db():
     conn = sqlite3.connect(DB, timeout=30)
@@ -180,6 +183,97 @@ def write_event(kind, body):
         conn.close()
     except Exception:
         pass
+
+def tg_send(text):
+    if not TG_TOKEN or not TG_CHAT_ID:
+        return False
+    try:
+        data = urllib.parse.urlencode({
+            "chat_id": TG_CHAT_ID,
+            "text": text
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
+            data=data,
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=15) as r:
+            _ = r.read()
+        return True
+    except Exception:
+        return False
+
+def recent_escalation_notified(label, seconds=900):
+    try:
+        conn = db()
+        conn.execute("""
+        create table if not exists ops_watcher_events(
+          id integer primary key autoincrement,
+          kind text,
+          body text,
+          created_at text default (datetime('now'))
+        )
+        """)
+        row = conn.execute(
+            """
+            select cast(strftime('%s','now') - strftime('%s', created_at) as integer)
+            from ops_watcher_events
+            where kind='notify'
+              and json_extract(body, '$.label') = ?
+              and json_extract(body, '$.type') = 'escalation'
+            order by id desc
+            limit 1
+            """,
+            (label,)
+        ).fetchone()
+        conn.close()
+        if not row or row[0] is None:
+            return False
+        return int(row[0]) < int(seconds)
+    except Exception:
+        return False
+
+def notify_escalations(escalations):
+    sent = []
+    for e in escalations:
+        label = e.get("label", "")
+        if not label:
+            continue
+        if recent_escalation_notified(label, 900):
+            sent.append({
+                "label": label,
+                "sent": False,
+                "blocked": "dedupe"
+            })
+            continue
+        reason = e.get("reason", "")
+        restart_result = e.get("restart_result", "")
+        sev = e.get("last_severity", "")
+        streak = e.get("streak_count", 0)
+        text = "\n".join([
+            "🚨 OpenClaw Ops Escalation",
+            f"label: {label}",
+            f"reason: {reason}",
+            f"severity: {sev}",
+            f"restart_result: {restart_result}",
+            f"streak: {streak}",
+        ])
+        ok = tg_send(text)
+        body = {
+            "type": "escalation",
+            "label": label,
+            "reason": reason,
+            "severity": sev,
+            "restart_result": restart_result,
+            "streak_count": streak,
+            "sent": ok
+        }
+        write_event("notify", body)
+        sent.append({
+            "label": label,
+            "sent": ok
+        })
+    return sent
 
 def agent_health():
     services = local_services()
@@ -386,11 +480,13 @@ def run_watcher():
                             "severity": "failed"
                         })
             results.append(item)
+        notifications = notify_escalations(escalations) if escalations else []
         body = {
             "mode": "watcher",
             "results": results,
             "restarted": restarted,
             "escalations": escalations,
+            "notifications": notifications,
             "ts": now_ts()
         }
         write_event("watch", body)
