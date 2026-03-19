@@ -101,6 +101,46 @@ def recent_restart_blocked(label, cooldown):
     except Exception:
         return False
 
+
+def recent_escalation_streak(label, allowed=("warning", "cooldown"), limit_count=3):
+    try:
+        conn = db()
+        conn.execute("""
+        create table if not exists ops_watcher_events(
+          id integer primary key autoincrement,
+          kind text,
+          body text,
+          created_at text default (datetime('now'))
+        )
+        """)
+        rows = conn.execute(
+            """
+            select json_extract(value, '$.severity') as severity
+            from ops_watcher_events,
+                 json_each(ops_watcher_events.body, '$.restarted')
+            where kind='watch'
+              and json_extract(value, '$.label') = ?
+            order by ops_watcher_events.id desc, json_each.key desc
+            limit ?
+            """,
+            (label, int(limit_count))
+        ).fetchall()
+        conn.close()
+        if len(rows) < int(limit_count):
+            return 0, ""
+        n = 0
+        last = ""
+        for r in rows:
+            sev = r[0] if not isinstance(r, dict) else r["severity"]
+            if sev in allowed:
+                n += 1
+                last = sev
+            else:
+                break
+        return n, last
+    except Exception:
+        return 0, ""
+
 def local_services():
     code, out = sh(["launchctl", "list"])
     rows = []
@@ -273,6 +313,7 @@ def run_watcher():
     while True:
         results = []
         restarted = []
+        escalations = []
         for t in targets:
             label = t["label"]
             health_url = t["health_url"]
@@ -324,6 +365,19 @@ def run_watcher():
                         else:
                             rr["severity"] = "failed"
                         restarted.append(rr)
+                        sev = rr.get("severity", "")
+                        if sev in ("warning", "cooldown"):
+                            streak, last_sev = recent_escalation_streak(label, ("warning", "cooldown"), 3)
+                            if streak >= 3:
+                                escalations.append({
+                                    "label": label,
+                                    "reason": "restart_streak",
+                                    "streak_count": streak,
+                                    "last_severity": last_sev,
+                                    "restart_result": rr.get("restart_result", ""),
+                                    "service_exists_after": rr.get("service_exists_after"),
+                                    "service_running_after": rr.get("service_running_after")
+                                })
                     except Exception as e:
                         restarted.append({
                             "ok": False,
@@ -336,6 +390,7 @@ def run_watcher():
             "mode": "watcher",
             "results": results,
             "restarted": restarted,
+            "escalations": escalations,
             "ts": now_ts()
         }
         write_event("watch", body)
