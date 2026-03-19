@@ -1,0 +1,1 @@
+When structural mode is enabled, deprioritize or skip low-leverage utility targets such as small helpers, smoke scripts, simple wrappers, and one-off support files unless they are directly tied to routing, orchestration, lifecycle, or execution loops.
