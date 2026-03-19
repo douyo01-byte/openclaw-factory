@@ -19,7 +19,7 @@ def tick(target_pid=None):
         rows=conn.execute("""
         select id,title,coalesce(spec,'') as spec
         from dev_proposals
-        where coalesce(status,'')='open'
+        where coalesce(status,'') in ('open','approved')
           and coalesce(project_decision,'')='execute_now'
           and coalesce(dev_stage,'')='execute_now'
           and coalesce(spec_stage,'')='refined'
