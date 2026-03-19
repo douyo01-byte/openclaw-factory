@@ -50,6 +50,7 @@ def parse_targets():
         label = parts[0] if len(parts) >= 1 else ""
         health_url = parts[1] if len(parts) >= 2 else ""
         cooldown = parts[2] if len(parts) >= 3 and parts[2] else "60"
+        policy = parts[3] if len(parts) >= 4 and parts[3] else "required"
         try:
             cooldown = int(cooldown)
         except Exception:
@@ -59,6 +60,7 @@ def parse_targets():
                 "label": label,
                 "health_url": health_url,
                 "cooldown": cooldown,
+                "policy": policy,
             })
     return out
 
@@ -275,7 +277,8 @@ def run_watcher():
             label = t["label"]
             health_url = t["health_url"]
             cooldown = t["cooldown"]
-            item = {"label": label, "health_url": health_url, "cooldown": cooldown}
+            policy = t.get("policy", "required")
+            item = {"label": label, "health_url": health_url, "cooldown": cooldown, "policy": policy}
             failed = False
             if health_url:
                 try:
@@ -293,9 +296,16 @@ def run_watcher():
             st = service_status(label)
             item["service_exists"] = st["exists"]
             item["service_running"] = st["running"]
-            if not st["running"]:
-                failed = True
-            if failed:
+
+            if policy == "required":
+                if not st["running"]:
+                    failed = True
+            elif policy == "optional":
+                item["optional_stopped"] = not st["running"]
+            elif policy == "observe":
+                item["observed_stopped"] = not st["running"]
+
+            if failed and policy == "required":
                 if recent_restart_blocked(label, cooldown):
                     restarted.append({"ok": False, "label": label, "blocked": "cooldown"})
                 else:
