@@ -25,7 +25,7 @@ while True:
                 c.commit()
 
                 subprocess.run(
-                    ["python","-u","bots/dev_executor_v1.py"],
+                    ["python","-u","bots/dev_executor_v1.py", str(pid)],
                     check=False,
                 )
     except:
