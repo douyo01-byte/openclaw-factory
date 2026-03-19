@@ -249,14 +249,24 @@ def queue_ops_escalation_proposals(escalations):
         try:
             conn = db()
             cols = [r[1] for r in conn.execute("pragma table_info(dev_proposals)").fetchall()]
+            safe_label = (
+                label.replace("jp.openclaw.", "")
+                     .replace(".", "-")
+                     .replace("_", "-")
+            )[:40]
             row = {
                 "title": title,
                 "description": "\n".join(detail_lines),
-                "status": "proposed",
-                "dev_stage": "proposed",
+                "branch_name": f"ops-escalation-{safe_label}",
+                "status": "pending",
+                "risk_level": "low",
+                "dev_stage": "",
                 "source_ai": "ops_watcher_escalation",
+                "category": "ops",
                 "target_system": "ops",
                 "improvement_type": "stability",
+                "quality_score": 0.0,
+                "priority": 50,
                 "created_at": None
             }
             use = {k: v for k, v in row.items() if k in cols and v is not None}
