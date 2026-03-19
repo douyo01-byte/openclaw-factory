@@ -14,8 +14,13 @@ MODE = os.environ.get("OPS_BRAIN_MODE", "agent").strip().lower()
 HOST = os.environ.get("OPS_BRAIN_HOST", "127.0.0.1").strip()
 PORT = int(os.environ.get("OPS_BRAIN_PORT", "8787"))
 WATCH_INTERVAL = int(os.environ.get("OPS_BRAIN_INTERVAL", "30"))
-WATCHER_TARGETS = [x.strip() for x in os.environ.get("OPS_WATCHER_TARGETS", "http://127.0.0.1:8787/health").split(",") if x.strip()]
-WATCHER_RESTART_LABELS = [x.strip() for x in os.environ.get("OPS_WATCHER_RESTART_LABELS", "jp.openclaw.ops_brain_agent_v1").split(",") if x.strip()]
+WATCHER_TARGETS_RAW = os.environ.get(
+    "OPS_WATCHER_TARGETS",
+    "jp.openclaw.ops_brain_agent_v1|http://127.0.0.1:8787/health|60,"
+    "jp.openclaw.dev_pr_automerge_v1||120,"
+    "jp.openclaw.db_integrity_watchdog_v1||120,"
+    "jp.openclaw.kaikun02_coo_controller_v1||120"
+).strip()
 AUTH_TOKEN = os.environ.get("OPS_BRAIN_TOKEN", "").strip()
 
 def db():
@@ -31,6 +36,68 @@ def db():
 def sh(cmd):
     r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     return r.returncode, r.stdout.strip()
+
+def now_ts():
+    return int(time.time())
+
+def parse_targets():
+    out = []
+    for raw in WATCHER_TARGETS_RAW.split(","):
+        raw = raw.strip()
+        if not raw:
+            continue
+        parts = [x.strip() for x in raw.split("|")]
+        label = parts[0] if len(parts) >= 1 else ""
+        health_url = parts[1] if len(parts) >= 2 else ""
+        cooldown = parts[2] if len(parts) >= 3 and parts[2] else "60"
+        try:
+            cooldown = int(cooldown)
+        except Exception:
+            cooldown = 60
+        if label:
+            out.append({
+                "label": label,
+                "health_url": health_url,
+                "cooldown": cooldown,
+            })
+    return out
+
+def service_status(label):
+    code, out = sh(["launchctl", "print", f"gui/{os.getuid()}/{label}"])
+    if code != 0:
+        return {"ok": False, "label": label, "exists": False, "running": False, "raw": out[-500:]}
+    running = "state = running" in out
+    return {"ok": running, "label": label, "exists": True, "running": running, "raw": out[-500:]}
+
+def recent_restart_blocked(label, cooldown):
+    try:
+        conn = db()
+        conn.execute("""
+        create table if not exists ops_watcher_events(
+          id integer primary key autoincrement,
+          kind text,
+          body text,
+          created_at text default (datetime('now'))
+        )
+        """)
+        row = conn.execute(
+            """
+            select cast(strftime('%s','now') - strftime('%s', created_at) as integer)
+            from ops_watcher_events
+            where kind='restart'
+              and json_extract(body, '$.label') = ?
+              and json_extract(body, '$.ok') = 1
+            order by id desc
+            limit 1
+            """,
+            (label,)
+        ).fetchone()
+        conn.close()
+        if not row or row[0] is None:
+            return False
+        return int(row[0]) < int(cooldown)
+    except Exception:
+        return False
 
 def local_services():
     code, out = sh(["launchctl", "list"])
@@ -182,36 +249,48 @@ def post_json(url):
 
 def run_watcher():
     print("ops_brain_v1 watcher boot", flush=True)
+    targets = parse_targets()
     while True:
         results = []
-        any_failed = False
-        for url in WATCHER_TARGETS:
-            try:
-                data = fetch_json(url)
-                ok = bool(data.get("ok"))
-                if not ok:
-                    any_failed = True
-                results.append({
-                    "url": url,
-                    "ok": ok,
-                    "service_count": data.get("service_count", 0),
-                    "running_count": data.get("running_count", 0)
-                })
-            except Exception as e:
-                any_failed = True
-                results.append({"url": url, "ok": False, "error": repr(e)})
         restarted = []
-        if any_failed:
-            for label in WATCHER_RESTART_LABELS:
+        for t in targets:
+            label = t["label"]
+            health_url = t["health_url"]
+            cooldown = t["cooldown"]
+            item = {"label": label, "health_url": health_url, "cooldown": cooldown}
+            failed = False
+            if health_url:
                 try:
-                    restarted.append(restart_label(label))
+                    data = fetch_json(health_url)
+                    ok = bool(data.get("ok"))
+                    item["health_ok"] = ok
+                    item["service_count"] = data.get("service_count", 0)
+                    item["running_count"] = data.get("running_count", 0)
+                    if not ok:
+                        failed = True
                 except Exception as e:
-                    restarted.append({"ok": False, "label": label, "error": repr(e)})
+                    item["health_ok"] = False
+                    item["health_error"] = repr(e)
+                    failed = True
+            st = service_status(label)
+            item["service_exists"] = st["exists"]
+            item["service_running"] = st["running"]
+            if not st["running"]:
+                failed = True
+            if failed:
+                if recent_restart_blocked(label, cooldown):
+                    restarted.append({"ok": False, "label": label, "blocked": "cooldown"})
+                else:
+                    try:
+                        restarted.append(restart_label(label))
+                    except Exception as e:
+                        restarted.append({"ok": False, "label": label, "error": repr(e)})
+            results.append(item)
         body = {
             "mode": "watcher",
             "results": results,
             "restarted": restarted,
-            "ts": int(time.time())
+            "ts": now_ts()
         }
         write_event("watch", body)
         print(json.dumps(body, ensure_ascii=False), flush=True)
