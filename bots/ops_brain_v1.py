@@ -18,7 +18,7 @@ WATCHER_TARGETS_RAW = os.environ.get(
     "OPS_WATCHER_TARGETS",
     "jp.openclaw.ops_brain_agent_v1|http://127.0.0.1:8787/health|60,"
     "jp.openclaw.dev_pr_automerge_v1||120,"
-    "jp.openclaw.db_integrity_watchdog_v1||120,"
+    "jp.openclaw.db_integrity_watchdog_v1|observe|120,"
     "jp.openclaw.kaikun02_coo_controller_v1||120"
 ).strip()
 AUTH_TOKEN = os.environ.get("OPS_BRAIN_TOKEN", "").strip()
