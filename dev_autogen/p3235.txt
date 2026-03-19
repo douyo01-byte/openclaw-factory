@@ -1,0 +1,30 @@
+id=3235
+title=🧠 Kaikun04 CTOレビュー
+batch=3235-3235
+ts=2026-03-19T09:56:55Z
+
+🧠 Kaikun04 CTOレビュー
+
+事業開始達成率: 65%
+現在フェーズ: 事業準備
+
+■ 開発ライン
+・ merged(24h): 78
+・ open PR: 0
+・ approved滞留: 5
+・ execute_now滞留: 1
+・ COO未完了: 0
+
+■ 常駐状態
+・ secretary: 停止
+・ executor: 稼働中
+・ watcher: 稼働中
+・ merge_notify: 稼働中
+・ meeting_bridge: 停止
+・ mainstream_supply: 停止
+
+■ 最新提案
+・ #3234 Investigate repeated ops restart escalation: jp.openclaw.db_integrity_watchdog_v1
+
+■ CTO判断
+・ supply停止 / Kaikun02停止
