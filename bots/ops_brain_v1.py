@@ -15,6 +15,7 @@ HOST = os.environ.get("OPS_BRAIN_HOST", "127.0.0.1").strip()
 PORT = int(os.environ.get("OPS_BRAIN_PORT", "8787"))
 WATCH_INTERVAL = int(os.environ.get("OPS_BRAIN_INTERVAL", "30"))
 WATCHER_TARGETS = [x.strip() for x in os.environ.get("OPS_WATCHER_TARGETS", "http://127.0.0.1:8787/health").split(",") if x.strip()]
+WATCHER_RESTART_LABELS = [x.strip() for x in os.environ.get("OPS_WATCHER_RESTART_LABELS", "jp.openclaw.ops_brain_agent_v1").split(",") if x.strip()]
 AUTH_TOKEN = os.environ.get("OPS_BRAIN_TOKEN", "").strip()
 
 def db():
@@ -142,17 +143,49 @@ def fetch_json(url):
     with urllib.request.urlopen(req, timeout=10) as r:
         return json.loads(r.read().decode("utf-8"))
 
+def post_json(url):
+    req = urllib.request.Request(
+        url,
+        data=b"",
+        method="POST",
+        headers={"X-Ops-Token": AUTH_TOKEN} if AUTH_TOKEN else {}
+    )
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return json.loads(r.read().decode("utf-8"))
+
 def run_watcher():
     print("ops_brain_v1 watcher boot", flush=True)
     while True:
         results = []
+        any_failed = False
         for url in WATCHER_TARGETS:
             try:
                 data = fetch_json(url)
-                results.append({"url": url, "ok": bool(data.get("ok")), "service_count": data.get("service_count", 0), "running_count": data.get("running_count", 0)})
+                ok = bool(data.get("ok"))
+                if not ok:
+                    any_failed = True
+                results.append({
+                    "url": url,
+                    "ok": ok,
+                    "service_count": data.get("service_count", 0),
+                    "running_count": data.get("running_count", 0)
+                })
             except Exception as e:
+                any_failed = True
                 results.append({"url": url, "ok": False, "error": repr(e)})
-        body = {"mode": "watcher", "results": results, "ts": int(time.time())}
+        restarted = []
+        if any_failed:
+            for label in WATCHER_RESTART_LABELS:
+                try:
+                    restarted.append(post_json(f"http://{HOST}:{PORT}/restart?label={label}"))
+                except Exception as e:
+                    restarted.append({"ok": False, "label": label, "error": repr(e)})
+        body = {
+            "mode": "watcher",
+            "results": results,
+            "restarted": restarted,
+            "ts": int(time.time())
+        }
         write_event("watch", body)
         print(json.dumps(body, ensure_ascii=False), flush=True)
         time.sleep(WATCH_INTERVAL)
