@@ -234,46 +234,77 @@ def recent_escalation_notified(label, seconds=900):
         return False
 
 def notify_escalations(escalations):
-    sent = []
+    out = []
     for e in escalations:
         label = e.get("label", "")
         if not label:
             continue
         if recent_escalation_notified(label, 900):
-            sent.append({
+            out.append({
                 "label": label,
                 "sent": False,
                 "blocked": "dedupe"
             })
             continue
-        reason = e.get("reason", "")
-        restart_result = e.get("restart_result", "")
-        sev = e.get("last_severity", "")
-        streak = e.get("streak_count", 0)
-        text = "\n".join([
-            "🚨 OpenClaw Ops Escalation",
-            f"label: {label}",
-            f"reason: {reason}",
-            f"severity: {sev}",
-            f"restart_result: {restart_result}",
-            f"streak: {streak}",
-        ])
-        ok = tg_send(text)
+
+        sent = False
+        err = ""
+        if not TG_TOKEN or not TG_CHAT_ID:
+            body = {
+                "type": "escalation",
+                "label": e.get("label", ""),
+                "reason": e.get("reason", ""),
+                "severity": e.get("last_severity", ""),
+                "restart_result": e.get("restart_result", ""),
+                "streak_count": e.get("streak_count", 0),
+                "sent": False,
+                "error": "missing_env"
+            }
+            write_event("notify", body)
+            out.append({
+                **e,
+                "sent": False,
+                "error": "missing_env"
+            })
+            continue
+
+        text = f"[OPS ESCALATION]\n{e.get('label','')}\nreason={e.get('reason','')}\nstreak={e.get('streak_count',0)}"
+        try:
+            data = urllib.parse.urlencode({
+                "chat_id": TG_CHAT_ID,
+                "text": text
+            }).encode("utf-8")
+            req = urllib.request.Request(
+                f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
+                data=data,
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=15) as r:
+                raw = r.read().decode("utf-8", errors="replace")
+                if getattr(r, "status", 200) == 200:
+                    sent = True
+                else:
+                    err = f"status={getattr(r,'status','')} body={raw[:100]}"
+        except Exception as ex:
+            err = str(ex)
+
         body = {
             "type": "escalation",
-            "label": label,
-            "reason": reason,
-            "severity": sev,
-            "restart_result": restart_result,
-            "streak_count": streak,
-            "sent": ok
+            "label": e.get("label", ""),
+            "reason": e.get("reason", ""),
+            "severity": e.get("last_severity", ""),
+            "restart_result": e.get("restart_result", ""),
+            "streak_count": e.get("streak_count", 0),
+            "sent": sent,
+            "error": err if not sent else None
         }
         write_event("notify", body)
-        sent.append({
-            "label": label,
-            "sent": ok
+        out.append({
+            **e,
+            "sent": sent,
+            "error": err if not sent else None
         })
-    return sent
+    return out
 
 def agent_health():
     services = local_services()
@@ -442,12 +473,24 @@ def run_watcher():
 
             if failed and policy == "required":
                 if recent_restart_blocked(label, cooldown):
-                    restarted.append({
+                    rr = {
                         "ok": False,
                         "label": label,
                         "blocked": "cooldown",
                         "severity": "cooldown"
-                    })
+                    }
+                    restarted.append(rr)
+                    streak, last_sev = recent_escalation_streak(label, ("warning", "cooldown"), 3)
+                    if streak >= 3:
+                        escalations.append({
+                            "label": label,
+                            "reason": "restart_streak",
+                            "streak_count": streak,
+                            "last_severity": last_sev,
+                            "restart_result": "",
+                            "service_exists_after": st["exists"],
+                            "service_running_after": st["running"]
+                        })
                 else:
                     try:
                         rr = restart_label(label)
