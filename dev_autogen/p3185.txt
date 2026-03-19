@@ -1,0 +1,1 @@
+Change innovation_llm_engine_v1 target ranking so that files related to routing, orchestration, queues, lifecycle, employee systems, proposal flow, business execution, and cross-agent coordination are ranked above isolated helper or utility files while structural mode is enabled.
