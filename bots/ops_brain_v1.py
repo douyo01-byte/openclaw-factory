@@ -85,12 +85,39 @@ def agent_health():
         "ts": int(time.time())
     }
 
+def plist_path_for_label(label):
+    return os.path.expanduser(f"~/Library/LaunchAgents/{label}.plist")
+
 def restart_label(label):
     if not label.startswith("jp.openclaw."):
         return {"ok": False, "error": "invalid_label"}
-    code, out = sh(["launchctl", "kickstart", "-k", f"gui/{os.getuid()}/{label}"])
-    ok = code == 0
-    body = {"ok": ok, "label": label, "output": out[-1000:]}
+    domain = f"gui/{os.getuid()}/{label}"
+    code, out = sh(["launchctl", "print", domain])
+    service_exists = code == 0
+    if service_exists:
+        code, out = sh(["launchctl", "kickstart", "-k", domain])
+        ok = code == 0
+        body = {"ok": ok, "label": label, "mode": "kickstart", "output": out[-1000:]}
+        write_event("restart", body)
+        return body
+    pl = plist_path_for_label(label)
+    if not os.path.exists(pl):
+        body = {"ok": False, "label": label, "mode": "bootstrap", "error": "plist_not_found", "plist": pl}
+        write_event("restart", body)
+        return body
+    sh(["launchctl", "bootout", f"gui/{os.getuid()}", pl])
+    code1, out1 = sh(["launchctl", "bootstrap", f"gui/{os.getuid()}", pl])
+    code2, out2 = sh(["launchctl", "enable", domain])
+    code3, out3 = sh(["launchctl", "kickstart", "-k", domain])
+    ok = code1 == 0 and code3 == 0
+    body = {
+        "ok": ok,
+        "label": label,
+        "mode": "bootstrap",
+        "bootstrap_output": out1[-1000:],
+        "enable_output": out2[-1000:],
+        "kickstart_output": out3[-1000:]
+    }
     write_event("restart", body)
     return body
 
