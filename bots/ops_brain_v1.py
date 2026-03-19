@@ -204,7 +204,7 @@ def run_watcher():
         if any_failed:
             for label in WATCHER_RESTART_LABELS:
                 try:
-                    restarted.append(post_json(f"http://{HOST}:{PORT}/restart?label={label}"))
+                    restarted.append(restart_label(label))
                 except Exception as e:
                     restarted.append({"ok": False, "label": label, "error": repr(e)})
         body = {
