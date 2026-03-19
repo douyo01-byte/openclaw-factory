@@ -184,6 +184,102 @@ def write_event(kind, body):
     except Exception:
         pass
 
+def recent_proposal_exists(label, seconds=21600):
+    try:
+        conn = db()
+        row = conn.execute(
+            """
+            select cast(strftime('%s','now') - strftime('%s', created_at) as integer)
+            from ops_watcher_events
+            where kind='proposal'
+              and json_extract(body, '$.label') = ?
+            order by id desc
+            limit 1
+            """,
+            (label,)
+        ).fetchone()
+        conn.close()
+        if not row or row[0] is None:
+            return False
+        return int(row[0]) < int(seconds)
+    except Exception:
+        return False
+
+def queue_ops_escalation_proposals(escalations):
+    out = []
+    for e in escalations:
+        label = (e.get("label") or "").strip()
+        if not label:
+            continue
+        if recent_proposal_exists(label, 21600):
+            out.append({
+                "label": label,
+                "queued": False,
+                "blocked": "dedupe"
+            })
+            continue
+        title = f"Investigate repeated ops restart escalation: {label}"
+        detail_lines = [
+            "Auto-generated from ops watcher escalation.",
+            f"label={label}",
+            f"reason={e.get('reason','')}",
+            f"streak_count={e.get('streak_count',0)}",
+            f"last_severity={e.get('last_severity','')}",
+            f"restart_result={e.get('restart_result','')}",
+            f"service_exists_after={e.get('service_exists_after')}",
+            f"service_running_after={e.get('service_running_after')}",
+            "",
+            "Expected action:",
+            "- inspect launch agent / runtime state",
+            "- identify root cause of repeated restart or cooldown loop",
+            "- propose low-risk fix",
+        ]
+        body = {
+            "label": label,
+            "reason": e.get("reason", ""),
+            "streak_count": e.get("streak_count", 0),
+            "last_severity": e.get("last_severity", ""),
+            "restart_result": e.get("restart_result", ""),
+            "service_exists_after": e.get("service_exists_after"),
+            "service_running_after": e.get("service_running_after"),
+            "title": title
+        }
+        queued = False
+        err = ""
+        try:
+            conn = db()
+            cols = [r[1] for r in conn.execute("pragma table_info(dev_proposals)").fetchall()]
+            row = {
+                "title": title,
+                "description": "\n".join(detail_lines),
+                "status": "proposed",
+                "dev_stage": "proposed",
+                "source_ai": "ops_watcher_escalation",
+                "target_system": "ops",
+                "improvement_type": "stability",
+                "created_at": None
+            }
+            use = {k: v for k, v in row.items() if k in cols and v is not None}
+            if "title" not in use:
+                raise RuntimeError("dev_proposals.title missing")
+            keys = list(use.keys())
+            sql = "insert into dev_proposals(" + ",".join(keys) + ") values(" + ",".join("?" for _ in keys) + ")"
+            conn.execute(sql, [use[k] for k in keys])
+            conn.commit()
+            conn.close()
+            queued = True
+        except Exception as ex:
+            err = str(ex)
+        body["queued"] = queued
+        body["error"] = err if not queued else None
+        write_event("proposal", body)
+        out.append({
+            "label": label,
+            "queued": queued,
+            "error": err if not queued else None
+        })
+    return out
+
 def tg_send(text):
     if not TG_TOKEN or not TG_CHAT_ID:
         return False
@@ -524,12 +620,14 @@ def run_watcher():
                         })
             results.append(item)
         notifications = notify_escalations(escalations) if escalations else []
+        proposals = queue_ops_escalation_proposals(escalations) if escalations else []
         body = {
             "mode": "watcher",
             "results": results,
             "restarted": restarted,
             "escalations": escalations,
             "notifications": notifications,
+            "proposals": proposals,
             "ts": now_ts()
         }
         write_event("watch", body)
