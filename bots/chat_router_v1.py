@@ -341,16 +341,20 @@ def build_item_reply(
     )
 
 
+def build_candidate_reply(role: Optional[str], q: str) -> str:
+    head, body = build_role_reply(role)
+    return f"{head}\n" f"対  象  候  補  : {q}\n\n" f"{body}"
+
+
 def build_chat_reply(
     conn: sqlite3.Connection,
     role: Optional[str],
     item: Optional[sqlite3.Row],
     q: str,
 ) -> str:
-    head, body = build_role_reply(role)
     if item:
         return build_item_reply(conn, role, item)
-    return f"{head}\n" f"対  象  候  補  : {q}\n\n" f"{body}"
+    return build_candidate_reply(role, q)
 
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
