@@ -264,7 +264,40 @@ def build_chat_reply(
     item: Optional[sqlite3.Row],
     q: str,
 ) -> str:
+    head, body = build_role_reply(role)
+    if item:
+        meta = get_item_meta(conn, int(item["id"]))
+        return (
+            f"{head}\n"
+            f"{format_meta(meta)}\n"
+            f"対 象 : {item['title']}\n"
+            f"{item['url']}\n\n"
+            f"{body}"
+        )
+    return f"{head}\n" f"対 象 候 補 : {q}\n\n" f"{body}"
+
+def handle_chat(
+    conn: sqlite3.Connection, row: sqlite3.Row
+) -> Tuple[str, Optional[str]]:
+    cmd_id = row["id"]
+    chat_id = str(row["chat_id"])
+    text = (row["text"] or "").strip()
+
+    if not text:
+        return ("ignored", None)
+    if text.startswith("/"):
+        return ("ignored", None)
+
+    d = parse_decision(text)
+    if d:
+        decision, reason = d
+        if apply_chat_decision(conn, chat_id, decision, reason):
+            return ("chatted", None)
+
+    role = role_from_text(text)
+    item, q = resolve_item_with_context(conn, chat_id, text)
     reply = build_chat_reply(conn, role, item, q)
+
     tg_send(reply)
     if item:
         set_ctx_last_item(conn, row["chat_id"], int(item["id"]))
@@ -272,7 +305,6 @@ def build_chat_reply(
             conn, row["chat_id"], int(item["id"]), role or "", normalize_chat_query(text)
         )
     return ("chatted", None)
-
 
 def main() -> None:
     ap = argparse.ArgumentParser()
