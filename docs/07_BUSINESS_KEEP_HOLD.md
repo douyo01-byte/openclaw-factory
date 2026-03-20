@@ -21,6 +21,6 @@
 - 事業系の新規 bot 追加は禁止
 
 ## INTEGRATION TARGET
-- jp.openclaw.scout_market_v2 -> brain_supply_v1 へ統合候補
-- jp.openclaw.chat_research_v1 -> brain_supply_v1 へ統合候補
+- jp.openclaw.scout_market_v2 -> business mainline 再設計対象
+- jp.openclaw.chat_research_v1 -> business mainline 再設計対象
 - ingest_private_replies_kaikun02 / ingest_private_replies_kaikun04 は private reply intake 専用で維持
