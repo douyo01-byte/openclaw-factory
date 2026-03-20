@@ -29,7 +29,7 @@
 - open_pr: 0
 - proposal_state: 171
 - ceo_hub_events: 35379
-- ops_watcher_events: 3665
+- ops_watcher_events: 3710
 
 ## schema notes
 ### ceo_hub_events
