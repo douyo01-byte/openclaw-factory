@@ -112,6 +112,17 @@ def upsert_role_brief(conn: sqlite3.Connection, role: str, title: str, url: str,
         ((role or "").strip(), topic, source_url, (title or "").strip(), summary),
     )
 
+def persist_meeting_outputs(conn: sqlite3.Connection, top: List["Row"], text: str) -> None:
+    if top:
+        upsert_role_brief(conn, "yarde", top[0].title, top[0].url, text)
+    for r in top:
+        try:
+            sig = scan_contact_paths(r.url, timeout=10)
+            for e in (sig.get("emails") or [])[:10]:
+                enqueue_contact(conn, r.id, e, "meeting_signal")
+        except Exception:
+            pass
+
 
 def _fetch_item_meta(conn: sqlite3.Connection, item_id: int) -> tuple[str, int, str]:
     """Return (decision, priority, last_note_line). Missing -> ('-', 0, '')."""
@@ -319,8 +330,6 @@ def meeting_text(top: List[Row]) -> str:
                 signal_line = ""
             if signal_line:
                 lines.append(signal_line)
-                for e in emails[:10]:
-                    enqueue_contact(conn, r.id, e, 'meeting_signal')
             lines.append(f"次アクション {action_plan(r)}\n")
 
         lines.append("🧠 ヤルデ（総括/決裁）")
@@ -344,9 +353,8 @@ def main():
     text = meeting_text(top)
     try:
         conn = sqlite3.connect(os.environ.get("OCLAW_DB_PATH", "./data/openclaw.db"))
-        if top:
-            upsert_role_brief(conn, "yarde", top[0].title, top[0].url, text)
-            conn.commit()
+        persist_meeting_outputs(conn, top, text)
+        conn.commit()
         conn.close()
     except Exception:
         pass
