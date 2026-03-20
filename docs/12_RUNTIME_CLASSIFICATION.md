@@ -100,3 +100,12 @@
 
 ## needs_manual_review
 - none
+
+## retired missing-target ceo plists
+- jp.openclaw.ceo_terminal_executor_guarded_normalizer_v1 plist retired: missing target script
+- jp.openclaw.ceo_terminal_executor_guarded_selector_v1 plist retired: missing target script
+- jp.openclaw.ceo_terminal_final_executor_bridge_v1 plist retired: missing target script
+- jp.openclaw.ceo_terminal_final_executor_normalizer_v1 plist retired: missing target script
+- jp.openclaw.ceo_terminal_final_executor_selector_v1 plist retired: missing target script
+- jp.openclaw.ceo_terminal_guard_normalizer_v1 plist retired: missing target script
+- jp.openclaw.ceo_terminal_guard_selector_v1 plist retired: missing target script
