@@ -260,6 +260,19 @@ def main():
     ap.add_argument("--role", default="all")
     ap.add_argument("--limit", type=int, default=5)
     args = ap.parse_args()
+    if feeds_file:
+        loaded = load_sources(feeds_file)
+        if loaded:
+            for src in loaded:
+                role = (src.get("role") or "").strip()
+                name = (src.get("name") or src.get("label") or "").strip()
+                url = (src.get("url") or "").strip()
+                if not role or not name or not url:
+                    continue
+                ROLE_FEEDS.setdefault(role, [])
+                pair = (name, url)
+                if pair not in ROLE_FEEDS[role]:
+                    ROLE_FEEDS[role].append(pair)
 
     roles = list(ROLE_FEEDS.keys()) if args.role == "all" else [args.role]
     total = 0
