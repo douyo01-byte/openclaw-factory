@@ -64,6 +64,31 @@ def summarize(signals_by_path):
         "ok_paths": ok_paths,
     }
 
+def scan_contact_paths(url: str, timeout: int = 10):
+    base = normalize_base(url)
+    if not base:
+        return {
+            "emails": [],
+            "has_jp": False,
+            "has_contact_hint": False,
+            "has_amazon_rakuten": False,
+            "ok_paths": [],
+        }
+    signals_by_path = []
+    for path in PATH_CANDIDATES:
+        try:
+            u = urljoin(base.rstrip("/") + "/", path.lstrip("/"))
+            code, html = fetch(u, timeout=timeout)
+            signals_by_path.append((path, code, extract_signals(html)))
+        except Exception:
+            signals_by_path.append((path, 0, {
+                "emails": [],
+                "has_jp": False,
+                "has_contact_hint": False,
+                "has_amazon_rakuten": False,
+            }))
+    return summarize(signals_by_path)
+
 def enqueue_contact(conn: sqlite3.Connection, item_id: int, email: str, source: str) -> None:
     try:
         conn.execute(
@@ -285,27 +310,12 @@ def meeting_text(top: List[Row]) -> str:
             lines.append(r.url)
             signal_line = ""
             try:
-                base = normalize_base(r.url)
-                emails = []
-                if base:
-                    signals_by_path = []
-                    for path in PATH_CANDIDATES:
-                        try:
-                            u = urljoin(base.rstrip("/") + "/", path.lstrip("/"))
-                            code, html = fetch(u, timeout=10)
-                            signals_by_path.append((path, code, extract_signals(html)))
-                        except Exception:
-                            signals_by_path.append((path, 0, {
-                                "emails": [],
-                                "has_jp": False,
-                                "has_contact_hint": False,
-                                "has_amazon_rakuten": False,
-                            }))
-                    sig = summarize(signals_by_path)
-                    emails = sig.get("emails") or []
-                    ok_paths = sig.get("ok_paths") or []
-                    signal_line = f"signal: jp={'yes' if sig.get('has_jp') else 'no'} contact_hint={'yes' if sig.get('has_contact_hint') else 'no'} emails={len(emails)} paths={','.join(ok_paths) if ok_paths else '-'}"
+                sig = scan_contact_paths(r.url, timeout=10)
+                emails = sig.get("emails") or []
+                ok_paths = sig.get("ok_paths") or []
+                signal_line = f"signal: jp={'yes' if sig.get('has_jp') else 'no'} contact_hint={'yes' if sig.get('has_contact_hint') else 'no'} emails={len(emails)} paths={','.join(ok_paths) if ok_paths else '-'}"
             except Exception:
+                emails = []
                 signal_line = ""
             if signal_line:
                 lines.append(signal_line)
