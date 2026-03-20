@@ -23,3 +23,4 @@
 - ス マ ホ 編 集 後 は spacing 崩 れ を 確 認 す る
 - 存 在 し な い 参 照 を index に 残 さ な い
 - runtime に 関 す る 判 断 は docs 単 独 で 行 わ な い
+09_BUSINESS_MAINLINE_REDESIGN.md
