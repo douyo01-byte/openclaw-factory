@@ -325,13 +325,19 @@ def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str)
     return item, q
 
 
+def get_build_item_reply_meta(
+    conn: sqlite3.Connection,
+    item: sqlite3.Row,
+):
+    return get_item_meta(conn, int(item["id"]))
+
 def build_item_reply(
     conn: sqlite3.Connection,
     role: Optional[str],
     item: sqlite3.Row,
 ) -> str:
     head, body = build_role_reply(role)
-    meta = get_item_meta(conn, int(item["id"]))
+    meta = get_build_item_reply_meta(conn, item)
     return (
         f"{head}\n"
         f"{format_meta(meta)}\n"
