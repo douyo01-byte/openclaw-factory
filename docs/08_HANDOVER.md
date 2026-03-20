@@ -3,11 +3,7 @@
 ## 最初に見るもの
 1. docs/06_CURRENT_STATE.md
 2. docs/10_RUNTIME_AUDIT_STATUS.md
-3. docs/99_CONNECTED_RUNTIME_PATCH.md
-4. ../openclaw-factory-daemon/reports/audit_20260315/kaikun02_runtime_memo.md
-5. ../openclaw-factory-daemon/reports/audit_20260315/connected_asset_inventory.md
-6. ../openclaw-factory-daemon/reports/audit_20260315/docs_live_gap.md
-7. ../openclaw-factory-daemon/reports/audit_20260315/implemented_not_prod.md
+3. docs/04_KAIKUN04_STARTER.md
 
 ## 今の判断
 - 実働最小系は guard / watcher / creator
@@ -18,4 +14,4 @@
 ## 次の行動
 - scripts/stage_runtime_reenable.sh を基準に段階起動
 - open PR 数と duplicate を常時確認
-- Kaikun02 は audit_20260315 を前提知識として扱う
+- Kaikun04/運用判断は docs/04_KAIKUN04_STARTER.md を起点にする

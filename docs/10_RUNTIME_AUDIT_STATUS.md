@@ -2,8 +2,6 @@
 
 ## 現在の基準
 - docs正本復元元: dev/self-watch-recovery
-- 接続監査基準: docs/99_CONNECTED_RUNTIME_PATCH.md
-- 監査成果物基準: ../openclaw-factory-daemon/reports/audit_20260315/
 
 ## 実働最小系
 - open_pr_guard_v1
@@ -34,6 +32,4 @@
 ## Kaikun02参照順
 1. docs/06_CURRENT_STATE.md
 2. docs/08_HANDOVER.md
-3. docs/99_CONNECTED_RUNTIME_PATCH.md
-4. ../openclaw-factory-daemon/reports/audit_20260315/kaikun02_runtime_memo.md
-5. ../openclaw-factory-daemon/reports/audit_20260315/connected_asset_inventory.md
+3. docs/04_KAIKUN04_STARTER.md
