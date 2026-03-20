@@ -39,4 +39,3 @@ Lv6〜Lv7
 ## 参照
 - docs/08_HANDOVER.md
 - docs/10_RUNTIME_AUDIT_STATUS.md
-- docs/99_CONNECTED_RUNTIME_PATCH.md
