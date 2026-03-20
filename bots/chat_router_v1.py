@@ -181,15 +181,18 @@ def build_scout_role_reply() -> Tuple[str, str]:
     body = "ロ ー ン チ 直 後 は 公 式 サ イ ト の Contactが 見 つ か り や す い 。 /contact /about /privacy を 先 に 当 て る 。 な け れ ば SNSや ド メ イ ン 情 報 へ 。 "
     return head, body
 
+def build_iindesuka_role_reply() -> Tuple[str, str]:
+    head = "💰 イ イ ン デ ス カ "
+    body = "単 価 ×輸 送 ×差 別 化 で 即 死 判 定 。 サ イ ズ ・ 重 量 ・ 破 損 率 ・ 関 税 ・ 返 品 コ ス ト を ざ っ く り で も 出 し て 落 と す 。 "
+    return head, body
+
 def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
     if role == "japache":
         return build_japache_role_reply()
     if role == "scout":
         return build_scout_role_reply()
     if role == "iindesuka":
-        head = "💰 イインデスカ"
-        body = "単価×輸送×差別化で即死判定。サイズ・重量・破損率・関税・返品コストをざっくりでも出して落とす。"
-        return head, body
+        return build_iindesuka_role_reply()
     if role == "tanoshi":
         head = "🔥 タノシ"
         body = "初手はテスト輸入→反応→独占提案の順。連絡先が取れたら返事が来やすい短文で刺す。"
