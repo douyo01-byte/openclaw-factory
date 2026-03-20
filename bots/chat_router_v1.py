@@ -107,11 +107,15 @@ def find_item_by_title_hint(
     ).fetchone()
 
 
-def get_item_meta(conn: sqlite3.Connection, item_id: int) -> Dict[str, Any]:
-    r = conn.execute(
+def fetch_item_meta_row(conn: sqlite3.Connection, item_id: int):
+    return conn.execute(
         "SELECT item_id, priority, decision, note, updated_at FROM item_meta WHERE item_id=?",
         (item_id,),
     ).fetchone()
+
+
+def get_item_meta(conn: sqlite3.Connection, item_id: int) -> Dict[str, Any]:
+    r = fetch_item_meta_row(conn, item_id)
     if not r:
         return {
             "item_id": item_id,
