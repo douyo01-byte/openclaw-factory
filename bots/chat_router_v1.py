@@ -403,15 +403,11 @@ def resolve_chat_item_context(
     return resolve_item_with_context(conn, chat_id, text)
 
 
-def normalize_handle_chat_text(row: sqlite3.Row) -> str:
-    return (row["text"] or "").strip()
-
-
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
 ) -> Tuple[str, Optional[str]]:
     chat_id = str(row["chat_id"])
-    text = normalize_handle_chat_text(row)
+    text = (row["text"] or "").strip()
 
     if should_ignore_chat_text(text):
         return ("ignored", None)
