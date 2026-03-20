@@ -1,6 +1,15 @@
 # OpenClaw Docs Index
-
 ## Core Entry
+- 01_SINGLE_SOURCE_OF_TRUTH.md
+- 02_ROLE_REGISTRY.md
+- 03_KAIKUN04_RUNTIME_RULE.md
+- 04_KAIKUN04_STARTER.md
+- 05_MAINLINE_IMPLEMENTATION_GATE.md
+- 06_META_KEEP_HOLD.md
+- 07_BUSINESS_KEEP_HOLD.md
+- 09_BUSINESS_MAINLINE_REDESIGN.md
+- 10_BUSINESS_INTEGRATION_DECISION.md
+
 - 01_SINGLE_SOURCE_OF_TRUTH.md
 - 02_ROLE_REGISTRY.md
 - 03_KAIKUN04_RUNTIME_RULE.md
@@ -23,4 +32,3 @@
 - ス マ ホ 編 集 後 は spacing 崩 れ を 確 認 す る
 - 存 在 し な い 参 照 を index に 残 さ な い
 - runtime に 関 す る 判 断 は docs 単 独 で 行 わ な い
-09_BUSINESS_MAINLINE_REDESIGN.md
