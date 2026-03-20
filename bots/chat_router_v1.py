@@ -290,9 +290,13 @@ def build_chat_query_context(text: str) -> str:
     return normalize_chat_query(text)
 
 
+def resolve_item_initial(conn: sqlite3.Connection, text: str) -> Optional[sqlite3.Row]:
+    return resolve_item(conn, text)
+
+
 def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str):
     q = build_chat_query_context(text)
-    item = resolve_item(conn, text)
+    item = resolve_item_initial(conn, text)
     if not item:
         item = resolve_item_from_title_hint(conn, text, q)
     if not item:
