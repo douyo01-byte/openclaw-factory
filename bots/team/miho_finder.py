@@ -108,6 +108,13 @@ def save_contacts(conn: sqlite3.Connection, item_url: str, emails, source: str =
             (item_url, e, source),
         )
 
+def save_contact_points(conn: sqlite3.Connection, item_url: str, socials, source: str = "web_enrich"):
+    for k, v in sorted(set(socials or [])):
+        conn.execute(
+            "insert or ignore into contact_points(item_url,kind,value,source) values(?,?,?,?)",
+            (item_url, k, v, source),
+        )
+
 def fetch(url: str):
     r = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
     if r.status_code >= 400:
@@ -156,12 +163,7 @@ def main():
             socials = extract_socials(html)
 
         save_contacts(conn, item_url, emails, "web_enrich")
-
-        for k, v in socials:
-            conn.execute(
-                "insert or ignore into contact_points(item_url,kind,value,source) values(?,?,?,?)",
-                (item_url, k, v, "web_enrich"),
-            )
+        save_contact_points(conn, item_url, socials, "web_enrich")
 
     conn.commit()
     conn.close()
