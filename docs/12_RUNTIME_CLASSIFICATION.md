@@ -16,7 +16,6 @@
 ## mainline active
 - jp.openclaw.ops_brain_agent_v1
 - jp.openclaw.dev_pr_watcher_v1
-- jp.openclaw.brain_supply_v1
 - jp.openclaw.proposal_cluster_v1
 - jp.openclaw.pattern_extractor_v1
 - jp.openclaw.supply_bias_updater_v1
@@ -96,3 +95,6 @@
 - jp.openclaw.innovation_llm_engine_v1 retired: orphan running process with no live source file
 - jp.openclaw.impact_judge_v1 retired: orphan running process with no live source file
 - jp.openclaw.evolution_trace_reporter_v1 retired: orphan running process with no live source file
+
+## retired brain supply
+- jp.openclaw.brain_supply_v1 retired: orphan runtime stopped, plist archived, live source missing

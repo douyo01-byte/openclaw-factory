@@ -9,7 +9,6 @@ Kaikun04 / 人 間 / 今 後 の 実 装 判 断 は こ の フ ァ イ ル を
 ## allowed mainline targets
 - jp.openclaw.ops_brain_agent_v1
 - jp.openclaw.dev_pr_watcher_v1
-- jp.openclaw.brain_supply_v1
 - jp.openclaw.proposal_cluster_v1
 - jp.openclaw.pattern_extractor_v1
 - jp.openclaw.supply_bias_updater_v1
