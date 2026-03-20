@@ -115,16 +115,22 @@ def save_contact_points(conn: sqlite3.Connection, item_url: str, socials, source
             (item_url, k, v, source),
         )
 
-def persist_item_contacts(conn: sqlite3.Connection, item_id: int, item_url: str, official_url: str, html: str, bad) -> str:
+
+def resolve_official_url(conn: sqlite3.Connection, item_id: int, item_url: str, official_url: str, html: str, bad) -> str:
     current_official = official_url or ""
-    if not current_official:
-        off = pick_official(item_url, html)
-        if off and dom(off) not in bad:
-            conn.execute(
-                "update items set official_url=?, official_domain=? where id=?",
-                (off, dom(off), item_id),
-            )
-            current_official = off
+    if current_official:
+        return current_official
+    off = pick_official(item_url, html)
+    if off and dom(off) not in bad:
+        conn.execute(
+            "update items set official_url=?, official_domain=? where id=?",
+            (off, dom(off), item_id),
+        )
+        return off
+    return current_official
+
+def persist_item_contacts(conn: sqlite3.Connection, item_id: int, item_url: str, official_url: str, html: str, bad) -> str:
+    current_official = resolve_official_url(conn, item_id, item_url, official_url, html, bad)
     emails = set(extract_emails(html))
     if current_official:
         off_html = fetch(current_official)
