@@ -1,52 +1,21 @@
+01_SINGLE_SOURCE_OF_TRUTH.md
 # OpenClaw Docs Index
 
-このファイルは docs 全体のナビゲーションです。
-
----
-
-# 核ドキュメント
-
-- 01_SYSTEM_PROMPT.md
+## 核ドキュメント
 - 06_CURRENT_STATE.md
 - 08_HANDOVER.md
+- 12_RUNTIME_CLASSIFICATION.md
+- 13_LAUNCHAGENT_INVENTORY.md
+- 14_LEGACY_TRIAGE.md
 
----
-
-# 運用
-
-- 11_OPERATIONS.md
-- 20_DAILY_OPERATION.md
-
----
-
-# 開発ルール
-
+## 運用
 - 17_EFFICIENCY_RULES.md
 
----
+## docs修正注意
+- スマホ編集後は spacing 崩れを確認する
+- 存在しない参照を index に残さない
+- runtime に関する判断は docs 単独で行わない
 
-# 状態管理
+02_ROLE_REGISTRY.md
 
-- 06_CURRENT_STATE.md
-
----
-
-# 引き継ぎ
-
-- 08_HANDOVER.md
-
----
-
-# docs 修正
-
-- scripts/fix_docs_spacing.py
-
-
----
-
-# docs 更新注意
-
-スマホ編集では以下が発生しやすいため、更新後は spacing 修正を実行してください。
-
-- 全角スペース崩れ
-- 改行崩れ
+03_KAIKUN04_RUNTIME_RULE.md
