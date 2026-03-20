@@ -192,6 +192,12 @@ def build_tanoshi_role_reply() -> Tuple[str, str]:
     return head, body
 
 
+def build_yarude_role_reply() -> Tuple[str, str]:
+    head = "🧠 ヤ ル デ "
+    body = "誰 の 意 見 が 欲 し い ？  ジ ャ パ チ ェ /ス カ ウ ン /イ イ ン デ ス カ /タ ノ シ  を 文中 に 入 れ て 投 げ て 。 "
+    return head, body
+
+
 def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
     if role == "japache":
         return build_japache_role_reply()
@@ -201,9 +207,7 @@ def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
         return build_iindesuka_role_reply()
     if role == "tanoshi":
         return build_tanoshi_role_reply()
-    head = "🧠 ヤ ル デ "
-    body = "誰 の 意 見 が 欲 し い ？  ジ ャ パ チ ェ /ス カ ウ ン /イ イ ン デ ス カ /タ ノ シ  を 文中 に 入 れ て 投 げ て 。 "
-    return head, body
+    return build_yarude_role_reply()
 
 def parse_decision(text: str):
     t = (text or "").strip()
