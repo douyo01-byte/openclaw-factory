@@ -276,6 +276,11 @@ def build_title_hint_for_context(text: str, q: str) -> str:
     )
 
 
+def resolve_item_from_context_key(conn: sqlite3.Connection, chat_id: str) -> Optional[sqlite3.Row]:
+    v = fetch_bot_state_value(conn, f"ctx:last_item:{chat_id}")
+    return get_item(conn, int(v)) if str(v or "").strip() else None
+
+
 def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str):
     item = resolve_item(conn, text)
     q = normalize_chat_query(text)
@@ -283,8 +288,7 @@ def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str)
         hint = build_title_hint_for_context(text, q)
         item = find_item_by_title_hint(conn, hint) if hint else None
     if not item:
-        v = fetch_bot_state_value(conn, f"ctx:last_item:{chat_id}")
-        item = get_item(conn, int(v)) if str(v or "").strip() else None
+        item = resolve_item_from_context_key(conn, chat_id)
     return item, q
 
 
