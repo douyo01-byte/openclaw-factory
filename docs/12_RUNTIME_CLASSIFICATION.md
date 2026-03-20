@@ -24,12 +24,12 @@
 - jp.openclaw.ingest_private_replies_kaikun04
 
 ## mainline data signals
-- dev_proposals: 3261
+- dev_proposals: 3265
 - merged: 2624
 - open_pr: 0
 - proposal_state: 171
 - ceo_hub_events: 35379
-- ops_watcher_events: 3174
+- ops_watcher_events: 3665
 
 ## schema notes
 ### ceo_hub_events
