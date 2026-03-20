@@ -231,9 +231,15 @@ def run_for_role(db_path: str, role: str, limit: int) -> int:
             print("  (skip) parse empty")
             continue
 
+        label_source = label or role
         for it in items:
             if not it.link:
                 continue
+            k = key_for(it.link)
+            already_seen = is_seen(conn, k)
+            save_item(conn, it.link, it.title, label_source)
+            if not already_seen:
+                mark_seen(conn, it.link, it.title, label_source)
             topic = guess_topic(it.title, it.link)
             ok = insert_brief(conn, role, topic, it.link, it.title, it.summary)
             if ok:
