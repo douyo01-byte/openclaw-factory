@@ -294,13 +294,18 @@ def resolve_item_initial(conn: sqlite3.Connection, text: str) -> Optional[sqlite
     return resolve_item(conn, text)
 
 
+def resolve_item_fallback_chain(conn: sqlite3.Connection, chat_id: str, text: str, q: str) -> Optional[sqlite3.Row]:
+    item = resolve_item_from_title_hint(conn, text, q)
+    if item:
+        return item
+    return resolve_item_from_context_key(conn, chat_id)
+
+
 def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str):
     q = build_chat_query_context(text)
     item = resolve_item_initial(conn, text)
     if not item:
-        item = resolve_item_from_title_hint(conn, text, q)
-    if not item:
-        item = resolve_item_from_context_key(conn, chat_id)
+        item = resolve_item_fallback_chain(conn, chat_id, text, q)
     return item, q
 
 
