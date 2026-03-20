@@ -258,6 +258,24 @@ def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str)
     return item, q
 
 
+def build_chat_reply(
+    conn: sqlite3.Connection,
+    role: Optional[str],
+    item: Optional[sqlite3.Row],
+    q: str,
+) -> str:
+    head, body = build_role_reply(role)
+    if item:
+        meta = get_item_meta(conn, int(item["id"]))
+        return (
+            f"{head}\n"
+            f"{format_meta(meta)}\n"
+            f"対 象 : {item['title']}\n"
+            f"{item['url']}\n\n"
+            f"{body}"
+        )
+    return f"{head}\n" f"対 象 候 補 : {q}\n\n" f"{body}"
+
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
 ) -> Tuple[str, Optional[str]]:
@@ -269,27 +287,16 @@ def handle_chat(
         return ("ignored", None)
     if text.startswith("/"):
         return ("ignored", None)
+
     d = parse_decision(text)
     if d:
         decision, reason = d
         if apply_chat_decision(conn, chat_id, decision, reason):
             return ("chatted", None)
+
     role = role_from_text(text)
     item, q = resolve_item_with_context(conn, chat_id, text)
-    head, body = build_role_reply(role)
-
-    if item:
-        meta = get_item_meta(conn, int(item["id"]))
-        reply = (
-            f"{head}\n"
-            f"{format_meta(meta)}\n"
-            f"対象: {item['title']}\n"
-            f"{item['url']}\n\n"
-            f"{body}"
-        )
-    else:
-        q = strip_role_words(text)
-        reply = f"{head}\n" f"対象候補: {q}\n\n" f"{body}"
+    reply = build_chat_reply(conn, role, item, q)
 
     tg_send(reply)
     if item:
@@ -298,7 +305,6 @@ def handle_chat(
             conn, row["chat_id"], int(item["id"]), role or "", normalize_chat_query(text)
         )
     return ("chatted", None)
-
 
 def main() -> None:
     ap = argparse.ArgumentParser()
