@@ -68,3 +68,12 @@
 - kaikun04_router_worker_v1 / kaikun04_router_cleanup_v1 are disabled as non-mainline legacy router artifacts
 
 - kaikun02_router_worker_v1 is disabled as non-mainline legacy router artifact
+
+## retired missing-target plists
+- jp.openclaw.kaikun02_coo_controller_v1 plist retired: missing target script
+- jp.openclaw.kaikun02_executor_bridge_v2 plist retired: missing target script
+- jp.openclaw.kaikun02_health_gate_v1 plist retired: missing target script
+- jp.openclaw.kaikun02_router_cleanup_v1 plist retired: missing target script
+- jp.openclaw.kaikun02_router_worker_v1 plist retired: missing target script
+- jp.openclaw.kaikun04_router_cleanup_v1 plist retired: missing target script
+- jp.openclaw.kaikun04_router_worker_v1 plist retired: missing target script
