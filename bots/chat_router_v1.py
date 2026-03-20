@@ -286,9 +286,15 @@ def resolve_item_from_title_hint(conn: sqlite3.Connection, text: str, q: str) ->
     return find_item_by_title_hint(conn, hint) if hint else None
 
 
-def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str):
-    item = resolve_item(conn, text)
+def build_chat_query_context(text: str):
     q = normalize_chat_query(text)
+    item = None
+    return item, q
+
+
+def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str):
+    _item0, q = build_chat_query_context(text)
+    item = resolve_item(conn, text)
     if not item:
         item = resolve_item_from_title_hint(conn, text, q)
     if not item:
