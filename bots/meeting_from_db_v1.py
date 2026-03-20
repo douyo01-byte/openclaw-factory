@@ -373,13 +373,19 @@ def dispatch_meeting(conn: sqlite3.Connection, top: List["Row"]) -> str:
     persist_meeting_outputs(conn, top, text, signal_map)
     return text
 
+def run_meeting_once(top: List["Row"]) -> str:
+    conn = sqlite3.connect(os.environ.get("OCLAW_DB_PATH", "./data/openclaw.db"))
+    try:
+        text = dispatch_meeting(conn, top)
+        conn.commit()
+        return text
+    finally:
+        conn.close()
+
 def main():
     top = load_meeting_candidates(limit=60, k=10)
     try:
-        conn = sqlite3.connect(os.environ.get("OCLAW_DB_PATH", "./data/openclaw.db"))
-        text = dispatch_meeting(conn, top)
-        conn.commit()
-        conn.close()
+        text = run_meeting_once(top)
     except Exception:
         text = meeting_text(top, collect_meeting_signals(top))
     tg_send(text)
