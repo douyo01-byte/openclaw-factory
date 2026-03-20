@@ -356,6 +356,14 @@ def build_chat_reply(
         return build_item_reply(conn, role, item)
     return build_candidate_reply(role, q)
 
+def should_ignore_chat_text(text: str) -> bool:
+    if not text:
+        return True
+    if text.startswith("/"):
+        return True
+    return False
+
+
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
 ) -> Tuple[str, Optional[str]]:
@@ -363,9 +371,7 @@ def handle_chat(
     chat_id = str(row["chat_id"])
     text = (row["text"] or "").strip()
 
-    if not text:
-        return ("ignored", None)
-    if text.startswith("/"):
+    if should_ignore_chat_text(text):
         return ("ignored", None)
 
     d = parse_decision(text)
