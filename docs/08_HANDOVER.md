@@ -31,3 +31,4 @@ cd ~/AI/openclaw-factory-daemon || exit 1
 4. watcher の required / observe 対象
 5. legacy launchagent の棚卸し
 - Meta HOLD 裁定完了: db_integrity_watchdog_v1 のみ保持、他は FULL_RETIRE 判定
+- Business HOLD 裁定中 : scout_market_v2 / chat_research_v1 は MAINLINE_INTEGRATION_CANDIDATE、ai_employee_* は FULL_RETIRE、chat_research_job_producer_v1 / secretary_llm_v1 は再確認 HOLD
