@@ -100,16 +100,20 @@ def find_item_by_url(conn: sqlite3.Connection, url: str) -> Optional[sqlite3.Row
     return fetch_item_by_url_row(conn, url)
 
 
+def fetch_item_by_title_hint_row(conn: sqlite3.Connection, hint: str):
+    return conn.execute(
+        "SELECT id, title, url FROM items WHERE title LIKE ? ORDER BY id DESC LIMIT 1",
+        (f"%{hint}%",),
+    ).fetchone()
+
+
 def find_item_by_title_hint(
     conn: sqlite3.Connection, hint: str
 ) -> Optional[sqlite3.Row]:
     h = (hint or "").strip()
     if len(h) < 3:
         return None
-    return conn.execute(
-        "SELECT id, title, url FROM items WHERE title LIKE ? ORDER BY id DESC LIMIT 1",
-        (f"%{h}%",),
-    ).fetchone()
+    return fetch_item_by_title_hint_row(conn, h)
 
 
 def fetch_item_meta_row(conn: sqlite3.Connection, item_id: int):
