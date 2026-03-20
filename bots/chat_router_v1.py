@@ -416,10 +416,6 @@ def normalize_handle_chat_text(row: sqlite3.Row) -> str:
     return (row["text"] or "").strip()
 
 
-def get_handle_chat_cmd_id(row: sqlite3.Row) -> int:
-    return row["id"]
-
-
 def get_handle_chat_chat_id(row: sqlite3.Row) -> str:
     return str(row["chat_id"])
 
