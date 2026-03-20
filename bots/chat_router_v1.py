@@ -244,7 +244,7 @@ def apply_chat_decision(conn: sqlite3.Connection, chat_id: str, decision: str, r
     return True
 
 
-def resolve_item(conn: sqlite3.Connection, text: str) -> Optional[sqlite3.Row]:
+def resolve_item_from_text(conn: sqlite3.Connection, text: str) -> Optional[sqlite3.Row]:
     urls = URL_RE.findall(text or "")
     if urls:
         it = find_item_by_url(conn, urls[0])
@@ -252,6 +252,10 @@ def resolve_item(conn: sqlite3.Connection, text: str) -> Optional[sqlite3.Row]:
             return it
     hint = extract_title_hint(text)
     return find_item_by_title_hint(conn, hint)
+
+
+def resolve_item(conn: sqlite3.Connection, text: str) -> Optional[sqlite3.Row]:
+    return resolve_item_from_text(conn, text)
 
 
 def fetch_item_row(conn: sqlite3.Connection, item_id: int):
