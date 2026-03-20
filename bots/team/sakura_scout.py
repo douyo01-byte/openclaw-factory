@@ -51,6 +51,22 @@ def save_item(conn: sqlite3.Connection, url: str, title: str, source: str) -> No
         (url, title, source),
     )
 
+
+def extend_role_feeds_from_sources(feeds_file: str) -> None:
+    loaded = load_sources(feeds_file)
+    if not loaded:
+        return
+    for src in loaded:
+        role = (src.get("role") or "").strip()
+        name = (src.get("name") or src.get("label") or "").strip()
+        url = (src.get("url") or "").strip()
+        if not role or not name or not url:
+            continue
+        ROLE_FEEDS.setdefault(role, [])
+        pair = (name, url)
+        if pair not in ROLE_FEEDS[role]:
+            ROLE_FEEDS[role].append(pair)
+
 import requests
 
 UA = "OpenClawRoleTrainer/1.1"
@@ -261,18 +277,7 @@ def main():
     ap.add_argument("--limit", type=int, default=5)
     args = ap.parse_args()
     if feeds_file:
-        loaded = load_sources(feeds_file)
-        if loaded:
-            for src in loaded:
-                role = (src.get("role") or "").strip()
-                name = (src.get("name") or src.get("label") or "").strip()
-                url = (src.get("url") or "").strip()
-                if not role or not name or not url:
-                    continue
-                ROLE_FEEDS.setdefault(role, [])
-                pair = (name, url)
-                if pair not in ROLE_FEEDS[role]:
-                    ROLE_FEEDS[role].append(pair)
+        extend_role_feeds_from_sources(feeds_file)
 
     roles = list(ROLE_FEEDS.keys()) if args.role == "all" else [args.role]
     total = 0
