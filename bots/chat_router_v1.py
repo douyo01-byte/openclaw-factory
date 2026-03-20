@@ -176,13 +176,16 @@ def build_japache_role_reply() -> Tuple[str, str]:
     body = "国 内 上 陸 の 兆 候 を 先 に 確 認 す る 。 日 本 語 LP、 代 理 店 表 記 、 Amazon/楽 天 /BASE、 プ レ ス リ リ ー ス を チ ェ ッ ク 。 な け れ ば 連 絡 先 回 収 へ 。 "
     return head, body
 
+def build_scout_role_reply() -> Tuple[str, str]:
+    head = "🌍 ス カ ウ ン "
+    body = "ロ ー ン チ 直 後 は 公 式 サ イ ト の Contactが 見 つ か り や す い 。 /contact /about /privacy を 先 に 当 て る 。 な け れ ば SNSや ド メ イ ン 情 報 へ 。 "
+    return head, body
+
 def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
     if role == "japache":
         return build_japache_role_reply()
     if role == "scout":
-        head = "🌍 スカウン"
-        body = "ローンチ直後は公式サイトのContactが見つかりやすい。/contact /about /privacy を先に当てる。なければSNSやドメイン情報へ。"
-        return head, body
+        return build_scout_role_reply()
     if role == "iindesuka":
         head = "💰 イインデスカ"
         body = "単価×輸送×差別化で即死判定。サイズ・重量・破損率・関税・返品コストをざっくりでも出して落とす。"
