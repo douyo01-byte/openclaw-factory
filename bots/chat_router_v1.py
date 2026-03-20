@@ -331,6 +331,12 @@ def get_build_item_reply_meta(
 ):
     return get_item_meta(conn, int(item["id"]))
 
+def get_build_item_reply_meta_text(
+    conn: sqlite3.Connection,
+    item: sqlite3.Row,
+) -> str:
+    return format_meta(meta)
+
 def build_item_reply(
     conn: sqlite3.Connection,
     role: Optional[str],
@@ -340,7 +346,7 @@ def build_item_reply(
     meta = get_build_item_reply_meta(conn, item)
     return (
         f"{head}\n"
-        f"{format_meta(meta)}\n"
+        f"{get_build_item_reply_meta_text(conn, item)}\n"
         f"対  象  : {item['title']}\n"
         f"{item['url']}\n\n"
         f"{body}"
