@@ -427,7 +427,6 @@ def get_handle_chat_chat_id(row: sqlite3.Row) -> str:
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
 ) -> Tuple[str, Optional[str]]:
-    cmd_id = get_handle_chat_cmd_id(row)
     chat_id = get_handle_chat_chat_id(row)
     text = normalize_handle_chat_text(row)
 
