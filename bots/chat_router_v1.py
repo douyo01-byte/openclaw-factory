@@ -376,21 +376,6 @@ def handle_chat_decision_if_any(
     return apply_chat_decision(conn, chat_id, decision, reason)
 
 
-def handle_chat_item_followup(
-    conn: sqlite3.Connection,
-    row: sqlite3.Row,
-    item: Optional[sqlite3.Row],
-    role: Optional[str],
-    text: str,
-) -> None:
-    if not item:
-        return
-    set_ctx_last_item(conn, row["chat_id"], int(item["id"]))
-    enqueue_chat_job(
-        conn, row["chat_id"], int(item["id"]), role or "", normalize_chat_query(text)
-    )
-
-
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
 ) -> Tuple[str, Optional[str]]:
@@ -408,7 +393,11 @@ def handle_chat(
     reply = build_chat_reply(conn, role, item, q)
 
     tg_send(reply)
-    handle_chat_item_followup(conn, row, item, role, text)
+    if item:
+        set_ctx_last_item(conn, row["chat_id"], int(item["id"]))
+        enqueue_chat_job(
+            conn, row["chat_id"], int(item["id"]), role or "", normalize_chat_query(text)
+        )
     return ("chatted", None)
 
 def main() -> None:
