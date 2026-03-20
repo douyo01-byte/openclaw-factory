@@ -2,8 +2,6 @@
 
 ## 現在の基準
 - docs正本復元元: dev/self-watch-recovery
-- 接続監査基準: docs/99_CONNECTED_RUNTIME_PATCH.md
-- 監査成果物基準: ../openclaw-factory-daemon/reports/audit_20260315/
 
 ## 実働最小系
 - open_pr_guard_v1
