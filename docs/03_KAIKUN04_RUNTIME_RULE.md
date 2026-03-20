@@ -1,6 +1,6 @@
 # KAIKUN04 RUNTIME RULE
 
-必ず以下順序で処理する：
+必ず以下順序で処理する:
 
 1. SINGLE SOURCE確認
 2. ROLE確認

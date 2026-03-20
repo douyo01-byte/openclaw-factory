@@ -30,7 +30,7 @@
 ## Absolute Rules
 - 同一役割の複数bot禁止
 - 既存機能の再実装禁止
-- bridge/selector/normalizer増殖禁止
+- bridge / selector / normalizer 増殖禁止
 
 ## Current Focus
 1. 重複削減
