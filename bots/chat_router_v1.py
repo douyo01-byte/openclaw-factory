@@ -281,12 +281,16 @@ def resolve_item_from_context_key(conn: sqlite3.Connection, chat_id: str) -> Opt
     return get_item(conn, int(v)) if str(v or "").strip() else None
 
 
+def resolve_item_from_title_hint(conn: sqlite3.Connection, text: str, q: str) -> Optional[sqlite3.Row]:
+    hint = build_title_hint_for_context(text, q)
+    return find_item_by_title_hint(conn, hint) if hint else None
+
+
 def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str):
     item = resolve_item(conn, text)
     q = normalize_chat_query(text)
     if not item:
-        hint = build_title_hint_for_context(text, q)
-        item = find_item_by_title_hint(conn, hint) if hint else None
+        item = resolve_item_from_title_hint(conn, text, q)
     if not item:
         item = resolve_item_from_context_key(conn, chat_id)
     return item, q
