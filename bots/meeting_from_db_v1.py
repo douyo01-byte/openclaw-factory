@@ -294,6 +294,8 @@ def meeting_text(top: List[Row]) -> str:
                 signal_line = ""
             if signal_line:
                 lines.append(signal_line)
+                for e in emails[:10]:
+                    enqueue_contact(conn, r.id, e, 'meeting_signal')
             lines.append(f"次アクション {action_plan(r)}\n")
 
         lines.append("🧠 ヤルデ（総括/決裁）")
