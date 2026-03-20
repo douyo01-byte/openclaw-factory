@@ -13,7 +13,43 @@ import sqlite3
 import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
+import json
+import hashlib
+
+def load_sources(path: str) -> List[Dict[str, Any]]:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("sources", []) if isinstance(data, dict) else []
+    except Exception:
+        return []
+
+def key_for(url: str) -> str:
+    return hashlib.sha256((url or "").encode("utf-8")).hexdigest()[:24]
+
+def is_seen(conn: sqlite3.Connection, k: str) -> bool:
+    row = conn.execute("SELECT 1 FROM seen WHERE key=? LIMIT 1", (k,)).fetchone()
+    return row is not None
+
+def mark_seen(conn: sqlite3.Connection, url: str, title: str, source: str) -> None:
+    conn.execute(
+        "INSERT OR IGNORE INTO seen(key,url,title,source,ts) VALUES(?,?,?,?,strftime('%s','now'))",
+        (key_for(url), url, title, source),
+    )
+
+def save_item(conn: sqlite3.Connection, url: str, title: str, source: str) -> None:
+    conn.execute(
+        """
+        INSERT INTO items (url, title, source, first_seen_at, last_seen_at, status)
+        VALUES (?, ?, ?, datetime('now'), datetime('now'), 'new')
+        ON CONFLICT(url) DO UPDATE SET
+            title=excluded.title,
+            source=excluded.source,
+            last_seen_at=datetime('now')
+        """,
+        (url, title, source),
+    )
 
 import requests
 
@@ -139,6 +175,12 @@ def parse_rss(xml_text: str, limit: int) -> List[FeedItem]:
 def connect_db(path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(path)
     conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS seen (key TEXT PRIMARY KEY, url TEXT, title TEXT, source TEXT, ts INTEGER)"
+    )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS items (url TEXT PRIMARY KEY, title TEXT, source TEXT, first_seen_at TEXT, last_seen_at TEXT, status TEXT)"
+    )
     return conn
 
 
