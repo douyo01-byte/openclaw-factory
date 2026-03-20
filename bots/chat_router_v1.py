@@ -356,35 +356,30 @@ def build_chat_reply(
         return build_item_reply(conn, role, item)
     return build_candidate_reply(role, q)
 
+def build_chat_response(
+    conn: sqlite3.Connection,
+    role: Optional[str],
+    item: Optional[sqlite3.Row],
+    q: str,
+) -> str:
+    return build_chat_reply(conn, role, item, q)
+
+
+def send_chat_response(chat_id: str, text: str):
+    tg_send(chat_id, text)
+
+
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
-) -> Tuple[str, Optional[str]]:
-    cmd_id = row["id"]
+):
     chat_id = str(row["chat_id"])
-    text = (row["text"] or "").strip()
+    text = row["text"]
 
-    if not text:
-        return ("ignored", None)
-    if text.startswith("/"):
-        return ("ignored", None)
-
-    d = parse_decision(text)
-    if d:
-        decision, reason = d
-        if apply_chat_decision(conn, chat_id, decision, reason):
-            return ("chatted", None)
-
-    role = role_from_text(text)
+    role = parse_role(text)
     item, q = resolve_item_with_context(conn, chat_id, text)
-    reply = build_chat_reply(conn, role, item, q)
 
-    tg_send(reply)
-    if item:
-        set_ctx_last_item(conn, row["chat_id"], int(item["id"]))
-        enqueue_chat_job(
-            conn, row["chat_id"], int(item["id"]), role or "", normalize_chat_query(text)
-        )
-    return ("chatted", None)
+    reply = build_chat_response(conn, role, item, q)
+    send_chat_response(chat_id, reply)
 
 def main() -> None:
     ap = argparse.ArgumentParser()
