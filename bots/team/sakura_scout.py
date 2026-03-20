@@ -219,6 +219,23 @@ def insert_brief(
     return cur.rowcount == 1
 
 
+
+def process_feed_item(
+    conn: sqlite3.Connection,
+    role: str,
+    label_source: str,
+    it: FeedItem,
+) -> bool:
+    if not it.link:
+        return False
+    k = key_for(it.link)
+    already_seen = is_seen(conn, k)
+    save_item(conn, it.link, it.title, label_source)
+    if not already_seen:
+        mark_seen(conn, it.link, it.title, label_source)
+    topic = guess_topic(it.title, it.link)
+    return insert_brief(conn, role, topic, it.link, it.title, it.summary)
+
 def run_for_role(db_path: str, role: str, limit: int) -> int:
     feeds = ROLE_FEEDS.get(role, [])
     if not feeds:
@@ -249,18 +266,9 @@ def run_for_role(db_path: str, role: str, limit: int) -> int:
 
         label_source = label or role
         for it in items:
-            if not it.link:
-                continue
-            k = key_for(it.link)
-            already_seen = is_seen(conn, k)
-            save_item(conn, it.link, it.title, label_source)
-            if not already_seen:
-                mark_seen(conn, it.link, it.title, label_source)
-            topic = guess_topic(it.title, it.link)
-            ok = insert_brief(conn, role, topic, it.link, it.title, it.summary)
+            ok = process_feed_item(conn, role, label_source, it)
             if ok:
                 added += 1
-
     conn.commit()
     conn.close()
     print(f"[{role}] added={added}")
