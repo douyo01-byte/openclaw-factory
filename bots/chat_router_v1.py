@@ -223,6 +223,23 @@ def get_item(conn, item_id):
         "SELECT id,title,url FROM items WHERE id=? LIMIT 1", (item_id,)
     ).fetchone()
 
+def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str):
+    item = resolve_item(conn, text)
+    q = normalize_chat_query(text)
+    if not item:
+        hint = (
+            extract_title_hint(text)
+            or extract_title_hint(q)
+            or (q.split()[0] if q else "")
+        )
+        item = find_item_by_title_hint(conn, hint) if hint else None
+    if not item:
+        r = conn.execute(
+            "SELECT v FROM bot_state WHERE k=? LIMIT 1", (f"ctx:last_item:{chat_id}",)
+        ).fetchone()
+        item = get_item(conn, int(r["v"])) if r and str(r["v"]).strip() else None
+    return item, q
+
 
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
@@ -255,20 +272,7 @@ def handle_chat(
             return ("chatted", None)
 
     role = role_from_text(text)
-    item = resolve_item(conn, text)
-    q = normalize_chat_query(text)
-    if not item:
-        hint = (
-            extract_title_hint(text)
-            or extract_title_hint(q)
-            or (q.split()[0] if q else "")
-        )
-        item = find_item_by_title_hint(conn, hint) if hint else None
-    if not item:
-        r = conn.execute(
-            "SELECT v FROM bot_state WHERE k=? LIMIT 1", (f"ctx:last_item:{chat_id}",)
-        ).fetchone()
-        item = get_item(conn, int(r["v"])) if r and str(r["v"]).strip() else None
+    item, q = resolve_item_with_context(conn, chat_id, text)
     head, body = build_role_reply(role)
 
     if item:
