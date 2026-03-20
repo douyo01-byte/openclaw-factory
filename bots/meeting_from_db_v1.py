@@ -184,6 +184,23 @@ def _meta_line(conn: sqlite3.Connection, item_id: int) -> str:
 DB = "data/openclaw.db"
 
 
+def fetch_pool_rows(conn: sqlite3.Connection, limit: int):
+    cur = conn.cursor()
+    return cur.execute(
+        '''
+        SELECT id,
+               COALESCE(title,'(no title)') as title,
+               COALESCE(url,'') as url,
+               COALESCE(source,'unknown') as source,
+               COALESCE(status,'unknown') as status
+        FROM items
+        WHERE status IN ('new','review')
+        ORDER BY id DESC
+        LIMIT ?
+        ''',
+        (limit,),
+    ).fetchall()
+
 @dataclass
 class Row:
     id: int
@@ -195,24 +212,9 @@ class Row:
 
 def fetch_pool(limit=60) -> List[Row]:
     conn = sqlite3.connect(DB)
-    cur = conn.cursor()
-    rows = cur.execute(
-        """
-        SELECT id,
-               COALESCE(title,'(no title)') as title,
-               COALESCE(url,'') as url,
-               COALESCE(source,'unknown') as source,
-               COALESCE(status,'unknown') as status
-        FROM items
-        WHERE status IN ('new','review')
-        ORDER BY id DESC
-        LIMIT ?
-    """,
-        (limit,),
-    ).fetchall()
+    rows = fetch_pool_rows(conn, limit)
     conn.close()
     return [Row(*r) for r in rows]
-
 
 def pick_top(pool, k=10):
     return pool[:k]
