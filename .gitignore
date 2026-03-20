@@ -20,3 +20,6 @@ configs/*.bak.*
 .env.*
 
 nohup.out
+
+obs/
+reports/
