@@ -382,12 +382,15 @@ def run_meeting_once(top: List["Row"]) -> str:
     finally:
         conn.close()
 
+def render_meeting_fallback(top: List["Row"]) -> str:
+    return meeting_text(top, collect_meeting_signals(top))
+
 def main():
     top = load_meeting_candidates(limit=60, k=10)
     try:
         text = run_meeting_once(top)
     except Exception:
-        text = meeting_text(top, collect_meeting_signals(top))
+        text = render_meeting_fallback(top)
     tg_send(text)
     print("meeting sent")
 
