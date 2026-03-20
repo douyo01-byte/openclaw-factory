@@ -208,6 +208,23 @@ def upsert_decision_reason(conn, item_id: int, reason: str) -> None:
     conn.commit()
 
 
+def apply_chat_decision(conn: sqlite3.Connection, chat_id: str, decision: str, reason: str) -> bool:
+    r = conn.execute(
+        "SELECT v FROM bot_state WHERE k=? LIMIT 1", (f"ctx:last_item:{chat_id}",)
+    ).fetchone()
+    if not (r and str(r["v"]).strip()):
+        return False
+    item_id = int(r["v"])
+    full_reason = f"{decision} {reason}".strip()
+    upsert_decision_reason(conn, item_id, full_reason)
+    score = 1 if decision == "採 用 " else 0 if decision == "保 留 " else -1 if decision == "見 送 り" else 0
+    insert_decision_event(
+        conn, item_id, decision, score, reason, decided_by="tg", source="tg"
+    )
+    tg_send(full_reason)
+    return True
+
+
 def resolve_item(conn: sqlite3.Connection, text: str) -> Optional[sqlite3.Row]:
     urls = URL_RE.findall(text or "")
     if urls:
@@ -255,22 +272,8 @@ def handle_chat(
     d = parse_decision(text)
     if d:
         decision, reason = d
-        r = conn.execute(
-            "SELECT v FROM bot_state WHERE k=? LIMIT 1", (f"ctx:last_item:{chat_id}",)
-        ).fetchone()
-        if r and str(r["v"]).strip():
-            upsert_decision_reason(conn, int(r["v"]), f"{decision} {reason}".strip())
-            score = (
-                1
-                if decision == "採用"
-                else 0 if decision == "保留" else -1 if decision == "見送り" else 0
-            )
-            insert_decision_event(
-                conn, int(r["v"]), decision, score, reason, decided_by="tg", source="tg"
-            )
-            tg_send(f"{decision} {reason}".strip())
+        if apply_chat_decision(conn, chat_id, decision, reason):
             return ("chatted", None)
-
     role = role_from_text(text)
     item, q = resolve_item_with_context(conn, chat_id, text)
     head, body = build_role_reply(role)
