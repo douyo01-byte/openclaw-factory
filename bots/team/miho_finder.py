@@ -115,6 +115,27 @@ def save_contact_points(conn: sqlite3.Connection, item_url: str, socials, source
             (item_url, k, v, source),
         )
 
+def persist_item_contacts(conn: sqlite3.Connection, item_id: int, item_url: str, official_url: str, html: str, bad) -> str:
+    current_official = official_url or ""
+    if not current_official:
+        off = pick_official(item_url, html)
+        if off and dom(off) not in bad:
+            conn.execute(
+                "update items set official_url=?, official_domain=? where id=?",
+                (off, dom(off), item_id),
+            )
+            current_official = off
+    emails = set(extract_emails(html))
+    if current_official:
+        off_html = fetch(current_official)
+        emails |= set(extract_emails(off_html))
+        socials = extract_socials(off_html)
+    else:
+        socials = extract_socials(html)
+    save_contacts(conn, item_url, emails, "web_enrich")
+    save_contact_points(conn, item_url, socials, "web_enrich")
+    return current_official
+
 def fetch(url: str):
     r = requests.get(url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
     if r.status_code >= 400:
@@ -145,25 +166,9 @@ def main():
         official_url = it["official_url"] or ""
 
         html = fetch(item_url)
-        if not official_url:
-            off = pick_official(item_url, html)
-            if off and dom(off) not in bad:
-                conn.execute(
-                    "update items set official_url=?, official_domain=? where id=?",
-                    (off, dom(off), item_id),
-                )
-                official_url = off
-
-        emails = set(extract_emails(html))
-        if official_url:
-            off_html = fetch(official_url)
-            emails |= set(extract_emails(off_html))
-            socials = extract_socials(off_html)
-        else:
-            socials = extract_socials(html)
-
-        save_contacts(conn, item_url, emails, "web_enrich")
-        save_contact_points(conn, item_url, socials, "web_enrich")
+        official_url = persist_item_contacts(
+            conn, item_id, item_url, official_url, html, bad
+        )
 
     conn.commit()
     conn.close()
