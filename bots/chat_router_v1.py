@@ -173,9 +173,8 @@ def normalize_chat_query(text: str) -> str:
 
 def build_japache_role_reply() -> Tuple[str, str]:
     head = "🕵️ ジ ャ パ チ ェ "
-    body = "国 内 上 陸 の 兆 候 を 先 に確 認 す る 。 日 本 語 LP、 代 理 店 表 記 、 Amazon/楽 天 /BASE、 プ レ ス リ リ ー ス を チ ェ ッ ク 。 な け れ ば 連 絡 先 回 収 へ 。 "
+    body = "国 内 上 陸 の 兆 候 を 先 に 確 認 す る 。 日 本 語 LP、 代 理 店 表 記 、 Amazon/楽 天 /BASE、 プ レ ス リ リ ー ス を チ ェ ッ ク 。 な け れ ば 連 絡 先 回 収 へ 。 "
     return head, body
-
 
 def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
     if role == "japache":
