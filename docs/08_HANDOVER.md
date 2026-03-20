@@ -30,3 +30,4 @@ cd ~/AI/openclaw-factory-daemon || exit 1
 3. ops_watcher_events 最新行
 4. watcher の required / observe 対象
 5. legacy launchagent の棚卸し
+- Meta HOLD 裁定完了: db_integrity_watchdog_v1 のみ保持、他は FULL_RETIRE 判定
