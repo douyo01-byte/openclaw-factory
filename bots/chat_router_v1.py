@@ -391,6 +391,10 @@ def handle_chat_item_followup(
     )
 
 
+def send_chat_reply(reply: str) -> None:
+    send_chat_reply(reply)
+
+
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
 ) -> Tuple[str, Optional[str]]:
