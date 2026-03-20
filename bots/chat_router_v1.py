@@ -186,7 +186,6 @@ def build_iindesuka_role_reply() -> Tuple[str, str]:
     body = "単 価 ×輸 送 ×差 別 化 で 即 死 判 定 。 サ イ ズ ・ 重 量 ・ 破 損 率 ・ 関 税 ・ 返 品 コ ス ト を ざ っ く り で も 出 し て 落 と す 。 "
     return head, body
 
-
 def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
     if role == "japache":
         return build_japache_role_reply()
