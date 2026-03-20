@@ -5,6 +5,87 @@ import sqlite3
 from datetime import datetime
 from oclibs.telegram import send as tg_send
 
+from urllib.parse import urljoin, urlparse
+import requests
+import re
+
+EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+JP_RE = re.compile(r"[\u3040-\u30ff\u4e00-\u9fff]")
+CONTACT_HINT_RE = re.compile(r"(contact|support|help|inquiry|お 問 い 合 わ せ |問 合 せ |問 い 合 わ せ )", re.IGNORECASE)
+AMAZON_RAKUTEN_RE = re.compile(r"(amazon\.co\.jp|rakuten\.co\.jp|楽 天 |ア マ ゾ ン )", re.IGNORECASE)
+
+def normalize_base(url: str) -> str:
+    u = (url or "").strip()
+    if not u:
+        return ""
+    p = urlparse(u)
+    if not p.scheme:
+        u = "https://" + u
+    return u
+
+def fetch(url: str, timeout: int = 15):
+    headers = {"User-Agent": "OpenClawResearch/1.0"}
+    r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
+    return r.status_code, r.text or ""
+
+def extract_signals(html: str):
+    emails = sorted(set(EMAIL_RE.findall(html or "")))
+    has_jp = bool(JP_RE.search(html or ""))
+    has_contact_hint = bool(CONTACT_HINT_RE.search(html or ""))
+    has_amazon_rakuten = bool(AMAZON_RAKUTEN_RE.search(html or ""))
+    return {
+        "emails": emails[:10],
+        "has_jp": has_jp,
+        "has_contact_hint": has_contact_hint,
+        "has_amazon_rakuten": has_amazon_rakuten,
+    }
+
+def summarize(signals_by_path):
+    emails = []
+    jp = False
+    contact = False
+    amzrk = False
+    ok_paths = []
+    for path, code, sig in signals_by_path:
+        if code and 200 <= code < 400:
+            ok_paths.append(path)
+        for e in sig.get("emails", []):
+            if e not in emails:
+                emails.append(e)
+        jp = jp or bool(sig.get("has_jp"))
+        contact = contact or bool(sig.get("has_contact_hint"))
+        amzrk = amzrk or bool(sig.get("has_amazon_rakuten"))
+    return {
+        "emails": emails[:10],
+        "has_jp": jp,
+        "has_contact_hint": contact,
+        "has_amazon_rakuten": amzrk,
+        "ok_paths": ok_paths,
+    }
+
+def enqueue_contact(conn: sqlite3.Connection, item_id: int, email: str, source: str) -> None:
+    try:
+        conn.execute(
+            "INSERT INTO contacts(item_id, email, source, created_at) VALUES(?,?,?,datetime('now'))",
+            (item_id, email, source),
+        )
+    except Exception:
+        pass
+
+def upsert_role_brief(conn: sqlite3.Connection, role: str, title: str, url: str, text: str) -> None:
+    topic = (title or "unknown").strip()
+    source_url = (url or "").strip()
+    if not source_url:
+        return
+    summary = text
+    conn.execute(
+        "INSERT INTO role_briefs(role, topic, source_url, title, summary, fetched_at) "
+        "VALUES(?,?,?,?,?,datetime('now')) "
+        "ON CONFLICT(role,topic,source_url) DO UPDATE SET "
+        "title=excluded.title, summary=excluded.summary, fetched_at=datetime('now')",
+        ((role or "").strip(), topic, source_url, (title or "").strip(), summary),
+    )
+
 
 def _fetch_item_meta(conn: sqlite3.Connection, item_id: int) -> tuple[str, int, str]:
     """Return (decision, priority, last_note_line). Missing -> ('-', 0, '')."""

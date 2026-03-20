@@ -21,6 +21,7 @@ def enqueue_chat_job(conn, chat_id, item_id, role, query):
         "insert into chat_jobs(chat_id,item_id,role,query,status) values(?,?,?,?, 'new')",
         (str(chat_id), item_id, role, query),
     )
+    conn.commit()
 
 
 from datetime import datetime
@@ -258,19 +259,6 @@ def handle_chat(
     head, body = build_role_reply(role)
 
     if item:
-        try:
-            conn.execute(
-                "INSERT INTO chat_jobs(chat_id, item_id, role, query, status, created_at, updated_at) VALUES(?,?,?,?, 'new', datetime('now'), datetime('now'))",
-                (
-                    chat_id,
-                    int(item["id"]),
-                    role or "",
-                    text,
-                ),
-            )
-            conn.commit()
-        except Exception:
-            pass
         meta = get_item_meta(conn, int(item["id"]))
         reply = (
             f"{head}\n"
