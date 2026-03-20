@@ -404,6 +404,14 @@ def build_chat_reply_for_item_context(
     return build_chat_reply(conn, role, item, q)
 
 
+def resolve_chat_item_context(
+    conn: sqlite3.Connection,
+    chat_id: str,
+    text: str,
+):
+    return resolve_item_with_context(conn, chat_id, text)
+
+
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
 ) -> Tuple[str, Optional[str]]:
@@ -418,7 +426,7 @@ def handle_chat(
         return ("chatted", None)
 
     role = resolve_chat_role(text)
-    item, q = resolve_item_with_context(conn, chat_id, text)
+    item, q = resolve_chat_item_context(conn, chat_id, text)
     reply = build_chat_reply_for_item_context(conn, role, item, q)
 
     tg_send(reply)
