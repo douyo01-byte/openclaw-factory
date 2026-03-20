@@ -112,16 +112,28 @@ def upsert_role_brief(conn: sqlite3.Connection, role: str, title: str, url: str,
         ((role or "").strip(), topic, source_url, (title or "").strip(), summary),
     )
 
-def persist_meeting_outputs(conn: sqlite3.Connection, top: List["Row"], text: str) -> None:
+def collect_meeting_signals(top: List["Row"]) -> dict[int, dict]:
+    out = {}
+    for r in top:
+        try:
+            out[int(r.id)] = scan_contact_paths(r.url, timeout=10)
+        except Exception:
+            out[int(r.id)] = {
+                "emails": [],
+                "has_jp": False,
+                "has_contact_hint": False,
+                "has_amazon_rakuten": False,
+                "ok_paths": [],
+            }
+    return out
+
+def persist_meeting_outputs(conn: sqlite3.Connection, top: List["Row"], text: str, signal_map: dict[int, dict]) -> None:
     if top:
         upsert_role_brief(conn, "yarde", top[0].title, top[0].url, text)
     for r in top:
-        try:
-            sig = scan_contact_paths(r.url, timeout=10)
-            for e in (sig.get("emails") or [])[:10]:
-                enqueue_contact(conn, r.id, e, "meeting_signal")
-        except Exception:
-            pass
+        sig = signal_map.get(int(r.id), {})
+        for e in (sig.get("emails") or [])[:10]:
+            enqueue_contact(conn, r.id, e, "meeting_signal")
 
 
 def _fetch_item_meta(conn: sqlite3.Connection, item_id: int) -> tuple[str, int, str]:
@@ -272,7 +284,7 @@ def make_rule(role: str, brief_title: str, brief_summary: str) -> str:
     return "新ルール：学習を判断基準に反映する"
 
 
-def meeting_text(top: List[Row]) -> str:
+def meeting_text(top: List[Row], signal_map: dict[int, dict]) -> str:
     conn = sqlite3.connect(os.environ.get("OCLAW_DB_PATH", "./data/openclaw.db"))
     try:
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -319,15 +331,10 @@ def meeting_text(top: List[Row]) -> str:
             lines.append(f"【候補{i}】({r.status}/{kind})")
             lines.append(r.title)
             lines.append(r.url)
-            signal_line = ""
-            try:
-                sig = scan_contact_paths(r.url, timeout=10)
-                emails = sig.get("emails") or []
-                ok_paths = sig.get("ok_paths") or []
-                signal_line = f"signal: jp={'yes' if sig.get('has_jp') else 'no'} contact_hint={'yes' if sig.get('has_contact_hint') else 'no'} emails={len(emails)} paths={','.join(ok_paths) if ok_paths else '-'}"
-            except Exception:
-                emails = []
-                signal_line = ""
+            sig = signal_map.get(int(r.id), {})
+            emails = sig.get("emails") or []
+            ok_paths = sig.get("ok_paths") or []
+            signal_line = f"signal: jp={'yes' if sig.get('has_jp') else 'no'} contact_hint={'yes' if sig.get('has_contact_hint') else 'no'} emails={len(emails)} paths={','.join(ok_paths) if ok_paths else '-'}"
             if signal_line:
                 lines.append(signal_line)
             lines.append(f"次アクション {action_plan(r)}\n")
@@ -350,10 +357,11 @@ def meeting_text(top: List[Row]) -> str:
 def main():
     pool = fetch_pool(limit=60)
     top = pick_top(pool, k=10)
-    text = meeting_text(top)
+    signal_map = collect_meeting_signals(top)
+    text = meeting_text(top, signal_map)
     try:
         conn = sqlite3.connect(os.environ.get("OCLAW_DB_PATH", "./data/openclaw.db"))
-        persist_meeting_outputs(conn, top, text)
+        persist_meeting_outputs(conn, top, text, signal_map)
         conn.commit()
         conn.close()
     except Exception:
