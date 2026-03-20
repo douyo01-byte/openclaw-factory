@@ -391,6 +391,10 @@ def handle_chat_item_followup(
     )
 
 
+def resolve_chat_role(text: str) -> Optional[str]:
+    return role_from_text(text)
+
+
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
 ) -> Tuple[str, Optional[str]]:
@@ -404,7 +408,7 @@ def handle_chat(
     if handle_chat_decision_if_any(conn, chat_id, text):
         return ("chatted", None)
 
-    role = role_from_text(text)
+    role = resolve_chat_role(text)
     item, q = resolve_item_with_context(conn, chat_id, text)
     reply = build_chat_reply(conn, role, item, q)
 
