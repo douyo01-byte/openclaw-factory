@@ -249,22 +249,24 @@ def action_plan(r: Row) -> str:
     return "→ まず公式サイト特定"
 
 
-def fetch_role_briefs(role: str, n: int = 2) -> List[Tuple[str, str, str]]:
-    conn = sqlite3.connect(DB)
+def fetch_role_brief_rows(conn: sqlite3.Connection, role: str, n: int):
     cur = conn.cursor()
-    rows = cur.execute(
-        """
+    return cur.execute(
+        '''
         SELECT COALESCE(title,''), COALESCE(source_url,''), COALESCE(summary,'')
         FROM role_briefs
         WHERE role=?
         ORDER BY fetched_at DESC, id DESC
         LIMIT ?
-    """,
+        ''',
         (role, n),
     ).fetchall()
+
+def fetch_role_briefs(role: str, n: int = 2) -> List[Tuple[str, str, str]]:
+    conn = sqlite3.connect(DB)
+    rows = fetch_role_brief_rows(conn, role, n)
     conn.close()
     return [(t, u, s) for (t, u, s) in rows if t and u]
-
 
 def make_rule(role: str, brief_title: str, brief_summary: str) -> str:
     """
