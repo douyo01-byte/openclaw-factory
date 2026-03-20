@@ -217,6 +217,9 @@ def fetch_pool(limit=60) -> List[Row]:
 def pick_top(pool, k=10):
     return pool[:k]
 
+def load_meeting_candidates(limit: int = 60, k: int = 10) -> List[Row]:
+    return pick_top(fetch_pool(limit=limit), k=k)
+
 
 def short_kind(url: str) -> str:
     u = (url or "").lower()
@@ -371,8 +374,7 @@ def dispatch_meeting(conn: sqlite3.Connection, top: List["Row"]) -> str:
     return text
 
 def main():
-    pool = fetch_pool(limit=60)
-    top = pick_top(pool, k=10)
+    top = load_meeting_candidates(limit=60, k=10)
     try:
         conn = sqlite3.connect(os.environ.get("OCLAW_DB_PATH", "./data/openclaw.db"))
         text = dispatch_meeting(conn, top)
