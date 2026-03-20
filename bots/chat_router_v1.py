@@ -23,6 +23,13 @@ def enqueue_chat_job(conn, chat_id, item_id, role, query):
     )
     conn.commit()
 
+def set_ctx_last_item(conn, chat_id, item_id):
+    conn.execute(
+        "INSERT INTO bot_state(k, v) VALUES(?, ?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",
+        (f"ctx:last_item:{chat_id}", str(item_id)),
+    )
+    conn.commit()
+
 
 from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
@@ -273,6 +280,7 @@ def handle_chat(
 
     tg_send(reply)
     if item:
+        set_ctx_last_item(conn, row["chat_id"], int(item["id"]))
         enqueue_chat_job(
             conn, row["chat_id"], int(item["id"]), role or "", strip_role_words(text)
         )
