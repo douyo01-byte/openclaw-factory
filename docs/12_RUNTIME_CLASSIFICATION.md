@@ -23,12 +23,12 @@
 - jp.openclaw.ceo_priority_scorer_v1
 
 ## mainline data signals
-- dev_proposals: 3236
+- dev_proposals: 3261
 - merged: 2624
 - open_pr: 0
 - proposal_state: 171
 - ceo_hub_events: 35379
-- ops_watcher_events: 1451
+- ops_watcher_events: 3174
 
 ## schema notes
 ### ceo_hub_events

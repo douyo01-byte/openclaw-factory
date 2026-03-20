@@ -9,12 +9,12 @@
 - burn-in: 前段整理中
 
 ## live counters
-- dev_proposals: 3236
+- dev_proposals: 3261
 - merged: 2624
 - open_pr: 0
 - proposal_state: 171
 - ceo_hub_events: 35379
-- ops_watcher_events: 1451
+- ops_watcher_events: 3174
 
 ## source of truth
 - 実運用の判断は docs より実DB / 実process / watcher event を優先する
