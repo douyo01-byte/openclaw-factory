@@ -66,9 +66,9 @@
 - run_ops_brain_agent.sh / run_ops_brain_watcher.sh both call factory bots/ops_brain_v1.py
 - daemon-side ops_brain_v4 is experimental only
 
-- kaikun04_router_worker_v1 / kaikun04_router_cleanup_v1 are disabled as non-mainline legacy router artifacts
+- kaikun04 legacy router worker/cleanup path is retired; current active private reply path is ingest_private_replies_kaikun04
 
-- kaikun02_router_worker_v1 is disabled as non-mainline legacy router artifact
+- kaikun02 private reply worker path is retired; current active private reply path is ingest_private_replies_kaikun02
 
 ## retired missing-target plists
 - jp.openclaw.kaikun02_coo_controller_v1 plist retired: missing target script
@@ -78,3 +78,6 @@
 - jp.openclaw.kaikun02_router_worker_v1 plist retired: missing target script
 - jp.openclaw.kaikun04_router_cleanup_v1 plist retired: missing target script
 - jp.openclaw.kaikun04_router_worker_v1 plist retired: missing target script
+- task_router_v1 is active runtime router path and must not be archived blindly
+- router_reply_finisher_v1 is active runtime finisher path and must not be archived blindly
+- router_stall_watchdog_v1 is active runtime watchdog path and must not be archived blindly
