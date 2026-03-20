@@ -316,7 +316,16 @@ def meeting_text(top: List[Row]) -> str:
 def main():
     pool = fetch_pool(limit=60)
     top = pick_top(pool, k=10)
-    tg_send(meeting_text(top))
+    text = meeting_text(top)
+    try:
+        conn = sqlite3.connect(os.environ.get("OCLAW_DB_PATH", "./data/openclaw.db"))
+        if top:
+            upsert_role_brief(conn, "yarde", top[0].title, top[0].url, text)
+            conn.commit()
+        conn.close()
+    except Exception:
+        pass
+    tg_send(text)
     print("meeting sent")
 
 
