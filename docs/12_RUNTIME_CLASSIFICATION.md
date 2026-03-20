@@ -81,3 +81,8 @@
 - task_router_v1 is active runtime router path and must not be archived blindly
 - router_reply_finisher_v1 is active runtime finisher path and must not be archived blindly
 - router_stall_watchdog_v1 is active runtime watchdog path and must not be archived blindly
+
+## retired orphan router processes
+- jp.openclaw.router_reply_finisher_v1 retired: orphan live process stopped and launcher disabled
+- jp.openclaw.router_stall_watchdog_v1 retired: orphan live process stopped and launcher disabled
+- jp.openclaw.task_router_v1 retired: orphan live process stopped and launcher disabled
