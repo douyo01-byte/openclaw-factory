@@ -19,3 +19,8 @@
 - MAINLINE_INTEGRATION_CANDIDATE は 単体復活ではなく mainline統合前提
 - FULL_RETIRE は 復活禁止
 - 事業系の新規 bot 追加は禁止
+
+## INTEGRATION TARGET
+- jp.openclaw.scout_market_v2 -> brain_supply_v1 へ統合候補
+- jp.openclaw.chat_research_v1 -> brain_supply_v1 へ統合候補
+- ingest_private_replies_kaikun02 / ingest_private_replies_kaikun04 は private reply intake 専用で維持
