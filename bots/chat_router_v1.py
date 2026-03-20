@@ -309,6 +309,22 @@ def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str)
     return item, q
 
 
+def build_item_reply(
+    conn: sqlite3.Connection,
+    role: Optional[str],
+    item: sqlite3.Row,
+) -> str:
+    head, body = build_role_reply(role)
+    meta = get_item_meta(conn, int(item["id"]))
+    return (
+        f"{head}\n"
+        f"{format_meta(meta)}\n"
+        f"対  象  : {item['title']}\n"
+        f"{item['url']}\n\n"
+        f"{body}"
+    )
+
+
 def build_chat_reply(
     conn: sqlite3.Connection,
     role: Optional[str],
@@ -317,15 +333,8 @@ def build_chat_reply(
 ) -> str:
     head, body = build_role_reply(role)
     if item:
-        meta = get_item_meta(conn, int(item["id"]))
-        return (
-            f"{head}\n"
-            f"{format_meta(meta)}\n"
-            f"対 象 : {item['title']}\n"
-            f"{item['url']}\n\n"
-            f"{body}"
-        )
-    return f"{head}\n" f"対 象 候 補 : {q}\n\n" f"{body}"
+        return build_item_reply(conn, role, item)
+    return f"{head}\n" f"対  象  候  補  : {q}\n\n" f"{body}"
 
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
