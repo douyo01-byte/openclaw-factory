@@ -181,7 +181,6 @@ def build_scout_role_reply() -> Tuple[str, str]:
     body = "ロ ー ン チ 直 後 は 公 式 サ イ ト の Contactが 見 つ か り や す い 。 /contact /about /privacy を 先 に 当 て る 。 な け れ ば SNSや ド メ イ ン 情 報 へ 。 "
     return head, body
 
-
 def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
     if role == "japache":
         return build_japache_role_reply()
