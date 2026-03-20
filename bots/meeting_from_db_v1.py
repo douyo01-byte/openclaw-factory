@@ -13,6 +13,7 @@ EMAIL_RE = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
 JP_RE = re.compile(r"[\u3040-\u30ff\u4e00-\u9fff]")
 CONTACT_HINT_RE = re.compile(r"(contact|support|help|inquiry|お 問 い 合 わ せ |問 合 せ |問 い 合 わ せ )", re.IGNORECASE)
 AMAZON_RAKUTEN_RE = re.compile(r"(amazon\.co\.jp|rakuten\.co\.jp|楽 天 |ア マ ゾ ン )", re.IGNORECASE)
+PATH_CANDIDATES = ["/", "/contact", "/about", "/privacy", "/terms", "/company"]
 
 def normalize_base(url: str) -> str:
     u = (url or "").strip()
