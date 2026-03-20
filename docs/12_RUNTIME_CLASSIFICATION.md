@@ -66,3 +66,5 @@
 - daemon-side ops_brain_v4 is experimental only
 
 - kaikun04_router_worker_v1 / kaikun04_router_cleanup_v1 are disabled as non-mainline legacy router artifacts
+
+- kaikun02_router_worker_v1 is disabled as non-mainline legacy router artifact
