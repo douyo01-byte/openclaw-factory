@@ -114,6 +114,14 @@ def fetch_item_meta_row(conn: sqlite3.Connection, item_id: int):
     ).fetchone()
 
 
+def fetch_bot_state_value(conn: sqlite3.Connection, key: str):
+    row = conn.execute(
+        "SELECT v FROM bot_state WHERE k=? LIMIT 1",
+        (key,),
+    ).fetchone()
+    return row["v"] if row and row["v"] is not None else None
+
+
 def get_item_meta(conn: sqlite3.Connection, item_id: int) -> Dict[str, Any]:
     r = fetch_item_meta_row(conn, item_id)
     if not r:
@@ -213,12 +221,10 @@ def upsert_decision_reason(conn, item_id: int, reason: str) -> None:
 
 
 def apply_chat_decision(conn: sqlite3.Connection, chat_id: str, decision: str, reason: str) -> bool:
-    r = conn.execute(
-        "SELECT v FROM bot_state WHERE k=? LIMIT 1", (f"ctx:last_item:{chat_id}",)
-    ).fetchone()
-    if not (r and str(r["v"]).strip()):
+    v = fetch_bot_state_value(conn, f"ctx:last_item:{chat_id}")
+    if not str(v or "").strip():
         return False
-    item_id = int(r["v"])
+    item_id = int(v)
     full_reason = f"{decision} {reason}".strip()
     upsert_decision_reason(conn, item_id, full_reason)
     score = 1 if decision == "採 用 " else 0 if decision == "保 留 " else -1 if decision == "見 送 り" else 0
@@ -255,10 +261,8 @@ def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str)
         )
         item = find_item_by_title_hint(conn, hint) if hint else None
     if not item:
-        r = conn.execute(
-            "SELECT v FROM bot_state WHERE k=? LIMIT 1", (f"ctx:last_item:{chat_id}",)
-        ).fetchone()
-        item = get_item(conn, int(r["v"])) if r and str(r["v"]).strip() else None
+        v = fetch_bot_state_value(conn, f"ctx:last_item:{chat_id}")
+        item = get_item(conn, int(v)) if str(v or "").strip() else None
     return item, q
 
 
