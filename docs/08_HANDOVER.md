@@ -14,4 +14,4 @@
 ## 次の行動
 - scripts/stage_runtime_reenable.sh を基準に段階起動
 - open PR 数と duplicate を常時確認
-- Kaikun02 は audit_20260315 を前提知識として扱う
+- Kaikun04/運用判断は docs/04_KAIKUN04_STARTER.md を起点にする
