@@ -407,14 +407,10 @@ def normalize_handle_chat_text(row: sqlite3.Row) -> str:
     return (row["text"] or "").strip()
 
 
-def get_handle_chat_chat_id(row: sqlite3.Row) -> str:
-    return str(row["chat_id"])
-
-
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
 ) -> Tuple[str, Optional[str]]:
-    chat_id = get_handle_chat_chat_id(row)
+    chat_id = str(row["chat_id"])
     text = normalize_handle_chat_text(row)
 
     if should_ignore_chat_text(text):
