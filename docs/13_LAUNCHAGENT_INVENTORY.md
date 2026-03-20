@@ -11,7 +11,6 @@
 - watcher required / observe の判断を優先する
 
 ## keep_mainline
-- jp.openclaw.brain_supply_v1 | pid=3578 | status=-15 | interpreted=terminated_or_recently_stopped
 - jp.openclaw.ceo_priority_scorer_v1 | pid=49956 | status=1 | interpreted=running_like
 - jp.openclaw.dev_pr_watcher_v1 | pid=49045 | status=1 | interpreted=running_like
 - jp.openclaw.ops_brain_agent_v1 | pid=42661 | status=-15 | interpreted=terminated_or_recently_stopped
