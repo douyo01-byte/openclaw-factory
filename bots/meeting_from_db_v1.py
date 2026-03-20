@@ -282,6 +282,18 @@ def meeting_text(top: List[Row]) -> str:
             lines.append(f"【候補{i}】({r.status}/{kind})")
             lines.append(r.title)
             lines.append(r.url)
+            signal_line = ""
+            try:
+                base = normalize_base(r.url)
+                if base:
+                    code, html = fetch(base, timeout=10)
+                    sig = summarize([("/", code, extract_signals(html))])
+                    emails = sig.get("emails") or []
+                    signal_line = f"signal: jp={'yes' if sig.get('has_jp') else 'no'} contact_hint={'yes' if sig.get('has_contact_hint') else 'no'} emails={len(emails)}"
+            except Exception:
+                signal_line = ""
+            if signal_line:
+                lines.append(signal_line)
             lines.append(f"次アクション {action_plan(r)}\n")
 
         lines.append("🧠 ヤルデ（総括/決裁）")
