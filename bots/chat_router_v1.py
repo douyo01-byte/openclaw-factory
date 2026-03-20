@@ -144,6 +144,12 @@ def strip_role_words(text: str) -> str:
     return t.strip()
 
 
+
+def normalize_chat_query(text: str) -> str:
+    q = strip_role_words(text)
+    q = re.sub(r"\s+", " ", (q or "").strip())
+    return q
+
 def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
     if role == "japache":
         head = "🕵️ ジャパチェ"
@@ -250,8 +256,8 @@ def handle_chat(
 
     role = role_from_text(text)
     item = resolve_item(conn, text)
+    q = normalize_chat_query(text)
     if not item:
-        q = strip_role_words(text)
         hint = (
             extract_title_hint(text)
             or extract_title_hint(q)
@@ -282,7 +288,7 @@ def handle_chat(
     if item:
         set_ctx_last_item(conn, row["chat_id"], int(item["id"]))
         enqueue_chat_job(
-            conn, row["chat_id"], int(item["id"]), role or "", strip_role_words(text)
+            conn, row["chat_id"], int(item["id"]), role or "", normalize_chat_query(text)
         )
     return ("chatted", None)
 
