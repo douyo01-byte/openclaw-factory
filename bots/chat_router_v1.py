@@ -420,10 +420,6 @@ def get_handle_chat_chat_id(row: sqlite3.Row) -> str:
     return str(row["chat_id"])
 
 
-def send_chat_reply(reply: str) -> None:
-    send_chat_reply(reply)
-
-
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
 ) -> Tuple[str, Optional[str]]:
