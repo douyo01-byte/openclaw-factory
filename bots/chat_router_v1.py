@@ -245,10 +245,15 @@ def resolve_item(conn: sqlite3.Connection, text: str) -> Optional[sqlite3.Row]:
     return find_item_by_title_hint(conn, hint)
 
 
-def get_item(conn, item_id):
+def fetch_item_row(conn: sqlite3.Connection, item_id: int):
     return conn.execute(
-        "SELECT id,title,url FROM items WHERE id=? LIMIT 1", (item_id,)
+        "SELECT id,title,url FROM items WHERE id=? LIMIT 1",
+        (item_id,),
     ).fetchone()
+
+
+def get_item(conn, item_id):
+    return fetch_item_row(conn, item_id)
 
 def resolve_item_with_context(conn: sqlite3.Connection, chat_id: str, text: str):
     item = resolve_item(conn, text)
