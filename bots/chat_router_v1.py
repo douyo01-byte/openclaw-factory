@@ -87,12 +87,17 @@ def extract_title_hint(text: str) -> str:
     return t[:40].strip(" 　「」\"'")
 
 
+def fetch_item_by_url_row(conn: sqlite3.Connection, url: str):
+    return conn.execute(
+        "SELECT id, title, url FROM items WHERE url=? LIMIT 1",
+        (url,),
+    ).fetchone()
+
+
 def find_item_by_url(conn: sqlite3.Connection, url: str) -> Optional[sqlite3.Row]:
     if not url:
         return None
-    return conn.execute(
-        "SELECT id, title, url FROM items WHERE url=? LIMIT 1", (url,)
-    ).fetchone()
+    return fetch_item_by_url_row(conn, url)
 
 
 def find_item_by_title_hint(
