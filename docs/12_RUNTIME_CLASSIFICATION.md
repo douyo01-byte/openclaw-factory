@@ -14,9 +14,9 @@
 - jp.openclaw.kaikun02_coo_controller_v1
 
 ## mainline active
-- jp.openclaw.ops_brain_watcher_v1
 - jp.openclaw.ops_brain_agent_v1
 - jp.openclaw.dev_pr_watcher_v1
+- jp.openclaw.brain_supply_v1
 - jp.openclaw.proposal_cluster_v1
 - jp.openclaw.pattern_extractor_v1
 - jp.openclaw.supply_bias_updater_v1
@@ -78,35 +78,3 @@
 - jp.openclaw.kaikun02_router_worker_v1 plist retired: missing target script
 - jp.openclaw.kaikun04_router_cleanup_v1 plist retired: missing target script
 - jp.openclaw.kaikun04_router_worker_v1 plist retired: missing target script
-
-## ceo legacy classification
-## dead_no_runtime
-- none
-
-## plist_only
-- jp.openclaw.ceo_decision_layer_v1 | state=stopped | plist=true | code_ref=0 | doc_ref=2
-- jp.openclaw.ceo_executor_guarded_promoter_v1 | state=running | plist=true | code_ref=0 | doc_ref=2
-- jp.openclaw.ceo_final_executor_guarded_promoter_v1 | state=running | plist=true | code_ref=0 | doc_ref=3
-- jp.openclaw.ceo_growth_reviewer_v1 | state=running | plist=true | code_ref=0 | doc_ref=2
-- jp.openclaw.ceo_guarded_executor_priority_fixer_v1 | state=running | plist=true | code_ref=0 | doc_ref=2
-- jp.openclaw.ceo_guarded_mainline_priority_fixer_v1 | state=running | plist=true | code_ref=0 | doc_ref=2
-- jp.openclaw.ceo_guarded_mainline_promoter_v1 | state=running | plist=true | code_ref=0 | doc_ref=2
-- jp.openclaw.ceo_hub_sender_v1 | state=running | plist=true | code_ref=0 | doc_ref=2
-- jp.openclaw.ceo_priority_fixer_v1 | state=running | plist=true | code_ref=0 | doc_ref=2
-- jp.openclaw.ceo_priority_scorer_v1 | state=running | plist=true | code_ref=0 | doc_ref=4
-- jp.openclaw.ceo_proposal_reviewer_v1 | state=running | plist=true | code_ref=0 | doc_ref=2
-
-## legacy_doc_only
-- none
-
-## needs_manual_review
-- none
-
-## retired missing-target ceo plists
-- jp.openclaw.ceo_terminal_executor_guarded_normalizer_v1 plist retired: missing target script
-- jp.openclaw.ceo_terminal_executor_guarded_selector_v1 plist retired: missing target script
-- jp.openclaw.ceo_terminal_final_executor_bridge_v1 plist retired: missing target script
-- jp.openclaw.ceo_terminal_final_executor_normalizer_v1 plist retired: missing target script
-- jp.openclaw.ceo_terminal_final_executor_selector_v1 plist retired: missing target script
-- jp.openclaw.ceo_terminal_guard_normalizer_v1 plist retired: missing target script
-- jp.openclaw.ceo_terminal_guard_selector_v1 plist retired: missing target script
