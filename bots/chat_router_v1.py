@@ -186,6 +186,12 @@ def build_iindesuka_role_reply() -> Tuple[str, str]:
     body = "単 価 ×輸 送 ×差 別 化 で 即 死 判 定 。 サ イ ズ ・ 重 量 ・ 破 損 率 ・ 関 税 ・ 返 品 コ ス ト を ざ っ く り で も 出 し て 落 と す 。 "
     return head, body
 
+def build_tanoshi_role_reply() -> Tuple[str, str]:
+    head = "🔥 タ ノ シ "
+    body = "初 手 は テ ス ト 輸 入 →反 応 →独 占 提 案 の 順 。 連 絡 先 が 取 れ た ら 返 事 が 来 や す い 短 文 で 刺 す 。 "
+    return head, body
+
+
 def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
     if role == "japache":
         return build_japache_role_reply()
@@ -194,13 +200,10 @@ def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
     if role == "iindesuka":
         return build_iindesuka_role_reply()
     if role == "tanoshi":
-        head = "🔥 タノシ"
-        body = "初手はテスト輸入→反応→独占提案の順。連絡先が取れたら返事が来やすい短文で刺す。"
-        return head, body
-    head = "🧠 ヤルデ"
-    body = "誰の意見が欲しい？ ジャパチェ/スカウン/イインデスカ/タノシ を文中に入れて投げて。"
+        return build_tanoshi_role_reply()
+    head = "🧠 ヤ ル デ "
+    body = "誰 の 意 見 が 欲 し い ？  ジ ャ パ チ ェ /ス カ ウ ン /イ イ ン デ ス カ /タ ノ シ  を 文中 に 入 れ て 投 げ て 。 "
     return head, body
-
 
 def parse_decision(text: str):
     t = (text or "").strip()
