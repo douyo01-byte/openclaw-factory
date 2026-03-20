@@ -127,6 +127,17 @@ def collect_meeting_signals(top: List["Row"]) -> dict[int, dict]:
             }
     return out
 
+
+def build_signal_line(sig: dict) -> str:
+    emails = sig.get("emails") or []
+    ok_paths = sig.get("ok_paths") or []
+    return (
+        f"signal: jp={'yes' if sig.get('has_jp') else 'no'} "
+        f"contact_hint={'yes' if sig.get('has_contact_hint') else 'no'} "
+        f"emails={len(emails)} "
+        f"paths={','.join(ok_paths) if ok_paths else '-'}"
+    )
+
 def persist_meeting_outputs(conn: sqlite3.Connection, top: List["Row"], text: str, signal_map: dict[int, dict]) -> None:
     if top:
         upsert_role_brief(conn, "yarde", top[0].title, top[0].url, text)
@@ -332,9 +343,7 @@ def meeting_text(top: List[Row], signal_map: dict[int, dict]) -> str:
             lines.append(r.title)
             lines.append(r.url)
             sig = signal_map.get(int(r.id), {})
-            emails = sig.get("emails") or []
-            ok_paths = sig.get("ok_paths") or []
-            signal_line = f"signal: jp={'yes' if sig.get('has_jp') else 'no'} contact_hint={'yes' if sig.get('has_contact_hint') else 'no'} emails={len(emails)} paths={','.join(ok_paths) if ok_paths else '-'}"
+            signal_line = build_signal_line(sig)
             if signal_line:
                 lines.append(signal_line)
             lines.append(f"次アクション {action_plan(r)}\n")
