@@ -171,11 +171,15 @@ def normalize_chat_query(text: str) -> str:
     q = re.sub(r"\s+", " ", (q or "").strip())
     return q
 
+def build_japache_role_reply() -> Tuple[str, str]:
+    head = "🕵️ ジ ャ パ チ ェ "
+    body = "国 内 上 陸 の 兆 候 を 先 に確 認 す る 。 日 本 語 LP、 代 理 店 表 記 、 Amazon/楽 天 /BASE、 プ レ ス リ リ ー ス を チ ェ ッ ク 。 な け れ ば 連 絡 先 回 収 へ 。 "
+    return head, body
+
+
 def build_role_reply(role: Optional[str]) -> Tuple[str, str]:
     if role == "japache":
-        head = "🕵️ ジャパチェ"
-        body = "国内上陸の兆候を先に確認する。日本語LP、代理店表記、Amazon/楽天/BASE、プレスリリースをチェック。なければ連絡先回収へ。"
-        return head, body
+        return build_japache_role_reply()
     if role == "scout":
         head = "🌍 スカウン"
         body = "ローンチ直後は公式サイトのContactが見つかりやすい。/contact /about /privacy を先に当てる。なければSNSやドメイン情報へ。"
