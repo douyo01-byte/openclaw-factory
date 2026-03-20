@@ -364,6 +364,18 @@ def should_ignore_chat_text(text: str) -> bool:
     return False
 
 
+def handle_chat_decision_if_any(
+    conn: sqlite3.Connection,
+    chat_id: str,
+    text: str,
+) -> bool:
+    d = parse_decision(text)
+    if not d:
+        return False
+    decision, reason = d
+    return apply_chat_decision(conn, chat_id, decision, reason)
+
+
 def handle_chat(
     conn: sqlite3.Connection, row: sqlite3.Row
 ) -> Tuple[str, Optional[str]]:
@@ -374,11 +386,8 @@ def handle_chat(
     if should_ignore_chat_text(text):
         return ("ignored", None)
 
-    d = parse_decision(text)
-    if d:
-        decision, reason = d
-        if apply_chat_decision(conn, chat_id, decision, reason):
-            return ("chatted", None)
+    if handle_chat_decision_if_any(conn, chat_id, text):
+        return ("chatted", None)
 
     role = role_from_text(text)
     item, q = resolve_item_with_context(conn, chat_id, text)
