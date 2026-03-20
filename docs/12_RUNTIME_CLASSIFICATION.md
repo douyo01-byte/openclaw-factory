@@ -86,3 +86,13 @@
 - jp.openclaw.router_reply_finisher_v1 retired: orphan live process stopped and launcher disabled
 - jp.openclaw.router_stall_watchdog_v1 retired: orphan live process stopped and launcher disabled
 - jp.openclaw.task_router_v1 retired: orphan live process stopped and launcher disabled
+
+## retired orphan hold processes
+- jp.openclaw.cto_review_v1 retired: orphan running process with no live source file
+- jp.openclaw.self_evolution_engine_v1 retired: orphan process and repeated database open failures
+- jp.openclaw.self_improvement_engine_v2 retired: orphan running process with no live source file
+- jp.openclaw.private_reply_to_inbox_v1 retired: orphan process and role overlaps with ingest_private_replies_*
+- jp.openclaw.learning_result_writer_v1 retired: orphan running process with no live source file
+- jp.openclaw.innovation_llm_engine_v1 retired: orphan running process with no live source file
+- jp.openclaw.impact_judge_v1 retired: orphan running process with no live source file
+- jp.openclaw.evolution_trace_reporter_v1 retired: orphan running process with no live source file
