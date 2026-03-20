@@ -285,11 +285,25 @@ def meeting_text(top: List[Row]) -> str:
             signal_line = ""
             try:
                 base = normalize_base(r.url)
+                emails = []
                 if base:
-                    code, html = fetch(base, timeout=10)
-                    sig = summarize([("/", code, extract_signals(html))])
+                    signals_by_path = []
+                    for path in PATH_CANDIDATES:
+                        try:
+                            u = urljoin(base.rstrip("/") + "/", path.lstrip("/"))
+                            code, html = fetch(u, timeout=10)
+                            signals_by_path.append((path, code, extract_signals(html)))
+                        except Exception:
+                            signals_by_path.append((path, 0, {
+                                "emails": [],
+                                "has_jp": False,
+                                "has_contact_hint": False,
+                                "has_amazon_rakuten": False,
+                            }))
+                    sig = summarize(signals_by_path)
                     emails = sig.get("emails") or []
-                    signal_line = f"signal: jp={'yes' if sig.get('has_jp') else 'no'} contact_hint={'yes' if sig.get('has_contact_hint') else 'no'} emails={len(emails)}"
+                    ok_paths = sig.get("ok_paths") or []
+                    signal_line = f"signal: jp={'yes' if sig.get('has_jp') else 'no'} contact_hint={'yes' if sig.get('has_contact_hint') else 'no'} emails={len(emails)} paths={','.join(ok_paths) if ok_paths else '-'}"
             except Exception:
                 signal_line = ""
             if signal_line:
