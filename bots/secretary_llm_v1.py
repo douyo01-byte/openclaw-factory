@@ -230,7 +230,6 @@ def ask_llm(user_text, context_text):
             {"role": "system", "content": build_system_prompt()},
             {"role": "user", "content": build_governed_prompt(user_text, context_text)},
         ],
-        "temperature": 0.2,
     }
     r = requests.post(
         "https://api.openai.com/v1/chat/completions",
@@ -241,9 +240,15 @@ def ask_llm(user_text, context_text):
         json=payload,
         timeout=60,
     )
-    r.raise_for_status()
+    if not r.ok:
+        body = ""
+        try:
+            body = r.text[:2000]
+        except Exception:
+            body = "<no_body>"
+        print(f"[secretary_openai_error] status={r.status_code} body={body}", flush=True)
+        return f"OpenAI_ERROR {r.status_code}: {body[:500]}"
     data = r.json()
-    
     return data["choices"][0]["message"]["content"].strip()
 
 
