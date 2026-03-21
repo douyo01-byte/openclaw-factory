@@ -1,4 +1,5 @@
 # OpenClaw Docs Index
+
 ## Core Entry
 - 01_SINGLE_SOURCE_OF_TRUTH.md
 - 02_ROLE_REGISTRY.md
@@ -14,18 +15,17 @@
 - 16_BUSINESS_FUNCTION_ASSIGNMENT.md
 - 18_BUSINESS_ABSORB_CONFIRMED.md
 
-
-## 核 ド キ ュ メ ン ト
+## 核ドキュメント
 - 06_CURRENT_STATE.md
 - 08_HANDOVER.md
 - 12_RUNTIME_CLASSIFICATION.md
 - 13_LAUNCHAGENT_INVENTORY.md
 - 14_LEGACY_TRIAGE.md
 
-## 運 用
+## 運用
 - 17_EFFICIENCY_RULES.md
 
-## docs修 正 注 意
-- ス マ ホ 編 集 後 は spacing 崩 れ を 確 認 す る
-- 存 在 し な い 参 照 を index に 残 さ な い
-- runtime に 関 す る 判 断 は docs 単 独 で 行 わ な い
+## docs修正注意
+- スマホ編集後は spacing 崩れを確認する
+- 存在しない参照を index に残さない
+- runtime に関する判断は docs 単独で行わない

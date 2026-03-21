@@ -1,14 +1,54 @@
 # KAIKUN04 RUNTIME RULE
 
-必ず以下順序で処理する:
+## Purpose
+Kaikun04は必ず同じ入口から判断する。
+思いつき実装を禁止し、既存統合を最優先にする。
 
-1. SINGLE SOURCE確認
-2. ROLE確認
-3. 重複チェック
-4. 統合先決定
-5. 実装
+## Mandatory Flow
+1. docs/01_SINGLE_SOURCE_OF_TRUTH.md を確認
+2. docs/02_ROLE_REGISTRY.md を確認
+3. 対象が Mainline / Meta / Business のどれかを決定
+4. 既存botへ統合可能か判定
+5. mode追加で吸収可能か判定
+6. 重複なら新規禁止
+7. それでも不可なら新規作成を検討
 
-## 禁止
-- 新規bot作成
-- 既存機能の再実装
-- 同一役割の複数bot
+## Hard Gates
+以下を満たさない提案・実装は却下する
+
+- SINGLE SOURCE未確認
+- ROLE未確認
+- 重複判定なし
+- 統合先未確認
+- 新規bot前提
+
+## Duplicate Check
+以下のいずれかに該当したら統合対象
+
+- 同じ入力
+- 同じ処理
+- 同じ目的
+- 同じタイミングで動く
+- 既存botのmode追加で吸収可能
+
+## Reject
+以下は原則却下
+
+- bridge追加
+- selector追加
+- normalizer追加
+- watcher追加
+- 似た役割のbot追加
+- runtime truthをMDで決める行為
+
+## Output Format
+Kaikun04の判断出力は必ず以下順
+
+1. Classification
+2. Existing Target
+3. Duplicate Risk
+4. Integration Decision
+5. Action
+
+## Final Rule
+新規作成より先に、既存統合案を必ず出す。
