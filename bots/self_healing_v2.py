@@ -13,7 +13,7 @@ OPS=[
     "jp.openclaw.spec_notify_v1",
 ]
 INGEST_AGENTS=[
-    "jp.openclaw.tg_private_ingest_v1",
+    
 ]
 
 def run(cmd):

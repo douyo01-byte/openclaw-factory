@@ -6,7 +6,7 @@ DAY="$(date +%Y%m%d)"
 ARCH="archive/logs/$DAY"
 mkdir -p "$ARCH"
 
-keep='^(tg_poll\.log|tg_poll_heartbeat\.log|spec_refiner_v2\.out|spec_refiner_v2\.err|spec_notify_v1\.out|spec_notify_v1\.err|jp\.openclaw\.dev_pr_watcher_v1\.out|jp\.openclaw\.dev_pr_watcher_v1\.err|dev_executor_daemon_v1\.out|dev_executor_daemon_v1\.err|dev_command_executor_v1\.out|dev_command_executor_v1\.err|tg_private_ingest_v1\.out|tg_private_ingest_v1\.err|self_healing_v2\.log|self_healing_v1\.log|dev_executor_daemon\.log|log_policy_snapshot\.txt)$'
+keep='^(tg_poll\.log|tg_poll_heartbeat\.log|spec_refiner_v2\.out|spec_refiner_v2\.err|spec_notify_v1\.out|spec_notify_v1\.err|jp\.openclaw\.dev_pr_watcher_v1\.out|jp\.openclaw\.dev_pr_watcher_v1\.err|dev_executor_daemon_v1\.out|dev_executor_daemon_v1\.err|dev_command_executor_v1\.out|dev_command_executor_v1\.err|self_healing_v2\.log|self_healing_v1\.log|dev_executor_daemon\.log|log_policy_snapshot\.txt)$'
 
 move_if_needed() {
   f="$1"
