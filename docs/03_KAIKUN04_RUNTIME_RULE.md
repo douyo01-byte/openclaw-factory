@@ -52,3 +52,15 @@ Kaikun04の判断出力は必ず以下順
 
 ## Final Rule
 新規作成より先に、既存統合案を必ず出す。
+
+## Fixed Private Reply Route
+private reply は以下のみを本流とする
+1. ingest_private_replies_kaikun04
+2. private_reply_to_inbox_v1
+3. secretary_llm_v1
+
+以下は本流扱いしない
+- ingest_private_replies_kaikun02
+- ingest_private_replies_v1
+- ingest_private_chat_v1
+- router_reply_finisher_v1

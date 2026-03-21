@@ -97,3 +97,11 @@
 1.
 2.
 3.
+
+## Current Runtime Fixed Path
+- private reply 本流:
+  1. jp.openclaw.ingest_private_replies_kaikun04
+  2. jp.openclaw.private_reply_to_inbox_v1
+  3. jp.openclaw.secretary_llm_v1
+- runtime truth は launchd / DB を優先
+- docs は判断規則を持つが、状態そのものは持たない
