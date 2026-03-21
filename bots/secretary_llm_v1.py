@@ -119,6 +119,14 @@ def fetch_dashboard_facts(conn):
     }
 
 
+
+
+def load_role_registry():
+    try:
+        return Path("/Users/doyopc/AI/openclaw-factory-docs/docs/02_ROLE_REGISTRY.md").read_text(encoding="utf-8")
+    except:
+        return ""
+
 def build_context(conn):
     health = load_json(OBS / "company_health_score.json")
     supply = load_json(OBS / "supply_adoption_metrics.json")
@@ -139,7 +147,11 @@ def build_context(conn):
     except Exception:
         runtime_classification = ""
 
+    
+    roles = load_role_registry()
     ctx = {
+        "roles": roles,
+
         "company_health": health,
         "supply_adoption": supply,
         "db_integrity_recent": integrity_lines,
@@ -149,17 +161,75 @@ def build_context(conn):
     return json.dumps(ctx, ensure_ascii=False, indent=2)
 
 
+
+
+def enforce_governance(user_text):
+    t = (user_text or "").lower()
+
+    banned = ["新bot", "新規bot", "watcher追加", "selector", "bridge", "normalizer"]
+    for b in banned:
+        if b in t:
+            return "reject", f"却下: {b} は禁止ルール"
+
+    return "ok", ""
+
+
+def detect_duplicate(text):
+    keywords = ["selector", "bridge", "normalizer"]
+    for k in keywords:
+        if k in (text or "").lower():
+            return True
+    return False
+
+def classify_input(text):
+    t = (text or "")
+    if "進捗" in t or "状態" in t:
+        return "status"
+    if "改善" in t or "強化" in t:
+        return "improvement"
+    if "追加" in t or "作りたい" in t:
+        return "feature"
+    if "緊急" in t:
+        return "urgent"
+    return "other"
+
+def build_governed_prompt(user_text, context_text):
+    rule = """
+【Execution Rule】
+1. SINGLE SOURCE確認
+2. ROLE確認
+3. 重複チェック
+4. 統合先決定
+5. 新規禁止
+
+【Absolute Rules】
+- 新規bot禁止
+- 重複機能禁止
+- 既存優先統合
+"""
+    return f"{rule}\n\ninput:\n{user_text}\n\ncontext:\n{context_text}"
+
 def ask_llm(user_text, context_text):
     if not OPENAI_API_KEY:
         return "OpenClaw COOです。\n今は簡易モードです。\n事実ベースで短く答えます。"
 
+    
+    
+    if detect_duplicate(user_text):
+        return "却下: 重複機能の可能性"
+
+    mode, reason = enforce_governance(user_text)
+
+    if mode == "reject":
+        return reason
+
     payload = {
+
         "model": OPENAI_MODEL,
         "messages": [
             {"role": "system", "content": build_system_prompt()},
-            {"role": "user", "content": f"question:\n{user_text}\n\ncontext:\n{context_text}"},
+            {"role": "user", "content": build_governed_prompt(user_text, context_text)},
         ],
-        "temperature": 0.2,
     }
     r = requests.post(
         "https://api.openai.com/v1/chat/completions",
@@ -170,9 +240,17 @@ def ask_llm(user_text, context_text):
         json=payload,
         timeout=60,
     )
-    r.raise_for_status()
+    if not r.ok:
+        body = ""
+        try:
+            body = r.text[:2000]
+        except Exception:
+            body = "<no_body>"
+        print(f"[secretary_openai_error] status={r.status_code} body={body}", flush=True)
+        return f"OpenAI_ERROR {r.status_code}: {body[:500]}"
     data = r.json()
     return data["choices"][0]["message"]["content"].strip()
+
 
 
 def send(chat_id, text):
