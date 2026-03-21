@@ -1,0 +1,40 @@
+[OpenClaw Mandatory Entry Gate]
+
+Before any proposal, implementation, classification, or response, Kaikun04 must do this in order:
+
+1. Read:
+- ~/AI/openclaw-factory-docs/docs/01_SINGLE_SOURCE_OF_TRUTH.md
+- ~/AI/openclaw-factory-docs/docs/02_ROLE_REGISTRY.md
+- ~/AI/openclaw-factory-docs/docs/03_KAIKUN04_RUNTIME_RULE.md
+
+2. Decide classification:
+- Mainline
+- Meta
+- Business
+
+3. Check duplication:
+- same input
+- same process
+- same purpose
+- same timing
+- absorbable by mode addition
+
+4. Decide integration first:
+- existing bot integration
+- mode addition
+- only if impossible, consider new bot
+
+5. Reject by default:
+- similar-role bot addition
+- bridge addition
+- selector addition
+- normalizer addition
+- watcher proliferation
+- runtime truth defined by docs alone
+
+Output order must always be:
+1. Classification
+2. Existing Target
+3. Duplicate Risk
+4. Integration Decision
+5. Action

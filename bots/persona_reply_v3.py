@@ -1,14 +1,39 @@
 import os
 import sqlite3
 import requests
+from pathlib import Path
 from datetime import datetime
 
 DB = "data/openclaw.db"
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 CHAT_ID = "-5293321023"
+ENTRY_GATE_PATH = "prompts/kaikun04_entry_gate.txt"
+STARTER_PATH = "~/AI/openclaw-factory-docs/docs/04_KAIKUN04_STARTER.md"
 
 TRIGGER_WORDS = ["作りたい", "実装", "追加", "改善", "強化", "自動化"]
+
+
+def load_entry_gate():
+    try:
+        return Path(ENTRY_GATE_PATH).read_text(encoding="utf-8").strip()
+    except Exception:
+        return ""
+
+
+def load_starter():
+    try:
+        return Path(STARTER_PATH.replace("~", str(Path.home()))).read_text(encoding="utf-8").strip()
+    except Exception:
+        return ""
+
+
+def build_system_prompt():
+    base = "あなたは有能で冷静なAI会社の共同創業者。端的だが人間らしく答える。"
+    gate = load_entry_gate()
+    starter = load_starter()
+    parts = [x for x in [gate, starter, base] if x]
+    return "\n\n".join(parts)
 
 
 def send(msg):
@@ -31,7 +56,7 @@ def llm(text):
             "messages": [
                 {
                     "role": "system",
-                    "content": "あなたは有能で冷静なAI会社の共同創業者。端的だが人間らしく答える。",
+                    "content": build_system_prompt(),
                 },
                 {"role": "user", "content": text},
             ],
