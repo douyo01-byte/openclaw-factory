@@ -8,42 +8,38 @@ Kaikun04は必ず同じ入口から判断する。
 1. docs/01_SINGLE_SOURCE_OF_TRUTH.md を確認
 2. docs/02_ROLE_REGISTRY.md を確認
 3. 対象が Mainline / Meta / Business のどれかを決定
-4. 既存botへ統合可能か判定
+4. 既存 bot へ統合可能か判定
 5. mode追加で吸収可能か判定
 6. 重複なら新規禁止
 7. それでも不可なら新規作成を検討
 
 ## Hard Gates
 以下を満たさない提案・実装は却下する
-
 - SINGLE SOURCE未確認
 - ROLE未確認
 - 重複判定なし
 - 統合先未確認
-- 新規bot前提
+- 新規 bot 前提
 
 ## Duplicate Check
 以下のいずれかに該当したら統合対象
-
 - 同じ入力
 - 同じ処理
 - 同じ目的
 - 同じタイミングで動く
-- 既存botのmode追加で吸収可能
+- 既存 bot の mode追加で吸収可能
 
 ## Reject
 以下は原則却下
-
 - bridge追加
 - selector追加
 - normalizer追加
 - watcher追加
-- 似た役割のbot追加
-- runtime truthをMDで決める行為
+- 似た役割の bot追加
+- runtime truth を MDで決める行為
 
 ## Output Format
 Kaikun04の判断出力は必ず以下順
-
 1. Classification
 2. Existing Target
 3. Duplicate Risk
@@ -63,7 +59,7 @@ private reply は以下のみを本流とする
 - ingest_private_replies_kaikun02
 - ingest_private_replies_v1
 - ingest_private_chat_v1
-- router_reply_finisher_v1
+- legacy router runtimes archived in archive/router_legacy_20260322
 
 ## Current Ops Watcher Targets
 ### required
@@ -85,40 +81,8 @@ private reply は以下のみを本流とする
 - escalation 時は notify を記録し、Telegram通知を送信する
 - escalation 時は ops_watcher_escalation として dev_proposals を自動起票する
 
-
-## ACTIVE本 流
-- private reply:
-  - ingest_private_replies_kaikun04
-  - private_reply_to_inbox_v1
-  - secretary_llm_v1
-- router:
-  - task_router_v1
-  - kaikun02_router_worker_v1
-  - kaikun04_router_worker_v1
-  - router_reply_finisher_v1
-  - kaikun02_router_cleanup_v1
-  - kaikun04_router_cleanup_v1
-  - router_stall_watchdog_v1
-- watcher required:
-  - jp.openclaw.ops_brain_agent_v1
-  - jp.openclaw.private_reply_to_inbox_v1
-  - jp.openclaw.secretary_llm_v1
-- watcher observe:
-  - jp.openclaw.dev_pr_automerge_v1
-  - jp.openclaw.db_integrity_watchdog_v1
-  - jp.openclaw.kaikun02_coo_controller_v1
-  - jp.openclaw.dev_pr_watcher_v1
-  - jp.openclaw.ingest_private_replies_kaikun04
-
-
-## THINK timeout fallback
-- THINK task が timeout し reply_text 空 の 場合
-- router_timeout_fallback_v1 が fallback を 生成
-- result_text に fallback_sent を 記録
-- task 自体 の status は timeout の まま保持
-
 ## private_reply_to_inbox_v1 bridge stability
 - run_private_reply_to_inbox_v1.sh は absolute path 固定
-- DB_PATH / OCLAW_DB_PATH / FACTORY_DB_PATH を 同 時 export
-- launchd 実 行 で の unable to open database file を 解 消
-- private tg log -> inbox_commands -> secretary_done を 再確認 済み
+- DB_PATH / OCLAW_DB_PATH / FACTORY_DB_PATH を同時 export
+- launchd 実行での unable to open database file を解消
+- private tg log -> inbox_commands -> secretary_done を再確認済み

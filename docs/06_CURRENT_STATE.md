@@ -17,18 +17,22 @@
 - ops_watcher_events: 3174
 
 ## source of truth
-- 実運用の判断は docs より実DB / 実process / watcher event を優先する
+- 実運用の判断は docs より 実DB / 実process / watcher event を優先する
 - 本番DBは /Users/doyopc/AI/openclaw-factory/data/openclaw.db
 - /Users/doyopc/AI/openclaw-factory-daemon/data/openclaw_real.db は現時点では本番ではない
 
 ## watcher summary
 ### required
 - jp.openclaw.ops_brain_agent_v1
+- jp.openclaw.private_reply_to_inbox_v1
+- jp.openclaw.secretary_llm_v1
 
-### observe stopped
+### observe
 - jp.openclaw.dev_pr_automerge_v1
 - jp.openclaw.db_integrity_watchdog_v1
 - jp.openclaw.kaikun02_coo_controller_v1
+- jp.openclaw.dev_pr_watcher_v1
+- jp.openclaw.ingest_private_replies_kaikun04
 
 ## mainline active
 - jp.openclaw.ops_brain_agent_v1
@@ -44,7 +48,6 @@
 - open_pr は 0 で健全
 - watcher は required 対象に対して正常
 
-
 ## ACTIVE本流
 ### dev pipeline
 - dev_proposals
@@ -52,15 +55,6 @@
 - dev_executor_v1
 - dev_pr_watcher_v1
 - dev_pr_automerge_v1
-
-### router
-- task_router_v1
-- kaikun02_router_worker_v1
-- kaikun04_router_worker_v1
-- router_reply_finisher_v1
-- kaikun02_router_cleanup_v1
-- kaikun04_router_cleanup_v1
-- router_stall_watchdog_v1
 
 ### private reply
 - ingest_private_replies_kaikun04
@@ -80,43 +74,11 @@
   - jp.openclaw.dev_pr_watcher_v1
   - jp.openclaw.ingest_private_replies_kaikun04
 
-
-## ACTIVE本 流
-- private reply:
-  - ingest_private_replies_kaikun04
-  - private_reply_to_inbox_v1
-  - secretary_llm_v1
-- router:
-  - task_router_v1
-  - kaikun02_router_worker_v1
-  - kaikun04_router_worker_v1
-  - router_reply_finisher_v1
-  - kaikun02_router_cleanup_v1
-  - kaikun04_router_cleanup_v1
-  - router_stall_watchdog_v1
-- watcher required:
-  - jp.openclaw.ops_brain_agent_v1
-  - jp.openclaw.private_reply_to_inbox_v1
-  - jp.openclaw.secretary_llm_v1
-- watcher observe:
-  - jp.openclaw.dev_pr_automerge_v1
-  - jp.openclaw.db_integrity_watchdog_v1
-  - jp.openclaw.kaikun02_coo_controller_v1
-  - jp.openclaw.dev_pr_watcher_v1
-  - jp.openclaw.ingest_private_replies_kaikun04
-
-
-## THINK timeout fallback
-- THINK task が timeout し reply_text 空 の 場合
-- router_timeout_fallback_v1 が fallback を 生成
-- result_text に fallback_sent を 記録
-- task 自体 の status は timeout の まま保持
-
 ## private_reply_to_inbox_v1 bridge stability
 - run_private_reply_to_inbox_v1.sh は absolute path 固定
-- DB_PATH / OCLAW_DB_PATH / FACTORY_DB_PATH を 同 時 export
-- launchd 実 行 で の unable to open database file を 解 消
-- private tg log -> inbox_commands -> secretary_done を 再確認 済み
+- DB_PATH / OCLAW_DB_PATH / FACTORY_DB_PATH を同時 export
+- launchd 実行での unable to open database file を解消
+- private tg log -> inbox_commands -> secretary_done を再確認済み
 
 ## Private Reply Single Source
 
@@ -127,11 +89,4 @@
     -> secretary_llm_v1
     -> secretary_done
 
-Router runtimes are not part of the private reply mainline.
-
-Excluded runtimes:
-- jp.openclaw.task_router_v1
-- jp.openclaw.kaikun02_router_worker_v1
-- jp.openclaw.kaikun04_router_worker_v1
-- jp.openclaw.router_reply_finisher_v1
-
+Legacy router runtimes were archived into archive/router_legacy_20260322 and are not part of the active private reply path.

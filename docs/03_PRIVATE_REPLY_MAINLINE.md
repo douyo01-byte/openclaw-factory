@@ -1,4 +1,6 @@
-## Private Reply Single Source
+# Private Reply Mainline
+
+## Single Source
 
     Telegram(private)
     -> tg_private_chat_log
@@ -7,11 +9,17 @@
     -> secretary_llm_v1
     -> secretary_done
 
-Router runtimes are not part of the private reply mainline.
+## Rule
+Router runtimes are not part of the active private reply mainline.
 
-Excluded runtimes:
-- jp.openclaw.task_router_v1
-- jp.openclaw.kaikun02_router_worker_v1
-- jp.openclaw.kaikun04_router_worker_v1
-- jp.openclaw.router_reply_finisher_v1
+Legacy router runtimes were archived into:
+- archive/router_legacy_20260322
 
+## Active Components
+- ingest_private_replies_kaikun04
+- private_reply_to_inbox_v1
+- secretary_llm_v1
+
+## Result
+- private Telegram -> tg_private_chat_log -> inbox_commands -> secretary_done confirmed
+- private reply operates without router_tasks involvement
