@@ -88,3 +88,10 @@ cd ~/AI/openclaw-factory-daemon || exit 1
   - jp.openclaw.kaikun02_coo_controller_v1
   - jp.openclaw.dev_pr_watcher_v1
   - jp.openclaw.ingest_private_replies_kaikun04
+
+
+## THINK timeout fallback
+- THINK task が timeout し reply_text 空 の 場合
+- router_timeout_fallback_v1 が fallback を 生成
+- result_text に fallback_sent を 記録
+- task 自体 の status は timeout の まま保持
