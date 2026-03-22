@@ -5,7 +5,10 @@ import time
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "data/openclaw.db"
 
 def conn():
-    c = sqlite3.connect(DB, timeout=30)
+    try:
+        c = sqlite3.connect(DB, timeout=30)
+    except Exception as e:
+        raise
     c.row_factory = sqlite3.Row
     c.execute("PRAGMA busy_timeout=30000")
     try:
