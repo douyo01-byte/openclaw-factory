@@ -15,10 +15,12 @@
 - source of truth DB: /Users/doyopc/AI/openclaw-factory/data/openclaw.db
 - open_pr: 0
 - watcher required は jp.openclaw.ops_brain_agent_v1
-- watcher observe stopped:
+- watcher observe 対象:
   - jp.openclaw.dev_pr_automerge_v1
   - jp.openclaw.db_integrity_watchdog_v1
   - jp.openclaw.kaikun02_coo_controller_v1
+  - jp.openclaw.dev_pr_watcher_v1
+  - jp.openclaw.ingest_private_replies_kaikun04
 - proposal → PR → merged → executor_audit の本線は稼働中
 
 ## 次チャットで最初に打つコマンド
@@ -34,3 +36,55 @@ cd ~/AI/openclaw-factory-daemon || exit 1
 - Business HOLD 裁定中 : scout_market_v2 / chat_research_v1 は MAINLINE_INTEGRATION_CANDIDATE、ai_employee_* は FULL_RETIRE、chat_research_job_producer_v1 / secretary_llm_v1 は再確認 HOLD
 - Business HOLD 裁定完了 : scout_market_v2 / chat_research_v1 は MAINLINE_INTEGRATION_CANDIDATE、chat_research_job_producer_v1 / secretary_llm_v1 / ai_employee_* は FULL_RETIRE
 - Business統合先仮決定 : scout_market_v2 / chat_research_v1 は business mainline 再設計対象、ingest_private_replies_* は intake専用維持
+
+
+## 現在の本流
+### private reply
+- ingest_private_replies_kaikun04
+- private_reply_to_inbox_v1
+- secretary_llm_v1
+- inbox_commands.secretary_done
+
+### router
+- task_router_v1 が inbox_commands を分類
+- 短文 / status / health は kaikun02 FAST
+- 長文 / analysis / docs は kaikun04 THINK
+- reply は [TASK_ID:xxx] 必須
+- cleanup が stale / timeout / orphan を close
+
+### watcher
+- required:
+  - jp.openclaw.ops_brain_agent_v1
+  - jp.openclaw.private_reply_to_inbox_v1
+  - jp.openclaw.secretary_llm_v1
+- observe:
+  - jp.openclaw.dev_pr_automerge_v1
+  - jp.openclaw.db_integrity_watchdog_v1
+  - jp.openclaw.kaikun02_coo_controller_v1
+  - jp.openclaw.dev_pr_watcher_v1
+  - jp.openclaw.ingest_private_replies_kaikun04
+
+
+## ACTIVE本 流
+- private reply:
+  - ingest_private_replies_kaikun04
+  - private_reply_to_inbox_v1
+  - secretary_llm_v1
+- router:
+  - task_router_v1
+  - kaikun02_router_worker_v1
+  - kaikun04_router_worker_v1
+  - router_reply_finisher_v1
+  - kaikun02_router_cleanup_v1
+  - kaikun04_router_cleanup_v1
+  - router_stall_watchdog_v1
+- watcher required:
+  - jp.openclaw.ops_brain_agent_v1
+  - jp.openclaw.private_reply_to_inbox_v1
+  - jp.openclaw.secretary_llm_v1
+- watcher observe:
+  - jp.openclaw.dev_pr_automerge_v1
+  - jp.openclaw.db_integrity_watchdog_v1
+  - jp.openclaw.kaikun02_coo_controller_v1
+  - jp.openclaw.dev_pr_watcher_v1
+  - jp.openclaw.ingest_private_replies_kaikun04
