@@ -77,3 +77,10 @@ private reply は以下のみを本流とする
 - jp.openclaw.kaikun02_coo_controller_v1
 - jp.openclaw.dev_pr_watcher_v1
 - jp.openclaw.ingest_private_replies_kaikun04
+
+## Escalation Behavior
+- required target が停止した場合、ops watcher は再起動を試みる
+- warning / cooldown / failed を連続異常として扱う
+- current event を含む実効3回で escalation する
+- escalation 時は notify を記録し、Telegram通知を送信する
+- escalation 時は ops_watcher_escalation として dev_proposals を自動起票する
