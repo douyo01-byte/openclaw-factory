@@ -1,0 +1,50 @@
+from __future__ import annotations
+import os
+import sqlite3
+
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+
+def ensure_schema(conn):
+    cols = {r[1] for r in conn.execute("pragma table_info(router_tasks)").fetchall()}
+    add_cols = {
+        "started_at": "text default ''",
+        "finished_at": "text default ''",
+        "result_text": "text default ''",
+    }
+    for k, v in add_cols.items():
+        if k not in cols:
+            conn.execute(f"alter table router_tasks add column {k} {v}")
+
+def main():
+    conn = sqlite3.connect(DB, timeout=30)
+    try:
+        conn.execute("pragma busy_timeout=30000")
+        ensure_schema(conn)
+        conn.execute("""
+            update router_tasks
+            set status='timeout',
+                finished_at=datetime('now'),
+                updated_at=datetime('now'),
+                result_text=coalesce(result_text,'') || ' | kaikun02_timeout_auto_closed'
+            where coalesce(target_bot,'')='kaikun02'
+              and coalesce(status,'') in ('new','started')
+              and datetime(coalesce(updated_at, created_at, datetime('now'))) <= datetime('now','-20 minutes')
+        """)
+        conn.execute("""
+            update router_tasks
+            set status='orphan',
+                finished_at=datetime('now'),
+                updated_at=datetime('now'),
+                result_text=coalesce(result_text,'') || ' | orphan_auto_closed'
+            where coalesce(status,'') in ('new','started')
+              and source_command_id is not null
+              and not exists (
+                select 1 from inbox_commands i where i.id = router_tasks.source_command_id
+              )
+        """)
+        conn.commit()
+    finally:
+        conn.close()
+
+if __name__ == "__main__":
+    main()

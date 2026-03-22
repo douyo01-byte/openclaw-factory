@@ -1,0 +1,95 @@
+from __future__ import annotations
+import os
+import sqlite3
+
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+
+def ensure_schema(conn):
+    cols = {r[1] for r in conn.execute("pragma table_info(router_tasks)").fetchall()}
+    add_cols = {
+        "started_at": "text default ''",
+        "finished_at": "text default ''",
+        "result_text": "text default ''",
+        "reply_text": "text default ''",
+        "user_key": "text default ''",
+        "intent": "text default ''",
+        "task_key": "text default ''",
+        "parent_task_id": "integer default null",
+    }
+    for k, v in add_cols.items():
+        if k not in cols:
+            conn.execute(f"alter table router_tasks add column {k} {v}")
+
+def main():
+    conn = sqlite3.connect(DB, timeout=30)
+    conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("pragma busy_timeout=30000")
+        ensure_schema(conn)
+
+        stale = conn.execute("""
+            select id, source_command_id, coalesce(user_key,'') as user_key,
+                   coalesce(intent,'') as intent, coalesce(task_key,'') as task_key
+            from router_tasks
+            where coalesce(target_bot,'')='kaikun04'
+              and coalesce(status,'') in ('new','started')
+              and datetime(coalesce(updated_at, created_at, datetime('now'))) <= datetime('now','-20 minutes')
+        """).fetchall()
+
+        for r in stale:
+            conn.execute("""
+                update router_tasks
+                set status='timeout',
+                    finished_at=datetime('now'),
+                    updated_at=datetime('now'),
+                    result_text=coalesce(result_text,'') || ' | think_timeout_auto_closed'
+                where id=?
+            """, (int(r["id"]),))
+
+            exists = conn.execute("""
+                select id
+                from router_tasks
+                where coalesce(parent_task_id,0)=?
+                  and coalesce(target_bot,'')='kaikun02'
+                  and coalesce(status,'') in ('new','started','done')
+                order by id desc
+                limit 1
+            """, (int(r["id"]),)).fetchone()
+
+            if not exists:
+                conn.execute("""
+                    insert into router_tasks(
+                      source_command_id, mode, target_bot, task_text, status,
+                      created_at, updated_at, user_key, intent, task_key, parent_task_id
+                    )
+                    values(
+                      ?, 'FAST', 'kaikun02', ?, 'new',
+                      datetime('now'), datetime('now'), ?, ?, ?, ?
+                    )
+                """, (
+                    int(r["source_command_id"] or 0),
+                    "[FAST][FALLBACK]\nTHINK timeout fallback. concise answer required.",
+                    r["user_key"],
+                    r["intent"] or "fallback",
+                    r["task_key"],
+                    int(r["id"]),
+                ))
+
+        conn.execute("""
+            update router_tasks
+            set status='orphan',
+                finished_at=datetime('now'),
+                updated_at=datetime('now'),
+                result_text=coalesce(result_text,'') || ' | orphan_auto_closed'
+            where coalesce(status,'') in ('new','started')
+              and source_command_id is not null
+              and not exists (
+                select 1 from inbox_commands i where i.id = router_tasks.source_command_id
+              )
+        """)
+        conn.commit()
+    finally:
+        conn.close()
+
+if __name__ == "__main__":
+    main()
