@@ -74,7 +74,10 @@ def run_once():
     print(f"[private_reply_to_inbox_v1] done={done}", flush=True)
 
 if __name__ == "__main__":
-    ensure()
     while True:
-        run_once()
+        try:
+            ensure()
+            run_once()
+        except Exception as e:
+            print(f"[private_reply_to_inbox_v1][error] {repr(e)}", flush=True)
         time.sleep(5)
