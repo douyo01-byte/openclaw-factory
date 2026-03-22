@@ -1,14 +1,15 @@
 import os
 import sqlite3
 import time
+from pathlib import Path
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("DB_PATH") or "data/openclaw.db"
 
 def conn():
-    try:
-        c = sqlite3.connect(DB, timeout=30)
-    except Exception as e:
-        raise
+    db = Path(DB).expanduser().resolve()
+    db.parent.mkdir(parents=True, exist_ok=True)
+    print(f"[private_reply_to_inbox_v1][db_open] path={db} exists={db.exists()} parent_exists={db.parent.exists()}", flush=True)
+    c = sqlite3.connect(str(db), timeout=30)
     c.row_factory = sqlite3.Row
     c.execute("PRAGMA busy_timeout=30000")
     try:
