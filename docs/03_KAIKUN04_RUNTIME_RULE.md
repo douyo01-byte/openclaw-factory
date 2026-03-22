@@ -116,3 +116,9 @@ private reply は以下のみを本流とする
 - router_timeout_fallback_v1 が fallback を 生成
 - result_text に fallback_sent を 記録
 - task 自体 の status は timeout の まま保持
+
+## private_reply_to_inbox_v1 bridge stability
+- run_private_reply_to_inbox_v1.sh は absolute path 固定
+- DB_PATH / OCLAW_DB_PATH / FACTORY_DB_PATH を 同 時 export
+- launchd 実 行 で の unable to open database file を 解 消
+- private tg log -> inbox_commands -> secretary_done を 再確認 済み
