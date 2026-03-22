@@ -68,6 +68,7 @@ private reply は以下のみを本流とする
 ## Current Ops Watcher Targets
 ### required
 - jp.openclaw.ops_brain_agent_v1
+- jp.openclaw.private_reply_to_inbox_v1
 
 ### observe
 - jp.openclaw.dev_pr_automerge_v1
@@ -75,5 +76,4 @@ private reply は以下のみを本流とする
 - jp.openclaw.kaikun02_coo_controller_v1
 - jp.openclaw.dev_pr_watcher_v1
 - jp.openclaw.ingest_private_replies_kaikun04
-- jp.openclaw.private_reply_to_inbox_v1
 - jp.openclaw.secretary_llm_v1
