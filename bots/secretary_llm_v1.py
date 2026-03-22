@@ -181,6 +181,15 @@ def detect_duplicate(text):
             return True
     return False
 
+
+def should_use_think(text):
+    t = (text or "").lower()
+    if "[think]" in t or "[deep]" in t:
+        return True
+    strong = ["比 較 ", "分 析 ", "設 計 ", "構 造 ", "統 合 ", "方 針 ", "根 拠 "]
+    return any(k in t for k in strong) and len(t) > 120
+
+
 def classify_input(text):
     t = (text or "")
     if "進捗" in t or "状態" in t:
@@ -210,6 +219,8 @@ def build_governed_prompt(user_text, context_text):
     return f"{rule}\n\ninput:\n{user_text}\n\ncontext:\n{context_text}"
 
 def ask_llm(user_text, context_text):
+    use_think = should_use_think(user_text)
+
     if not OPENAI_API_KEY:
         return "OpenClaw COOです。\n今は簡易モードです。\n事実ベースで短く答えます。"
 

@@ -38,3 +38,12 @@ Output order must always be:
 3. Duplicate Risk
 4. Integration Decision
 5. Action
+\n
+## THINK使用条件
+- [THINK] or [DEEP] 明示あり
+- かつ 長文 or 分析ワードあり
+
+## THINK抑制
+- 単なる説明要求は FAST相当の短い答え
+- status / health / docs / handover は簡潔優先
+- private reply / router / watcher / docs の単語だけでは THINK化しない
