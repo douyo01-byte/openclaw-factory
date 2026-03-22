@@ -587,7 +587,9 @@ def run_watcher():
                     }
                     restarted.append(rr)
                     streak, last_sev = recent_escalation_streak(label, ("warning", "cooldown", "failed"), 2)
-                    if streak >= 2:
+                    streak += 1
+                    last_sev = rr.get("severity", last_sev)
+                    if streak >= 3:
                         escalations.append({
                             "label": label,
                             "reason": "restart_streak",
@@ -611,7 +613,9 @@ def run_watcher():
                         sev = rr.get("severity", "")
                         if sev in ("warning", "cooldown", "failed"):
                             streak, last_sev = recent_escalation_streak(label, ("warning", "cooldown", "failed"), 2)
-                            if streak >= 2:
+                            streak += 1
+                            last_sev = rr.get("severity", last_sev)
+                            if streak >= 3:
                                 escalations.append({
                                     "label": label,
                                     "reason": "restart_streak",
