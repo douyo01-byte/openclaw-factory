@@ -291,6 +291,7 @@ def next_row(conn):
         select id, coalesce(chat_id,''), coalesce(text,'')
         from inbox_commands
         where coalesce(processed,0)=0
+          and coalesce(router_target,'')='secretary'
           and coalesce(status,'') not in ('company_done','company_error','secretary_done','secretary_error')
         order by id asc
         limit 1
