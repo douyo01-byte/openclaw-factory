@@ -1,0 +1,124 @@
+from __future__ import annotations
+import os, time, sqlite3, re
+
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+SLEEP = float(os.environ.get("ROUTER_REPLY_FINISHER_SLEEP", "8"))
+TASK_ID_RE = re.compile(r"\[TASK_ID:(\d+)\]")
+
+def conn():
+    c = sqlite3.connect(DB, timeout=30)
+    c.row_factory = sqlite3.Row
+    c.execute("pragma busy_timeout=30000")
+    try:
+        c.execute("pragma journal_mode=WAL")
+    except Exception:
+        pass
+    return c
+
+def ensure_schema(c):
+    rt_cols = {r["name"] for r in c.execute("pragma table_info(router_tasks)").fetchall()}
+    if "reply_text" not in rt_cols:
+        c.execute("alter table router_tasks add column reply_text text default ''")
+    ic_cols = {r["name"] for r in c.execute("pragma table_info(inbox_commands)").fetchall()}
+    if "router_finish_status" not in ic_cols:
+        c.execute("alter table inbox_commands add column router_finish_status text default ''")
+
+def extract_task_id(text: str):
+    m = TASK_ID_RE.search(text or "")
+    return int(m.group(1)) if m else None
+
+def tick():
+    c = conn()
+    try:
+        ensure_schema(c)
+        replies = c.execute("""
+        select id, coalesce(text,'') as text
+        from inbox_commands
+        where coalesce(router_finish_status,'')=''
+          and coalesce(source,'')='private_reply_bridge'
+          and coalesce(text,'')<>''
+        order by id asc
+        limit 20
+        """).fetchall()
+        done = 0
+        touched = 0
+        for r in replies:
+            tid = extract_task_id(r["text"])
+            if not tid:
+                c.execute("""
+                update inbox_commands
+                set router_finish_status='missing_task_id',
+                    updated_at=datetime('now')
+                where id=?
+                """, (r["id"],))
+                touched += 1
+                continue
+
+            task = c.execute("""
+            select id, target_bot
+            from router_tasks
+            where id=?
+              and coalesce(status,'')='started'
+            limit 1
+            """, (tid,)).fetchone()
+
+            if not task:
+                c.execute("""
+                update inbox_commands
+                set router_finish_status='no_task_id_match',
+                    updated_at=datetime('now')
+                where id=?
+                """, (r["id"],))
+                touched += 1
+                continue
+
+            c.execute("""
+            update router_tasks
+            set status='done',
+                finished_at=datetime('now'),
+                updated_at=datetime('now'),
+                reply_text=?,
+                result_text=coalesce(result_text,'') || ' | reply_received'
+            where id=?
+            """, (r["text"], task["id"]))
+
+            c.execute("""
+            update inbox_commands
+            set router_finish_status='applied',
+                updated_at=datetime('now')
+            where id=?
+            """, (r["id"],))
+
+            if (task["target_bot"] or "") == "kaikun04":
+                c.execute("""
+                create table if not exists ai_thought_log(
+                  id integer primary key autoincrement,
+                  task_id integer,
+                  thought text,
+                  created_at text default (datetime('now'))
+                )
+                """)
+                c.execute(
+                    "insert into ai_thought_log(task_id, thought) values(?, ?)",
+                    (task["id"], (r["text"] or "")[:2000])
+                )
+
+            done += 1
+            touched += 1
+
+        if touched:
+            c.commit()
+        print(f"[router_reply_finisher_v1] done={done} touched={touched} replies={len(replies)}", flush=True)
+    finally:
+        c.close()
+
+def main():
+    while True:
+        try:
+            tick()
+        except Exception as e:
+            print(f"[router_reply_finisher_v1] err={e!r}", flush=True)
+        time.sleep(SLEEP)
+
+if __name__ == "__main__":
+    main()

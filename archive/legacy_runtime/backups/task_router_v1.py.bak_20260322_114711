@@ -1,0 +1,221 @@
+from __future__ import annotations
+import hashlib
+import os
+import sqlite3
+import time
+
+DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+SLEEP = float(os.environ.get("TASK_ROUTER_SLEEP", "5"))
+DEDUP_SECONDS = int(os.environ.get("TASK_ROUTER_DEDUP_SECONDS", "900"))
+THINK_MIN_LEN = int(os.environ.get("TASK_ROUTER_THINK_MIN_LEN", "140"))
+
+ANALYSIS_HINTS = [
+    "分析", "比較", "設計", "構造", "統合", "監査", "精査", "整理", "戦略",
+    "原因", "なぜ", "どうすべき", "ボトルネック", "差分", "レビュー", "改善案",
+    "guard", "pipeline", "schema", "db", "router", "watcher", "runtime", "docs"
+]
+
+STATUS_HINTS = [
+    "進捗", "状態", "いま", "今", "動いてる", "動作", "生きてる", "health",
+    "status", "watcher", "open_pr", "異常", "大丈夫", "問題ある"
+]
+
+HEALTH_HINTS = [
+    "health", "alive", "uptime", "pid", "起動", "停止", "落ちた", "restart"
+]
+
+LIST_HINTS = [
+    "一覧", "リスト", "どれ", "何が", "候補", "上位", "ランキング"
+]
+
+DOC_HINTS = [
+    "docs", "readme", "handover", "md", "文章", "文面"
+]
+
+def conn():
+    c = sqlite3.connect(DB, timeout=30)
+    c.row_factory = sqlite3.Row
+    c.execute("pragma busy_timeout=30000")
+    try:
+        c.execute("pragma journal_mode=WAL")
+    except Exception:
+        pass
+    return c
+
+def ensure_schema(c):
+    c.execute("""
+    create table if not exists router_tasks(
+      id integer primary key autoincrement,
+      source_command_id integer,
+      mode text not null default 'FAST',
+      target_bot text not null default 'kaikun02',
+      task_text text not null,
+      status text not null default 'new',
+      created_at text default (datetime('now')),
+      updated_at text default (datetime('now'))
+    )
+    """)
+    cols = {r["name"] for r in c.execute("pragma table_info(router_tasks)").fetchall()}
+    add_cols = {
+        "started_at": "text default ''",
+        "finished_at": "text default ''",
+        "result_text": "text default ''",
+        "sent_message_id": "text default ''",
+        "reply_text": "text default ''",
+        "user_key": "text default ''",
+        "intent": "text default ''",
+        "task_key": "text default ''",
+        "parent_task_id": "integer default null",
+    }
+    for k, v in add_cols.items():
+        if k not in cols:
+            c.execute(f"alter table router_tasks add column {k} {v}")
+    c.execute("create index if not exists idx_router_tasks_status on router_tasks(status, target_bot, mode)")
+    c.execute("create index if not exists idx_router_tasks_user_intent on router_tasks(user_key, intent, status, id desc)")
+
+    cols2 = {r["name"] for r in c.execute("pragma table_info(inbox_commands)").fetchall()}
+    add_cols2 = {
+        "router_status": "text default ''",
+        "router_target": "text default ''",
+        "router_mode": "text default ''",
+        "router_finish_status": "text default ''",
+    }
+    for k, v in add_cols2.items():
+        if k not in cols2:
+            c.execute(f"alter table inbox_commands add column {k} {v}")
+
+def normalize_text(text: str):
+    return " ".join((text or "").strip().split())
+
+def shorten(text: str):
+    lines = (text or "").splitlines()
+    if len(lines) > 18:
+        lines = lines[:18]
+    return "\n".join(lines).strip()
+
+def detect_intent(text: str):
+    t = normalize_text(text).lower()
+    if any(x.lower() in t for x in STATUS_HINTS):
+        return "status"
+    if any(x.lower() in t for x in HEALTH_HINTS):
+        return "health"
+    if any(x.lower() in t for x in LIST_HINTS):
+        return "list"
+    if any(x.lower() in t for x in DOC_HINTS):
+        return "doc"
+    if any(x.lower() in t for x in ANALYSIS_HINTS):
+        return "analysis"
+    return "general"
+
+def is_simple_question(text: str, intent: str):
+    t = normalize_text(text)
+    if not t:
+        return True
+    if intent in ("status", "health", "list", "doc"):
+        return True
+    if len(t) < THINK_MIN_LEN and ("\n" not in t) and not any(x in t.lower() for x in [h.lower() for h in ANALYSIS_HINTS]):
+        return True
+    return False
+
+def classify(text: str):
+    raw = normalize_text(text)
+    t = raw.lower()
+    intent = detect_intent(raw)
+
+    if "[fast]" in t:
+        return "FAST", "kaikun02", intent
+    if "[think]" in t or "[deep]" in t:
+        return "THINK", "kaikun04", "analysis"
+
+    if is_simple_question(raw, intent):
+        return "FAST", "kaikun02", intent
+
+    if len(raw) >= THINK_MIN_LEN or any(x.lower() in t for x in ANALYSIS_HINTS):
+        return "THINK", "kaikun04", "analysis"
+
+    return "FAST", "kaikun02", intent
+
+def build_task_key(user_key: str, intent: str, text: str):
+    base = f"{user_key}|{intent}|{normalize_text(text).lower()}"
+    return hashlib.sha1(base.encode("utf-8")).hexdigest()
+
+def find_recent_open_task(c, user_key: str, intent: str):
+    return c.execute("""
+        select id, mode, target_bot, status
+        from router_tasks
+        where coalesce(user_key,'')=?
+          and coalesce(intent,'')=?
+          and coalesce(status,'') in ('new','started')
+          and datetime(coalesce(updated_at, created_at, datetime('now'))) >= datetime('now', ?)
+        order by id desc
+        limit 1
+    """, (user_key, intent, f"-{DEDUP_SECONDS} seconds")).fetchone()
+
+def tick():
+    c = conn()
+    try:
+        ensure_schema(c)
+        rows = c.execute("""
+        select
+          id,
+          coalesce(chat_id,'') as chat_id,
+          coalesce(text,'') as text
+        from inbox_commands
+        where coalesce(router_status,'')=''
+          and coalesce(router_target,'')=''
+          and coalesce(text,'')<>''
+          and coalesce(source,'')<>'private_reply_bridge'
+        order by id asc
+        limit 20
+        """).fetchall()
+        done = 0
+        for r in rows:
+            rid = int(r["id"])
+            raw = r["text"] or ""
+            user_key = str(r["chat_id"] or "")
+            mode, target, intent = classify(raw)
+            task_key = build_task_key(user_key, intent, raw)
+
+            dup = find_recent_open_task(c, user_key, intent)
+            if dup:
+                c.execute("""
+                    update inbox_commands
+                    set router_status=?, router_target=?, router_mode=?, updated_at=datetime('now')
+                    where id=?
+                """, (f"reused:{dup['id']}", dup["target_bot"], dup["mode"], rid))
+                done += 1
+                continue
+
+            task_text = f"[{mode}][{intent.upper()}]\n{shorten(raw)}"
+            c.execute("""
+                insert into router_tasks(
+                  source_command_id, mode, target_bot, task_text, status,
+                  created_at, updated_at, user_key, intent, task_key
+                )
+                values(?,?,?,?, 'new', datetime('now'), datetime('now'), ?, ?, ?)
+            """, (rid, mode, target, task_text, user_key, intent, task_key))
+            c.execute("""
+                update inbox_commands
+                set router_status='routed',
+                    router_target=?,
+                    router_mode=?,
+                    updated_at=datetime('now')
+                where id=?
+            """, (target, mode, rid))
+            done += 1
+        if done:
+            c.commit()
+        print(f"[task_router_v1] done={done}", flush=True)
+    finally:
+        c.close()
+
+def main():
+    while True:
+        try:
+            tick()
+        except Exception as e:
+            print(f"[task_router_v1] err={e!r}", flush=True)
+        time.sleep(SLEEP)
+
+if __name__ == "__main__":
+    main()
