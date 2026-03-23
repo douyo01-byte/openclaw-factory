@@ -64,3 +64,19 @@ from decider_feedback_metrics
 order by sample_count desc, source_ai asc, decision asc, matched_band asc
 limit 30;
 "
+
+echo
+echo '===== latest-only old payload count ====='
+sqlite3 "$DB" "
+with latest as (
+  select proposal_id, max(id) as max_id
+  from dev_events
+  where event_type='decider_patterns_applied'
+  group by proposal_id
+)
+select count(*)
+from latest l
+join dev_events de on de.id = l.max_id
+where json_extract(de.payload,'$.matched_count') is null
+   or coalesce(json_extract(de.payload,'$.matched_count'),0) <= 0;
+"
