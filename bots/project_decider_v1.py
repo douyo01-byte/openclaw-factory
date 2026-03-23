@@ -39,6 +39,78 @@ def source_bias(source_ai, rates):
     rate = rates.get(s, 0.0)
     return round(rate * 0.6, 4)
 
+
+def load_cluster_bias(conn):
+    rows = conn.execute("""
+        select
+          lower(coalesce(source_ai,'')) as source_ai,
+          lower(coalesce(target_system,'')) as target_system,
+          lower(coalesce(improvement_type,'')) as improvement_type,
+          coalesce(success_count,0) as success_count,
+          coalesce(bias_score,0) as bias_score
+        from cluster_bias
+        where coalesce(source_ai,'') <> ''
+    """).fetchall()
+    out = {}
+    for source_ai, target_system, improvement_type, success_count, bias_score in rows:
+        out[(source_ai, target_system, improvement_type)] = (
+            int(success_count or 0),
+            float(bias_score or 0),
+        )
+    return out
+
+def cluster_bias(source_ai, title, desc, cluster_map):
+    s = (source_ai or "").strip().lower()
+    if not s:
+        return 0.0
+    text = f"{title or ''} {desc or ''}".lower()
+
+    target = ""
+    improve = ""
+
+    if "watcher" in text:
+        target = "watcher"
+    elif "telegram" in text:
+        target = "telegram"
+    elif "executor" in text:
+        target = "executor"
+    elif "database" in text or "sqlite" in text or "db" in text:
+        target = "database"
+    elif "learning" in text:
+        target = "learning"
+    elif "brain" in text:
+        target = "brain"
+
+    if "stabilize" in text or "安 定" in text or "不 具 合" in text or "障 害" in text:
+        improve = "stabilize"
+    elif "optimize" in text or "最 適 化" in text:
+        improve = "optimize"
+    elif "refactor" in text or "整 理" in text:
+        improve = "refactor"
+    elif "monitor" in text or "監 視" in text:
+        improve = "monitor"
+    elif "extend" in text or "拡 張" in text:
+        improve = "extend"
+
+    if not target and not improve:
+        return 0.0
+
+    best = 0.0
+    for (cs, ct, ci), (succ, bias) in cluster_map.items():
+        if cs != s:
+            continue
+        if target and ct and ct != target:
+            continue
+        if improve and ci and ci != improve:
+            continue
+        if succ < 3:
+            bias *= 0.5
+        elif succ < 6:
+            bias *= 0.8
+        best = max(best, bias)
+
+    return min(max(best, -0.9), 0.9)
+
 def load_patterns(conn):
     rows = conn.execute(
         """
@@ -50,7 +122,7 @@ def load_patterns(conn):
     ).fetchall()
     return [(str(r[0] or "").strip().lower(), float(r[1] or 0)) for r in rows if str(r[0] or "").strip()]
 
-def score(title, desc, patterns, source_ai="", source_rates=None):
+def score(title, desc, patterns, source_ai="", source_rates=None, cluster_map=None):
     text = f"{title or ''} {desc or ''}".lower()
     priority = 0.0
     for k in KEYWORDS_EXECUTE:
@@ -64,6 +136,7 @@ def score(title, desc, patterns, source_ai="", source_rates=None):
             priority += weight
             matched.append((token, weight))
     priority += source_bias(source_ai, source_rates or {})
+    priority += cluster_bias(source_ai, title, desc, cluster_map or {})
     if priority > 2.4:
         decision = "execute_now"
     elif priority > 1.1:
@@ -77,6 +150,7 @@ def main():
     conn.row_factory = sqlite3.Row
     patterns = load_patterns(conn)
     source_rates = load_source_merge_rates(conn)
+    cluster_map = load_cluster_bias(conn)
     rows = conn.execute(
         """
         select id, title, description, status, project_decision, coalesce(source_ai,'') as source_ai
@@ -94,6 +168,7 @@ def main():
             patterns,
             r["source_ai"],
             source_rates,
+            cluster_map,
         )
         conn.execute(
             """
