@@ -213,18 +213,18 @@ def looks_like_code_or_log(text):
 def should_use_think(text):
     raw = normalize_gate_text(text)
     t = raw.lower()
-    if looks_like_code_or_log(text):
-        return False
+    analysis_words = ["比較", "分析", "設計", "構造", "統合", "方針", "根拠", "整理"]
     if "[think]" in t or "[deep]" in t:
-        return True
-    strong = ["比較", "分析", "設計", "構造", "統合", "方針", "根拠", "整理"]
-    return len(raw) >= 180 and any(k in raw for k in strong)
+        return len(raw) >= 40
+    if len(raw) < 120:
+        return False
+    return any(k in raw for k in analysis_words)
 
 def classify_input(text):
     raw = normalize_gate_text(text)
     if looks_like_code_or_log(text):
         return "code_or_log"
-    if any(k in raw for k in ["進捗", "状態", "status", "health"]):
+    if any(k in raw for k in ["進捗", "状態", "status", "health", "要約", "まとめ"]):
         return "status"
     if any(k in raw for k in ["改善", "強化"]):
         return "improvement"
