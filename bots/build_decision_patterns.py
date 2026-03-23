@@ -44,14 +44,35 @@ def load_learning_results(conn):
     try:
         rows = conn.execute("""
             select
-              lower(coalesce(pattern,'')) as pattern,
-              coalesce(score,0) as score
+              lower(trim(
+                coalesce(title,'') || ' ' ||
+                coalesce(source_ai,'') || ' ' ||
+                coalesce(target_system,'') || ' ' ||
+                coalesce(improvement_type,'') || ' ' ||
+                coalesce(impact_reason,'') || ' ' ||
+                coalesce(result_type,'') || ' ' ||
+                coalesce(result_note,'') || ' ' ||
+                coalesce(learning_summary,'')
+              )) as learning_text,
+              coalesce(result_score,0) as result_score,
+              coalesce(impact_score,0) as impact_score,
+              coalesce(success_flag,0) as success_flag
             from learning_results
-            where coalesce(pattern,'') <> ''
-            order by coalesce(score,0) desc
-            limit 200
+            order by id desc
+            limit 500
         """).fetchall()
-        return [(r[0], float(r[1] or 0)) for r in rows]
+        out = []
+        for learning_text, result_score, impact_score, success_flag in rows:
+            text = str(learning_text or '').strip()
+            if not text:
+                continue
+            score = float(result_score or 0) + float(impact_score or 0)
+            if int(success_flag or 0) == 1:
+                score += 2.0
+            else:
+                score -= 1.0
+            out.append((text, score))
+        return out
     except Exception:
         return []
 
