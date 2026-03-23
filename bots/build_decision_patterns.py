@@ -11,7 +11,11 @@ BAD = {
     "decision","reason","score","adopted","held","dropped","item",
     "reflection_worker_v1","db_updated","git_push","git_base","picked",
     "dev","cli","workspace","main","branch","proposal","open","merged",
-    "2026","2025","10z"
+    "2026","2025","10z",
+    "source_ai","target","type","impact","result","core","and","with","after",
+    "bots","loop","guard","medium","low","normal","change","code_change",
+    "mothership","innovation_llm_engine_v1","brain_supply","idea_pool",
+    "kaikun04","cto","v1.py","v2.py"
 }
 
 ALLOW_HINT = {
