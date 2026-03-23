@@ -100,10 +100,12 @@ def run_once():
                 text = normalize_text(raw_text)
                 if is_noise(text):
                     mark_ingested(c, r["id"], "skipped_noise")
+                    c.commit()
                     done += 1
                     continue
                 if recent_duplicate(c, r["chat_id"], text):
                     mark_ingested(c, r["id"], "skipped_dup")
+                    c.commit()
                     done += 1
                     continue
                 mode = classify_mode(text)
@@ -130,10 +132,11 @@ def run_once():
                     ),
                 )
                 mark_ingested(c, r["id"], "yes")
+                c.commit()
                 done += 1
             except Exception as e:
+                c.rollback()
                 print(f"[private_reply_to_inbox_v1][row_error] id={r['id']} message_id={r['message_id']} err={e!r}", flush=True)
-        c.commit()
     print(f"[private_reply_to_inbox_v1] done={done}", flush=True)
 
 if __name__ == "__main__":
