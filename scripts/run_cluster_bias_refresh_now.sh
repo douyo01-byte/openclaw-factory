@@ -8,3 +8,4 @@ python3 bots/project_decider_v1.py
 python3 bots/decider_feedback_learning_v1.py
 ./scripts/check_cluster_bias_state.sh
 ./scripts/check_private_reply_flow.sh
+./scripts/check_decider_tuning_state.sh
