@@ -44,32 +44,82 @@ def load_learning_results(conn):
     try:
         rows = conn.execute("""
             select
-              lower(coalesce(pattern,'')) as pattern,
-              coalesce(score,0) as score
+              lower(trim(
+                coalesce(title,'') || ' ' ||
+                coalesce(source_ai,'') || ' ' ||
+                coalesce(target_system,'') || ' ' ||
+                coalesce(improvement_type,'') || ' ' ||
+                coalesce(impact_reason,'') || ' ' ||
+                coalesce(result_type,'') || ' ' ||
+                coalesce(result_note,'') || ' ' ||
+                coalesce(learning_summary,'')
+              )) as learning_text,
+              coalesce(result_score,0) as result_score,
+              coalesce(impact_score,0) as impact_score,
+              coalesce(success_flag,0) as success_flag
             from learning_results
-            where coalesce(pattern,'') <> ''
-            order by coalesce(score,0) desc
-            limit 200
+            order by id desc
+            limit 500
         """).fetchall()
-        return [(r[0], float(r[1] or 0)) for r in rows]
+        out = []
+        for learning_text, result_score, impact_score, success_flag in rows:
+            text = str(learning_text or '').strip()
+            if not text:
+                continue
+            score = float(result_score or 0) + float(impact_score or 0)
+            if int(success_flag or 0) == 1:
+                score += 2.0
+            else:
+                score -= 1.0
+            out.append((text, score))
+        return out
     except Exception:
         return []
 
 def merge_learning_into_scores(scored, learning_rows):
     extra = {}
+    blocked_prefixes = ("impact=", "result=", "source_ai=", "target=", "type=")
+    blocked_exact = {
+        "success", "merged", "normal", "change", "code_change"
+    }
     for pat, sc in learning_rows:
-        for tok in (pat or "").split():
-            tok = tok.strip()
-            if len(tok) < 2:
+        for token in tok(pat or ""):
+            token = token.strip().lower()
+            if len(token) < 3:
                 continue
-            extra[tok] = extra.get(tok, 0.0) + min(max(sc / 20.0, -3.0), 3.0)
+            if token in blocked_exact:
+                continue
+            if any(token.startswith(x) for x in blocked_prefixes):
+                continue
+            extra[token] = extra.get(token, 0.0) + min(max(sc / 160.0, -0.45), 0.45)
     merged = []
-    for tok, base in scored:
-        merged.append((tok, base + extra.pop(tok, 0.0)))
-    for tok, w in extra.items():
-        merged.append((tok, w))
+    seen = set()
+    for token, base in scored:
+        w = base + extra.pop(token, 0.0)
+        w = min(max(w, -3.0), 3.0)
+        merged.append((token, w))
+        seen.add(token)
+    for token, w in extra.items():
+        if token in seen:
+            continue
+        merged.append((token, min(max(w, -0.6), 0.6)))
     merged.sort(key=lambda x: abs(x[1]), reverse=True)
     return merged
+
+
+def build_patterns_from_learning_only(learning_rows):
+    scores = {}
+    for learning_text, sc in learning_rows:
+        for token in tok(learning_text or ""):
+            token = token.strip()
+            if not token:
+                continue
+            if token in BAD:
+                continue
+            scores[token] = scores.get(token, 0.0) + min(max(float(sc or 0) / 200.0, -0.35), 0.35)
+    out = [(k, v) for k, v in scores.items() if abs(v) >= 0.05]
+    out.sort(key=lambda x: abs(x[1]), reverse=True)
+    return out
 
 def main():
     conn = sqlite3.connect(DB)
@@ -137,7 +187,9 @@ def main():
     scored.sort(key=lambda x: abs(x[1]), reverse=True)
     learning_rows = load_learning_results(conn)
     scored = merge_learning_into_scores(scored, learning_rows)
-    top = scored[:80]
+    top = [x for x in scored if abs(x[1]) >= 0.08][:80]
+    if not top:
+        top = build_patterns_from_learning_only(learning_rows)[:80]
 
     conn.execute("delete from decision_patterns")
     conn.executemany(
