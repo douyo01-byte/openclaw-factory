@@ -16,7 +16,15 @@ BAD = {
     "bots","loop","guard","medium","low","normal","change","code_change",
     "mothership","innovation_llm_engine_v1","brain_supply","idea_pool",
     "kaikun04","cto","v1.py","v2.py"
-}
+,
+    "high",
+    "success",
+    "state",
+    "audit",
+    "self",
+    "backfilled",
+    "innovation",
+    "automation"}
 
 ALLOW_HINT = {
     "pipeline","speed","logging","merge","executor","automation","safety","security",
@@ -84,12 +92,15 @@ def merge_learning_into_scores(scored, learning_rows):
     extra = {}
     blocked_prefixes = ("impact=", "result=", "source_ai=", "target=", "type=")
     blocked_exact = {
-        "success", "merged", "normal", "change", "code_change"
+        "success", "merged", "normal", "change", "code_change",
+        "source_ai", "target", "type", "impact", "result", "low", "medium", "high",
+        "core", "after", "with", "and", "state", "audit", "loop", "self",
+        "idea_pool", "backfilled", "innovation", "automation"
     }
     for pat, sc in learning_rows:
         for token in tok(pat or ""):
             token = token.strip().lower()
-            if len(token) < 3:
+            if len(token) < 4:
                 continue
             if token in blocked_exact:
                 continue
@@ -120,7 +131,7 @@ def build_patterns_from_learning_only(learning_rows):
                 continue
             if token in BAD:
                 continue
-            scores[token] = scores.get(token, 0.0) + min(max(float(sc or 0) / 200.0, -0.35), 0.35)
+            scores[token] = scores.get(token, 0.0) + min(max(float(sc or 0) / 260.0, -0.22), 0.22)
     out = [(k, v) for k, v in scores.items() if abs(v) >= 0.05]
     out.sort(key=lambda x: abs(x[1]), reverse=True)
     return out
