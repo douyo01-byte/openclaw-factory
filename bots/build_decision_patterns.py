@@ -75,9 +75,20 @@ def load_learning_results(conn):
         """).fetchall()
         out = []
         for learning_text, result_score, impact_score, success_flag in rows:
-            text = str(learning_text or '').strip()
+            parts = [
+                str(learning_text or '').strip(),
+                str(target_system or '').strip(),
+                str(improvement_type or '').strip(),
+                str(source_ai or '').strip(),
+                str(impact_reason or '').strip(),
+                str(result_note or '').strip(),
+            ]
+            text = " ".join([x for x in parts if x]).strip()
             if not text:
                 continue
+            signals = normalize_learning_signals(text)
+            if signals:
+                text = text + " " + " ".join(signals)
             score = float(result_score or 0) + float(impact_score or 0)
             if int(success_flag or 0) == 1:
                 score += 2.0
@@ -135,6 +146,51 @@ def build_patterns_from_learning_only(learning_rows):
     out = [(k, v) for k, v in scores.items() if abs(v) >= 0.05]
     out.sort(key=lambda x: abs(x[1]), reverse=True)
     return out
+
+
+SIGNAL_MAP = {
+    "stabilize": [
+        "障 害", "不 具 合", "安 定", "復 旧", "再 試 行", "通 信 不 安 定", "stability", "stabilize", "retry"
+    ],
+    "logging": [
+        "ロ グ", "監 査", "可 視 化", "trace", "logging", "observability", "audit"
+    ],
+    "executor": [
+        "executor", "実 行", "ジョブ", "queue", "worker", "dispatch"
+    ],
+    "watcher": [
+        "watcher", "監 視", "healthcheck", "health", "検 知", "ops"
+    ],
+    "telegram": [
+        "telegram", "通知", "send", "poll", "chat"
+    ],
+    "router": [
+        "router", "spec_refiner", "chat_router", "ingest", "secretary"
+    ],
+    "database": [
+        "sqlite", "db", "database", "保存", "整 合", "migration"
+    ],
+    "automation": [
+        "automation", "自 動", "自 動 化", "loop", "orchestrator"
+    ],
+    "safety": [
+        "guard", "safety", "secure", "secret", "validation", "fail", "failure"
+    ],
+    "performance": [
+        "最 適 化", "処 理 効 率", "高速", "optimize", "performance"
+    ],
+    "refactor": [
+        "refactor", "整理", "置 き 換 え", "replace", "再 編"
+    ],
+}
+
+def normalize_learning_signals(text):
+    raw = str(text or "").strip().lower()
+    hits = []
+    for label, keys in SIGNAL_MAP.items():
+        if any(k.lower() in raw for k in keys):
+            hits.append(label)
+    return hits
 
 def main():
     conn = sqlite3.connect(DB)
