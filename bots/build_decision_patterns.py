@@ -56,16 +56,14 @@ def load_learning_results(conn):
     try:
         rows = conn.execute("""
             select
-              lower(trim(
-                coalesce(title,'') || ' ' ||
-                coalesce(source_ai,'') || ' ' ||
-                coalesce(target_system,'') || ' ' ||
-                coalesce(improvement_type,'') || ' ' ||
-                coalesce(impact_reason,'') || ' ' ||
-                coalesce(result_type,'') || ' ' ||
-                coalesce(result_note,'') || ' ' ||
-                coalesce(learning_summary,'')
-              )) as learning_text,
+              coalesce(title,'') as title,
+              coalesce(source_ai,'') as source_ai,
+              coalesce(target_system,'') as target_system,
+              coalesce(improvement_type,'') as improvement_type,
+              coalesce(impact_reason,'') as impact_reason,
+              coalesce(result_type,'') as result_type,
+              coalesce(result_note,'') as result_note,
+              coalesce(learning_summary,'') as learning_summary,
               coalesce(result_score,0) as result_score,
               coalesce(impact_score,0) as impact_score,
               coalesce(success_flag,0) as success_flag
@@ -74,15 +72,25 @@ def load_learning_results(conn):
             limit 500
         """).fetchall()
         out = []
-        for learning_text, result_score, impact_score, success_flag in rows:
-            text = str(learning_text or '').strip()
+        for title, source_ai, target_system, improvement_type, impact_reason, result_type, result_note, learning_summary, result_score, impact_score, success_flag in rows:
+            parts = [
+                str(title or '').strip(),
+                str(source_ai or '').strip(),
+                str(target_system or '').strip(),
+                str(improvement_type or '').strip(),
+                str(impact_reason or '').strip(),
+                str(result_type or '').strip(),
+                str(result_note or '').strip(),
+                str(learning_summary or '').strip(),
+            ]
+            text = " ".join([x for x in parts if x]).strip().lower()
             if not text:
                 continue
             score = float(result_score or 0) + float(impact_score or 0)
             if int(success_flag or 0) == 1:
-                score += 2.0
+                score += 1.5
             else:
-                score -= 1.0
+                score -= 0.5
             out.append((text, score))
         return out
     except Exception:
@@ -90,51 +98,32 @@ def load_learning_results(conn):
 
 def merge_learning_into_scores(scored, learning_rows):
     extra = {}
-    blocked_prefixes = ("impact=", "result=", "source_ai=", "target=", "type=")
-    blocked_exact = {
-        "success", "merged", "normal", "change", "code_change",
-        "source_ai", "target", "type", "impact", "result", "low", "medium", "high",
-        "core", "after", "with", "and", "state", "audit", "loop", "self",
-        "idea_pool", "backfilled", "innovation", "automation"
+    blocked = {
+        "success","merged","normal","change","code_change",
+        "low","medium","high","result","impact","source_ai","target","type",
+        "mothership","brain_supply","innovation_llm_engine_v1","cto","ceo",
+        "core","idea_pool"
     }
     for pat, sc in learning_rows:
         for token in tok(pat or ""):
             token = token.strip().lower()
             if len(token) < 4:
                 continue
-            if token in blocked_exact:
+            if token in blocked:
                 continue
-            if any(token.startswith(x) for x in blocked_prefixes):
-                continue
-            extra[token] = extra.get(token, 0.0) + min(max(sc / 160.0, -0.45), 0.45)
+            extra[token] = extra.get(token, 0.0) + min(max(sc / 180.0, -0.35), 0.35)
     merged = []
     seen = set()
     for token, base in scored:
         w = base + extra.pop(token, 0.0)
-        w = min(max(w, -3.0), 3.0)
-        merged.append((token, w))
+        merged.append((token, max(min(w, 3.0), -3.0)))
         seen.add(token)
     for token, w in extra.items():
         if token in seen:
             continue
-        merged.append((token, min(max(w, -0.6), 0.6)))
+        merged.append((token, max(min(w, 0.6), -0.6)))
     merged.sort(key=lambda x: abs(x[1]), reverse=True)
     return merged
-
-
-def build_patterns_from_learning_only(learning_rows):
-    scores = {}
-    for learning_text, sc in learning_rows:
-        for token in tok(learning_text or ""):
-            token = token.strip()
-            if not token:
-                continue
-            if token in BAD:
-                continue
-            scores[token] = scores.get(token, 0.0) + min(max(float(sc or 0) / 260.0, -0.22), 0.22)
-    out = [(k, v) for k, v in scores.items() if abs(v) >= 0.05]
-    out.sort(key=lambda x: abs(x[1]), reverse=True)
-    return out
 
 def main():
     conn = sqlite3.connect(DB)
