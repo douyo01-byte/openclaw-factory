@@ -159,6 +159,8 @@ def main():
         from dev_proposals
         where status='approved'
           and coalesce(project_decision,'') in ('','backlog','archive','execute_now')
+          and coalesce(source_ai,'') <> 'decider_threshold_advisor_v1'
+          and coalesce(title,'') not like '[decider-tuning]%'
         order by id asc
         """
     ).fetchall()
