@@ -109,7 +109,7 @@ def cluster_bias(source_ai, title, desc, cluster_map):
             bias *= 0.8
         best = max(best, bias)
 
-    return min(max(best, -0.9), 0.9)
+    return min(max(best, -0.45), 0.45)
 
 def load_patterns(conn):
     rows = conn.execute(
@@ -136,14 +136,15 @@ def score(title, desc, patterns, source_ai="", source_rates=None, cluster_map=No
             priority += weight
             matched.append((token, weight))
     priority += source_bias(source_ai, source_rates or {})
-    priority += cluster_bias(source_ai, title, desc, cluster_map or {})
+    cb = cluster_bias(source_ai, title, desc, cluster_map or {})
+    priority += cb
     if priority > 2.4:
         decision = "execute_now"
-    elif priority > 1.1:
+    elif priority > 1.15:
         decision = "backlog"
     else:
         decision = "archive"
-    return decision, priority, matched
+    return decision, priority, matched, cb
 
 def main():
     conn = sqlite3.connect(DB)
@@ -162,7 +163,7 @@ def main():
     ).fetchall()
     done = 0
     for r in rows:
-        decision, priority, matched = score(
+        decision, priority, matched, cluster_bias_applied = score(
             r["title"],
             r["description"],
             patterns,
@@ -189,6 +190,7 @@ def main():
                     'decision', ?,
                     'priority', ?,
                     'matched', ?,
+                    'cluster_bias', ?,
                     'source', 'decision_patterns'
                   )
                 )
@@ -198,6 +200,7 @@ def main():
                     decision,
                     priority,
                     ",".join([f"{t}:{w}" for t, w in matched]),
+                    cluster_bias_applied,
                 ),
             )
         done += 1
