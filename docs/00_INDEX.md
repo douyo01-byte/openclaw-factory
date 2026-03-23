@@ -46,3 +46,31 @@
   - jp.openclaw.kaikun02_coo_controller_v1
   - jp.openclaw.dev_pr_watcher_v1
   - jp.openclaw.ingest_private_replies_kaikun04
+
+## Private Reply Mainline
+- Telegram(private)
+- tg_private_chat_log
+- ingest_private_replies_kaikun04
+- private_reply_to_inbox_v1
+- inbox_commands
+- secretary_llm_v1
+- secretary_done
+
+## Router Structure
+- Kaikun02 = FAST
+- Kaikun04 = THINK
+
+## Entry Gate / Input Guard
+- blank / 1文字 / URL単体 は除外
+- duplicate 抑止
+- short = fast
+- long / [THINK] / 分析要求 = think
+
+## Watcher Definition
+### required
+- jp.openclaw.private_reply_to_inbox_v1
+- jp.openclaw.secretary_llm_v1
+
+### observe
+- jp.openclaw.ingest_private_replies_kaikun04
+

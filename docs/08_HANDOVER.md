@@ -65,3 +65,60 @@ cd ~/AI/openclaw-factory-daemon || exit 1
     -> secretary_done
 
 Legacy router runtimes were archived into archive/router_legacy_20260322 and are not part of the active private reply path.
+
+## Private Reply Mainline
+- Telegram(private)
+- tg_private_chat_log
+- ingest_private_replies_kaikun04
+- private_reply_to_inbox_v1
+- inbox_commands
+- secretary_llm_v1
+- secretary_done
+
+## Router Structure
+- Kaikun02 = FAST
+- Kaikun04 = THINK
+
+## Entry Gate / Input Guard
+- blank / 1文字 / URL単体 は除外
+- duplicate 抑止
+- short = fast
+- long / [THINK] / 分析要求 = think
+
+## Watcher Definition
+### required
+- jp.openclaw.private_reply_to_inbox_v1
+- jp.openclaw.secretary_llm_v1
+
+### observe
+- jp.openclaw.ingest_private_replies_kaikun04
+
+## ACTIVE本流
+### dev pipeline
+- dev_proposals
+- spec_refiner_v2
+- dev_executor_v1
+- dev_pr_watcher_v1
+- dev_pr_automerge_v1
+
+### router
+- Kaikun02 = FAST
+- Kaikun04 = THINK
+
+### private reply
+- Telegram(private)
+- tg_private_chat_log
+- ingest_private_replies_kaikun04
+- private_reply_to_inbox_v1
+- inbox_commands
+- secretary_llm_v1
+- secretary_done
+
+### watcher
+#### required
+- jp.openclaw.private_reply_to_inbox_v1
+- jp.openclaw.secretary_llm_v1
+
+#### observe
+- jp.openclaw.ingest_private_replies_kaikun04
+
