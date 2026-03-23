@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>jp.openclaw.cluster_bias_refresh_v1</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>/Users/doyopc/AI/openclaw-factory-daemon/scripts/cluster_bias_refresh_loop.sh</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/doyopc/AI/openclaw-factory-daemon/logs/cluster_bias_refresh.launchd.out</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/doyopc/AI/openclaw-factory-daemon/logs/cluster_bias_refresh.launchd.err</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>DB_PATH</key>
+    <string>/Users/doyopc/AI/openclaw-factory/data/openclaw.db</string>
+  </dict>
+</dict>
+</plist>
