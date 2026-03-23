@@ -182,13 +182,16 @@ def detect_duplicate(text):
     return False
 
 
+def normalize_gate_text(text):
+    return " ".join((text or "").replace("\u3000", " ").split())
+
 def should_use_think(text):
-    t = (text or "").lower()
+    raw = normalize_gate_text(text)
+    t = raw.lower()
     if "[think]" in t or "[deep]" in t:
         return True
-    strong = ["比 較 ", "分 析 ", "設 計 ", "構 造 ", "統 合 ", "方 針 ", "根 拠 "]
-    return any(k in t for k in strong) and len(t) > 120
-
+    strong = ["比較", "分析", "設計", "構造", "統合", "方針", "根拠", "整理"]
+    return len(raw) >= 180 and any(k in raw for k in strong)
 
 def classify_input(text):
     t = (text or "")
@@ -234,12 +237,12 @@ def ask_llm(user_text, context_text):
     if mode == "reject":
         return reason
 
+    mode_hint = "THINK" if use_think else "FAST"
     payload = {
-
         "model": OPENAI_MODEL,
         "messages": [
             {"role": "system", "content": build_system_prompt()},
-            {"role": "user", "content": build_governed_prompt(user_text, context_text)},
+            {"role": "user", "content": f"[ENTRY_MODE:{mode_hint}]\n" + build_governed_prompt(user_text, context_text)},
         ],
     }
     r = requests.post(
@@ -249,7 +252,7 @@ def ask_llm(user_text, context_text):
             "Content-Type": "application/json",
         },
         json=payload,
-        timeout=60,
+        timeout=90 if use_think else 45,
     )
     if not r.ok:
         body = ""
