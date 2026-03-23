@@ -39,6 +39,38 @@ def tok(s):
         cleaned.append(x)
     return cleaned
 
+
+def load_learning_results(conn):
+    try:
+        rows = conn.execute("""
+            select
+              lower(coalesce(pattern,'')) as pattern,
+              coalesce(score,0) as score
+            from learning_results
+            where coalesce(pattern,'') <> ''
+            order by coalesce(score,0) desc
+            limit 200
+        """).fetchall()
+        return [(r[0], float(r[1] or 0)) for r in rows]
+    except Exception:
+        return []
+
+def merge_learning_into_scores(scored, learning_rows):
+    extra = {}
+    for pat, sc in learning_rows:
+        for tok in (pat or "").split():
+            tok = tok.strip()
+            if len(tok) < 2:
+                continue
+            extra[tok] = extra.get(tok, 0.0) + min(max(sc / 20.0, -3.0), 3.0)
+    merged = []
+    for tok, base in scored:
+        merged.append((tok, base + extra.pop(tok, 0.0)))
+    for tok, w in extra.items():
+        merged.append((tok, w))
+    merged.sort(key=lambda x: abs(x[1]), reverse=True)
+    return merged
+
 def main():
     conn = sqlite3.connect(DB)
     conn.execute(
@@ -48,12 +80,17 @@ def main():
     pos = collections.Counter()
     neg = collections.Counter()
 
-    rows = conn.execute("""
-      select decision, reason
-      from decision_events
-      order by id desc
-      limit 3000
-    """).fetchall()
+    has_decision_events = conn.execute(
+        "select count(*) from sqlite_master where type='table' and name='decision_events'"
+    ).fetchone()[0]
+    rows = []
+    if has_decision_events:
+        rows = conn.execute("""
+          select decision, reason
+          from decision_events
+          order by id desc
+          limit 3000
+        """).fetchall()
 
     for decision, reason in rows:
         d = (decision or "").strip().lower()
@@ -65,12 +102,17 @@ def main():
         elif d in {"hold", "reject", "rejected", "drop", "closed", "archive"}:
             neg.update(tokens)
 
-    retro_rows = conn.execute("""
-      select text
-      from retrospectives
-      order by id desc
-      limit 500
-    """).fetchall()
+    has_retrospectives = conn.execute(
+        "select count(*) from sqlite_master where type='table' and name='retrospectives'"
+    ).fetchone()[0]
+    retro_rows = []
+    if has_retrospectives:
+        retro_rows = conn.execute("""
+          select text
+          from retrospectives
+          order by id desc
+          limit 500
+        """).fetchall()
 
     for (text,) in retro_rows:
         tokens = tok(text or "")
@@ -93,7 +135,9 @@ def main():
         scored.append((w, s))
 
     scored.sort(key=lambda x: abs(x[1]), reverse=True)
-    top = scored[:60]
+    learning_rows = load_learning_results(conn)
+    scored = merge_learning_into_scores(scored, learning_rows)
+    top = scored[:80]
 
     conn.execute("delete from decision_patterns")
     conn.executemany(
