@@ -48,3 +48,19 @@ where event_type='decider_patterns_applied'
 order by id desc
 limit 20;
 "
+
+
+echo
+echo '===== decider feedback summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(source_ai,'') as source_ai,
+  coalesce(decision,'') as decision,
+  coalesce(matched_band,'') as matched_band,
+  sample_count,
+  round(avg_source_bias,4),
+  round(avg_cluster_bias,4)
+from decider_feedback_metrics
+order by sample_count desc, source_ai asc, decision asc, matched_band asc
+limit 30;
+"
