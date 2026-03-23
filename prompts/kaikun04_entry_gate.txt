@@ -1,29 +1,23 @@
 [OpenClaw Mandatory Entry Gate]
-
 Before any proposal, implementation, classification, or response, Kaikun04 must do this in order:
-
 1. Read:
 - ~/AI/openclaw-factory-docs/docs/01_SINGLE_SOURCE_OF_TRUTH.md
 - ~/AI/openclaw-factory-docs/docs/02_ROLE_REGISTRY.md
 - ~/AI/openclaw-factory-docs/docs/03_KAIKUN04_RUNTIME_RULE.md
-
 2. Decide classification:
 - Mainline
 - Meta
 - Business
-
 3. Check duplication:
 - same input
 - same process
 - same purpose
 - same timing
 - absorbable by mode addition
-
 4. Decide integration first:
 - existing bot integration
 - mode addition
 - only if impossible, consider new bot
-
 5. Reject by default:
 - similar-role bot addition
 - bridge addition
@@ -38,12 +32,18 @@ Output order must always be:
 3. Duplicate Risk
 4. Integration Decision
 5. Action
-\n
+
 ## THINK使用条件
 - [THINK] or [DEEP] 明示あり
 - かつ 長文 or 分析ワードあり
+- 単なる説明要求や status は THINK化しない
 
 ## THINK抑制
-- 単なる説明要求は FAST相当の短い答え
 - status / health / docs / handover は簡潔優先
 - private reply / router / watcher / docs の単語だけでは THINK化しない
+- コード貼り付けや長文ログは、まず要点整理モードで返す
+
+## Code/Log Guard
+- コードやログ貼り付けは全文解説しない
+- まず「何が起きたか / 問題箇所 / 次の一手」を短く返す
+- 新 bot / watcher / bridge / normalizer を安易に提案しない

@@ -176,52 +176,94 @@ def enforce_governance(user_text):
 
 def detect_duplicate(text):
     keywords = ["selector", "bridge", "normalizer"]
+    raw = normalize_gate_text(text).lower()
     for k in keywords:
-        if k in (text or "").lower():
+        if k in raw:
             return True
     return False
-
 
 def normalize_gate_text(text):
     return " ".join((text or "").replace("\u3000", " ").split())
 
+def looks_like_code_or_log(text):
+    raw = text or ""
+    if len(raw) >= 400:
+        return True
+    markers = [
+        "cd ~/AI/",
+        "git ",
+        "launchctl ",
+        "sqlite3 ",
+        "python3 - <<'PY'",
+        "Traceback (most recent call last):",
+        'File "',
+        "select ",
+        "from ",
+        "where ",
+        "cat > ",
+        "#!/bin/zsh",
+    ]
+    hit = sum(1 for m in markers if m in raw)
+    if hit >= 2:
+        return True
+    if raw.count("\n") >= 8:
+        return True
+    return False
+
 def should_use_think(text):
     raw = normalize_gate_text(text)
     t = raw.lower()
+    if looks_like_code_or_log(text):
+        return False
     if "[think]" in t or "[deep]" in t:
         return True
     strong = ["比較", "分析", "設計", "構造", "統合", "方針", "根拠", "整理"]
     return len(raw) >= 180 and any(k in raw for k in strong)
 
 def classify_input(text):
-    t = (text or "")
-    if "進捗" in t or "状態" in t:
+    raw = normalize_gate_text(text)
+    if looks_like_code_or_log(text):
+        return "code_or_log"
+    if any(k in raw for k in ["進捗", "状態", "status", "health"]):
         return "status"
-    if "改善" in t or "強化" in t:
+    if any(k in raw for k in ["改善", "強化"]):
         return "improvement"
-    if "追加" in t or "作りたい" in t:
+    if any(k in raw for k in ["追加", "作りたい"]):
         return "feature"
-    if "緊急" in t:
+    if "緊急" in raw:
         return "urgent"
     return "other"
 
 def build_governed_prompt(user_text, context_text):
+    input_type = classify_input(user_text)
+    extra = ""
+    if input_type == "code_or_log":
+        extra = """
+
+【 Code/Log Handling】
+- コードやログの貼り付けは全文解説しない
+- まず 1) 何が起きたか 2) 問題箇所 3) 次の一手 を短く返す
+- 新しい bot / watcher / bridge を安易に提案しない
+"""
     rule = """
-【Execution Rule】
+【 Execution Rule】
 1. SINGLE SOURCE確認
 2. ROLE確認
 3. 重複チェック
 4. 統合先決定
 5. 新規禁止
-
-【Absolute Rules】
+【 Absolute Rules】
 - 新規bot禁止
+- watcher増殖禁止
+- bridge追加禁止
+- normalizer追加禁止
 - 重複機能禁止
 - 既存優先統合
-"""
-    return f"{rule}\n\ninput:\n{user_text}\n\ncontext:\n{context_text}"
+""" + extra
+    return f"{rule}\n\ninput_type:\n{input_type}\n\ninput:\n{user_text}\n\ncontext:\n{context_text}"
 
 def ask_llm(user_text, context_text):
+
     use_think = should_use_think(user_text)
 
     if not OPENAI_API_KEY:
