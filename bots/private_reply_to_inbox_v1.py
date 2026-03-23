@@ -95,41 +95,44 @@ def run_once():
             """
         ).fetchall()
         for r in rows:
-            raw_text = r["text"] or ""
-            text = normalize_text(raw_text)
-            if is_noise(text):
-                mark_ingested(c, r["id"], "skipped_noise")
-                done += 1
-                continue
-            if recent_duplicate(c, r["chat_id"], text):
-                mark_ingested(c, r["id"], "skipped_dup")
-                done += 1
-                continue
-            mode = classify_mode(text)
-            c.execute(
-                """
-                insert or ignore into inbox_commands(
-                    source, text, status, created_at, updated_at,
-                    chat_id, message_id, received_at, update_id, processed,
-                    router_status, router_target, router_mode, router_finish_status
-                ) values(
-                    ?, ?, 'pending', datetime('now'), datetime('now'),
-                    ?, ?, ?, ?, 0,
-                    '', 'secretary', ?, ''
+            try:
+                raw_text = r["text"] or ""
+                text = normalize_text(raw_text)
+                if is_noise(text):
+                    mark_ingested(c, r["id"], "skipped_noise")
+                    done += 1
+                    continue
+                if recent_duplicate(c, r["chat_id"], text):
+                    mark_ingested(c, r["id"], "skipped_dup")
+                    done += 1
+                    continue
+                mode = classify_mode(text)
+                c.execute(
+                    """
+                    insert or ignore into inbox_commands(
+                        source, text, status, created_at, updated_at,
+                        chat_id, message_id, received_at, update_id, processed,
+                        router_status, router_target, router_mode, router_finish_status
+                    ) values(
+                        ?, ?, 'pending', datetime('now'), datetime('now'),
+                        ?, ?, ?, ?, 0,
+                        '', 'secretary', ?, ''
+                    )
+                    """,
+                    (
+                        "tg_private_chat_log",
+                        text,
+                        str(r["chat_id"]),
+                        int(r["message_id"]),
+                        r["created_at"] or "",
+                        int(r["update_id"]),
+                        mode,
+                    ),
                 )
-                """,
-                (
-                    "tg_private_chat_log",
-                    text,
-                    str(r["chat_id"]),
-                    int(r["message_id"]),
-                    r["created_at"] or "",
-                    int(r["update_id"]),
-                    mode,
-                ),
-            )
-            mark_ingested(c, r["id"], "yes")
-            done += 1
+                mark_ingested(c, r["id"], "yes")
+                done += 1
+            except Exception as e:
+                print(f"[private_reply_to_inbox_v1][row_error] id={r['id']} message_id={r['message_id']} err={e!r}", flush=True)
         c.commit()
     print(f"[private_reply_to_inbox_v1] done={done}", flush=True)
 
