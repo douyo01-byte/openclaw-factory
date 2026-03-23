@@ -35,9 +35,9 @@ def source_bias(source_ai, rates):
     if not s:
         return 0.0
     if s == "ceo":
-        return 2.5
+        return 1.2
     rate = rates.get(s, 0.0)
-    return round(rate * 2.0, 4)
+    return round(rate * 0.8, 4)
 
 def load_patterns(conn):
     rows = conn.execute(
@@ -64,9 +64,9 @@ def score(title, desc, patterns, source_ai="", source_rates=None):
             priority += weight
             matched.append((token, weight))
     priority += source_bias(source_ai, source_rates or {})
-    if priority > 0.7:
+    if priority > 2.2:
         decision = "execute_now"
-    elif priority > 0.4:
+    elif priority > 1.0:
         decision = "backlog"
     else:
         decision = "archive"

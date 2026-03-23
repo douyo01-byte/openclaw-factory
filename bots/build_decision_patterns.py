@@ -57,19 +57,48 @@ def load_learning_results(conn):
 
 def merge_learning_into_scores(scored, learning_rows):
     extra = {}
+    blocked_prefixes = ("impact=", "result=", "source_ai=", "target=", "type=")
+    blocked_exact = {
+        "success", "merged", "normal", "change", "code_change"
+    }
     for pat, sc in learning_rows:
-        for tok in (pat or "").split():
-            tok = tok.strip()
-            if len(tok) < 2:
+        for tok in tok(pat or ""):
+            tok = tok.strip().lower()
+            if len(tok) < 3:
                 continue
-            extra[tok] = extra.get(tok, 0.0) + min(max(sc / 20.0, -3.0), 3.0)
+            if tok in blocked_exact:
+                continue
+            if any(tok.startswith(x) for x in blocked_prefixes):
+                continue
+            extra[tok] = extra.get(tok, 0.0) + min(max(sc / 160.0, -0.45), 0.45)
     merged = []
-    for tok, base in scored:
-        merged.append((tok, base + extra.pop(tok, 0.0)))
-    for tok, w in extra.items():
-        merged.append((tok, w))
+    seen = set()
+    for token, base in scored:
+        w = base + extra.pop(token, 0.0)
+        w = min(max(w, -3.0), 3.0)
+        merged.append((token, w))
+        seen.add(token)
+    for token, w in extra.items():
+        if token in seen:
+            continue
+        merged.append((token, min(max(w, -0.6), 0.6)))
     merged.sort(key=lambda x: abs(x[1]), reverse=True)
     return merged
+
+
+def build_patterns_from_learning_only(learning_rows):
+    scores = {}
+    for learning_text, sc in learning_rows:
+        for tok in tok(learning_text or ""):
+            tok = tok.strip()
+            if not tok:
+                continue
+            if tok in BAD:
+                continue
+            scores[tok] = scores.get(tok, 0.0) + min(max(float(sc or 0) / 200.0, -0.35), 0.35)
+    out = [(k, v) for k, v in scores.items() if abs(v) >= 0.05]
+    out.sort(key=lambda x: abs(x[1]), reverse=True)
+    return out
 
 def main():
     conn = sqlite3.connect(DB)
@@ -137,7 +166,9 @@ def main():
     scored.sort(key=lambda x: abs(x[1]), reverse=True)
     learning_rows = load_learning_results(conn)
     scored = merge_learning_into_scores(scored, learning_rows)
-    top = scored[:80]
+    top = [x for x in scored if abs(x[1]) >= 0.08][:80]
+    if not top:
+        top = build_patterns_from_learning_only(learning_rows)[:80]
 
     conn.execute("delete from decision_patterns")
     conn.executemany(
