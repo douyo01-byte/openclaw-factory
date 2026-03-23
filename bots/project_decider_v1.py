@@ -135,7 +135,8 @@ def score(title, desc, patterns, source_ai="", source_rates=None, cluster_map=No
         if token and token in text:
             priority += weight
             matched.append((token, weight))
-    priority += source_bias(source_ai, source_rates or {})
+    sb = source_bias(source_ai, source_rates or {})
+    priority += sb
     cb = cluster_bias(source_ai, title, desc, cluster_map or {})
     priority += cb
     if priority > 2.4:
@@ -144,7 +145,7 @@ def score(title, desc, patterns, source_ai="", source_rates=None, cluster_map=No
         decision = "backlog"
     else:
         decision = "archive"
-    return decision, priority, matched, cb
+    return decision, priority, matched, sb, cb
 
 def main():
     conn = sqlite3.connect(DB)
@@ -163,7 +164,7 @@ def main():
     ).fetchall()
     done = 0
     for r in rows:
-        decision, priority, matched, cluster_bias_applied = score(
+        decision, priority, matched, source_bias_applied, cluster_bias_applied = score(
             r["title"],
             r["description"],
             patterns,
@@ -190,6 +191,8 @@ def main():
                     'decision', ?,
                     'priority', ?,
                     'matched', ?,
+                    'matched_count', ?,
+                    'source_bias', ?,
                     'cluster_bias', ?,
                     'source', 'decision_patterns'
                   )
@@ -200,6 +203,8 @@ def main():
                     decision,
                     priority,
                     ",".join([f"{t}:{w}" for t, w in matched]),
+                    len(matched),
+                    source_bias_applied,
                     cluster_bias_applied,
                 ),
             )
