@@ -1,5 +1,8 @@
 import os, sqlite3, datetime, json, random, difflib
-from openai import OpenAI
+try:
+    from openai import OpenAI
+except Exception:
+    OpenAI = None
 
 DB = os.environ.get("DB_PATH", "data/openclaw.db")
 
@@ -131,7 +134,7 @@ def main():
     api_key = os.environ.get("OPENAI_API_KEY", "").strip()
     data = pick_fallback(recent)
 
-    if api_key:
+    if api_key and OpenAI is not None:
         try:
             client = OpenAI(api_key=api_key)
             used_titles = "\n".join([f"- {r[0]}" for r in recent[:40]])
@@ -164,12 +167,18 @@ def main():
         except Exception:
             pass
 
+    source_ai = os.environ.get("PROPOSAL_SOURCE_AI", "innovation_llm_engine_v1").strip()
     quality_score = calc_quality(data)
+    try:
+        quality_score += calc_source_bonus(conn, source_ai)
+    except Exception:
+        pass
+    quality_score = max(0, min(100, quality_score))
     ts = int(datetime.datetime.now(datetime.UTC).timestamp() * 1000)
     branch = f"dev/{data['target_system']}-{data['improvement_type']}-{ts}"
 
     cur.execute(
-        "insert into dev_proposals(title,description,spec,branch_name,status,category,target_system,improvement_type,quality_score) values(?,?,?,?,?,?,?,?,?)",
+        "insert into dev_proposals(title,description,spec,branch_name,status,category,target_system,improvement_type,quality_score,source_ai) values(?,?,?,?,?,?,?,?,?,?)",
         (
             data["title"],
             data["description"],
@@ -180,6 +189,7 @@ def main():
             data["target_system"],
             data["improvement_type"],
             quality_score,
+            source_ai,
         ),
     )
     conn.commit()
