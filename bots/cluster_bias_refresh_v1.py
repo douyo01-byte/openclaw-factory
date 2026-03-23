@@ -48,19 +48,25 @@ def main():
         avg_result_score = float(avg_result_score or 0.0)
         avg_impact_score = float(avg_impact_score or 0.0)
 
-        base = avg_result_score + avg_impact_score
+        base = (avg_result_score * 0.55) + (avg_impact_score * 0.45)
 
-        if success_count < 3:
-            base *= 0.4
-        elif success_count < 6:
-            base *= 0.7
+        if success_count <= 1:
+            base *= 0.18
+        elif success_count <= 2:
+            base *= 0.32
+        elif success_count <= 4:
+            base *= 0.52
+        elif success_count <= 7:
+            base *= 0.72
+        else:
+            base *= 0.90
 
-        base *= math.log(success_count + 1, 2) * 0.55
+        base *= math.log(success_count + 1, 2) * 0.38
 
         if source_ai == "":
             base = 0.0
 
-        base = clamp(base, -1.2, 1.2)
+        base = clamp(base, -0.75, 0.75)
 
         out.append((
             source_ai,
@@ -81,7 +87,10 @@ def main():
     """, out)
     conn.commit()
     conn.close()
+
+    top5 = sorted(out, key=lambda x: x[6], reverse=True)[:5]
     print(f"cluster_bias_done={len(out)}", flush=True)
+    print("cluster_bias_top5=", top5, flush=True)
 
 if __name__ == "__main__":
     main()
