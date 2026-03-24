@@ -1025,6 +1025,49 @@ limit 20;
 "
 
 echo
+echo '===== observability core mix applied summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(dp.guard_status,'') as guard_status,
+  coalesce(dp.decision_note,'') as decision_note,
+  count(*) as cnt
+from decider_tuning_observability_core_mix_applied a
+join dev_proposals dp on dp.id = a.proposal_id
+group by coalesce(dp.guard_status,''), coalesce(dp.decision_note,'')
+order by cnt desc, guard_status asc, decision_note asc;
+"
+
+echo
+echo '===== ready but not applied core mix count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_core_mix_plan p on p.proposal_id = dp.id
+left join decider_tuning_observability_core_mix_applied a on a.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(p.mix_action,'')='ready_for_observability_core_mix'
+  and a.proposal_id is null;
+"
+
+echo
+echo '===== latest observability core mix applied rows ====='
+sqlite3 "$DB" "
+select
+  a.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.decision_note,''),
+  coalesce(a.apply_note,''),
+  coalesce(a.applied_at,''),
+  coalesce(a.source,'')
+from decider_tuning_observability_core_mix_applied a
+join dev_proposals dp on dp.id = a.proposal_id
+order by a.applied_at desc, a.proposal_id desc
+limit 20;
+"
+
+echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
 select
