@@ -1,0 +1,8 @@
+id=3284
+title=learningの学習反映速度の改善
+ts=2026-03-24T14:32:43Z
+source_ai=ceo
+target_system=learning
+improvement_type=optimize
+
+learningに対して学習反映速度の改善を行い、次提案へ活かしやすくする。
