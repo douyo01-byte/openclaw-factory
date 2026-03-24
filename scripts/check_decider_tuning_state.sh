@@ -2,6 +2,23 @@
 set -euo pipefail
 cd ~/AI/openclaw-factory-daemon || exit 1
 DB="${DB_PATH:-$HOME/AI/openclaw-factory/data/openclaw.db}"
+TEXT_COL="$(sqlite3 "$DB" "
+select name
+from pragma_table_info('inbox_commands')
+where name in ('body','text','command_text','message_text','content','input_text','raw_text','command')
+order by case name
+  when 'body' then 1
+  when 'text' then 2
+  when 'command_text' then 3
+  when 'message_text' then 4
+  when 'content' then 5
+  when 'input_text' then 6
+  when 'raw_text' then 7
+  when 'command' then 8
+  else 99
+end
+limit 1;
+")"
 
 echo '===== decider threshold advice ====='
 sqlite3 "$DB" "
@@ -195,3 +212,54 @@ and coalesce(guard_status,'')='review_only'
 and coalesce(guard_reason,'')='decider_tuning_proposal'
 order by id desc;
 "
+
+
+
+echo
+echo '===== tuning review decision summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(review_status,'') as review_status,
+  count(*) as cnt
+from decider_tuning_reviews
+group by coalesce(review_status,'')
+order by cnt desc, review_status asc;
+"
+
+echo
+echo '===== tuning latest reviewed rows ====='
+sqlite3 "$DB" "
+select
+  r.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(r.review_status,''),
+  coalesce(r.review_note,''),
+  coalesce(r.reviewed_at,''),
+  coalesce(r.source,'')
+from decider_tuning_reviews r
+left join dev_proposals dp on dp.id = r.proposal_id
+order by r.reviewed_at desc, r.proposal_id desc
+limit 20;
+"
+
+
+
+echo
+echo '===== tuning reply bridge recent inbox ====='
+if [ -n "${TEXT_COL:-}" ]; then
+sqlite3 "$DB" "
+select
+  id,
+  coalesce(${TEXT_COL},''),
+  coalesce(router_status,''),
+  coalesce(router_finish_status,''),
+  coalesce(router_target,'')
+from inbox_commands
+where coalesce(router_target,'')='review_only_tuning_reply_bridge_v1'
+   or coalesce(${TEXT_COL},'') like 'tune %'
+order by id desc
+limit 20;
+"
+else
+  echo 'inbox_commands text column not found'
+fi
