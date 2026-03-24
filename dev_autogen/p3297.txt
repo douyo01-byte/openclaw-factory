@@ -1,0 +1,12 @@
+id=3297
+title=SNS成果物テスト
+ts=2026-03-24T21:27:34Z
+source_ai=business_activation
+target_system=sns
+improvement_type=sns_script
+
+ショート動画台本:
+- テーマ: 店舗集客向けショート動画制作
+- フック: 3秒で違いが伝わる冒頭
+- 台本: 問題提起 → 解決策 → 行動喚起
+- カット構成: 0-3秒 / 3-8秒 / 8-15秒
