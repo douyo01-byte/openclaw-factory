@@ -101,19 +101,37 @@ def main():
         limit 1
         """, (title, f"%source_ai: {source_ai}%decision: {decision}%matched_band: {matched_band}%")).fetchone()
         if dup:
+            proposal_id = int(dup[0])
+            conn.execute("""
+            update dev_proposals
+            set decision_note=case
+                  when coalesce(decision_note,'')='' then 'human_review_required'
+                  else decision_note
+                end,
+                guard_status=case
+                  when coalesce(guard_status,'')='' then 'review_only'
+                  else guard_status
+                end,
+                guard_reason=case
+                  when coalesce(guard_reason,'')='' then 'decider_tuning_proposal'
+                  else guard_reason
+                end
+            where id=?
+            """, (proposal_id,))
             conn.execute("""
             insert or replace into decider_tuning_proposals(
               source_ai, decision, matched_band, proposal_id, created_at
             ) values(?,?,?,?,datetime('now'))
-            """, (source_ai, decision, matched_band, int(dup[0]),))
+            """, (source_ai, decision, matched_band, proposal_id))
             done += 1
             continue
 
         branch_name = mk_branch_name(source_ai, decision, matched_band)
         cur = conn.execute("""
         insert into dev_proposals(
-          title, description, source_ai, status, project_decision, priority, branch_name
-        ) values(?,?,?,?,?,?,?)
+          title, description, source_ai, status, project_decision, priority, branch_name,
+          decision_note, guard_status, guard_reason
+        ) values(?,?,?,?,?,?,?,?,?,?)
         """, (
             title,
             description,
@@ -122,6 +140,9 @@ def main():
             "backlog",
             1.0,
             branch_name,
+            "human_review_required",
+            "review_only",
+            "decider_tuning_proposal",
         ))
         proposal_id = cur.lastrowid
 
