@@ -1,0 +1,18 @@
+id=3298
+title=営業成果物テスト
+ts=2026-03-24T21:27:49Z
+source_ai=business_activation
+target_system=sales
+improvement_type=sales_outreach
+
+営業テンプレ:
+- テーマ: Web制作・集客改善の見込み客獲得
+- ターゲット業種: 中小企業
+- ターゲットリスト: 10件想定
+- DMテンプレ: 課題仮説 + 改善提案 + 相談導線
+- メールテンプレ: 現状課題 + 支援内容 + 事例 + CTA
+[HUMAN REQUIRED]
+内容: 実送信先・契約条件・送信文最終確認
+理由: 外部接続と契約判断は人間確認が必要
+優先度: 高
+推奨: 送信前に10件の対象先を人間確認
