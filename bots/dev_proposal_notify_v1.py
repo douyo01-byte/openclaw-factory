@@ -88,6 +88,41 @@ def run():
             (msg_id, r["id"]),
         )
 
+    promoted_rows = conn.execute("""
+        select
+          id,
+          coalesce(source_ai,'') as source_ai,
+          coalesce(title,'') as title,
+          coalesce(branch_name,'') as branch_name,
+          coalesce(project_decision,'') as project_decision,
+          coalesce(decision_note,'') as decision_note,
+          coalesce(guard_status,'') as guard_status,
+          coalesce(guard_reason,'') as guard_reason
+        from dev_proposals
+        where coalesce(notified_at,'')=''
+          and coalesce(guard_status,'')='promoted_review_only'
+          and coalesce(guard_reason,'')='decider_tuning_proposal'
+        order by id asc
+        limit 20
+    """).fetchall()
+    for r in promoted_rows:
+        msg = (
+            f"[promoted tuning]\n"
+            f"id: {r['id']}\n"
+            f"title: {r['title']}\n"
+            f"branch: {r['branch_name']}\n"
+            f"decision: {r['project_decision']}\n"
+            f"note: {r['decision_note']}\n"
+            f"guard: {r['guard_status']} / {r['guard_reason']}\n\n"
+            f"approved and promoted for backlog tracking\n"
+            f"still isolated from normal automation"
+        )
+        msg_id = send_text(msg)
+        conn.execute(
+            "update dev_proposals set notified_at=datetime('now'), notified_msg_id=? where id=?",
+            (msg_id, r["id"]),
+        )
+
     conn.commit()
     conn.close()
 
