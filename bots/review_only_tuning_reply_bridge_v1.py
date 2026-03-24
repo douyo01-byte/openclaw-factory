@@ -12,6 +12,7 @@ def detect_text_col(conn):
     raise SystemExit(f"inbox_commands text column not found: {cols}")
 
 PATTERNS = [
+    (re.compile(r'^\s*tune\s+approve\s+(\d+)(?:\s+(.*))?$', re.I), "approved"),
     (re.compile(r'^\s*tune\s+ok\s+(\d+)(?:\s+(.*))?$', re.I), "approved"),
     (re.compile(r'^\s*tune\s+reject\s+(\d+)(?:\s+(.*))?$', re.I), "rejected"),
     (re.compile(r'^\s*tune\s+hold\s+(\d+)(?:\s+(.*))?$', re.I), "keep_review"),
@@ -68,9 +69,9 @@ def main():
         if not target:
             conn.execute("""
             update inbox_commands
-            set router_status='tuning_review_target_not_found',
+            set router_status='tuning_review_ignored',
                 router_target='review_only_tuning_reply_bridge_v1',
-                router_finish_status='ignored'
+                router_finish_status='invalid'
             where id=?
             """, (cmd_id,))
             done += 1

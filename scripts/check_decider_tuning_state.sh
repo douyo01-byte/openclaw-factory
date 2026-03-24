@@ -244,6 +244,20 @@ limit 20;
 
 
 
+
+echo
+echo '===== tuning reply bridge status summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(router_status,'') as router_status,
+  coalesce(router_finish_status,'') as router_finish_status,
+  count(*) as cnt
+from inbox_commands
+where coalesce(router_target,'')='review_only_tuning_reply_bridge_v1'
+group by coalesce(router_status,''), coalesce(router_finish_status,'')
+order by cnt desc, router_status asc, router_finish_status asc;
+"
+
 echo
 echo '===== tuning reply bridge recent inbox ====='
 if [ -n "${TEXT_COL:-}" ]; then
