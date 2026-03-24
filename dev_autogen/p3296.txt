@@ -1,0 +1,15 @@
+id=3296
+title=EC成果物テスト
+ts=2026-03-24T21:26:26Z
+source_ai=business_activation
+target_system=ec
+improvement_type=ec_improvement
+
+before/after改善案:
+- 対象: Shopify商品ページ改善代行
+- before: 情報が散在し、訴求が弱い
+- after: ベネフィット先頭、比較表、FAQ、CTAを整理
+- コピー改善: 一文目で価値訴求
+- 画像案: 使用シーン、比較、実績、導線
+- SEO案: 商品名 + 用途 + 比較 + 導入事例
+- 優先度: 高
