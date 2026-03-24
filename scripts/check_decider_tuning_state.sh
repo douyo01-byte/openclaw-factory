@@ -521,6 +521,47 @@ limit 20;
 "
 
 echo
+echo '===== normalization planner summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(normalize_action,'') as normalize_action,
+  coalesce(normalize_reason,'') as normalize_reason,
+  count(*) as cnt
+from decider_tuning_normalization_plan
+group by coalesce(normalize_action,''), coalesce(normalize_reason,'')
+order by cnt desc, normalize_action asc, normalize_reason asc;
+"
+
+echo
+echo '===== ready but not normalized count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_normalization_plan p on p.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(p.normalize_action,'')='ready_for_normalization';
+"
+
+echo
+echo '===== latest normalization plan rows ====='
+sqlite3 "$DB" "
+select
+  p.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.decision_note,''),
+  coalesce(p.normalize_action,''),
+  coalesce(p.normalize_reason,''),
+  coalesce(p.planned_at,''),
+  coalesce(p.source,'')
+from decider_tuning_normalization_plan p
+join dev_proposals dp on dp.id = p.proposal_id
+order by p.planned_at desc, p.proposal_id desc
+limit 20;
+"
+
+echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
 select
