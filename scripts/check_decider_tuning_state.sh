@@ -729,6 +729,48 @@ order by p.planned_at desc, p.proposal_id desc
 limit 20;
 "
 
+
+echo
+echo '===== normal observability gate summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(g.gate_status,'') as gate_status,
+  coalesce(g.gate_reason,'') as gate_reason,
+  count(*) as cnt
+from decider_tuning_normal_observability_gate g
+group by coalesce(g.gate_status,''), coalesce(g.gate_reason,'')
+order by cnt desc, gate_status asc, gate_reason asc;
+"
+
+echo
+echo '===== open for normal observability count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_normal_observability_gate g on g.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(g.gate_status,'')='open_for_normal_observability';
+"
+
+echo
+echo '===== latest normal observability gate rows ====='
+sqlite3 "$DB" "
+select
+  g.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.decision_note,''),
+  coalesce(g.gate_status,''),
+  coalesce(g.gate_reason,''),
+  coalesce(g.checked_at,''),
+  coalesce(g.source,'')
+from decider_tuning_normal_observability_gate g
+join dev_proposals dp on dp.id = g.proposal_id
+order by g.checked_at desc, g.proposal_id desc
+limit 20;
+"
+
 echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
