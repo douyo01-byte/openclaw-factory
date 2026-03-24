@@ -10,6 +10,10 @@ from dev_proposals
 where coalesce(status,'')='approved'
   and coalesce(source_ai,'') <> 'decider_threshold_advisor_v1'
   and coalesce(title,'') not like '[decider-tuning]%'
+  and not (
+    coalesce(guard_status,'')='review_only'
+    and coalesce(guard_reason,'')='decider_tuning_proposal'
+  )
 group by coalesce(project_decision,'')
 order by count(*) desc;
 "
@@ -95,6 +99,10 @@ where coalesce(status,'')='approved'
   and (
     coalesce(source_ai,'')='decider_threshold_advisor_v1'
     or coalesce(title,'') like '[decider-tuning]%'
+    or (
+      coalesce(guard_status,'')='review_only'
+      and coalesce(guard_reason,'')='decider_tuning_proposal'
+    )
   )
 group by coalesce(project_decision,'')
 order by count(*) desc;

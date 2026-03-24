@@ -55,6 +55,10 @@ def main():
     where de.event_type='decider_patterns_applied'
       and coalesce(dp.source_ai,'') <> 'decider_threshold_advisor_v1'
       and coalesce(dp.title,'') not like '[decider-tuning]%'
+      and not (
+        coalesce(dp.guard_status,'')='review_only'
+        and coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+      )
     """).fetchall()
 
     agg = {}
