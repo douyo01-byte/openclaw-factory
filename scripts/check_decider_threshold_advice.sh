@@ -17,3 +17,15 @@ select
 from decider_threshold_advice
 order by sample_count desc, source_ai asc, decision asc, matched_band asc;
 "
+
+
+echo
+echo '===== threshold advice action summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(suggested_action,'') as suggested_action,
+  count(*) as cnt
+from decider_threshold_advice
+group by coalesce(suggested_action,'')
+order by cnt desc, suggested_action asc;
+"

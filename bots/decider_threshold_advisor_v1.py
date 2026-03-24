@@ -19,32 +19,30 @@ def main():
 
     out = []
     for source_ai, decision, matched_band, sample_count, avg_source_bias, avg_cluster_bias in rows:
+        source_ai = str(source_ai or "").strip()
+        decision = str(decision or "").strip()
+        matched_band = str(matched_band or "").strip()
         sample_count = int(sample_count or 0)
         avg_source_bias = float(avg_source_bias or 0.0)
         avg_cluster_bias = float(avg_cluster_bias or 0.0)
 
-        suggested_action = "keep"
-        reason = "stable"
+        high_confidence = (
+            sample_count >= 3
+            and decision == "execute_now"
+            and matched_band in ("8_12", "13_plus")
+            and avg_source_bias >= 0.30
+            and avg_cluster_bias <= 0.10
+        )
 
-        if sample_count < 2:
+        if sample_count < 3:
             suggested_action = "observe"
-            reason = "low_sample"
-
-        elif decision == "execute_now" and matched_band in ("1_3", "4_7"):
-            suggested_action = "consider_raise_execute_threshold"
-            reason = "low_match_band_reaches_execute"
-
-        elif decision == "backlog" and matched_band in ("13_plus",):
-            suggested_action = "consider_lower_execute_threshold"
-            reason = "high_match_band_stays_backlog"
-
-        elif avg_cluster_bias >= 0.35 and decision == "execute_now":
-            suggested_action = "consider_lower_cluster_cap"
-            reason = "cluster_bias_dominant"
-
-        elif avg_source_bias >= 0.30 and decision == "execute_now":
+            suggestion_reason = "low_sample"
+        elif high_confidence:
             suggested_action = "consider_lower_source_bias"
-            reason = "source_bias_dominant"
+            suggestion_reason = "source_bias_dominant_high_confidence"
+        else:
+            suggested_action = "keep"
+            suggestion_reason = "stable"
 
         out.append((
             source_ai,
@@ -54,9 +52,8 @@ def main():
             avg_source_bias,
             avg_cluster_bias,
             suggested_action,
-            reason,
+            suggestion_reason,
         ))
-
     conn.execute("delete from decider_threshold_advice")
     conn.executemany("""
     insert into decider_threshold_advice(
