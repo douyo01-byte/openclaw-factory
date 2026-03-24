@@ -1365,6 +1365,49 @@ limit 20;
 "
 
 echo
+echo '===== observability runtime applied summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(a.applied_guard_status,'') as applied_guard_status,
+  coalesce(a.applied_guard_reason,'') as applied_guard_reason,
+  count(*) as cnt
+from decider_tuning_observability_runtime_applied a
+group by coalesce(a.applied_guard_status,''), coalesce(a.applied_guard_reason,'')
+order by cnt desc, applied_guard_status asc, applied_guard_reason asc;
+"
+
+echo
+echo '===== ready but not applied observability runtime count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_runtime_plan p on p.proposal_id = dp.id
+left join decider_tuning_observability_runtime_applied a on a.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(p.plan_action,'')='ready_for_observability_runtime'
+  and a.proposal_id is null;
+"
+
+echo
+echo '===== latest observability runtime applied rows ====='
+sqlite3 "$DB" "
+select
+  a.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.guard_reason,''),
+  coalesce(dp.decision_note,''),
+  coalesce(a.applied_note,''),
+  coalesce(a.applied_at,''),
+  coalesce(a.source,'')
+from decider_tuning_observability_runtime_applied a
+join dev_proposals dp on dp.id = a.proposal_id
+order by a.applied_at desc, a.proposal_id desc
+limit 20;
+"
+
+echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
 select
