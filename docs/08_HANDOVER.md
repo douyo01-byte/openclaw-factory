@@ -3,33 +3,51 @@
 ## 最初に見るもの
 1. docs/06_CURRENT_STATE.md
 2. docs/10_RUNTIME_AUDIT_STATUS.md
-3. docs/04_KAIKUN04_STARTER.md
+3. docs/08_HANDOVER.md
+4. docs/11_OPERATIONS.md
 
-## 今の判断
+## 現在の正
+- docs単体ではなく docs / DB / runtime 一致状態を正とする
+- runtime確認は watcher 24h health check を最優先で使う
+- watcher は `ops_watcher_events.body` の JSON を唯一のソースとして扱う
+- `ops_watcher_events` スキーマは `id / kind / body / created_at`
+- private reply 本流は `Telegram -> tg_private_chat_log -> inbox_commands -> secretary_done`
 
-- 現役ACTIVE本流は promoted tuning observability runtime live 本流まで接続済み
-- proposal 3285 は observability_runtime_live_review_only 到達済み
-- private reply 本流は healthy
-- cluster bias は stable
-- watcher は 24h で watch ログのみ、再起動 / エスカレーション / 通知 / proposal なし
-- docs旧記述より live DB / live logs / launchctl / watcher 結果を優先する
+## required targets
+- `jp.openclaw.ops_brain_agent_v1`
+- `jp.openclaw.private_reply_to_inbox_v1`
+- `jp.openclaw.secretary_llm_v1`
+
+## observe targets
+- `jp.openclaw.dev_pr_watcher_v1`
+- `jp.openclaw.ingest_private_replies_kaikun04`
+- `jp.openclaw.db_integrity_watchdog_v1`
+- `jp.openclaw.dev_pr_automerge_v1`
+- `jp.openclaw.kaikun02_coo_controller_v1`
+
+## 現在のruntime実体
+- `jp.openclaw.ops_brain_agent_v1`
+  - `~/AI/openclaw-factory/scripts/run_ops_brain_agent.sh`
+- `jp.openclaw.private_reply_to_inbox_v1`
+  - `~/AI/openclaw-factory-daemon/scripts/run_private_reply_to_inbox_v1.sh`
+- `jp.openclaw.secretary_llm_v1`
+  - LaunchAgent上の `program=/bin/zsh`
+
+## DB
+- daemon側DBは以下へ統一
+- `~/AI/openclaw-factory-daemon/data/openclaw.db`
+- `-> ~/AI/openclaw-factory/data/openclaw.db`
+
+## 直近確認済み状態
+- watcher 24h:
+  - restarted=0
+  - escalations=0
+  - notifications=0
+  - proposals=0
+- required 3 targets running
+- DB handle は 78 -> 6 まで削減済み
 
 ## 次の行動
-
-- ACTIVE本流テンプレをこの状態で維持
-- watcher 詳細は ops_watcher_events 実スキーマ準拠で読む
-- target 列前提の旧SQLは使わない
-- 長時間監視の結果整理を docs/10_RUNTIME_AUDIT_STATUS.md 側へ寄せる
-
-## 監視メモ
-
-- required:
-  - jp.openclaw.ops_brain_agent_v1
-  - jp.openclaw.private_reply_to_inbox_v1
-  - jp.openclaw.secretary_llm_v1
-- observe:
-  - jp.openclaw.dev_pr_automerge_v1
-  - jp.openclaw.db_integrity_watchdog_v1
-  - jp.openclaw.kaikun02_coo_controller_v1
-  - jp.openclaw.dev_pr_watcher_v1
-  - jp.openclaw.ingest_private_replies_kaikun04
+- `python3 scripts/check_watcher_health_24h.py` を固定確認手順として使う
+- required / observe / docs / runtime のズレのみ修正する
+- 新規機能追加はしない
