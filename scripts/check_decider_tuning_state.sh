@@ -310,6 +310,47 @@ order by promoted_notified_at desc, id desc
 limit 20;
 "
 
+
+echo
+echo '===== release queue summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(release_status,'') as release_status,
+  count(*) as cnt
+from decider_tuning_release_queue
+group by coalesce(release_status,'')
+order by cnt desc, release_status asc;
+"
+
+echo
+echo '===== eligible but not queued count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_eligibility e on e.proposal_id = dp.id
+left join decider_tuning_release_queue q on q.proposal_id = dp.id
+where coalesce(dp.guard_status,'')='promoted_review_only'
+  and coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(e.eligibility_status,'')='eligible'
+  and q.proposal_id is null;
+"
+
+echo
+echo '===== queued latest rows ====='
+sqlite3 "$DB" "
+select
+  q.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(q.release_status,''),
+  coalesce(q.release_note,''),
+  coalesce(q.queued_at,''),
+  coalesce(q.source,'')
+from decider_tuning_release_queue q
+join dev_proposals dp on dp.id = q.proposal_id
+order by q.queued_at desc, q.proposal_id desc
+limit 20;
+"
+
 echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
