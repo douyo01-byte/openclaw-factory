@@ -3,23 +3,27 @@ set -euo pipefail
 cd ~/AI/openclaw-factory-daemon || exit 1
 DB="${DB_PATH:-$HOME/AI/openclaw-factory/data/openclaw.db}"
 
-echo '===== approved decision spread ====='
+echo '===== approved decision spread (normal only) ====='
 sqlite3 "$DB" "
 select coalesce(project_decision,''), count(*)
 from dev_proposals
 where coalesce(status,'')='approved'
+  and coalesce(source_ai,'') <> 'decider_threshold_advisor_v1'
+  and coalesce(title,'') not like '[decider-tuning]%'
 group by coalesce(project_decision,'')
 order by count(*) desc;
 "
 
 echo
-echo '===== approved source spread ====='
+echo '===== approved source spread (normal only) ====='
 sqlite3 "$DB" "
 select coalesce(source_ai,''), count(*) total,
        sum(case when coalesce(project_decision,'')='execute_now' then 1 else 0 end) exec_now,
        round(avg(coalesce(priority,0)),4) avg_priority
 from dev_proposals
 where coalesce(status,'')='approved'
+  and coalesce(source_ai,'') <> 'decider_threshold_advisor_v1'
+  and coalesce(title,'') not like '[decider-tuning]%'
 group by coalesce(source_ai,'')
 order by total desc;
 "
@@ -79,4 +83,35 @@ from latest l
 join dev_events de on de.id = l.max_id
 where json_extract(de.payload,'$.matched_count') is null
    or coalesce(json_extract(de.payload,'$.matched_count'),0) <= 0;
+"
+
+
+echo
+echo '===== tuning proposal spread ====='
+sqlite3 "$DB" "
+select coalesce(project_decision,''), count(*)
+from dev_proposals
+where coalesce(status,'')='approved'
+  and (
+    coalesce(source_ai,'')='decider_threshold_advisor_v1'
+    or coalesce(title,'') like '[decider-tuning]%'
+  )
+group by coalesce(project_decision,'')
+order by count(*) desc;
+"
+
+echo
+echo '===== tuning proposal source spread ====='
+sqlite3 "$DB" "
+select coalesce(source_ai,''), count(*) total,
+       sum(case when coalesce(project_decision,'')='execute_now' then 1 else 0 end) exec_now,
+       round(avg(coalesce(priority,0)),4) avg_priority
+from dev_proposals
+where coalesce(status,'')='approved'
+  and (
+    coalesce(source_ai,'')='decider_threshold_advisor_v1'
+    or coalesce(title,'') like '[decider-tuning]%'
+  )
+group by coalesce(source_ai,'')
+order by total desc;
 "

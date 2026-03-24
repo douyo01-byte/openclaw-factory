@@ -53,6 +53,8 @@ def main():
     left join dev_proposals dp
       on dp.id = de.proposal_id
     where de.event_type='decider_patterns_applied'
+      and coalesce(dp.source_ai,'') <> 'decider_threshold_advisor_v1'
+      and coalesce(dp.title,'') not like '[decider-tuning]%'
     """).fetchall()
 
     agg = {}

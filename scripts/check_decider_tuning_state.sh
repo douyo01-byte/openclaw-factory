@@ -87,3 +87,25 @@ where coalesce(status,'')='approved'
 group by coalesce(source_ai,'')
 order by total desc;
 "
+
+
+echo
+echo '===== tuning proposal summary ====='
+sqlite3 "$DB" "
+select
+  count(*) as proposal_count,
+  max(coalesce(created_at,'')) as latest_created_at
+from decider_tuning_proposals;
+"
+
+echo
+echo '===== tuning proposal status summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(dp.project_decision,'') as project_decision,
+  count(*) as cnt
+from decider_tuning_proposals r
+join dev_proposals dp on dp.id = r.proposal_id
+group by coalesce(dp.project_decision,'')
+order by cnt desc, project_decision asc;
+"
