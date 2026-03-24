@@ -124,3 +124,74 @@ where coalesce(title,'') like '[decider-tuning]%'
 group by coalesce(guard_status,''), coalesce(decision_note,''), coalesce(guard_reason,'')
 order by cnt desc, guard_status asc, decision_note asc, guard_reason asc;
 "
+
+
+echo
+echo '===== review-only notification pending count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals
+where (
+  coalesce(source_ai,'')='decider_threshold_advisor_v1'
+  or coalesce(title,'') like '[decider-tuning]%'
+)
+and coalesce(decision_note,'')='human_review_required'
+and coalesce(guard_status,'')='review_only'
+and coalesce(guard_reason,'')='decider_tuning_proposal'
+and coalesce(notified_at,'')='';
+"
+
+echo
+echo '===== review-only notification sent count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals
+where (
+  coalesce(source_ai,'')='decider_threshold_advisor_v1'
+  or coalesce(title,'') like '[decider-tuning]%'
+)
+and coalesce(decision_note,'')='human_review_required'
+and coalesce(guard_status,'')='review_only'
+and coalesce(guard_reason,'')='decider_tuning_proposal'
+and coalesce(notified_at,'')<>'';
+"
+
+echo
+echo '===== review-only notification latest sent rows ====='
+sqlite3 "$DB" "
+select
+  id,
+  coalesce(title,''),
+  coalesce(notified_at,''),
+  coalesce(notified_msg_id,'')
+from dev_proposals
+where (
+  coalesce(source_ai,'')='decider_threshold_advisor_v1'
+  or coalesce(title,'') like '[decider-tuning]%'
+)
+and coalesce(decision_note,'')='human_review_required'
+and coalesce(guard_status,'')='review_only'
+and coalesce(guard_reason,'')='decider_tuning_proposal'
+and coalesce(notified_at,'')<>''
+order by notified_at desc, id desc
+limit 20;
+"
+
+echo
+echo '===== review-only notification state rows ====='
+sqlite3 "$DB" "
+select
+  id,
+  coalesce(title,''),
+  coalesce(notified_at,''),
+  coalesce(notified_msg_id,'')
+from dev_proposals
+where (
+  coalesce(source_ai,'')='decider_threshold_advisor_v1'
+  or coalesce(title,'') like '[decider-tuning]%'
+)
+and coalesce(decision_note,'')='human_review_required'
+and coalesce(guard_status,'')='review_only'
+and coalesce(guard_reason,'')='decider_tuning_proposal'
+order by id desc;
+"
