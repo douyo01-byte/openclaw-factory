@@ -311,23 +311,37 @@ where coalesce(status,'')='approved';
 echo
 echo '===== review-only learning leak count ====='
 sqlite3 "$DB" "
+select count(*)
+from decider_feedback_metrics
+where coalesce(source_ai,'')='decider_threshold_advisor_v1';
+"
+
+echo
+echo '===== review-only latest decider events ====='
+sqlite3 "$DB" "
 with latest as (
   select proposal_id, max(id) as max_id
   from dev_events
   where event_type='decider_patterns_applied'
   group by proposal_id
 )
-select count(*)
+select
+  dp.id,
+  coalesce(dp.title,''),
+  coalesce(json_extract(de.payload,'$.decision'),''),
+  coalesce(json_extract(de.payload,'$.matched_count'),''),
+  round(coalesce(json_extract(de.payload,'$.source_bias'),0),4),
+  round(coalesce(json_extract(de.payload,'$.cluster_bias'),0),4)
 from latest l
 join dev_events de on de.id = l.max_id
 left join dev_proposals dp on dp.id = de.proposal_id
-where de.event_type='decider_patterns_applied'
-  and (
-    coalesce(dp.source_ai,'')='decider_threshold_advisor_v1'
-    or coalesce(dp.title,'') like '[decider-tuning]%'
-    or (
-      coalesce(dp.guard_status,'')='review_only'
-      and coalesce(dp.guard_reason,'')='decider_tuning_proposal'
-    )
-  );
+where
+  coalesce(dp.source_ai,'')='decider_threshold_advisor_v1'
+  or coalesce(dp.title,'') like '[decider-tuning]%'
+  or (
+    coalesce(dp.guard_status,'')='review_only'
+    and coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  )
+order by dp.id desc
+limit 20;
 "
