@@ -942,6 +942,48 @@ limit 20;
 "
 
 echo
+echo '===== observability core mix queue summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(q.queue_status,'') as queue_status,
+  count(*) as cnt
+from decider_tuning_observability_core_mix_queue q
+group by coalesce(q.queue_status,'')
+order by cnt desc, queue_status asc;
+"
+
+echo
+echo '===== open but not observability-core-mix-queued count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_core_mix_gate g on g.proposal_id = dp.id
+left join decider_tuning_observability_core_mix_queue q on q.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(g.gate_status,'')='open_for_observability_core_mix'
+  and q.proposal_id is null;
+"
+
+echo
+echo '===== latest observability core mix queued rows ====='
+sqlite3 "$DB" "
+select
+  q.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.decision_note,''),
+  coalesce(q.queue_status,''),
+  coalesce(q.queue_note,''),
+  coalesce(q.queued_at,''),
+  coalesce(q.source,'')
+from decider_tuning_observability_core_mix_queue q
+join dev_proposals dp on dp.id = q.proposal_id
+order by q.queued_at desc, q.proposal_id desc
+limit 20;
+"
+
+echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
 select
