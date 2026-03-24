@@ -109,3 +109,18 @@ join dev_proposals dp on dp.id = r.proposal_id
 group by coalesce(dp.project_decision,'')
 order by cnt desc, project_decision asc;
 "
+
+
+echo
+echo '===== tuning review-only summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(guard_status,'') as guard_status,
+  coalesce(decision_note,'') as decision_note,
+  coalesce(guard_reason,'') as guard_reason,
+  count(*) as cnt
+from dev_proposals
+where coalesce(title,'') like '[decider-tuning]%'
+group by coalesce(guard_status,''), coalesce(decision_note,''), coalesce(guard_reason,'')
+order by cnt desc, guard_status asc, decision_note asc, guard_reason asc;
+"
