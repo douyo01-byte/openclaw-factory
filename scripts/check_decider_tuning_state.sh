@@ -277,3 +277,57 @@ limit 20;
 else
   echo 'inbox_commands text column not found'
 fi
+
+
+
+echo
+echo '===== review-only isolated state ====='
+sqlite3 "$DB" "
+select
+  sum(case
+    when (
+      coalesce(source_ai,'')='decider_threshold_advisor_v1'
+      or coalesce(title,'') like '[decider-tuning]%'
+      or (
+        coalesce(guard_status,'')='review_only'
+        and coalesce(guard_reason,'')='decider_tuning_proposal'
+      )
+    ) then 1 else 0 end) as isolated_review_only_count,
+  sum(case
+    when (
+      coalesce(source_ai,'')='decider_threshold_advisor_v1'
+      or coalesce(title,'') like '[decider-tuning]%'
+      or (
+        coalesce(guard_status,'')='review_only'
+        and coalesce(guard_reason,'')='decider_tuning_proposal'
+      )
+    )
+    and coalesce(project_decision,'')='execute_now'
+    then 1 else 0 end) as leaked_execute_now_count
+from dev_proposals
+where coalesce(status,'')='approved';
+"
+
+echo
+echo '===== review-only learning leak count ====='
+sqlite3 "$DB" "
+with latest as (
+  select proposal_id, max(id) as max_id
+  from dev_events
+  where event_type='decider_patterns_applied'
+  group by proposal_id
+)
+select count(*)
+from latest l
+join dev_events de on de.id = l.max_id
+left join dev_proposals dp on dp.id = de.proposal_id
+where de.event_type='decider_patterns_applied'
+  and (
+    coalesce(dp.source_ai,'')='decider_threshold_advisor_v1'
+    or coalesce(dp.title,'') like '[decider-tuning]%'
+    or (
+      coalesce(dp.guard_status,'')='review_only'
+      and coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+    )
+  );
+"
