@@ -646,6 +646,48 @@ limit 20;
 "
 
 echo
+echo '===== normal merge queue summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(queue_status,'') as queue_status,
+  count(*) as cnt
+from decider_tuning_normal_merge_queue
+group by coalesce(queue_status,'')
+order by cnt desc, queue_status asc;
+"
+
+echo
+echo '===== open but not normal-merge-queued count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_normalization_gate g on g.proposal_id = dp.id
+left join decider_tuning_normal_merge_queue q on q.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(g.gate_status,'')='open_for_normal_merge'
+  and q.proposal_id is null;
+"
+
+echo
+echo '===== latest normal merge queued rows ====='
+sqlite3 "$DB" "
+select
+  q.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.decision_note,''),
+  coalesce(q.queue_status,''),
+  coalesce(q.queue_note,''),
+  coalesce(q.queued_at,''),
+  coalesce(q.source,'')
+from decider_tuning_normal_merge_queue q
+join dev_proposals dp on dp.id = q.proposal_id
+order by q.queued_at desc, q.proposal_id desc
+limit 20;
+"
+
+echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
 select
