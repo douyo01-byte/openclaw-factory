@@ -226,6 +226,54 @@ group by coalesce(review_status,'')
 order by cnt desc, review_status asc;
 "
 
+
+echo
+echo '===== approved but not promoted count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_reviews r on r.proposal_id = dp.id
+left join decider_tuning_promotions p on p.proposal_id = dp.id
+where (
+  coalesce(dp.source_ai,'')='decider_threshold_advisor_v1'
+  or coalesce(dp.title,'') like '[decider-tuning]%'
+)
+and coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+and coalesce(r.review_status,'')='approved'
+and p.proposal_id is null;
+"
+
+echo
+echo '===== promoted summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(dp.guard_status,'') as guard_status,
+  coalesce(dp.decision_note,'') as decision_note,
+  count(*) as cnt
+from decider_tuning_promotions p
+join dev_proposals dp on dp.id = p.proposal_id
+group by coalesce(dp.guard_status,''), coalesce(dp.decision_note,'')
+order by cnt desc, guard_status asc, decision_note asc;
+"
+
+echo
+echo '===== promoted latest rows ====='
+sqlite3 "$DB" "
+select
+  p.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.decision_note,''),
+  coalesce(p.promotion_note,''),
+  coalesce(p.promoted_at,''),
+  coalesce(p.source,'')
+from decider_tuning_promotions p
+join dev_proposals dp on dp.id = p.proposal_id
+order by p.promoted_at desc, p.proposal_id desc
+limit 20;
+"
+
 echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
