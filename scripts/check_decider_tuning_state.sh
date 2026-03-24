@@ -984,6 +984,47 @@ limit 20;
 "
 
 echo
+echo '===== observability core mix planner summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(p.mix_action,'') as mix_action,
+  coalesce(p.mix_reason,'') as mix_reason,
+  count(*) as cnt
+from decider_tuning_observability_core_mix_plan p
+group by coalesce(p.mix_action,''), coalesce(p.mix_reason,'')
+order by cnt desc, mix_action asc, mix_reason asc;
+"
+
+echo
+echo '===== ready but not applied core-mix-plan count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_core_mix_plan p on p.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(p.mix_action,'')='ready_for_observability_core_mix';
+"
+
+echo
+echo '===== latest observability core mix plan rows ====='
+sqlite3 "$DB" "
+select
+  p.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.decision_note,''),
+  coalesce(p.mix_action,''),
+  coalesce(p.mix_reason,''),
+  coalesce(p.planned_at,''),
+  coalesce(p.source,'')
+from decider_tuning_observability_core_mix_plan p
+join dev_proposals dp on dp.id = p.proposal_id
+order by p.planned_at desc, p.proposal_id desc
+limit 20;
+"
+
+echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
 select
