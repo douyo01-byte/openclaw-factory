@@ -1,0 +1,32 @@
+id=3299
+title=LP品質向上テスト
+ts=2026-03-24T21:37:55Z
+source_ai=business_activation
+target_system=lp
+improvement_type=lp_generation
+
+LP markdown:
+# LP品質向上テスト
+
+## Hero
+中小企業向けLP制作代行 で『問い合わせ率改善』を狙うLP
+
+## First view copy
+見込み客に『何をしてくれるか』を3秒で伝える。
+
+## Target
+中小企業 / 店舗 / サービス事業者
+
+## Pain
+広告やSNSから流入しても問い合わせにつながらない。
+
+## Offer
+中小企業向けLP制作代行 を短納期で整備し、導線・訴求・CTAを改善する。
+
+## Proof
+- ビフォーアフター提案
+- 導線改善
+- CTA最適化
+
+## CTA
+無料相談 / LP診断はこちら
