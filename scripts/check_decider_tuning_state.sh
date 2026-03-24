@@ -856,6 +856,50 @@ order by p.planned_at desc, p.proposal_id desc
 limit 20;
 "
 
+
+echo
+echo '===== normal observability applied summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(dp.guard_status,'') as guard_status,
+  coalesce(dp.decision_note,'') as decision_note,
+  count(*) as cnt
+from decider_tuning_normal_observability_applied a
+join dev_proposals dp on dp.id = a.proposal_id
+group by coalesce(dp.guard_status,''), coalesce(dp.decision_note,'')
+order by cnt desc, guard_status asc, decision_note asc;
+"
+
+echo
+echo '===== ready but not applied observability count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_normal_observability_plan p on p.proposal_id = dp.id
+left join decider_tuning_normal_observability_applied a on a.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(p.plan_action,'')='ready_for_normal_observability'
+  and a.proposal_id is null;
+"
+
+echo
+echo '===== latest normal observability applied rows ====='
+sqlite3 "$DB" "
+select
+  a.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.decision_note,''),
+  coalesce(a.apply_note,''),
+  coalesce(a.applied_at,''),
+  coalesce(a.source,'')
+from decider_tuning_normal_observability_applied a
+join dev_proposals dp on dp.id = a.proposal_id
+order by a.applied_at desc, a.proposal_id desc
+limit 20;
+"
+
 echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
