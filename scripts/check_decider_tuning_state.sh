@@ -351,6 +351,46 @@ order by q.queued_at desc, q.proposal_id desc
 limit 20;
 "
 
+
+echo
+echo '===== release planner summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(release_action,'') as release_action,
+  coalesce(release_reason,'') as release_reason,
+  count(*) as cnt
+from decider_tuning_release_plan
+group by coalesce(release_action,''), coalesce(release_reason,'')
+order by cnt desc, release_action asc, release_reason asc;
+"
+
+echo
+echo '===== ready but not released count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_release_plan p on p.proposal_id = dp.id
+where coalesce(dp.guard_status,'')='promoted_review_only'
+  and coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(p.release_action,'')='ready_for_release';
+"
+
+echo
+echo '===== latest release plan rows ====='
+sqlite3 "$DB" "
+select
+  p.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(p.release_action,''),
+  coalesce(p.release_reason,''),
+  coalesce(p.planned_at,''),
+  coalesce(p.source,'')
+from decider_tuning_release_plan p
+join dev_proposals dp on dp.id = p.proposal_id
+order by p.planned_at desc, p.proposal_id desc
+limit 20;
+"
+
 echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
