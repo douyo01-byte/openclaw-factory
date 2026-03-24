@@ -275,6 +275,42 @@ limit 20;
 "
 
 echo
+echo '===== promoted notification pending count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals
+where coalesce(guard_status,'')='promoted_review_only'
+  and coalesce(guard_reason,'')='decider_tuning_proposal'
+  and coalesce(promoted_notified_at,'')='';
+"
+
+echo
+echo '===== promoted notification sent count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals
+where coalesce(guard_status,'')='promoted_review_only'
+  and coalesce(guard_reason,'')='decider_tuning_proposal'
+  and coalesce(promoted_notified_at,'')<>'';
+"
+
+echo
+echo '===== promoted notification latest sent rows ====='
+sqlite3 "$DB" "
+select
+  id,
+  coalesce(title,''),
+  coalesce(promoted_notified_at,''),
+  coalesce(promoted_notified_msg_id,'')
+from dev_proposals
+where coalesce(guard_status,'')='promoted_review_only'
+  and coalesce(guard_reason,'')='decider_tuning_proposal'
+  and coalesce(promoted_notified_at,'')<>''
+order by promoted_notified_at desc, id desc
+limit 20;
+"
+
+echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
 select

@@ -99,7 +99,7 @@ def run():
           coalesce(guard_status,'') as guard_status,
           coalesce(guard_reason,'') as guard_reason
         from dev_proposals
-        where coalesce(notified_at,'')=''
+        where coalesce(promoted_notified_at,'')=''
           and coalesce(guard_status,'')='promoted_review_only'
           and coalesce(guard_reason,'')='decider_tuning_proposal'
         order by id asc
@@ -119,7 +119,7 @@ def run():
         )
         msg_id = send_text(msg)
         conn.execute(
-            "update dev_proposals set notified_at=datetime('now'), notified_msg_id=? where id=?",
+            "update dev_proposals set promoted_notified_at=datetime('now'), promoted_notified_msg_id=? where id=?",
             (msg_id, r["id"]),
         )
 
