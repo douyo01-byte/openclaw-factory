@@ -562,6 +562,49 @@ limit 20;
 "
 
 echo
+echo '===== normalization applied summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(dp.guard_status,'') as guard_status,
+  coalesce(dp.decision_note,'') as decision_note,
+  count(*) as cnt
+from decider_tuning_normalizations n
+join dev_proposals dp on dp.id = n.proposal_id
+group by coalesce(dp.guard_status,''), coalesce(dp.decision_note,'')
+order by cnt desc, guard_status asc, decision_note asc;
+"
+
+echo
+echo '===== ready but not applied normalization count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_normalization_plan p on p.proposal_id = dp.id
+left join decider_tuning_normalizations n on n.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(p.normalize_action,'')='ready_for_normalization'
+  and n.proposal_id is null;
+"
+
+echo
+echo '===== latest normalized rows ====='
+sqlite3 "$DB" "
+select
+  n.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.decision_note,''),
+  coalesce(n.normalize_note,''),
+  coalesce(n.normalized_at,''),
+  coalesce(n.source,'')
+from decider_tuning_normalizations n
+join dev_proposals dp on dp.id = n.proposal_id
+order by n.normalized_at desc, n.proposal_id desc
+limit 20;
+"
+
+echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
 select
