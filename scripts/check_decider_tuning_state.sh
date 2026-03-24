@@ -391,6 +391,50 @@ order by p.planned_at desc, p.proposal_id desc
 limit 20;
 "
 
+
+echo
+echo '===== release applied summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(dp.guard_status,'') as guard_status,
+  coalesce(dp.decision_note,'') as decision_note,
+  count(*) as cnt
+from decider_tuning_releases r
+join dev_proposals dp on dp.id = r.proposal_id
+group by coalesce(dp.guard_status,''), coalesce(dp.decision_note,'')
+order by cnt desc, guard_status asc, decision_note asc;
+"
+
+echo
+echo '===== ready but not applied count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_release_plan p on p.proposal_id = dp.id
+left join decider_tuning_releases r on r.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(p.release_action,'')='ready_for_release'
+  and r.proposal_id is null;
+"
+
+echo
+echo '===== latest released rows ====='
+sqlite3 "$DB" "
+select
+  r.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.decision_note,''),
+  coalesce(r.release_note,''),
+  coalesce(r.released_at,''),
+  coalesce(r.source,'')
+from decider_tuning_releases r
+join dev_proposals dp on dp.id = r.proposal_id
+order by r.released_at desc, r.proposal_id desc
+limit 20;
+"
+
 echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
