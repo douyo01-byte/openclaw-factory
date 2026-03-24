@@ -687,6 +687,48 @@ order by q.queued_at desc, q.proposal_id desc
 limit 20;
 "
 
+
+echo
+echo '===== normal merge planner summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(merge_action,'') as merge_action,
+  coalesce(merge_reason,'') as merge_reason,
+  count(*) as cnt
+from decider_tuning_normal_merge_plan
+group by coalesce(merge_action,''), coalesce(merge_reason,'')
+order by cnt desc, merge_action asc, merge_reason asc;
+"
+
+echo
+echo '===== ready but not merged-normal count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_normal_merge_plan p on p.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='decider_tuning_proposal'
+  and coalesce(p.merge_action,'')='ready_for_normal_merge';
+"
+
+echo
+echo '===== latest normal merge plan rows ====='
+sqlite3 "$DB" "
+select
+  p.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.decision_note,''),
+  coalesce(p.merge_action,''),
+  coalesce(p.merge_reason,''),
+  coalesce(p.planned_at,''),
+  coalesce(p.source,'')
+from decider_tuning_normal_merge_plan p
+join dev_proposals dp on dp.id = p.proposal_id
+order by p.planned_at desc, p.proposal_id desc
+limit 20;
+"
+
 echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
