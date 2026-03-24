@@ -1493,6 +1493,434 @@ limit 20;
 "
 
 echo
+echo '===== observability runtime release planner summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(p.plan_action,'') as plan_action,
+  coalesce(p.plan_reason,'') as plan_reason,
+  count(*) as cnt
+from decider_tuning_observability_runtime_release_plan p
+group by coalesce(p.plan_action,''), coalesce(p.plan_reason,'')
+order by cnt desc, plan_action asc, plan_reason asc;
+"
+
+echo
+echo '===== ready but not applied observability-runtime-release-plan count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_runtime_release_plan p on p.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='human_review_observability_runtime_applied'
+  and coalesce(p.plan_action,'')='ready_for_observability_runtime_release';
+"
+
+echo
+echo '===== latest observability runtime release plan rows ====='
+sqlite3 "$DB" "
+select
+  p.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.guard_reason,''),
+  coalesce(dp.decision_note,''),
+  coalesce(p.plan_action,''),
+  coalesce(p.plan_reason,''),
+  coalesce(p.planned_at,''),
+  coalesce(p.source,'')
+from decider_tuning_observability_runtime_release_plan p
+join dev_proposals dp on dp.id = p.proposal_id
+order by p.planned_at desc, p.proposal_id desc
+limit 20;
+"
+
+echo
+echo '===== observability runtime release applied summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(dp.guard_status,'') as guard_status,
+  coalesce(dp.guard_reason,'') as guard_reason,
+  count(*) as cnt
+from dev_proposals dp
+join decider_tuning_observability_runtime_release_applied a on a.proposal_id = dp.id
+group by coalesce(dp.guard_status,''), coalesce(dp.guard_reason,'')
+order by cnt desc, guard_status asc, guard_reason asc;
+"
+
+echo
+echo '===== ready but not applied observability runtime release count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_runtime_release_plan p on p.proposal_id = dp.id
+left join decider_tuning_observability_runtime_release_applied a on a.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='human_review_observability_runtime_applied'
+  and coalesce(p.plan_action,'')='ready_for_observability_runtime_release'
+  and a.proposal_id is null;
+"
+
+echo
+echo '===== latest observability runtime release applied rows ====='
+sqlite3 "$DB" "
+select
+  a.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.guard_reason,''),
+  coalesce(dp.decision_note,''),
+  coalesce(a.applied_note,''),
+  coalesce(a.applied_at,''),
+  coalesce(a.source,'')
+from decider_tuning_observability_runtime_release_applied a
+join dev_proposals dp on dp.id = a.proposal_id
+order by a.applied_at desc, a.proposal_id desc
+limit 20;
+"
+
+echo
+echo '===== observability runtime rollout gate summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(g.gate_status,'') as gate_status,
+  coalesce(g.gate_reason,'') as gate_reason,
+  count(*) as cnt
+from decider_tuning_observability_runtime_rollout_gate g
+group by coalesce(g.gate_status,''), coalesce(g.gate_reason,'')
+order by cnt desc, gate_status asc, gate_reason asc;
+"
+
+echo
+echo '===== open for observability runtime rollout runtime count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_runtime_rollout_gate g on g.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='human_review_observability_runtime_release_applied'
+  and coalesce(g.gate_status,'')='open_for_observability_runtime_rollout_runtime';
+"
+
+echo
+echo '===== latest observability runtime rollout gate rows ====='
+sqlite3 "$DB" "
+select
+  g.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.guard_reason,''),
+  coalesce(dp.decision_note,''),
+  coalesce(g.gate_status,''),
+  coalesce(g.gate_reason,''),
+  coalesce(g.checked_at,''),
+  coalesce(g.source,'')
+from decider_tuning_observability_runtime_rollout_gate g
+join dev_proposals dp on dp.id = g.proposal_id
+order by g.checked_at desc, g.proposal_id desc
+limit 20;
+"
+
+echo
+echo '===== observability runtime rollout queue summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(q.queue_status,'') as queue_status,
+  count(*) as cnt
+from decider_tuning_observability_runtime_rollout_queue q
+group by coalesce(q.queue_status,'')
+order by cnt desc, queue_status asc;
+"
+
+echo
+echo '===== open but not observability-runtime-rollout-queued count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_runtime_rollout_gate g on g.proposal_id = dp.id
+left join decider_tuning_observability_runtime_rollout_queue q on q.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='human_review_observability_runtime_release_applied'
+  and coalesce(g.gate_status,'')='open_for_observability_runtime_rollout_runtime'
+  and q.proposal_id is null;
+"
+
+echo
+echo '===== latest observability runtime rollout queued rows ====='
+sqlite3 "$DB" "
+select
+  q.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.guard_reason,''),
+  coalesce(dp.decision_note,''),
+  coalesce(q.queue_status,''),
+  coalesce(q.queue_note,''),
+  coalesce(q.queued_at,''),
+  coalesce(q.source,'')
+from decider_tuning_observability_runtime_rollout_queue q
+join dev_proposals dp on dp.id = q.proposal_id
+order by q.queued_at desc, q.proposal_id desc
+limit 20;
+"
+
+echo
+echo '===== observability runtime rollout planner summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(p.plan_action,'') as plan_action,
+  coalesce(p.plan_reason,'') as plan_reason,
+  count(*) as cnt
+from decider_tuning_observability_runtime_rollout_plan p
+group by coalesce(p.plan_action,''), coalesce(p.plan_reason,'')
+order by cnt desc, plan_action asc, plan_reason asc;
+"
+
+echo
+echo '===== ready but not applied observability-runtime-rollout-plan count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_runtime_rollout_plan p on p.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='human_review_observability_runtime_release_applied'
+  and coalesce(p.plan_action,'')='ready_for_observability_runtime_rollout';
+"
+
+echo
+echo '===== latest observability runtime rollout plan rows ====='
+sqlite3 "$DB" "
+select
+  p.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.guard_reason,''),
+  coalesce(dp.decision_note,''),
+  coalesce(p.plan_action,''),
+  coalesce(p.plan_reason,''),
+  coalesce(p.planned_at,''),
+  coalesce(p.source,'')
+from decider_tuning_observability_runtime_rollout_plan p
+join dev_proposals dp on dp.id = p.proposal_id
+order by p.planned_at desc, p.proposal_id desc
+limit 20;
+"
+
+echo
+echo '===== observability runtime rollout applied summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(dp.guard_status,'') as guard_status,
+  coalesce(dp.guard_reason,'') as guard_reason,
+  count(*) as cnt
+from dev_proposals dp
+join decider_tuning_observability_runtime_rollout_applied a on a.proposal_id = dp.id
+group by coalesce(dp.guard_status,''), coalesce(dp.guard_reason,'')
+order by cnt desc, guard_status asc, guard_reason asc;
+"
+
+echo
+echo '===== ready but not applied observability runtime rollout count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_runtime_rollout_plan p on p.proposal_id = dp.id
+left join decider_tuning_observability_runtime_rollout_applied a on a.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='human_review_observability_runtime_release_applied'
+  and coalesce(p.plan_action,'')='ready_for_observability_runtime_rollout'
+  and a.proposal_id is null;
+"
+
+echo
+echo '===== latest observability runtime rollout applied rows ====='
+sqlite3 "$DB" "
+select
+  a.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.guard_reason,''),
+  coalesce(dp.decision_note,''),
+  coalesce(a.applied_note,''),
+  coalesce(a.applied_at,''),
+  coalesce(a.source,'')
+from decider_tuning_observability_runtime_rollout_applied a
+join dev_proposals dp on dp.id = a.proposal_id
+order by a.applied_at desc, a.proposal_id desc
+limit 20;
+"
+
+echo
+echo '===== observability runtime rollout final gate summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(g.gate_status,'') as gate_status,
+  coalesce(g.gate_reason,'') as gate_reason,
+  count(*) as cnt
+from decider_tuning_observability_runtime_rollout_final_gate g
+group by coalesce(g.gate_status,''), coalesce(g.gate_reason,'')
+order by cnt desc, gate_status asc, gate_reason asc;
+"
+
+echo
+echo '===== open for observability runtime live count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_runtime_rollout_final_gate g on g.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='human_review_observability_runtime_rollout_applied'
+  and coalesce(g.gate_status,'')='open_for_observability_runtime_live';
+"
+
+echo
+echo '===== latest observability runtime rollout final gate rows ====='
+sqlite3 "$DB" "
+select
+  g.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.guard_reason,''),
+  coalesce(dp.decision_note,''),
+  coalesce(g.gate_status,''),
+  coalesce(g.gate_reason,''),
+  coalesce(g.checked_at,''),
+  coalesce(g.source,'')
+from decider_tuning_observability_runtime_rollout_final_gate g
+join dev_proposals dp on dp.id = g.proposal_id
+order by g.checked_at desc, g.proposal_id desc
+limit 20;
+"
+
+echo
+echo '===== observability runtime live queue summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(q.queue_status,'') as queue_status,
+  count(*) as cnt
+from decider_tuning_observability_runtime_live_queue q
+group by coalesce(q.queue_status,'')
+order by cnt desc, queue_status asc;
+"
+
+echo
+echo '===== open but not observability-runtime-live-queued count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_runtime_rollout_final_gate g on g.proposal_id = dp.id
+left join decider_tuning_observability_runtime_live_queue q on q.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='human_review_observability_runtime_rollout_applied'
+  and coalesce(g.gate_status,'')='open_for_observability_runtime_live'
+  and q.proposal_id is null;
+"
+
+echo
+echo '===== latest observability runtime live queued rows ====='
+sqlite3 "$DB" "
+select
+  q.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.guard_reason,''),
+  coalesce(dp.decision_note,''),
+  coalesce(q.queue_status,''),
+  coalesce(q.queue_note,''),
+  coalesce(q.queued_at,''),
+  coalesce(q.source,'')
+from decider_tuning_observability_runtime_live_queue q
+join dev_proposals dp on dp.id = q.proposal_id
+order by q.queued_at desc, q.proposal_id desc
+limit 20;
+"
+
+echo
+echo '===== observability runtime live planner summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(p.plan_action,'') as plan_action,
+  coalesce(p.plan_reason,'') as plan_reason,
+  count(*) as cnt
+from decider_tuning_observability_runtime_live_plan p
+group by coalesce(p.plan_action,''), coalesce(p.plan_reason,'')
+order by cnt desc, plan_action asc, plan_reason asc;
+"
+
+echo
+echo '===== ready but not applied observability-runtime-live-plan count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_runtime_live_plan p on p.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='human_review_observability_runtime_rollout_applied'
+  and coalesce(p.plan_action,'')='ready_for_observability_runtime_live';
+"
+
+echo
+echo '===== latest observability runtime live plan rows ====='
+sqlite3 "$DB" "
+select
+  p.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.guard_reason,''),
+  coalesce(dp.decision_note,''),
+  coalesce(p.plan_action,''),
+  coalesce(p.plan_reason,''),
+  coalesce(p.planned_at,''),
+  coalesce(p.source,'')
+from decider_tuning_observability_runtime_live_plan p
+join dev_proposals dp on dp.id = p.proposal_id
+order by p.planned_at desc, p.proposal_id desc
+limit 20;
+"
+
+echo
+echo '===== observability runtime live applied summary ====='
+sqlite3 "$DB" "
+select
+  coalesce(dp.guard_status,'') as guard_status,
+  coalesce(dp.guard_reason,'') as guard_reason,
+  count(*) as cnt
+from dev_proposals dp
+join decider_tuning_observability_runtime_live_applied a on a.proposal_id = dp.id
+group by coalesce(dp.guard_status,''), coalesce(dp.guard_reason,'')
+order by cnt desc, guard_status asc, guard_reason asc;
+"
+
+echo
+echo '===== ready but not applied observability runtime live count ====='
+sqlite3 "$DB" "
+select count(*)
+from dev_proposals dp
+join decider_tuning_observability_runtime_live_plan p on p.proposal_id = dp.id
+left join decider_tuning_observability_runtime_live_applied a on a.proposal_id = dp.id
+where coalesce(dp.guard_reason,'')='human_review_observability_runtime_rollout_applied'
+  and coalesce(p.plan_action,'')='ready_for_observability_runtime_live'
+  and a.proposal_id is null;
+"
+
+echo
+echo '===== latest observability runtime live applied rows ====='
+sqlite3 "$DB" "
+select
+  a.proposal_id,
+  coalesce(dp.title,''),
+  coalesce(dp.project_decision,''),
+  coalesce(dp.guard_status,''),
+  coalesce(dp.guard_reason,''),
+  coalesce(dp.decision_note,''),
+  coalesce(a.applied_note,''),
+  coalesce(a.applied_at,''),
+  coalesce(a.source,'')
+from decider_tuning_observability_runtime_live_applied a
+join dev_proposals dp on dp.id = a.proposal_id
+order by a.applied_at desc, a.proposal_id desc
+limit 20;
+"
+
+echo
 echo '===== tuning latest reviewed rows ====='
 sqlite3 "$DB" "
 select
