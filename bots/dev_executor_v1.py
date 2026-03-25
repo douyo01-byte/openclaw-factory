@@ -1,4 +1,5 @@
 from __future__ import annotations
+import bots.content_quality_gate_v1 as qg
 from datetime import datetime, timezone
 import json
 import os
@@ -82,6 +83,34 @@ def build_todo_block():
         "- A / Instagram導線の有無を確認（URL・導線位置を確認）\n"
         "- B / 各送信先ごとに提案3点を1行ずつ調整（完全コピペ禁止）\n"
     )
+
+
+def render_with_quality_gate(title: str, spec: str):
+    output = render_business_output(title, spec)
+    meta = parse_business_task(spec)
+    task_type = (meta.get("task_type") or "").strip()
+
+    ok_lp, r_lp = qg.check_lp(output)
+    ok_ec, r_ec = qg.check_ec(output)
+    ok_sns, r_sns = qg.check_sns(output)
+
+    if task_type == "lp_generation":
+        quality_score = qg.score(ok_lp, r_lp)
+    elif task_type == "ec_improvement":
+        quality_score = qg.score(ok_ec, r_ec)
+    elif task_type == "sns_script":
+        quality_score = qg.score(ok_sns, r_sns)
+    else:
+        quality_score = 0.9
+
+    quality_block = (
+        "\n[QUALITY]\n"
+        f"LP: {'OK' if ok_lp else 'NG'} score={qg.score(ok_lp, r_lp)} reasons={r_lp}\n"
+        f"EC: {'OK' if ok_ec else 'NG'} score={qg.score(ok_ec, r_ec)} reasons={r_ec}\n"
+        f"SNS: {'OK' if ok_sns else 'NG'} score={qg.score(ok_sns, r_sns)} reasons={r_sns}\n"
+        f"FINAL: score={quality_score}\n"
+    )
+    return output + quality_block, quality_score
 
 def render_business_output(title: str, spec: str):
     meta = parse_business_task(spec)
@@ -188,7 +217,7 @@ def main():
     source_ai = (row["source_ai"] or "").strip()
     target_system = (row["target_system"] or "").strip()
     improvement_type = (row["improvement_type"] or "").strip()
-    business_output = render_business_output(title, spec) if source_ai == "business_activation" else ""
+    business_output, business_quality_score = render_with_quality_gate(title, spec) if source_ai == "business_activation" else ("", None)
 
     sh(["/usr/bin/git", "checkout", BASE_BRANCH])
     kai(conn, pid, "git_base", base=BASE_BRANCH)
@@ -285,10 +314,10 @@ def main():
                 source_ai,
                 target_system,
                 improvement_type,
-                0.8,
+                business_quality_score if business_quality_score is not None else 0.8,
                 "medium",
                 "business executor output generated",
-                0.8,
+                business_quality_score if business_quality_score is not None else 0.8,
                 "business_task_ready",
                 business_output[:2000],
                 1,
