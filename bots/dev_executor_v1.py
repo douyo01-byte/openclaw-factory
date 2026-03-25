@@ -75,11 +75,12 @@ def build_human_required_block():
 def build_todo_block():
     return (
         "[TODO]\n"
-        "- 優 先 度 : 高 / Gmail下 書 き 作 成 \n"
-        "- 優 先 度 : 高 / 送 信 対 象 10件 の 確 認 \n"
-        "- 優 先 度 : 高 / 契 約 条 件 と NG表 現 の 確 認 \n"
-        "- 優 先 度 : 中 / Instagram導 線 の 確 認 \n"
-        "- 優 先 度 : 中 / LP公 開 状 態 の 確 認 \n"
+        "- S / Gmailで営業メール下書きを作成（件名＋本文まで完成させる）\n"
+        "- S / 送信対象10件を確定（会社名・担当窓口・連絡先を確認）\n"
+        "- S / 契約条件とNG表現を確認（料金・禁止表現をチェック）\n"
+        "- A / LP公開URLと問い合わせ導線を確認（実際に遷移テスト）\n"
+        "- A / Instagram導線の有無を確認（URL・導線位置を確認）\n"
+        "- B / 各送信先ごとに提案3点を1行ずつ調整（完全コピペ禁止）\n"
     )
 
 def render_business_output(title: str, spec: str):
