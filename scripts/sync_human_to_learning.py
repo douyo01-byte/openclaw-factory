@@ -7,18 +7,23 @@ def score_from_human_action(action_type, action_detail, result):
     text = f"{action_type or ''} {action_detail or ''} {result or ''}"
     score = 0.6
     impact = 0.6
-    if "返 信" in text or "返信" in text:
-        score = max(score, 0.8)
-        impact = max(impact, 0.8)
-    if "商 談" in text or "商談" in text:
-        score = max(score, 0.9)
-        impact = max(impact, 0.9)
-    if "成 約" in text or "成約" in text:
+
+    if (action_type or "") == "todo_generated":
+        return 0.7, 0.7
+
+    if "送信" in text or "送 信" in text:
+        score = max(score, 0.75)
+        impact = max(impact, 0.75)
+    if "返信" in text or "返 信" in text:
+        score = max(score, 0.85)
+        impact = max(impact, 0.85)
+    if "商談" in text or "商 談" in text:
+        score = max(score, 0.92)
+        impact = max(impact, 0.92)
+    if "成約" in text or "成 約" in text:
         score = 1.0
         impact = 1.0
-    if (action_type or "") == "todo_generated":
-        score = 0.7
-        impact = 0.7
+
     return score, impact
 
 conn = sqlite3.connect(DB_PATH)
