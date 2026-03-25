@@ -1,6 +1,6 @@
 id=3308
 title=TODO固 定 生 成 テ ス ト 3
-ts=2026-03-25T08:00:03Z
+ts=2026-03-25T08:03:04Z
 source_ai=business_activation
 target_system=sales
 improvement_type=sales_outreach
