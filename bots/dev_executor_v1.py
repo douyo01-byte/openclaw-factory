@@ -72,6 +72,16 @@ def build_human_required_block():
         "推奨 : 送信前に10件の対象先とNG表現を人間確認\n"
     )
 
+def build_todo_block():
+    return (
+        "[TODO]\n"
+        "- 優 先 度 : 高 / Gmail下 書 き 作 成 \n"
+        "- 優 先 度 : 高 / 送 信 対 象 10件 の 確 認 \n"
+        "- 優 先 度 : 高 / 契 約 条 件 と NG表 現 の 確 認 \n"
+        "- 優 先 度 : 中 / Instagram導 線 の 確 認 \n"
+        "- 優 先 度 : 中 / LP公 開 状 態 の 確 認 \n"
+    )
+
 def render_business_output(title: str, spec: str):
     meta = parse_business_task(spec)
     task_type = (meta.get("task_type") or "").strip()
@@ -286,14 +296,25 @@ def main():
             ),
         )
         if improvement_type == "sales_outreach":
+            todo_block = build_todo_block()
+            conn.execute(
+                """
+                update learning_results
+                set result_note = coalesce(result_note,'') || char(10) || char(10) || ?
+                where proposal_id = ?
+                """
+                ,
+                (todo_block, pid),
+            )
             conn.execute(
                 """
                 insert into inbox_commands(source,text,status,result,created_at,updated_at)
                 values(?,?,?,?,datetime('now'),datetime('now'))
-                """,
+                """
+                ,
                 (
                     "business_activation",
-                    build_human_required_block(),
+                    todo_block,
                     "done",
                     build_human_required_block(),
                 ),
