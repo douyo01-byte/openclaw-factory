@@ -63,6 +63,15 @@ def parse_business_task(spec: str):
         meta[k.strip()] = v.strip()
     return meta
 
+def build_human_required_block():
+    return (
+        "[HUMAN REQUIRED]\n"
+        "内容 : 実送信先・契約条件・送信文最終確認\n"
+        "理由 : 外部接続と契約判断は人間確認が必要\n"
+        "優先度 : 高\n"
+        "推奨 : 送信前に10件の対象先とNG表現を人間確認\n"
+    )
+
 def render_business_output(title: str, spec: str):
     meta = parse_business_task(spec)
     task_type = (meta.get("task_type") or "").strip()
@@ -276,6 +285,19 @@ def main():
                 now(),
             ),
         )
+        if improvement_type == "sales_outreach":
+            conn.execute(
+                """
+                insert into inbox_commands(source,text,status,result,created_at,updated_at)
+                values(?,?,?,?,datetime('now'),datetime('now'))
+                """,
+                (
+                    "business_activation",
+                    build_human_required_block(),
+                    "done",
+                    build_human_required_block(),
+                ),
+            )
 
     kai(conn, pid, "db_updated", pr_url=pr_url, pr_number=pr_num)
     conn.commit()
