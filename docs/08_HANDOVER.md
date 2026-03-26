@@ -77,3 +77,12 @@
 - inbox_commands は finisher成功で done / processed=1 / sent に揃う
 - task 522 / inbox 474 で sent_message_id 永続化まで確認済み
 - reply本流の未整合は解消済み
+
+
+## 2026-03-26 追 記 : exec bridge
+
+- `kaikun04_exec_bridge_v1` 追 加 済 み
+- Kaikun04 done reply の `[EXEC]` を `ops_exec` child task に 変 換
+- `self_improvement_log` で 親 子 関 係 を 記 録
+- 確 認 済 み smoke : parent 538 -> child 539 -> `db_health.sh`
+- 以 後 は Telegram 指 示 → Kaikun04 提 案 → 安 全 script 実 行 の 連 鎖 が 使 え る
