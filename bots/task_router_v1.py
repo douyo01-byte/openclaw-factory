@@ -38,6 +38,8 @@ def ensure_schema(c):
 
 def classify(text: str):
     t = (text or "").lower()
+    if "[exec]" in t or "[ops]" in t:
+        return "EXEC", "ops_exec"
     if "[doc]" in t:
         return "DOC", "kaikun04"
     if "[think]" in t or "[deep]" in t:
