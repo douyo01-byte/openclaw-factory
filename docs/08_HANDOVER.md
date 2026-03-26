@@ -51,3 +51,13 @@
 - `python3 scripts/check_watcher_health_24h.py` を固定確認手順として使う
 - required / observe / docs / runtime のズレのみ修正する
 - 新規機能追加はしない
+
+## 2026-03-26 追記: Kaikun04 reply mainline
+
+- Kaikun04 reply 本流は完全クローズ
+- private -> router -> worker -> finisher まで成立
+- task 514 / 519 実回答確認済み
+- inbox_commands 466 / 471 routed -> sent 確認済み
+- sent_message_id 欠損は backfill_from_sent_state で整合化済み
+- daemon main: f974d15
+- PR #2705 merge 済み

@@ -43,3 +43,19 @@
   - `~/AI/openclaw-factory-daemon/scripts/run_private_reply_to_inbox_v1.sh`
 - `jp.openclaw.secretary_llm_v1`
   - LaunchAgent上の `program=/bin/zsh`
+
+## 2026-03-26 Kaikun04 reply mainline 復旧
+
+完了
+- Kaikun04 router worker / router reply finisher の env 読み込み安定化
+- private reply -> inbox -> task_router -> kaikun04 worker -> finisher の本流復旧
+- task 514 / 519 で Kaikun04 が実回答を返すことを確認
+- inbox_commands 466 / 471 は routed -> sent を確認
+- sent_message_id 欠損は backfill_from_sent_state で整合化
+- PR #2705 を squash merge 済み
+- daemon main 最新同期済み
+
+現状態
+- Kaikun04 はオウム返しではなく実回答を返す
+- private -> router -> worker -> finisher の reply 本流は完全クローズ
+- daemon main: f974d15
