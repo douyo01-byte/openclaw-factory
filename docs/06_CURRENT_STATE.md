@@ -86,3 +86,16 @@
 - kaikun04_done_sent_missing = 0
 - kaikun02_new_remaining = 0
 - private_pending = 0
+
+
+## 2026-03-26 追 記 : Kaikun04 exec bridge 本 流
+
+完 了
+- Kaikun04 reply 末 尾 の `[EXEC]` を  bridge し て `ops_exec` child task 化 す る `kaikun04_exec_bridge_v1` を 追 加
+- `telegram_ops_executor_v1` と 接 続 し 、 allowlisted script 実 行 結 果 を Telegram 返 却 で き る 状 態 に 到 達
+- `self_improvement_log` を 追 加 し 、 parent -> child の 実 行 連 鎖 を 記 録
+- manual smoke で parent task 538 -> child task 539 -> `db_health.sh` 実 行 成 功 を 確 認
+
+現 状 態
+- Kaikun04 は 回 答 末 尾 に safe allowlisted `[EXEC]` を 出 せ る
+- exec bridge -> ops_exec -> finisher の 最 小 自 己 改 善 ル ー プ は 稼 働
