@@ -49,8 +49,16 @@ def tick():
             try:
                 mid = tg_send(r["reply_text"])
                 c.execute("""
+                    update router_tasks
+                    set sent_message_id=?,
+                        updated_at=datetime('now')
+                    where id=?
+                """, (mid, r["task_id"]))
+                c.execute("""
                     update inbox_commands
-                    set router_finish_status='sent',
+                    set status='done',
+                        processed=1,
+                        router_finish_status='sent',
                         router_task_id=?,
                         updated_at=datetime('now')
                     where id=?
