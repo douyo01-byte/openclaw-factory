@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>jp.openclaw.task_router_v1</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd "$HOME/AI/openclaw-factory-daemon" || exit 1; source .venv/bin/activate || exit 1; export OCLAW_DB_PATH="$HOME/AI/openclaw-factory/data/openclaw.db"; exec python -u bots/task_router_v1.py >> logs/task_router_v1.out 2>> logs/task_router_v1.err</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>WorkingDirectory</key>
+  <string>/Users/doyopc/AI/openclaw-factory-daemon</string>
+  <key>StandardOutPath</key>
+  <string>/Users/doyopc/AI/openclaw-factory-daemon/logs/task_router_v1.launchd.out</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/doyopc/AI/openclaw-factory-daemon/logs/task_router_v1.launchd.err</string>
+</dict>
+</plist>
