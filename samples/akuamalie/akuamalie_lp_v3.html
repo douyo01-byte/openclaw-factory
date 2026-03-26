@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Akua Malie | トータルボディメイクサロン</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f7f3ee;
+      --paper:#fffdfa;
+      --paper-2:#f2ebe2;
+      --text:#2c2723;
+      --muted:#6f6760;
+      --line:rgba(44,39,35,.10);
+      --accent:#b39167;
+      --accent-dark:#8f6d43;
+      --shadow:0 14px 40px rgba(31,24,18,.08);
+      --radius:24px;
+      --max:1180px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,#f9f6f2 0%, #f5efe8 100%);
+      color:var(--text);
+      font-family:'Noto Sans JP',sans-serif;
+      -webkit-font-smoothing:antialiased;
+      line-height:1.8;
+    }
+    a{text-decoration:none;color:inherit}
+    img{display:block;max-width:100%}
+    .wrap{width:min(var(--max),92vw);margin:0 auto}
+    .section{padding:88px 0}
+    .eyebrow{
+      display:inline-block;
+      font-size:12px;
+      letter-spacing:.14em;
+      color:var(--accent-dark);
+      margin-bottom:14px;
+    }
+    .title{
+      margin:0 0 16px;
+      font-family:'Noto Serif JP',serif;
+      font-size:clamp(30px,4.8vw,54px);
+      line-height:1.22;
+      letter-spacing:.03em;
+      font-weight:600;
+    }
+    .lead{
+      margin:0;
+      color:var(--muted);
+      font-size:16px;
+    }
+    .btnrow{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:54px;
+      padding:0 22px;
+      border-radius:999px;
+      font-size:14px;
+      font-weight:700;
+      transition:.2s ease;
+      white-space:nowrap;
+    }
+    .btn.primary{
+      background:linear-gradient(135deg,var(--accent),#c6a67e);
+      color:#fff;
+      box-shadow:0 10px 24px rgba(179,145,103,.28);
+    }
+    .btn.secondary{
+      background:rgba(255,255,255,.7);
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+
+    .hero{
+      min-height:100svh;
+      display:flex;
+      align-items:center;
+      padding:28px 0 56px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.04fr .96fr;
+      gap:30px;
+      align-items:center;
+    }
+    .hero-copy h1{
+      margin:0 0 18px;
+      font-family:'Noto Serif JP',serif;
+      font-size:clamp(38px,7vw,72px);
+      line-height:1.08;
+      letter-spacing:.04em;
+      font-weight:600;
+    }
+    .hero-copy p{
+      margin:0 0 26px;
+      color:var(--muted);
+      font-size:16px;
+    }
+    .hero-visual{
+      min-height:640px;
+      border-radius:34px;
+      overflow:hidden;
+      position:relative;
+      box-shadow:var(--shadow);
+      background:
+        linear-gradient(180deg,rgba(20,16,12,.14),rgba(20,16,12,.22)),
+        url('./img/hero.jpg') center/cover no-repeat;
+    }
+    .hero-card{
+      position:absolute;
+      left:18px;
+      right:18px;
+      bottom:18px;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+    }
+    .glass{
+      padding:14px 14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.84);
+      border:1px solid rgba(255,255,255,.5);
+      backdrop-filter:blur(10px);
+      font-size:12px;
+      color:#413932;
+    }
+    .glass strong{
+      display:block;
+      margin-bottom:4px;
+      font-size:13px;
+    }
+
+    .cards-3,.cards-2{
+      display:grid;
+      gap:18px;
+    }
+    .cards-3{grid-template-columns:repeat(3,1fr)}
+    .cards-2{grid-template-columns:repeat(2,1fr)}
+    .card{
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:28px;
+      box-shadow:var(--shadow);
+    }
+    .card h3,.card h4{
+      margin:0 0 10px;
+      font-size:21px;
+      line-height:1.45;
+    }
+    .card p{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .problem{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+      margin-top:28px;
+    }
+    .problem .item{
+      background:rgba(255,255,255,.72);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px 18px;
+      color:var(--text);
+      box-shadow:var(--shadow);
+      font-size:14px;
+    }
+
+    .split{
+      display:grid;
+      grid-template-columns:.95fr 1.05fr;
+      gap:24px;
+      align-items:stretch;
+    }
+    .visual{
+      min-height:520px;
+      border-radius:30px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      background:
+        linear-gradient(180deg,rgba(20,16,12,.08),rgba(20,16,12,.16)),
+        url('./img/concept.jpg') center/cover no-repeat;
+    }
+    .box{
+      background:rgba(255,253,249,.88);
+      border:1px solid var(--line);
+      border-radius:30px;
+      padding:34px;
+      box-shadow:var(--shadow);
+    }
+    .box p{
+      margin:0 0 14px;
+      color:var(--muted);
+    }
+
+    .service-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+      margin-top:28px;
+    }
+    .service{
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:28px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+    .service .photo{
+      aspect-ratio:4/3;
+      background-size:cover;
+      background-position:center;
+    }
+    .service .body{
+      padding:24px;
+    }
+    .service h3{
+      margin:0 0 10px;
+      font-size:22px;
+      font-family:'Noto Serif JP',serif;
+    }
+    .service p{
+      margin:0 0 12px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .tag{
+      font-size:12px;
+      color:var(--accent-dark);
+      background:#f6efe6;
+      border:1px solid rgba(179,145,103,.18);
+      padding:7px 10px;
+      border-radius:999px;
+    }
+
+    .voice{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+      margin-top:28px;
+    }
+    .quote{
+      background:linear-gradient(180deg,#fffdfa,#fbf6ef);
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:24px;
+      box-shadow:var(--shadow);
+    }
+    .quote strong{
+      display:block;
+      margin-bottom:10px;
+      font-size:15px;
+    }
+    .quote p{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .flow{
+      display:grid;
+      gap:16px;
+      margin-top:26px;
+    }
+    .flow-item{
+      display:grid;
+      grid-template-columns:90px 1fr;
+      gap:18px;
+      align-items:start;
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:20px 22px;
+      box-shadow:var(--shadow);
+    }
+    .step{
+      font-family:'Noto Serif JP',serif;
+      color:var(--accent-dark);
+      font-size:20px;
+      line-height:1.2;
+    }
+    .flow-item h4{
+      margin:0 0 6px;
+      font-size:17px;
+    }
+    .flow-item p{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .info{
+      display:grid;
+      grid-template-columns:220px 1fr;
+      gap:10px 20px;
+      margin-top:24px;
+    }
+    .info div{
+      padding:12px 0;
+      border-bottom:1px solid var(--line);
+      font-size:14px;
+    }
+    .label{color:var(--muted)}
+
+    .cta{
+      text-align:center;
+      padding:40px 24px;
+      border-radius:34px;
+      border:1px solid rgba(179,145,103,.22);
+      background:linear-gradient(135deg,rgba(179,145,103,.10),rgba(255,255,255,.86));
+      box-shadow:var(--shadow);
+    }
+    .cta h2{
+      margin:0 0 12px;
+      font-family:'Noto Serif JP',serif;
+      font-size:clamp(30px,4vw,46px);
+      line-height:1.25;
+      font-weight:600;
+    }
+    .cta p{
+      margin:0 auto 22px;
+      max-width:760px;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .sticky-cta{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:50;
+      display:none;
+      gap:10px;
+      padding:12px 12px calc(12px + env(safe-area-inset-bottom));
+      background:rgba(250,247,242,.92);
+      backdrop-filter:blur(12px);
+      border-top:1px solid var(--line);
+    }
+    .sticky-cta a{
+      flex:1;
+      min-height:48px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:13px;
+      font-weight:700;
+    }
+    .sticky-cta .primary{background:linear-gradient(135deg,var(--accent),#c6a67e);color:#fff}
+    .sticky-cta .secondary{background:#fff;color:var(--text);border:1px solid var(--line)}
+
+    footer{
+      padding:32px 0 110px;
+      text-align:center;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    @media (max-width: 960px){
+      .hero-grid,.split,.cards-3,.cards-2,.service-grid,.voice,.problem,.hero-card{
+        grid-template-columns:1fr;
+      }
+      .hero{min-height:auto}
+      .hero-visual,.visual{min-height:420px}
+      .section{padding:60px 0}
+      .card,.box,.cta{padding:22px}
+      .flow-item{grid-template-columns:1fr}
+      .info{grid-template-columns:1fr}
+      .sticky-cta{display:flex}
+      footer{padding-bottom:110px}
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">TOTAL BODY MAKE SALON</span>
+          <h1>外側だけではなく、<br>内側からも整える美しさへ。</h1>
+          <p>
+            フェイシャル、ボディ、ビューティー。<br>
+            その日の悩みや理想に合わせて、あなたに合う導線から整えていく。<br>
+            Akua Malie のトータルボディメイクは、結果と心地よさの両方を大切にします。
+          </p>
+          <div class="btnrow">
+            <a class="btn primary" href="https://www.akuamalie.com/reservation.php">Webで予約・相談する</a>
+            <a class="btn secondary" href="https://line.me/R/ti/p/%40852fcvkp">LINEで相談する</a>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-card">
+            <div class="glass"><strong>女性専用</strong>周囲を気にせず通えるプライベート空間</div>
+            <div class="glass"><strong>完全予約制</strong>マンツーマンで丁寧に向き合う施術</div>
+            <div class="glass"><strong>全身提案</strong>フェイシャル・ボディ・内側ケアまで対応</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <span class="eyebrow">FOR YOU</span>
+        <h2 class="title">こんなお悩みはありませんか。</h2>
+        <p class="lead">顔だけ、身体だけでは解決しきれない悩みに、全身視点で向き合います。</p>
+        <div class="problem">
+          <div class="item">自分に合う施術が分からない</div>
+          <div class="item">顔も身体もまとめて相談したい</div>
+          <div class="item">人目を気にせず落ち着いて通いたい</div>
+          <div class="item">痩身だけでなく内側ケアも気になる</div>
+          <div class="item">その場しのぎではなく継続的に整えたい</div>
+          <div class="item">予約前にまず相談したい</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="background:#fff;">
+      <div class="wrap split">
+        <div class="visual"></div>
+        <div class="box">
+          <span class="eyebrow">CONCEPT</span>
+          <h2 class="title" style="font-size:clamp(28px,4vw,44px);">トータルボディメイクという考え方</h2>
+          <p>
+            Akua Malie は、高品質な商品と美容機器を活かし、カラダの外側と内側の両面から理想に近づける「トータルボディメイク」を提案するサロンです。
+          </p>
+          <p>
+            フェイシャルだけ、ボディだけで終わらせず、その方の悩みやコンプレックス、ご要望に合わせて、最適な入口から整えていけることが強みです。
+          </p>
+          <p>
+            女性専用・完全予約制だからこそ、周囲を気にせず落ち着いて相談できる隠れ家的な空間で、丁寧に向き合います。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <span class="eyebrow">SERVICE LINE</span>
+        <h2 class="title">3つのラインから、今のあなたに合う導線を選ぶ。</h2>
+        <div class="service-grid">
+          <article class="service">
+            <div class="photo" style="background-image:url('./img/facial.jpg');"></div>
+            <div class="body">
+              <h3>Facial</h3>
+              <p>VAVITTE核酸DNA美容法や話題のフェイシャルトリートメントで、肌印象やハリ感にアプローチ。</p>
+              <div class="tags">
+                <span class="tag">核酸DNA美容法</span>
+                <span class="tag">エイジングケア</span>
+                <span class="tag">肌印象アップ</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="service">
+            <div class="photo" style="background-image:url('./img/body.jpg');"></div>
+            <div class="body">
+              <h3>Body</h3>
+              <p>PYR SWORD パラボラ痩身法などを活かし、脂肪燃焼やセルライトケアを含むボディスリミングを提案。</p>
+              <div class="tags">
+                <span class="tag">パラボラ痩身法</span>
+                <span class="tag">ボディライン</span>
+                <span class="tag">巡りケア</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="service">
+            <div class="photo" style="background-image:url('./img/beauty.jpg');"></div>
+            <div class="body">
+              <h3>Beauty / Inner Care</h3>
+              <p>酵素ファスティングなど、カラダの中から美と健康を支えるメニューで、日常の習慣までサポート。</p>
+              <div class="tags">
+                <span class="tag">酵素ファスティング</span>
+                <span class="tag">内側ケア</span>
+                <span class="tag">健康サポート</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="background:#fff;">
+      <div class="wrap">
+        <span class="eyebrow">WHY CHOOSE US</span>
+        <h2 class="title">選ばれる理由</h2>
+        <div class="cards-3" style="margin-top:28px;">
+          <div class="card">
+            <h3>一人ひとりに寄り添う</h3>
+            <p>悩みや理想が違うからこそ、同じメニューをただ当てはめず、要望に合わせた施術・サービスを大切にします。</p>
+          </div>
+          <div class="card">
+            <h3>外・中両面からアプローチ</h3>
+            <p>フェイシャルやボディの外側ケアだけでなく、ファスティングなど内側からのサポートまで視野に入れます。</p>
+          </div>
+          <div class="card">
+            <h3>通いやすさと安心感</h3>
+            <p>三河安城駅近くで、女性専用・完全予約制。人目を気にせず通える落ち着いたサロン環境です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <span class="eyebrow">VOICE</span>
+        <h2 class="title">予約前の不安を、先に解消する。</h2>
+        <div class="voice">
+          <div class="quote">
+            <strong>何を選べばいいか分からない方へ</strong>
+            <p>最初からメニューを決めきれなくても大丈夫です。悩みベースで相談し、合う導線から提案される設計にしています。</p>
+          </div>
+          <div class="quote">
+            <strong>強い勧誘が不安な方へ</strong>
+            <p>まずは相談からでも問題ありません。問い合わせしやすいよう、電話・LINE・メールフォームの3導線を用意しています。</p>
+          </div>
+          <div class="quote">
+            <strong>人目が気になる方へ</strong>
+            <p>女性専用・完全予約制の隠れ家的サロンなので、周囲の目を気にせず落ち着いて施術を受けやすい環境です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="background:#fff;">
+      <div class="wrap">
+        <span class="eyebrow">FLOW</span>
+        <h2 class="title">ご予約から施術まで</h2>
+        <div class="flow">
+          <div class="flow-item">
+            <div class="step">STEP 01</div>
+            <div>
+              <h4>お問い合わせ・ご予約</h4>
+              <p>Webフォーム、LINE、電話から受付。まずは悩みや希望を相談するところからでも大丈夫です。</p>
+            </div>
+          </div>
+          <div class="flow-item">
+            <div class="step">STEP 02</div>
+            <div>
+              <h4>カウンセリング</h4>
+              <p>今の状態、気になること、目指したい方向性を丁寧に整理し、最適な施術ラインを一緒に決めます。</p>
+            </div>
+          </div>
+          <div class="flow-item">
+            <div class="step">STEP 03</div>
+            <div>
+              <h4>施術提案・ご案内</h4>
+              <p>フェイシャル、ボディ、ビューティーの中から、今のあなたに合う施術・サービスを提案します。</p>
+            </div>
+          </div>
+          <div class="flow-item">
+            <div class="step">STEP 04</div>
+            <div>
+              <h4>継続サポート</h4>
+              <p>その場だけで終わらせず、日常のケアや次回以降の整え方まで見据えてサポートします。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <span class="eyebrow">SALON INFO</span>
+        <h2 class="title">安心して通いやすいサロン情報</h2>
+        <div class="card" style="margin-top:24px;">
+          <div class="info">
+            <div class="label">サロン名</div><div>Total body make salon Akua Malie - アクアマーリエ -</div>
+            <div class="label">所在地</div><div>愛知県安城市三河安城本町2-1-10 カガヤキスクエア602号室-1</div>
+            <div class="label">特徴</div><div>女性専用・完全予約制のプライベートサロン</div>
+            <div class="label">営業時間</div><div>10:00〜21:00（最終受付19:00）</div>
+            <div class="label">連絡先</div><div>050-1068-0185</div>
+            <div class="label">問い合わせ</div><div>電話 / LINE / メールフォーム</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <div class="cta">
+          <span class="eyebrow">CALL TO ACTION</span>
+          <h2>まずは、今の悩みを相談するところから。</h2>
+          <p>
+            顔から始めるべきか、身体から整えるべきか、内側のケアまで見た方がいいか。<br>
+            無理に決めきらなくても大丈夫です。今のあなたに合う入口からご案内します。
+          </p>
+          <div class="btnrow" style="justify-content:center;">
+            <a class="btn primary" href="https://www.akuamalie.com/reservation.php">Webで予約・相談する</a>
+            <a class="btn secondary" href="https://www.akuamalie.com/">公式サイトを見る</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="sticky-cta">
+    <a class="primary" href="https://www.akuamalie.com/reservation.php">Web予約</a>
+    <a class="secondary" href="https://line.me/R/ti/p/%40852fcvkp">LINE相談</a>
+  </div>
+
+  <footer>© Akua Malie proposal sample</footer>
+</body>
+</html>
