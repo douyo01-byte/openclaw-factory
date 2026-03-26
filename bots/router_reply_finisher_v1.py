@@ -17,6 +17,15 @@ def conn():
     c.execute("pragma busy_timeout=30000")
     return c
 
+def safe_text(t: str) -> str:
+    if not t:
+        return t
+    t = t.strip()
+    # Telegram制限対策（4000で切る）
+    if len(t) > 4000:
+        t = t[:4000] + "\n...(truncated)"
+    return t
+
 def tg_send(text):
     payload = {
         "chat_id": CHAT_ID,
@@ -47,7 +56,7 @@ def tick():
         touched = len(rows)
         for r in rows:
             try:
-                mid = tg_send(r["reply_text"])
+                mid = tg_send(safe_text(r["reply_text"]))
                 c.execute("""
                     update router_tasks
                     set sent_message_id=?,
