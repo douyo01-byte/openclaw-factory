@@ -59,3 +59,16 @@
 - Kaikun04 はオウム返しではなく実回答を返す
 - private -> router -> worker -> finisher の reply 本流は完全クローズ
 - daemon main: f974d15
+
+## 2026-03-26 追記: Kaikun02 routed残件整理
+
+完了
+- Kaikun02 worker 不在を runtime / LaunchAgents / router_tasks で確認
+- routed 後に `target_bot='kaikun02'` のまま `status='new'` で滞留していた残件を棚卸し
+- 残件は `skipped_no_kaikun02_worker` で整合化
+- `router_tasks target_bot='kaikun02' and status='new'` は 0 を確認
+
+現状態
+- Kaikun04 reply 本流は復旧済み
+- Kaikun02 は worker 不在のため routed 後は自動実行しない
+- 古い routed 残件は DB 上でクローズ済み
