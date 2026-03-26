@@ -20,7 +20,7 @@ def ensure_schema(c):
       id integer primary key autoincrement,
       source_command_id integer,
       mode text not null default 'FAST',
-      target_bot text not null default 'kaikun02',
+      target_bot text not null default 'kaikun04',
       task_text text not null,
       status text not null default 'new',
       created_at text default (datetime('now')),
@@ -38,24 +38,22 @@ def ensure_schema(c):
 
 def classify(text: str):
     t = (text or "").lower()
-
     if "[doc]" in t:
-        return "DOC", "kaikun02"
+        return "DOC", "kaikun04"
     if "[think]" in t or "[deep]" in t:
         return "THINK", "kaikun04"
     if "[fast]" in t:
-        return "FAST", "kaikun02"
-
-    if any(x in t for x in ["schema", "pipeline", "db", "設計", "構造", "統合"]):
+        return "FAST", "kaikun04"
+    if any(x in t for x in ["schema", "pipeline", "db", "設 計 ", "構 造 ", "統合 "]):
         return "THINK", "kaikun04"
-    if any(x in t for x in ["分類", "classify", "棚卸し", "一覧", "どれ"]):
-        return "FAST", "kaikun02"
-    if any(x in t for x in ["docs", "handover", "readme", "文章", "文面"]):
-        return "DOC", "kaikun02"
-
-    return "FAST", "kaikun02"
+    if any(x in t for x in ["分 類 ", "classify", "棚 卸 し ", "一 覧 ", "ど れ "]):
+        return "FAST", "kaikun04"
+    if any(x in t for x in ["docs", "handover", "readme", "文 章 ", "文 面 "]):
+        return "DOC", "kaikun04"
+    return "FAST", "kaikun04"
 
 def shorten(text: str):
+
     lines = (text or "").splitlines()
     if len(lines) > 12:
         lines = lines[:12]
