@@ -72,3 +72,17 @@
 - Kaikun04 reply 本流は復旧済み
 - Kaikun02 は worker 不在のため routed 後は自動実行しない
 - 古い routed 残件は DB 上でクローズ済み
+
+
+## 2026-03-26 追記 : router finisher sent_message_id 永続化
+
+完了
+- router_reply_finisher_v1 で Telegram送信成功時に router_tasks.sent_message_id を保存するよう修正
+- inbox_commands も finisher 成功時に done / processed=1 / sent へ更新するよう統一
+- task 522 で sent_message_id=398 保存を実地確認
+- Kaikun04 reply 本流は DB整合込みでクローズ済み
+
+現状態
+- kaikun04_done_sent_missing = 0
+- kaikun02_new_remaining = 0
+- private_pending = 0
