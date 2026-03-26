@@ -61,3 +61,11 @@
 - sent_message_id 欠損は backfill_from_sent_state で整合化済み
 - daemon main: f974d15
 - PR #2705 merge 済み
+
+## 2026-03-26 追記: Kaikun02 routed残件
+
+- Kaikun02 worker は現行 runtime に存在しない
+- `task_router_v1` は `kaikun02` task を作るが、処理実行体は未接続
+- 既存の `kaikun02 new` 残件は `skipped_no_kaikun02_worker` で整理済み
+- 現時点で `router_tasks target_bot='kaikun02' and status='new'` は 0
+- 今後 Kaikun02 を復活させるなら worker 実装または routed 抑止が必要
