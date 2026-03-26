@@ -69,3 +69,11 @@
 - 既存の `kaikun02 new` 残件は `skipped_no_kaikun02_worker` で整理済み
 - 現時点で `router_tasks target_bot='kaikun02' and status='new'` は 0
 - 今後 Kaikun02 を復活させるなら worker 実装または routed 抑止が必要
+
+
+## 2026-03-26 追記 : finisher最終整合
+
+- router_reply_finisher_v1 は送信成功時に sent_message_id を保存する
+- inbox_commands は finisher成功で done / processed=1 / sent に揃う
+- task 522 / inbox 474 で sent_message_id 永続化まで確認済み
+- reply本流の未整合は解消済み
