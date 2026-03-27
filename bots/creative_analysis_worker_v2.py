@@ -5,6 +5,7 @@ import re
 import sqlite3
 import subprocess
 from pathlib import Path
+from text_normalizer_v1 import normalize_text
 
 DB_PATH = os.environ.get("DB_PATH", os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db"))
 ROOT = Path(__file__).resolve().parent.parent
@@ -47,13 +48,6 @@ def load_context(c, job_id):
         return json.loads(row["input_json"])
     except:
         return {}
-
-def normalize_text(text: str) -> str:
-    text = text.replace("\u3000", " ")
-    text = re.sub(r"[ \t]+", " ", text)
-    text = re.sub(r"(?<=[ぁ-んァ-ン一-龥A-Za-z0-9])\s+(?=[ぁ-んァ-ン一-龥A-Za-z0-9])", "", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
 
 def strip_html(html: str) -> str:
     s = re.sub(r"(?is)<script.*?>.*?</script>", " ", html)
