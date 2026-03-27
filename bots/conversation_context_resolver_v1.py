@@ -14,7 +14,7 @@ def resolve_context(text: str) -> dict:
     target_object = ""
     if "educateb" in tl.replace(" ", ""):
         target_object = "educate B"
-    has_continue_intent = any(x in t for x in ["続き","そのまま","次へ","改善","作り直し","深掘り"])
+    has_continue_intent = any(x in t for x in ["続き", "そのまま", "次へ", "改善", "作り直し", "深掘り"])
     return {
         "normalized_text": t,
         "urls": urls,
