@@ -32,13 +32,21 @@ def ensure_cols(c):
         if k not in cols:
             c.execute(sql)
 
-def creative_eligible(text: str, source: str) -> bool:
+def creative_eligible(text: str, source: str, chat_id: str) -> bool:
     t = (text or "").lower()
-    if source not in ("manual", "tg_private_chat_log", "tg_reply", "telegram"):
+    s = (source or "").strip().lower()
+    chat_id = (chat_id or "").strip()
+
+    allowed_sources = {"manual", "tg_private_chat_log", "tg_reply", "telegram", ""}
+    if s not in allowed_sources:
         return False
+    if not chat_id:
+        return False
+
     creative_hits = [
         "lp", "ランディングページ", "商品分析", "勝ち軸", "コピー", "バナー",
-        "画像", "動画台本", "構成", "訴求", "記事", "紹介文", "サムネ", "制作"
+        "画像", "動画台本", "構成", "訴求", "記事", "紹介文", "サムネ", "制作",
+        "改善版"
     ]
     has_url = "http://" in t or "https://" in t
     return has_url and any(k in t for k in creative_hits)
@@ -52,7 +60,7 @@ def fetch_rows(c, limit=20):
                coalesce(router_status,'') as router_status,
                coalesce(conversation_job_id,0) as conversation_job_id
         from inbox_commands
-        where coalesce(status,'')='new'
+        where coalesce(status,'') in ('new','pending')
           and coalesce(conversation_job_id,0)=0
         order by id asc
         limit ?
@@ -61,7 +69,7 @@ def fetch_rows(c, limit=20):
     ).fetchall()
     out = []
     for r in rows:
-        if creative_eligible(r["text"] or "", r["source"] or ""):
+        if creative_eligible(r["text"] or "", r["source"] or "", r["chat_id"] or ""):
             out.append(r)
     return out
 
@@ -105,6 +113,8 @@ def create_job(c, row):
                     "context": context,
                     "intent": intent,
                     "source_inbox_command_id": row["id"],
+                    "source_status": row["status"],
+                    "source_source": row["source"],
                 }, ensure_ascii=False),
                 None,
             )
