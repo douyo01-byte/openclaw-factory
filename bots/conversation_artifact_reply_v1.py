@@ -35,33 +35,37 @@ def build_reply(job_id: int) -> str:
     for a in arts:
         if a["artifact_type"] == "analysis_markdown":
             lines.append("【分析】")
-            lines.append(a["artifact_body"][:450])
+            lines.append(a["artifact_body"][:400])
             lines.append("")
         elif a["artifact_type"] == "lp_review_markdown":
             lines.append("【LPレビュー】")
-            lines.append(a["artifact_body"][:450])
+            lines.append(a["artifact_body"][:400])
             lines.append("")
         elif a["artifact_type"] == "lp_improved_markdown":
             lines.append("【改善版LP】")
-            lines.append(a["artifact_body"][:700])
+            lines.append(a["artifact_body"][:600])
             lines.append("")
         elif a["artifact_type"] == "image_plan_markdown":
             lines.append("【画像構成案】")
-            lines.append(a["artifact_body"][:700])
+            lines.append(a["artifact_body"][:500])
             lines.append("")
         elif a["artifact_type"] == "product_image_urls_markdown":
             lines.append("【商品画像URL候補】")
+            lines.append(a["artifact_body"][:500])
+            lines.append("")
+        elif a["artifact_type"] == "fv_wireframe_markdown":
+            lines.append("【FVラフ構成】")
             lines.append(a["artifact_body"][:700])
             lines.append("")
         elif a["artifact_type"] == "lp_markdown":
             lines.append(f"【LP案 v{a['version']}】")
-            lines.append(a["artifact_body"][:300])
+            lines.append(a["artifact_body"][:220])
             lines.append("")
 
     lines.append("次アクション候補:")
-    lines.append("1. FVラフ構成を作る")
-    lines.append("2. 商品画像候補から採用案を決める")
-    lines.append("3. LP本文をさらに磨く")
+    lines.append("1. FV完成稿テキストを作る")
+    lines.append("2. 採用画像を1つに絞る")
+    lines.append("3. セクション構成へ展開する")
     return "\n".join(lines).strip()
 
 def main() -> None:
