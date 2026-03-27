@@ -17,6 +17,32 @@ TAG_RE = re.compile(r"^\[(THINK|TASK|MODE:[^\]]+)\]\s*$", re.MULTILINE)
 SPACE_RE = re.compile(r"[ \t\u3000]+")
 MULTI_NL_RE = re.compile(r"\n{3,}")
 
+EXEC_BLOCK_RE = re.compile(r"(?ms)^\[EXEC\]\s*script=([A-Za-z0-9_.-]+)\s*$")
+ALLOWED_EXEC_SCRIPTS = {
+    "db_health.sh",
+    "git_status.sh",
+    "status_core.sh",
+    "kick_service.sh",
+    "route_smoke.sh",
+    "gh_pr_create.sh",
+    "gh_pr_merge.sh",
+    "git_commit_push.sh",
+}
+
+def normalize_exec_block(text: str) -> str:
+    s = (text or "").strip()
+    m = EXEC_BLOCK_RE.search(s)
+    if not m:
+        s = re.sub(r"(?ms)\n*EXEC[^\n]*$", "", s).strip()
+        s = re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "", s).strip()
+        return s
+    script = (m.group(1) or "").strip()
+    if script not in ALLOWED_EXEC_SCRIPTS:
+        s = re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "", s).strip()
+        return s
+    clean = f"[EXEC]\nscript={script}"
+    return re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "\n\n" + clean, s).strip()
+
 SYSTEM_PROMPT = """あなたは OpenClaw の Kaikun04 です。
 目的は、タスク本文に対して実務で使える完成回答を返すことです。
 禁止:
@@ -30,7 +56,53 @@ SYSTEM_PROMPT = """あなたは OpenClaw の Kaikun04 です。
 - HTMLを求められたら、そのままコピペできるHTMLを含める
 - 3案を求められたら3案返す
 - 返信冒頭は必ず [TASK_ID:番号]
+
+追 加 ル ー ル :
+- EXEC を 出 す の は 本 当 に 有 用 な と き だ け
+- EXEC を 出 す 場 合 は 返 信 の 最 後 に 1つ だ け
+- EXEC 形 式 は 必 ず 次 の 2行 だ け
+[EXEC]
+script=<allowlisted_script_name>
+- bash / sh / zsh / python / command列 / 引 数 直 書 き は 禁 止
+- 許 可 script:
+  - db_health.sh
+  - git_status.sh
+  - status_core.sh
+  - kick_service.sh
+  - route_smoke.sh
+  - gh_pr_create.sh
+  - gh_pr_merge.sh
+  - git_commit_push.sh
+- 実 行 が 不 要 な と き は EXEC を 出 さ な い
 """
+
+def load_exec_pattern_hints() -> str:
+    try:
+        with conn() as c:
+            rows = c.execute("""
+                select pattern_key, weight
+                from learning_patterns
+                where pattern_type='self_improvement_exec'
+                order by weight desc, success_count desc, sample_count desc
+                limit 5
+            """).fetchall()
+    except Exception:
+        rows = []
+    hints = []
+    for r in rows:
+        k = (r["pattern_key"] or "").strip()
+        if not k.startswith("script="):
+            continue
+        hints.append(f"- {k} weight={float(r['weight'] or 0):.3f}")
+    if not hints:
+        return ""
+    return "\n".join([
+        "実行提案ヒント:",
+        "過去に成功した allowlisted EXEC パターンがあります。",
+        *hints,
+        "必要性が低いときは EXEC を出さないこと。",
+        "出す場合は末尾に 1つだけ出すこと。"
+    ])
 
 def conn():
     c = sqlite3.connect(DB, timeout=30)
@@ -105,7 +177,9 @@ def validate_output(prompt: str, output: str):
 def call_llm(task_id: int, prompt: str) -> str:
     if not OPENAI_API_KEY:
         raise RuntimeError("OPENAI_API_KEY missing")
-    user_prompt = f"[TASK_ID:{task_id}]\n\n{prompt}"
+    pattern_hints = load_exec_pattern_hints()
+    prompt2 = prompt if not pattern_hints else f"{prompt}\n\n{pattern_hints}"
+    user_prompt = f"[TASK_ID:{task_id}]\n\n{prompt2}"
     r = requests.post(
         "https://api.openai.com/v1/chat/completions",
         headers={
@@ -129,6 +203,7 @@ def call_llm(task_id: int, prompt: str) -> str:
         raise
     j = r.json()
     text = (((j.get("choices") or [{}])[0].get("message") or {}).get("content") or "").strip()
+    text = normalize_exec_block(text)
     if not text.startswith(f"[TASK_ID:{task_id}]"):
         text = f"[TASK_ID:{task_id}]\n{text}"
     return text.strip()
