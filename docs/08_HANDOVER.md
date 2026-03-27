@@ -118,3 +118,11 @@
 - ops_exec_new_remaining = 0
 - kaikun04_new_remaining = 0
 - kaikun04_done_sent_missing = 0
+
+
+## self_improvement_log lifecycle 拡張
+- self_improvement_log に status / parent_reply_head / child_result_head / applied_at / updated_at を追加
+- Kaikun04 exec bridge が queued / skipped を記録
+- telegram_ops_executor_v1 が child ops_exec の done / failed / skipped を self_improvement_log に反映
+- 検証: parent_task_id=550 -> child_task_id=551
+- script=db_health.sh の child 実行完了まで self_improvement_log で追跡可能
