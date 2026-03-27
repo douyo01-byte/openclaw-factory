@@ -206,3 +206,31 @@
 - ops_exec_new_remaining=0
 - kaikun04_new_remaining=0
 - kaikun04_done_sent_missing=0
+
+
+## 2026-03-27 self_improvement_feedback_metrics_v1
+
+追加:
+- self_improvement_feedback_metrics_v1 を追加
+- self improvement -> learning -> pattern ループの状態を obs/self_improvement_feedback.json へ定期出力
+- 正の EXEC パターンと負の no_exec_block パターンを 1ファイルで確認可能
+
+確認済み:
+- self_improvement_log_total=6
+- done_rows=3
+- skipped_rows=2
+- learning_done_rows=5
+- pattern_done_rows=5
+- negative_learning_rows=2
+- positive_learning_rows=3
+- secretary_done_remaining=0
+- tg_private_pending=0
+- manual_pending=0
+- ops_exec_new_remaining=0
+- kaikun04_new_remaining=0
+- kaikun04_done_sent_missing=0
+
+主要パターン:
+- script=status_core.sh
+- script=db_health.sh
+- no_exec_block
