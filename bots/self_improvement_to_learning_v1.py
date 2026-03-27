@@ -67,7 +67,7 @@ def fetch_rows(c):
           coalesce(applied_at,'') as applied_at,
           coalesce(learning_bridge_status,'') as learning_bridge_status
         from self_improvement_log
-        where coalesce(status,'')='done'
+        where coalesce(status,'') in ('done','skipped')
           and coalesce(learning_bridge_status,'')=''
         order by id asc
         limit 20
