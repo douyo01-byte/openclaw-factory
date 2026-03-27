@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import html as html_lib
-import json
 import os
 import re
 import sqlite3
@@ -21,8 +20,9 @@ def fetch_jobs(c, limit=10):
         """
         select *
         from conversation_jobs
-        where coalesce(current_phase,'') in ('image_plan_done','lp_improved_done')
+        where coalesce(current_phase,'')='image_plan_done'
           and coalesce(status,'')='done'
+          and coalesce(final_reply_status,'') in ('', 'ready', 'queued')
           and id not in (
             select job_id from conversation_artifacts where artifact_type='product_image_urls_markdown'
           )
@@ -31,31 +31,6 @@ def fetch_jobs(c, limit=10):
         """,
         (limit,),
     ).fetchall()
-
-def load_context(c, job_id):
-    row = c.execute(
-        """
-        select input_json
-        from conversation_job_steps
-        where job_id=?
-        order by step_order asc
-        limit 1
-        """,
-        (job_id,),
-    ).fetchone()
-    if not row or not row["input_json"]:
-        return {}
-    try:
-        return json.loads(row["input_json"])
-    except:
-        return {}
-
-def normalize_text(text: str) -> str:
-    t = html_lib.unescape(text or "")
-    t = t.replace("\u3000", " ")
-    t = re.sub(r"[ \t]+", " ", t)
-    t = re.sub(r"\n{3,}", "\n\n", t)
-    return t.strip()
 
 def collect_urls(html: str):
     pats = [
@@ -96,9 +71,9 @@ def build_body(job, urls):
         lines.append(f"{i}. {u}")
     lines.append("")
     lines.append("## 利用方針")
-    lines.append("- まず og:image と商品メイン画像を優先")
-    lines.append("- FV用は正面寄り、白背景寄りを優先")
-    lines.append("- CTA付近は寄り画像または手持ち風があれば候補化")
+    lines.append("- og:image と商品メイン画像を優先")
+    lines.append("- FV用は正面寄り・白背景寄りを優先")
+    lines.append("- CTA付近は寄り画像があれば候補化")
     return "\n".join(lines)
 
 def run_once():
