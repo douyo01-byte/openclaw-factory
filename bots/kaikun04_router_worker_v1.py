@@ -6,6 +6,7 @@ import sqlite3
 import time
 from difflib import SequenceMatcher
 import requests
+from bots.self_improvement_proposal_feedback_v1 import build_exec_feedback_block
 from bots.self_improvement_proposal_feedback_v1 import load_proposal_pattern_hints
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
@@ -221,8 +222,8 @@ def call_llm(task_id: int, prompt: str) -> str:
     if not OPENAI_API_KEY:
         raise RuntimeError("OPENAI_API_KEY missing")
     exec_hints = load_exec_pattern_hints()
-    proposal_hints = load_proposal_pattern_hints()
-    extra = "\n\n".join([x for x in [proposal_hints, exec_hints] if x])
+    feedback_hints = build_exec_feedback_block()
+    extra = "\n\n".join([x for x in [feedback_hints, exec_hints] if x])
     prompt2 = prompt if not extra else f"{prompt}\n\n{extra}"
     user_prompt = f"[TASK_ID:{task_id}]\n\n{prompt2}"
     r = requests.post(
@@ -253,7 +254,6 @@ def call_llm(task_id: int, prompt: str) -> str:
     if not text.startswith(f"[TASK_ID:{task_id}]"):
         text = f"[TASK_ID:{task_id}]\n{text}"
     return text.strip()
-
 def fetch_rows(c):
 
 
