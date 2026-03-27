@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import re
 import sqlite3
 import urllib.parse
 import urllib.request
@@ -8,6 +9,7 @@ import urllib.request
 DB = os.environ.get("DB_PATH") or os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 BOT_TOKEN = (os.environ.get("KAIKUN04_ROUTER_BOT_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
 API = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+CHAT_ID_RE = re.compile(r"^-?\d+$")
 
 def conn():
     c = sqlite3.connect(DB, timeout=30)
@@ -22,11 +24,14 @@ def safe_text(t: str) -> str:
         t = t[:4000] + "\n...(truncated)"
     return t
 
+def valid_chat_id(chat_id: str) -> bool:
+    return bool(chat_id and CHAT_ID_RE.match(str(chat_id).strip()))
+
 def tg_send(chat_id: str, text: str) -> str:
     if not BOT_TOKEN:
         raise RuntimeError("TELEGRAM_BOT_TOKEN empty")
-    if not chat_id:
-        raise RuntimeError("chat_id empty")
+    if not valid_chat_id(chat_id):
+        raise RuntimeError(f"invalid_chat_id:{chat_id}")
     payload = {
         "chat_id": chat_id,
         "text": safe_text(text),
@@ -74,20 +79,23 @@ def run_once():
             print(f"sent outbox_id={r['id']} job_id={r['job_id']} message_id={mid}", flush=True)
             done += 1
         except Exception as e:
+            msg = str(e)[:1000]
+            status = "skipped" if msg.startswith("invalid_chat_id:") else "error"
+            job_status = "skipped_invalid_chat_id" if status == "skipped" else "send_error"
             c.execute("""
                 update conversation_outbox
-                set status='error',
+                set status=?,
                     error=?,
                     updated_at=datetime('now')
                 where id=?
-            """, (str(e)[:1000], r["id"]))
+            """, (status, msg, r["id"]))
             c.execute("""
                 update conversation_jobs
-                set final_reply_status='send_error',
+                set final_reply_status=?,
                     updated_at=datetime('now')
                 where id=?
-            """, (r["job_id"],))
-            print(f"send_error outbox_id={r['id']} job_id={r['job_id']} err={e}", flush=True)
+            """, (job_status, r["job_id"]))
+            print(f"{status} outbox_id={r['id']} job_id={r['job_id']} err={msg}", flush=True)
     c.commit()
     c.close()
     print(f"send_done={done}", flush=True)
