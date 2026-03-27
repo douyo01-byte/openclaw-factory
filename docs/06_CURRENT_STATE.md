@@ -125,3 +125,15 @@
 - telegram_ops_executor_v1 が child ops_exec の done / failed / skipped を self_improvement_log に反映
 - 検証: parent_task_id=550 -> child_task_id=551
 - script=db_health.sh の child 実行完了まで self_improvement_log で追跡可能
+
+
+## self_improvement_to_learning_v1 追加
+
+- self_improvement_log の done 行を learning_results に橋渡しする mainline を追加
+- live schema に合わせて learning_results へ挿入する列を動的選択
+- synthetic proposal_id を使って self improvement 系 learning を永続化
+- 検証済み:
+  - self_improvement_log id=2
+  - parent=550 -> child=551
+  - learning_result_id=3052
+  - proposal_id=-1000000002
