@@ -64,6 +64,7 @@ def fetch_rows(c):
           coalesce(reusable_pattern,'') as reusable_pattern,
           coalesce(parent_reply_head,'') as parent_reply_head,
           coalesce(child_result_head,'') as child_result_head,
+          coalesce(applied_at,'') as applied_at,
           coalesce(learning_bridge_status,'') as learning_bridge_status
         from self_improvement_log
         where coalesce(status,'')='done'
