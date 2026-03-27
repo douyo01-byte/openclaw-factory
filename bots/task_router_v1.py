@@ -1,8 +1,9 @@
 from __future__ import annotations
-import os, time, sqlite3
+import os, time, sqlite3, re
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 SLEEP = float(os.environ.get("TASK_ROUTER_SLEEP", "5"))
+EXEC_ONLY_RE = re.compile(r"(?is)^\s*\[exec\]\s*script\s*=\s*[A-Za-z0-9_.-]+(?:\s*$|\n)")
 
 def conn():
     c = sqlite3.connect(DB, timeout=30)
@@ -37,8 +38,9 @@ def ensure_schema(c):
         c.execute("alter table inbox_commands add column router_mode text default ''")
 
 def classify(text: str):
-    t = (text or "").lower()
-    if "[exec]" in t or "[ops]" in t:
+    raw = (text or "").strip()
+    t = raw.lower()
+    if EXEC_ONLY_RE.match(raw):
         return "EXEC", "ops_exec"
     if "[doc]" in t:
         return "DOC", "kaikun04"
