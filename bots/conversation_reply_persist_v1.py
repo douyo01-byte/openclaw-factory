@@ -16,7 +16,7 @@ def fetch_jobs(c, limit=10):
         """
         select id
         from conversation_jobs
-        where coalesce(current_phase,'') in ('lp_improved_done','image_plan_done')
+        where coalesce(current_phase,'') in ('lp_improved_done','image_plan_done','product_image_urls_done')
           and coalesce(status,'')='done'
           and coalesce(final_reply_status,'')=''
         order by id asc
