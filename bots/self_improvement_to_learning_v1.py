@@ -23,23 +23,26 @@ def has_table(c, name: str) -> bool:
     ).fetchone()
     return bool(row)
 
+def cols(c, table: str) -> set[str]:
+    return {r["name"] for r in c.execute(f"pragma table_info({table})").fetchall()}
+
+def ensure_cols(c, table: str, adds: dict[str, str]):
+    existing = cols(c, table)
+    for k, sql in adds.items():
+        if k not in existing:
+            c.execute(sql)
+
 def ensure_schema(c):
-    cols = {r["name"] for r in c.execute("pragma table_info(self_improvement_log)").fetchall()}
-    adds = {
+    ensure_cols(c, "self_improvement_log", {
         "learning_bridge_status": "alter table self_improvement_log add column learning_bridge_status text not null default ''",
         "learning_bridge_reason": "alter table self_improvement_log add column learning_bridge_reason text not null default ''",
         "learning_result_id": "alter table self_improvement_log add column learning_result_id integer default 0",
-    }
-    for k, sql in adds.items():
-        if k not in cols:
-            c.execute(sql)
+    })
 
     if not has_table(c, "learning_results"):
         c.execute("""
-            create table if not exists learning_results(
+            create table learning_results(
               id integer primary key autoincrement,
-              source text not null default '',
-              source_ref_id integer default 0,
               title text not null default '',
               content text not null default '',
               result text not null default '',
@@ -58,6 +61,7 @@ def fetch_rows(c):
           coalesce(status,'') as status,
           coalesce(fix,'') as fix,
           coalesce(result,'') as result,
+          coalesce(reusable_pattern,'') as reusable_pattern,
           coalesce(parent_reply_head,'') as parent_reply_head,
           coalesce(child_result_head,'') as child_result_head,
           coalesce(learning_bridge_status,'') as learning_bridge_status
@@ -69,35 +73,68 @@ def fetch_rows(c):
     """).fetchall()
 
 def build_title(r) -> str:
-    return f"self_improvement exec bridge success parent={r['parent_task_id']} child={r['child_task_id']}"
+    return f"self_improvement exec bridge parent={r['parent_task_id']} child={r['child_task_id']}"
 
 def build_content(r) -> str:
-    parts = [
+    return "\n".join([
         f"kind={r['kind']}",
         f"fix={r['fix']}",
         f"result={r['result']}",
+        f"reusable_pattern={r['reusable_pattern']}",
         "",
         "[parent_reply_head]",
         r["parent_reply_head"],
         "",
         "[child_result_head]",
         r["child_result_head"],
-    ]
-    return "\n".join(parts).strip()
+    ]).strip()
+
+def build_row_payload(r) -> dict[str, object]:
+    return {
+        "source": "self_improvement_log",
+        "source_ref_id": int(r["id"]),
+        "ref_id": int(r["id"]),
+        "title": build_title(r),
+        "content": build_content(r),
+        "body": build_content(r),
+        "summary": build_content(r),
+        "result": "success",
+        "status": "success",
+        "kind": "self_improvement_log",
+        "note": f"self_improvement_log:{int(r['id'])}",
+        "created_at": "datetime('now')",
+        "updated_at": "datetime('now')",
+    }
 
 def insert_learning_result(c, r) -> int:
-    c.execute("""
+    table_cols = cols(c, "learning_results")
+    payload = build_row_payload(r)
+
+    normal_values: list[object] = []
+    normal_cols: list[str] = []
+    sql_values: list[str] = []
+
+    for k, v in payload.items():
+        if k not in table_cols:
+            continue
+        normal_cols.append(k)
+        if isinstance(v, str) and v == "datetime('now')":
+            sql_values.append("datetime('now')")
+        else:
+            sql_values.append("?")
+            normal_values.append(v)
+
+    if not normal_cols:
+        raise RuntimeError("learning_results_has_no_supported_columns")
+
+    sql = f"""
         insert into learning_results(
-          source, source_ref_id, title, content, result, created_at
+          {",".join(normal_cols)}
         ) values(
-          'self_improvement_log', ?, ?, ?, ?, datetime('now')
+          {",".join(sql_values)}
         )
-    """, (
-        int(r["id"]),
-        build_title(r),
-        build_content(r),
-        "success",
-    ))
+    """
+    c.execute(sql, tuple(normal_values))
     return int(c.execute("select last_insert_rowid()").fetchone()[0])
 
 def mark_done(c, row_id: int, learning_result_id: int):
@@ -130,9 +167,13 @@ def tick():
                 mark_skipped(c, int(r["id"]), "empty_fix")
                 skipped += 1
                 continue
-            lrid = insert_learning_result(c, r)
-            mark_done(c, int(r["id"]), lrid)
-            done += 1
+            try:
+                lrid = insert_learning_result(c, r)
+                mark_done(c, int(r["id"]), lrid)
+                done += 1
+            except Exception as e:
+                mark_skipped(c, int(r["id"]), f"{type(e).__name__}:{e}")
+                skipped += 1
         c.commit()
     print(f"[self_improvement_to_learning_v1] done={done} skipped={skipped}", flush=True)
 
