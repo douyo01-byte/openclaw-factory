@@ -167,7 +167,7 @@ def mark_retry(c, task_id: int, clean: str, reason: str):
         where id=?
     """, (clean, reason, task_id))
 
-def mark_done(c, task_id: int, clean: str, reply: str):
+def mark_done(c, task_id: int, cmd_id: int, clean: str, reply: str):
     c.execute("""
         update router_tasks
         set clean_prompt=?,
@@ -179,6 +179,13 @@ def mark_done(c, task_id: int, clean: str, reply: str):
             updated_at=datetime('now')
         where id=?
     """, (clean, reply, task_id))
+    c.execute("""
+        update inbox_commands
+        set router_finish_status='applied',
+            router_task_id=?,
+            updated_at=datetime('now')
+        where id=?
+    """, (task_id, cmd_id))
 
 def tick():
     done = 0
@@ -198,7 +205,7 @@ def tick():
                 reply = call_llm(task_id, clean)
                 ok, reason = validate_output(clean, reply)
                 if ok:
-                    mark_done(c, task_id, clean, reply)
+                    mark_done(c, task_id, r["source_command_id"], clean, reply)
                     c.commit()
                     done += 1
                     print(f"[kaikun04_router_worker_v1] done task_id={task_id}", flush=True)
