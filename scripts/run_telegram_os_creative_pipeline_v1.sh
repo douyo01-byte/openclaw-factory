@@ -11,5 +11,6 @@ python3 bots/image_plan_worker_v1.py
 python3 bots/product_image_url_worker_v1.py
 python3 bots/fv_wireframe_worker_v1.py
 python3 bots/section_outline_worker_v1.py
+python3 bots/fv_copy_final_worker_v1.py
 python3 bots/conversation_reply_persist_v1.py
 python3 bots/conversation_reply_to_outbox_v1.py
