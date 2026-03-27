@@ -138,3 +138,22 @@
   - learning_result_id=3052
   - learning_results.proposal_id=-1000000002
 - 次段は learning_results / self_improvement_log を pattern 化 or 改善ルール抽出へ接続すること
+
+
+## 2026-03-27 self improvement feedback loop
+
+- self_improvement_to_learning_v1 により self_improvement_log の完了行を learning_results へ橋渡し済み
+- synthetic proposal_id は `-1000000000 - self_improvement_log.id`
+- self_improvement_pattern_bridge_v1 により learning_results から learning_patterns / success_patterns へ反映済み
+- pattern_type=`self_improvement_exec` の成功例:
+  - script=db_health.sh
+  - script=status_core.sh
+- kaikun04_router_worker_v1 は learning_patterns を読み、health-check 系 THINK では強い成功パターンがある場合のみ allowlisted EXEC を末尾に 1つだけ自動付与
+- EXEC は allowlisted script のみ許可し、非許可形式は normalize_exec_block で除去
+- 直近確認:
+  - secretary_done_remaining=0
+  - tg_private_pending=0
+  - manual_pending=0
+  - ops_exec_new_remaining=0
+  - kaikun04_new_remaining=0
+  - kaikun04_done_sent_missing=0
