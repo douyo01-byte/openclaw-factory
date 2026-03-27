@@ -74,7 +74,10 @@ def fetch_rows(c):
     """).fetchall()
 
 def build_title(r) -> str:
-    return f"self_improvement exec bridge parent={r['parent_task_id']} child={r['child_task_id']}"
+    child = int(r["child_task_id"] or 0)
+    if child > 0:
+        return f"self_improvement exec bridge parent={r['parent_task_id']} child={child}"
+    return f"self_improvement exec bridge parent={r['parent_task_id']} skipped"
 
 def build_content(r) -> str:
     return "\n".join([
@@ -93,8 +96,10 @@ def build_content(r) -> str:
 def build_row_payload(r) -> dict[str, object]:
     sid = int(r["id"])
     summary = build_content(r)
+    kind = (r["kind"] or "exec_bridge").strip() or "exec_bridge"
     fix = (r["fix"] or "").strip()
     result = (r["result"] or "").strip()
+    status = (r["status"] or "").strip() or "done"
     applied = (r["applied_at"] or "").strip()
     synthetic_proposal_id = -1000000000 - sid
     return {
@@ -102,14 +107,14 @@ def build_row_payload(r) -> dict[str, object]:
         "title": build_title(r),
         "source_ai": "kaikun04",
         "target_system": "self_improvement_loop",
-        "improvement_type": r["kind"] or "exec_bridge",
+        "improvement_type": kind,
         "impact_score": 0.2,
         "impact_level": "internal",
         "impact_reason": "self improvement bridge",
-        "result_score": 1.0 if (r["status"] or "") == "done" else 0.0,
-        "result_type": r["status"] or "done",
-        "result_note": f"fix={fix} | result={result}",
-        "success_flag": 1 if (r["status"] or "") == "done" else 0,
+        "result_score": 1.0 if status == "done" else 0.0,
+        "result_type": status,
+        "result_note": f"status={status} | fix={fix} | result={result}",
+        "success_flag": 1 if status == "done" else 0,
         "learning_summary": summary,
         "merged_at": applied,
         "created_at": "datetime('now')",
@@ -173,10 +178,6 @@ def tick():
         ensure_schema(c)
         rows = fetch_rows(c)
         for r in rows:
-            if not r["fix"]:
-                mark_skipped(c, int(r["id"]), "empty_fix")
-                skipped += 1
-                continue
             try:
                 lrid = insert_learning_result(c, r)
                 mark_done(c, int(r["id"]), lrid)
