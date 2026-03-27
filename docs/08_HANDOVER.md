@@ -247,3 +247,20 @@ Kaikun04 THINK
 - script=status_core.sh
 - script=db_health.sh
 - no_exec_block
+
+## 2026-03-27 追記 : feedback summary Telegram送信確認 完了
+### 完了
+- `scripts/tg_poll_loop.sh` の `DB_PATH` / `FACTORY_DB_PATH` を `~/AI/openclaw-factory/data/openclaw.db` に統一
+- `tg_poll_loop.sh` は `~/AI/openclaw-factory/env/openai.env` 不在でも落ちないよう修正
+- `jp.openclaw.tg_poll_loop` を再起動し、`state=running` / `last exit code=(never exited)` を確認
+- heartbeat 再開を確認
+- `ceo_hub_sender_v1` の自動送信再開を確認
+- `ceo_hub_events.id=35433` を指定送信し、`sent_at=2026-03-27 20:13:46` 更新を確認
+- 実送信本文に以下を確認
+  - `【 自 己 改 善 】 正 3 / 負 2`
+  - `【 EXEC 学 習 】 成 功 script=status_core.sh / 抑 制 no_exec_block x2`
+  - `【 ル ー プ 健 康 】 private=0 ops_exec=0 kaikun04=0`
+
+### 現在の意味
+- self improvement feedback loop は 生成 -> DB投入 -> CEO Telegram共有 まで閉じた
+- 残タスクだった Kaikun02 / CEO送信面の最終確認は完了
