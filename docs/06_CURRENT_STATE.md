@@ -156,3 +156,12 @@
   - ops_exec_new_remaining=0
   - kaikun04_new_remaining=0
   - kaikun04_done_sent_missing=0
+
+
+## 2026-03-27 self improvement skipped rows learning bridge
+- self_improvement_to_learning_v1 が skipped 行も learning_results に反映する構成へ更新
+- skipped 事例も synthetic proposal_id で learning_results に保存
+- 検証対象:
+  - self_improvement_log id=3 -> proposal_id=-1000000003
+  - self_improvement_log id=4 -> proposal_id=-1000000004
+- done / skipped の両方が self_improvement -> learning に残る状態へ統一
