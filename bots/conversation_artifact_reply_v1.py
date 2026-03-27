@@ -10,6 +10,12 @@ def connect():
     con.row_factory = sqlite3.Row
     return con
 
+def find_artifact(arts, artifact_type):
+    for a in arts:
+        if a["artifact_type"] == artifact_type:
+            return a
+    return None
+
 def build_reply(job_id: int) -> str:
     con = connect()
     c = con.cursor()
@@ -25,6 +31,14 @@ def build_reply(job_id: int) -> str:
     ).fetchall()
     con.close()
 
+    best = find_artifact(arts, "lp_best_markdown")
+    improved = find_artifact(arts, "lp_improved_markdown")
+    fv = find_artifact(arts, "fv_copy_final_markdown")
+    cta = find_artifact(arts, "cta_compare_markdown")
+    lp_final = find_artifact(arts, "lp_final_markdown")
+    preview = find_artifact(arts, "public_preview_url")
+    html_export = find_artifact(arts, "lp_html_export")
+
     lines = []
     lines.append(f"案件 {job_id} の処理が完了しました。")
     lines.append(f"領域: {job['domain']}")
@@ -32,64 +46,45 @@ def build_reply(job_id: int) -> str:
         lines.append(f"対象: {job['target_object']}")
     lines.append("")
 
-    for a in arts:
-        if a["artifact_type"] == "analysis_markdown":
-            lines.append("【分析】")
-            lines.append(a["artifact_body"][:140])
-            lines.append("")
-        elif a["artifact_type"] == "lp_review_markdown":
-            lines.append("【LPレビュー】")
-            lines.append(a["artifact_body"][:140])
-            lines.append("")
-        elif a["artifact_type"] == "lp_improved_markdown":
-            lines.append("【改善版LP】")
-            lines.append(a["artifact_body"][:160])
-            lines.append("")
-        elif a["artifact_type"] == "image_plan_markdown":
-            lines.append("【画像構成案】")
-            lines.append(a["artifact_body"][:140])
-            lines.append("")
-        elif a["artifact_type"] == "product_image_urls_markdown":
-            lines.append("【商品画像URL候補】")
-            lines.append(a["artifact_body"][:140])
-            lines.append("")
-        elif a["artifact_type"] == "fv_wireframe_markdown":
-            lines.append("【FVラフ構成】")
-            lines.append(a["artifact_body"][:150])
-            lines.append("")
-        elif a["artifact_type"] == "section_outline_markdown":
-            lines.append("【セクション構成】")
-            lines.append(a["artifact_body"][:150])
-            lines.append("")
-        elif a["artifact_type"] == "fv_copy_final_markdown":
-            lines.append("【FV完成稿コピー】")
-            lines.append(a["artifact_body"][:160])
-            lines.append("")
-        elif a["artifact_type"] == "cta_compare_markdown":
-            lines.append("【CTA比較案】")
-            lines.append(a["artifact_body"][:160])
-            lines.append("")
-        elif a["artifact_type"] == "section_body_markdown":
-            lines.append("【セクション本文案】")
-            lines.append(a["artifact_body"][:180])
-            lines.append("")
-        elif a["artifact_type"] == "lp_final_markdown":
-            lines.append("【LP完成稿】")
-            lines.append(a["artifact_body"][:260])
-            lines.append("")
-        elif a["artifact_type"] == "lp_html_export":
-            lines.append("【HTML出力】")
-            lines.append(a["artifact_body"])
-            if a["artifact_path"]:
-                lines.append(a["artifact_path"])
-            lines.append("")
-        elif a["artifact_type"] == "lp_markdown":
-            lines.append(f"【LP案 v{a['version']}】")
-            lines.append(a["artifact_body"][:70])
-            lines.append("")
+    if best:
+        lines.append("【本命LP】")
+        lines.append(best["artifact_body"][:220])
+        lines.append("")
+
+    if improved:
+        lines.append("【改善版LP】")
+        lines.append(improved["artifact_body"][:260])
+        lines.append("")
+
+    if fv:
+        lines.append("【FV完成稿コピー】")
+        lines.append(fv["artifact_body"][:260])
+        lines.append("")
+
+    if cta:
+        lines.append("【CTA比較案】")
+        lines.append(cta["artifact_body"][:260])
+        lines.append("")
+
+    if lp_final:
+        lines.append("【LP完成稿】")
+        lines.append(lp_final["artifact_body"][:420])
+        lines.append("")
+
+    if preview:
+        lines.append("【お客様確認用URL】")
+        lines.append(preview["artifact_body"])
+        lines.append("")
+
+    elif html_export:
+        lines.append("【HTML出力】")
+        lines.append(html_export["artifact_body"])
+        if html_export["artifact_path"]:
+            lines.append(html_export["artifact_path"])
+        lines.append("")
 
     lines.append("次アクション候補:")
-    lines.append("1. HTMLを確認する")
+    lines.append("1. お客様に確認URLを送る")
     lines.append("2. CTA最終案を決める")
     lines.append("3. 公開前チェックを行う")
     return "\n".join(lines).strip()

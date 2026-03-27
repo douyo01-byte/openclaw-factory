@@ -2,6 +2,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.." || exit 1
 export DB_PATH="${DB_PATH:-$HOME/AI/openclaw-factory/data/openclaw.db}"
+export TELEGRAM_OS_PUBLIC_REPO="${TELEGRAM_OS_PUBLIC_REPO:-$HOME/AI/telegram-os-public}"
+export TELEGRAM_OS_PUBLIC_BASE_URL="${TELEGRAM_OS_PUBLIC_BASE_URL:-https://douyo01-byte.github.io/telegram-os-public}"
 
 python3 bots/inbox_to_conversation_jobs_v1.py
 python3 bots/creative_analysis_worker_v2.py
@@ -16,5 +18,6 @@ python3 bots/cta_compare_worker_v1.py
 python3 bots/section_body_worker_v1.py
 python3 bots/lp_final_compiler_worker_v1.py
 python3 bots/lp_html_export_worker_v1.py
+python3 bots/public_preview_publish_worker_v1.py
 python3 bots/conversation_reply_persist_v1.py
 python3 bots/conversation_reply_to_outbox_v1.py
