@@ -35,45 +35,49 @@ def build_reply(job_id: int) -> str:
     for a in arts:
         if a["artifact_type"] == "analysis_markdown":
             lines.append("【分析】")
-            lines.append(a["artifact_body"][:300])
+            lines.append(a["artifact_body"][:250])
             lines.append("")
         elif a["artifact_type"] == "lp_review_markdown":
             lines.append("【LPレビュー】")
-            lines.append(a["artifact_body"][:300])
+            lines.append(a["artifact_body"][:250])
             lines.append("")
         elif a["artifact_type"] == "lp_improved_markdown":
             lines.append("【改善版LP】")
-            lines.append(a["artifact_body"][:420])
+            lines.append(a["artifact_body"][:350])
             lines.append("")
         elif a["artifact_type"] == "image_plan_markdown":
             lines.append("【画像構成案】")
-            lines.append(a["artifact_body"][:350])
+            lines.append(a["artifact_body"][:280])
             lines.append("")
         elif a["artifact_type"] == "product_image_urls_markdown":
             lines.append("【商品画像URL候補】")
-            lines.append(a["artifact_body"][:350])
+            lines.append(a["artifact_body"][:280])
             lines.append("")
         elif a["artifact_type"] == "fv_wireframe_markdown":
             lines.append("【FVラフ構成】")
-            lines.append(a["artifact_body"][:400])
+            lines.append(a["artifact_body"][:320])
             lines.append("")
         elif a["artifact_type"] == "section_outline_markdown":
             lines.append("【セクション構成】")
-            lines.append(a["artifact_body"][:450])
+            lines.append(a["artifact_body"][:320])
             lines.append("")
         elif a["artifact_type"] == "fv_copy_final_markdown":
             lines.append("【FV完成稿コピー】")
+            lines.append(a["artifact_body"][:420])
+            lines.append("")
+        elif a["artifact_type"] == "cta_compare_markdown":
+            lines.append("【CTA比較案】")
             lines.append(a["artifact_body"][:700])
             lines.append("")
         elif a["artifact_type"] == "lp_markdown":
             lines.append(f"【LP案 v{a['version']}】")
-            lines.append(a["artifact_body"][:140])
+            lines.append(a["artifact_body"][:120])
             lines.append("")
 
     lines.append("次アクション候補:")
-    lines.append("1. CTA比較案を3つ出す")
-    lines.append("2. セクション本文へ展開する")
-    lines.append("3. FV画像採用案を1つに絞る")
+    lines.append("1. セクション本文を作る")
+    lines.append("2. CTA採用案を決める")
+    lines.append("3. FV画像を確定する")
     return "\n".join(lines).strip()
 
 def main() -> None:

@@ -22,7 +22,8 @@ def fetch_jobs(c, limit=10):
           'product_image_urls_done',
           'fv_wireframe_done',
           'section_outline_done',
-          'fv_copy_final_done'
+          'fv_copy_final_done',
+          'cta_compare_done'
         )
           and coalesce(status,'')='done'
           and coalesce(final_reply_status,'')=''
