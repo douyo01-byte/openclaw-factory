@@ -86,3 +86,35 @@
 - `self_improvement_log` で 親 子 関 係 を 記 録
 - 確 認 済 み smoke : parent 538 -> child 539 -> `db_health.sh`
 - 以 後 は Telegram 指 示 → Kaikun04 提 案 → 安 全 script 実 行 の 連 鎖 が 使 え る
+
+
+## 2026-03-27 handover 追記
+
+### 今回完了
+- EXEC payload routing hardening を main 反映
+- malformed EXEC payload の skip正規化を main 反映
+- Kaikun04 worker completion 時の applied / router_task_id 反映を main 反映
+- finisher safe_text を main 反映
+- legacy secretary_done 残留を全件閉塞
+- private/manual ともに pending / new 残なしを確認
+
+### 現在の運用ルール
+- `ops_exec` に流れるのは EXEC専用形のみ
+- THINK/FAST本文に `[EXEC]` の語が含まれても即 ops_exec には行かない
+- EXEC提案は Kaikun04 → exec_bridge → ops_exec の順で処理
+- malformed EXEC は failed ではなく skip系で閉じる
+- reply送信は finisher が担当し、長文は safe_text で切り詰める
+
+### 次に見る場所
+- `bots/task_router_v1.py`
+- `bots/telegram_ops_executor_v1.py`
+- `bots/kaikun04_router_worker_v1.py`
+- `bots/router_reply_finisher_v1.py`
+
+### 現在の健全性
+- secretary_done_remaining = 0
+- tg_private_pending = 0
+- manual_pending = 0
+- ops_exec_new_remaining = 0
+- kaikun04_new_remaining = 0
+- kaikun04_done_sent_missing = 0

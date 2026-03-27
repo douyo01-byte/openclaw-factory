@@ -99,3 +99,21 @@
 現 状 態
 - Kaikun04 は 回 答 末 尾 に safe allowlisted `[EXEC]` を 出 せ る
 - exec bridge -> ops_exec -> finisher の 最 小 自 己 改 善 ル ー プ は 稼 働
+
+
+## 2026-03-27 追記: EXECルーティング硬化と残留閉塞の完了
+
+- task_router_v1 は EXEC専用payloadのみ `ops_exec` へ送るよう硬化済み
+- THINK本文中に `[EXEC]` という語が含まれるだけでは `ops_exec` に誤ルーティングされない
+- telegram_ops_executor_v1 は malformed EXEC payload を `skipped_bad_exec_payload` で正規化して閉じる
+- Kaikun04 worker は reply生成完了時に `inbox_commands.router_finish_status='applied'` と `router_task_id` を自動反映
+- finisher は送信前に safe_text で長文を丸めて Telegram 400 を回避
+- legacy `secretary_done` 残留はすべて閉塞済み
+
+### 2026-03-27 現在の確認値
+- secretary_done_remaining = 0
+- tg_private_pending = 0
+- manual_pending = 0
+- ops_exec_new_remaining = 0
+- kaikun04_new_remaining = 0
+- kaikun04_done_sent_missing = 0
