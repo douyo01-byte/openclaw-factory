@@ -51,3 +51,5 @@
 
 - 全角スペース崩れ
 - 改行崩れ
+
+- 12_TELEGRAM_OS_EXEC_PLAN.md
