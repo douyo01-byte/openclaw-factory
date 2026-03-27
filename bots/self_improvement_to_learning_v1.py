@@ -90,20 +90,29 @@ def build_content(r) -> str:
     ]).strip()
 
 def build_row_payload(r) -> dict[str, object]:
+    sid = int(r["id"])
+    summary = build_content(r)
+    fix = (r["fix"] or "").strip()
+    result = (r["result"] or "").strip()
+    applied = (r["applied_at"] or "").strip()
+    synthetic_proposal_id = -1000000000 - sid
     return {
-        "source": "self_improvement_log",
-        "source_ref_id": int(r["id"]),
-        "ref_id": int(r["id"]),
+        "proposal_id": synthetic_proposal_id,
         "title": build_title(r),
-        "content": build_content(r),
-        "body": build_content(r),
-        "summary": build_content(r),
-        "result": "success",
-        "status": "success",
-        "kind": "self_improvement_log",
-        "note": f"self_improvement_log:{int(r['id'])}",
+        "source_ai": "kaikun04",
+        "target_system": "self_improvement_loop",
+        "improvement_type": r["kind"] or "exec_bridge",
+        "impact_score": 0.2,
+        "impact_level": "internal",
+        "impact_reason": "self improvement bridge",
+        "result_score": 1.0 if (r["status"] or "") == "done" else 0.0,
+        "result_type": r["status"] or "done",
+        "result_note": f"fix={fix} | result={result}",
+        "success_flag": 1 if (r["status"] or "") == "done" else 0,
+        "learning_summary": summary,
+        "merged_at": applied,
         "created_at": "datetime('now')",
-        "updated_at": "datetime('now')",
+        "human_action_id": None,
     }
 
 def insert_learning_result(c, r) -> int:
