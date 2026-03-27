@@ -163,6 +163,28 @@ def mark_failed(c, task_id: int, cmd_id: int, reason: str):
         where id=?
     """, (task_id, cmd_id))
 
+def mark_skipped(c, task_id: int, cmd_id: int, reason: str):
+    reply = f"[TASK_ID:{task_id}]\n[EXEC RESULT]\nstatus=skipped\nreason={reason}"
+    c.execute("""
+        update router_tasks
+        set status='skipped',
+            reply_text=?,
+            validation_status='skipped',
+            validation_reason=?,
+            finished_at=datetime('now'),
+            updated_at=datetime('now')
+        where id=?
+    """, (reply, reason, task_id))
+    c.execute("""
+        update inbox_commands
+        set status='done',
+            processed=1,
+            router_finish_status='skipped_bad_exec_payload',
+            router_task_id=?,
+            updated_at=datetime('now')
+        where id=?
+    """, (task_id, cmd_id))
+
 def tick():
     done = 0
     with conn() as c:
@@ -176,13 +198,25 @@ def tick():
             try:
                 script, args = parse_payload(r["task_text"])
                 if not script:
-                    raise RuntimeError("missing_script")
+                    mark_skipped(c, task_id, cmd_id, "missing_script")
+                    c.commit()
+                    print(f"[telegram_ops_executor_v1] skipped task_id={task_id} reason=missing_script", flush=True)
+                    continue
                 out = run_script(script, args)
                 reply = f"[TASK_ID:{task_id}]\n[EXEC RESULT]\n{out}"
                 mark_done(c, task_id, cmd_id, reply)
                 c.commit()
                 done += 1
                 print(f"[telegram_ops_executor_v1] done task_id={task_id} script={script}", flush=True)
+            except RuntimeError as e:
+                if str(e) in {"invalid_script","script_outside_allowlist","script_not_found","script_not_executable"}:
+                    mark_skipped(c, task_id, cmd_id, str(e))
+                    c.commit()
+                    print(f"[telegram_ops_executor_v1] skipped task_id={task_id} reason={e}", flush=True)
+                else:
+                    mark_failed(c, task_id, cmd_id, f"{type(e).__name__}:{e}")
+                    c.commit()
+                    print(f"[telegram_ops_executor_v1] failed task_id={task_id} err={e!r}", flush=True)
             except Exception as e:
                 mark_failed(c, task_id, cmd_id, f"{type(e).__name__}:{e}")
                 c.commit()
