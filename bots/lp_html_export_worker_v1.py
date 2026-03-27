@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import html
 import os
+import re
 import sqlite3
 from pathlib import Path
 
 DB_PATH = os.environ.get("DB_PATH", os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db"))
-ROOT = Path(__file__).resolve().parent.parent
-OUT_DIR = ROOT / "data" / "telegram_os_html"
+OUT_DIR = Path(os.environ.get("TELEGRAM_OS_HTML_DIR", os.path.expanduser("~/AI/openclaw-factory-daemon/data/telegram_os_html")))
 
 def connect():
     con = sqlite3.connect(DB_PATH, timeout=30)
@@ -19,175 +19,250 @@ def fetch_jobs(c, limit=10):
         """
         select *
         from conversation_jobs
-        where coalesce(current_phase,'')='lp_final_done'
+        where coalesce(current_phase,'') in ('lp_final_done','public_preview_done')
           and coalesce(status,'')='done'
-          and coalesce(final_reply_status,'') in ('', 'ready', 'queued', 'sent')
-          and id not in (
-            select job_id
-            from conversation_artifacts
-            where artifact_type='lp_html_export'
-          )
         order by id asc
         limit ?
         """,
         (limit,),
     ).fetchall()
 
-def get_body(c, job_id, artifact_type):
-    row = c.execute(
+def get_artifact(c, job_id, artifact_type):
+    return c.execute(
         """
-        select artifact_body
+        select *
         from conversation_artifacts
-        where job_id=?
-          and artifact_type=?
+        where job_id=? and artifact_type=?
         order by id desc
         limit 1
         """,
         (job_id, artifact_type),
     ).fetchone()
-    return row["artifact_body"] if row else ""
 
-def esc(s: str) -> str:
-    return html.escape(s or "")
+def upsert_artifact(c, job_id, artifact_type, artifact_title, artifact_body, artifact_path, version=1):
+    old = c.execute(
+        """
+        select id from conversation_artifacts
+        where job_id=? and artifact_type=?
+        order by id desc
+        limit 1
+        """,
+        (job_id, artifact_type),
+    ).fetchone()
+    if old:
+        c.execute(
+            """
+            update conversation_artifacts
+            set artifact_title=?, artifact_body=?, artifact_path=?, version=?
+            where id=?
+            """,
+            (artifact_title, artifact_body, artifact_path, version, old["id"]),
+        )
+    else:
+        c.execute(
+            """
+            insert into conversation_artifacts(
+              job_id, artifact_type, artifact_title, artifact_body, artifact_path, version, created_at
+            ) values(?,?,?,?,?,?,datetime('now'))
+            """,
+            (job_id, artifact_type, artifact_title, artifact_body, artifact_path, version),
+        )
 
-def nl2br(s: str) -> str:
-    return "<br>\n".join(esc(s).splitlines())
+def extract_value(text, heading):
+    m = re.search(rf'##\s*{re.escape(heading)}\s*\n(.+?)(?:\n## |\Z)', text, re.S)
+    return m.group(1).strip() if m else ""
 
-def build_html(job, fv_copy, section_body, cta_compare, image_urls):
-    title = f"{job['target_object'] or 'LP'} LP Draft"
-    fv = nl2br(fv_copy)
-    body = nl2br(section_body)
-    cta = nl2br(cta_compare)
-    imgs = nl2br(image_urls)
+def extract_lines(text, heading):
+    block = extract_value(text, heading)
+    rows = []
+    for line in block.splitlines():
+        s = line.strip()
+        if not s:
+            continue
+        s = re.sub(r'^[-・]\s*', '', s)
+        rows.append(s)
+    return rows
+
+def first_image_url(text):
+    if not text:
+        return ""
+    for line in text.splitlines():
+        s = line.strip()
+        if s.startswith("http://") or s.startswith("https://"):
+            return s
+        m = re.search(r'https?://\S+', s)
+        if m:
+            return m.group(0)
+    return ""
+
+def build_html(job, fv_text, body_text, cta_text, image_url):
+    main_copy = extract_value(fv_text, "メインコピー案") or "隠すより、整えて魅せる。"
+    sub_copy = extract_value(fv_text, "サブコピー案")
+    benefits = extract_lines(fv_text, "ベネフィット表示")
+    cta_lines = extract_lines(cta_text, "CTA案 2")
+    cta_label = cta_lines[0] if cta_lines else "educate B の魅力を確認する"
+
+    sec1 = extract_value(body_text, "1. ファーストビュー本文")
+    sec2 = extract_value(body_text, "2. こんな方へ")
+    sec3 = extract_value(body_text, "3. educate B の価値")
+    sec4 = extract_value(body_text, "4. 成分訴求本文")
+    sec5 = extract_value(body_text, "5. 使用シーン本文")
+    sec6 = extract_value(body_text, "6. CTA前本文")
+
+    benefits_html = "".join(f"<li>{html.escape(x)}</li>" for x in benefits[:3])
+
+    image_block = f'<img src="{html.escape(image_url)}" alt="educate B" class="hero-image">' if image_url else '<div class="hero-image placeholder">商品画像</div>'
 
     return f"""<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{esc(title)}</title>
-<style>
-body {{
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
-  color: #222;
-  background: #faf8f5;
-}}
-.wrap {{
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 32px 20px 80px;
-}}
-.hero {{
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 32px;
-  align-items: center;
-  padding: 48px 0 24px;
-}}
-.card {{
-  background: #fff;
-  border-radius: 18px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.06);
-}}
-.eyebrow {{
-  font-size: 12px;
-  letter-spacing: .08em;
-  color: #8b7d6b;
-  margin-bottom: 10px;
-}}
-h1 {{
-  font-size: 40px;
-  line-height: 1.25;
-  margin: 0 0 16px;
-}}
-.sub {{
-  font-size: 16px;
-  line-height: 1.9;
-  color: #555;
-}}
-.cta {{
-  display: inline-block;
-  margin-top: 18px;
-  padding: 14px 22px;
-  border-radius: 999px;
-  background: #c8a97e;
-  color: #fff;
-  text-decoration: none;
-  font-weight: 700;
-}}
-.image-box {{
-  min-height: 420px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #f6f1ea, #efe6da);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #8b7d6b;
-  text-align: center;
-  padding: 24px;
-}}
-section {{
-  margin-top: 28px;
-}}
-h2 {{
-  font-size: 24px;
-  margin: 0 0 14px;
-}}
-.block {{
-  white-space: normal;
-  line-height: 1.95;
-  color: #444;
-}}
-@media (max-width: 860px) {{
-  .hero {{
-    grid-template-columns: 1fr;
-  }}
-  h1 {{
-    font-size: 30px;
-  }}
-}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>educate B</title>
+  <style>
+    body {{
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", sans-serif;
+      background: #f3f1ee;
+      color: #2d2a28;
+      line-height: 1.8;
+    }}
+    .wrap {{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }}
+    .card {{
+      background: #fcfbf9;
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+      margin-bottom: 24px;
+    }}
+    .hero {{
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      align-items: center;
+    }}
+    .eyebrow {{
+      color: #8b7d71;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }}
+    h1 {{
+      font-size: 54px;
+      line-height: 1.12;
+      margin: 0 0 14px 0;
+    }}
+    .sub {{
+      font-size: 20px;
+      color: #5c534c;
+      margin-bottom: 18px;
+    }}
+    .benefits {{
+      padding-left: 20px;
+      margin: 0 0 22px 0;
+    }}
+    .btn {{
+      display: inline-block;
+      background: #c9a977;
+      color: #fff;
+      text-decoration: none;
+      padding: 16px 30px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 20px;
+    }}
+    .hero-image {{
+      width: 100%;
+      max-width: 420px;
+      display: block;
+      margin: 0 auto;
+      border-radius: 24px;
+      background: #fff;
+    }}
+    .placeholder {{
+      min-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #8b7d71;
+      background: #efe8df;
+    }}
+    h2 {{
+      font-size: 34px;
+      line-height: 1.3;
+      margin: 0 0 14px 0;
+    }}
+    p {{
+      font-size: 20px;
+      margin: 0;
+    }}
+    .cta-final {{
+      text-align: center;
+    }}
+    .cta-final p {{
+      margin-bottom: 18px;
+    }}
+    @media (max-width: 800px) {{
+      .hero {{
+        grid-template-columns: 1fr;
+      }}
+      h1 {{
+        font-size: 40px;
+      }}
+      p {{
+        font-size: 18px;
+      }}
+    }}
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <section class="hero">
-    <div class="card">
-      <div class="eyebrow">{esc(job["target_object"] or "Product")}</div>
-      <h1>隠すより、整えて魅せる。</h1>
-      <div class="sub">{fv}</div>
-      <a class="cta" href="#cta">まずは商品詳細を見る</a>
-    </div>
-    <div class="image-box card">
+  <div class="wrap">
+    <section class="card hero">
       <div>
-        <strong>商品画像配置エリア</strong><br>
-        正面商品画像 / 白〜ベージュ背景 / 補助成分ビジュアル
+        <div class="eyebrow">educate B</div>
+        <h1>{html.escape(main_copy)}</h1>
+        <div class="sub">{html.escape(sub_copy)}</div>
+        <ul class="benefits">{benefits_html}</ul>
+        <a class="btn" href="https://kuu-medic.com/products/educate-b">{html.escape(cta_label)}</a>
       </div>
-    </div>
-  </section>
+      <div>{image_block}</div>
+    </section>
 
-  <section class="card">
-    <h2>セクション本文</h2>
-    <div class="block">{body}</div>
-  </section>
+    <section class="card">
+      <h2>毎日のベースメイクを、もっと心地よく。</h2>
+      <p>{html.escape(sec1)}</p>
+    </section>
 
-  <section class="card">
-    <h2>CTA比較</h2>
-    <div class="block">{cta}</div>
-  </section>
+    <section class="card">
+      <h2>こんな方へ</h2>
+      <p>{html.escape(sec2)}</p>
+    </section>
 
-  <section class="card">
-    <h2>商品画像URL候補</h2>
-    <div class="block">{imgs}</div>
-  </section>
+    <section class="card">
+      <h2>educate B の価値</h2>
+      <p>{html.escape(sec3)}</p>
+    </section>
 
-  <section id="cta" class="card">
-    <h2>最終CTA</h2>
-    <div class="block">まずは商品詳細を確認し、自分に合う使い方を検討してください。</div>
-    <a class="cta" href="#">educate B の魅力を確認する</a>
-  </section>
-</div>
+    <section class="card">
+      <h2>着眼成分と発想</h2>
+      <p>{html.escape(sec4)}</p>
+    </section>
+
+    <section class="card">
+      <h2>使いやすさを意識した設計</h2>
+      <p>{html.escape(sec5)}</p>
+    </section>
+
+    <section class="card cta-final">
+      <h2>まずは商品詳細を確認し、自分に合う使い方を検討してください。</h2>
+      <p>{html.escape(sec6)}</p>
+      <a class="btn" href="https://kuu-medic.com/products/educate-b">{html.escape(cta_label)}</a>
+    </section>
+  </div>
 </body>
 </html>
 """
@@ -196,34 +271,41 @@ def run_once():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     con = connect()
     c = con.cursor()
-    rows = fetch_jobs(c, 10)
+    rows = fetch_jobs(c, 20)
     done = 0
+
     for job in rows:
         try:
-            fv_copy = get_body(c, job["id"], "fv_copy_final_markdown")
-            section_body = get_body(c, job["id"], "section_body_markdown")
-            cta_compare = get_body(c, job["id"], "cta_compare_markdown")
-            image_urls = get_body(c, job["id"], "product_image_urls_markdown")
+            fv = get_artifact(c, job["id"], "fv_copy_final_markdown")
+            body = get_artifact(c, job["id"], "section_body_markdown")
+            cta = get_artifact(c, job["id"], "cta_compare_markdown")
+            imgs = get_artifact(c, job["id"], "product_image_urls_markdown")
 
-            html_text = build_html(job, fv_copy, section_body, cta_compare, image_urls)
+            if not fv or not body or not cta:
+                continue
+
+            image_url = first_image_url(imgs["artifact_body"] if imgs else "")
+            html_text = build_html(
+                job,
+                fv["artifact_body"],
+                body["artifact_body"],
+                cta["artifact_body"],
+                image_url,
+            )
+
             out_path = OUT_DIR / f"job_{job['id']}_lp.html"
             out_path.write_text(html_text, encoding="utf-8")
 
-            c.execute(
-                """
-                insert into conversation_artifacts(
-                  job_id, artifact_type, artifact_title, artifact_body, artifact_path, version, created_at
-                ) values(?,?,?,?,?,?,datetime('now'))
-                """,
-                (
-                    job["id"],
-                    "lp_html_export",
-                    "lp_html_export",
-                    f"HTMLを書き出しました: {out_path}",
-                    str(out_path),
-                    1
-                )
+            upsert_artifact(
+                c,
+                job["id"],
+                "lp_html_export",
+                "lp_html_export",
+                f"HTMLを書き出しました: {out_path}",
+                str(out_path),
+                1,
             )
+
             c.execute(
                 """
                 update conversation_jobs
@@ -237,6 +319,7 @@ def run_once():
             done += 1
         except Exception as e:
             print(f"lp_html_export_error job_id={job['id']} err={e}", flush=True)
+
     con.commit()
     con.close()
     print(f"lp_html_export_total={done}", flush=True)
