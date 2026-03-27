@@ -165,3 +165,24 @@
   - self_improvement_log id=3 -> proposal_id=-1000000003
   - self_improvement_log id=4 -> proposal_id=-1000000004
 - done / skipped の両方が self_improvement -> learning に残る状態へ統一
+
+
+## 2026-03-27 追加更新（skipped learning bridge 実装修正）
+
+- self_improvement_to_learning_v1 は `status in ('done','skipped')` を対象に修正済み
+- これにより skipped 行も learning_results へ正しく流入
+- 検証済み:
+  - self_improvement_log id=3 -> learning_bridge_status=done, learning_result_id=3055
+  - self_improvement_log id=4 -> learning_bridge_status=done, learning_result_id=3056
+  - learning_results proposal_id=-1000000003 / -1000000004 を確認
+- learning_patterns:
+  - `script=status_core.sh` sample=2 success=2 weight=1.0
+  - `script=db_health.sh` sample=1 success=1 weight=1.0
+  - `no_exec_block` sample=2 success=0 weight=0.0
+- 健康状態:
+  - secretary_done_remaining=0
+  - tg_private_pending=0
+  - manual_pending=0
+  - ops_exec_new_remaining=0
+  - kaikun04_new_remaining=0
+  - kaikun04_done_sent_missing=0
