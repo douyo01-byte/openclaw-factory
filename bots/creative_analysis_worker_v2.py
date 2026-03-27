@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import html as html_lib
 import json
 import os
 import re
@@ -55,21 +56,74 @@ def strip_html(html: str) -> str:
     s = re.sub(r"(?i)<br\s*/?>", "\n", s)
     s = re.sub(r"(?i)</p>|</div>|</li>|</section>|</h[1-6]>", "\n", s)
     s = re.sub(r"(?s)<.*?>", " ", s)
-    s = s.replace("&nbsp;", " ").replace("&amp;", "&")
+    s = html_lib.unescape(s)
     return normalize_text(s)
 
-def extract_between(text: str, start: str, end: str):
-    m = re.search(re.escape(start) + r"(.*?)" + re.escape(end), text, re.S)
-    return normalize_text(m.group(1)) if m else ""
+def meta_content(html: str, name: str) -> str:
+    pats = [
+        rf'<meta[^>]+property="{re.escape(name)}"[^>]+content="([^"]*)"',
+        rf"<meta[^>]+property='{re.escape(name)}'[^>]+content='([^']*)'",
+        rf'<meta[^>]+name="{re.escape(name)}"[^>]+content="([^"]*)"',
+        rf"<meta[^>]+name='{re.escape(name)}'[^>]+content='([^']*)'",
+    ]
+    for p in pats:
+        m = re.search(p, html, re.I | re.S)
+        if m:
+            return normalize_text(html_lib.unescape(m.group(1)))
+    return ""
 
-def extract_bullets(text: str, patterns):
+def clean_spaced_japanese(text: str) -> str:
+    t = html_lib.unescape(text)
+    t = t.replace("＜", "<").replace("＞", ">")
+    t = t.replace("　", " ")
+    t = re.sub(r"\s+", " ", t).strip()
+    t = re.sub(r'(?<=[ぁ-んァ-ン一-龥A-Za-z0-9])\s+(?=[ぁ-んァ-ン一-龥A-Za-z0-9])', '', t)
+    t = t.replace("／", "/")
+    t = t.replace("　", " ")
+    return t.strip()
+
+def extract_ingredients(meta_desc: str, plain: str):
+    text = clean_spaced_japanese(meta_desc or plain)
     found = []
-    for p in patterns:
-        for m in re.finditer(p, text, re.I):
-            v = normalize_text(m.group(1))
-            if v and v not in found:
-                found.append(v)
+    keys = [
+        "ヒト遺伝子組換オリゴペプチド-1",
+        "酢酸トコフェロール",
+        "セラミドNG",
+        "セラミドAP",
+        "セラミドAG",
+        "セラミドNP",
+        "セラミドEOP",
+        "水添レシチン",
+        "コレステロール",
+        "フィトステロールズ",
+        "ザクロ種子油",
+        "アーモンド油",
+        "ヒマワリ種子油",
+        "レモングラス油",
+        "ラベンダー油",
+        "ローマカミツレ花油",
+    ]
+    for k in keys:
+        if k in text and k not in found:
+            found.append(k)
     return found
+
+def extract_claims(text: str):
+    src = clean_spaced_japanese(text)
+    rules = [
+        ("自然なツヤ", ["自然なツヤ", "ツヤ"]),
+        ("均一なトーン", ["均一なトーン", "トーン"]),
+        ("毛穴カバー", ["毛穴"]),
+        ("くすみカバー", ["くすみ"]),
+        ("軽いテクスチャー", ["軽い", "テクスチャー"]),
+        ("しっとり感", ["しっとり", "保湿"]),
+        ("BBクリーム下地", ["BB", "下地"]),
+    ]
+    out = []
+    for label, kws in rules:
+        if any(k in src for k in kws):
+            out.append(label)
+    return out
 
 def fetch_source(url: str, job_id: int) -> str:
     out = FETCH_DIR / f"job_{job_id}.html"
@@ -78,7 +132,7 @@ def fetch_source(url: str, job_id: int) -> str:
 
 def parse_product(job, ctx):
     target = job["target_object"] or "対象商品"
-    request_text = normalize_text(job["request_text"] or "")
+    request_text = clean_spaced_japanese(job["request_text"] or "")
     urls = []
     context = {}
     if isinstance(ctx, dict):
@@ -89,42 +143,35 @@ def parse_product(job, ctx):
     html = fetch_source(source_url, job["id"]) if source_url else ""
     plain = strip_html(html)
 
-    title = ""
-    m = re.search(r"<title>(.*?)</title>", html, re.I | re.S)
-    if m:
-        title = normalize_text(m.group(1))
+    source_title = meta_content(html, "og:title") or meta_content(html, "twitter:title")
+    if not source_title:
+        m = re.search(r"<title>(.*?)</title>", html, re.I | re.S)
+        source_title = clean_spaced_japanese(m.group(1)) if m else ""
 
-    ingredients = []
-    for kw in ["ザクロ", "EGF", "ビタミンE", "セラミド", "水添レシチン", "コレステロール", "フィトステロール", "アーモンド油", "ヒマワリ種子油"]:
-        if kw in plain and kw not in ingredients:
-            ingredients.append(kw)
+    meta_desc = meta_content(html, "description") or meta_content(html, "og:description") or meta_content(html, "twitter:description")
+    meta_desc = clean_spaced_japanese(meta_desc)
 
-    claims = []
-    claim_candidates = [
-        "自然なツヤ", "均一なトーン", "毛穴", "くすみ", "軽いテクスチャー", "しっとり", "保湿", "BBクリーム", "下地"
-    ]
-    for kw in claim_candidates:
-        if kw in plain and kw not in claims:
-            claims.append(kw)
+    ingredients = extract_ingredients(meta_desc, plain)
+    claims = extract_claims(meta_desc + "\n" + plain)
 
     if not claims:
-        claims = ["素肌印象を整える", "乾燥を防ぎながら使いやすい", "美容成分発想のベースメイク"]
+        claims = ["自然なツヤ", "均一なトーン", "しっとり感", "BBクリーム下地"]
 
     angles = [
         {
             "name": "素肌格上げBB",
             "target": "厚塗り感なく肌印象を整えたい人",
-            "hook": "隠すより整える。軽さとカバー感の両立。",
+            "hook": "隠すより、整えて魅せる。軽さとカバー感を両立したBB下地。",
         },
         {
             "name": "乾燥に強い美容下地",
             "target": "日中の乾燥やつっぱり感が気になる人",
-            "hook": "しっとり感を保ちながらベースを整える。",
+            "hook": "しっとり感を保ちながら、ベースメイクをきれいに整える。",
         },
         {
             "name": "美容成分発想ベース",
             "target": "仕上がりだけでなく成分も重視する人",
-            "hook": "メイク時間を美容時間に寄せる発想。",
+            "hook": "メイク時間を、美容発想のケア時間へ。",
         },
     ]
 
@@ -132,45 +179,38 @@ def parse_product(job, ctx):
         "target": target,
         "request_text": request_text,
         "source_url": source_url,
-        "source_title": title,
+        "source_title": source_title,
+        "meta_desc": meta_desc,
         "ingredients": ingredients,
         "claims": claims,
         "angles": angles,
-        "plain_excerpt": plain[:3000],
     }
 
 def build_lp_variant(data, angle):
-    target = data["target"]
-    claims = data["claims"]
-    ingredients = data["ingredients"]
-    claim_line = " / ".join(claims[:4]) if claims else "軽さ・ツヤ・カバー感"
-    ing_line = "、".join(ingredients[:5]) if ingredients else "美容成分"
-
-    name = angle["name"]
-    hook = angle["hook"]
-    who = angle["target"]
+    claim_line = " / ".join(data["claims"][:4]) if data["claims"] else "自然なツヤ / 均一なトーン / しっとり感"
+    ing_line = "、".join(data["ingredients"][:6]) if data["ingredients"] else "美容成分"
 
     parts = []
-    parts.append(f"# {target} LP案: {name}")
+    parts.append(f"# {data['target']} LP案: {angle['name']}")
     parts.append("")
     parts.append("## ファーストビュー")
-    parts.append(hook)
+    parts.append(angle["hook"])
     parts.append("")
     parts.append("### サブコピー")
     parts.append(f"{claim_line}を意識した、毎日使いやすいベースメイク提案。")
     parts.append("")
     parts.append("## こんな方へ")
-    parts.append(f"- {who}")
+    parts.append(f"- {angle['target']}")
     parts.append("- ベースメイクを重くしたくない")
     parts.append("- 自然に整った印象を目指したい")
     parts.append("")
     parts.append("## educate Bの着眼点")
-    for c in claims[:5]:
+    for c in data["claims"][:6]:
         parts.append(f"- {c}")
     parts.append("")
     parts.append("## 成分訴求")
     parts.append(f"- 主な着眼成分: {ing_line}")
-    parts.append("- 現サイトで確認できた成分・訴求をもとに構成")
+    parts.append("- 現サイトで確認できた成分情報をもとに構成")
     parts.append("")
     parts.append("## CTA")
     parts.append("まずは商品詳細をチェック")
@@ -190,6 +230,10 @@ def build_analysis_markdown(data):
     if data["source_title"]:
         lines.append("## 取得タイトル")
         lines.append(data["source_title"])
+        lines.append("")
+    if data["meta_desc"]:
+        lines.append("## 取得説明")
+        lines.append(data["meta_desc"][:800])
         lines.append("")
     lines.append("## 抽出訴求")
     for c in data["claims"]:
@@ -216,7 +260,7 @@ def save_artifact(c, job_id, artifact_type, artifact_title, artifact_body, versi
           job_id, artifact_type, artifact_title, artifact_body, artifact_path, version, created_at
         ) values(?,?,?,?,?,?,datetime('now'))
         """,
-        (job_id, artifact_type, artifact_title, normalize_text(artifact_body), "", version)
+        (job_id, artifact_type, artifact_title, artifact_body.strip(), "", version)
     )
 
 def mark_done(c, job_id):

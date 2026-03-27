@@ -21,7 +21,7 @@ def build_reply(job_id: int) -> str:
         where job_id=?
         order by id asc
         """,
-        (job_id,)
+        (job_id,),
     ).fetchall()
     con.close()
 
