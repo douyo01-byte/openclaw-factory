@@ -1,7 +1,6 @@
 from __future__ import annotations
 import os
 import re
-import shlex
 import sqlite3
 import subprocess
 import time
@@ -12,9 +11,12 @@ ROOT = Path("/Users/doyopc/AI/openclaw-factory-daemon")
 OPS_DIR = ROOT / "ops" / "telegram_exec"
 SLEEP = float(os.environ.get("TELEGRAM_OPS_EXECUTOR_SLEEP", "3"))
 MAX_OUT = int(os.environ.get("TELEGRAM_OPS_EXECUTOR_MAX_OUT", "3500"))
-
 TASK_ID_RE = re.compile(r"\[TASK_ID:\d+\]")
 TAG_RE = re.compile(r"^\[(EXEC|FAST|DOC|THINK|TASK|MODE:[^\]]+)\]\s*$", re.MULTILINE)
+
+def head(text: str, n: int = 300) -> str:
+    s = (text or "").strip().replace("\r", "\n")
+    return s[:n]
 
 def conn():
     c = sqlite3.connect(DB, timeout=30)
@@ -26,9 +28,14 @@ def conn():
         pass
     return c
 
+def ensure_cols(c, table: str, adds: dict[str, str]):
+    cols = {r["name"] for r in c.execute(f"pragma table_info({table})").fetchall()}
+    for k, sql in adds.items():
+        if k not in cols:
+            c.execute(sql)
+
 def ensure_schema(c):
-    cols = {r["name"] for r in c.execute("pragma table_info(router_tasks)").fetchall()}
-    adds = {
+    ensure_cols(c, "router_tasks", {
         "reply_text": "alter table router_tasks add column reply_text text default ''",
         "sent_message_id": "alter table router_tasks add column sent_message_id text default ''",
         "started_at": "alter table router_tasks add column started_at text default ''",
@@ -36,10 +43,29 @@ def ensure_schema(c):
         "validation_status": "alter table router_tasks add column validation_status text default ''",
         "validation_reason": "alter table router_tasks add column validation_reason text default ''",
         "retry_count": "alter table router_tasks add column retry_count integer default 0",
-    }
-    for k, sql in adds.items():
-        if k not in cols:
-            c.execute(sql)
+    })
+    c.execute("""
+        create table if not exists self_improvement_log(
+          id integer primary key autoincrement,
+          parent_task_id integer not null,
+          child_task_id integer,
+          source_command_id integer,
+          kind text not null default 'exec_bridge',
+          problem text not null default '',
+          fix text not null default '',
+          result text not null default '',
+          reusable_pattern text not null default '',
+          created_at text default (datetime('now'))
+        )
+    """)
+    ensure_cols(c, "self_improvement_log", {
+        "status": "alter table self_improvement_log add column status text not null default ''",
+        "parent_reply_head": "alter table self_improvement_log add column parent_reply_head text not null default ''",
+        "child_result_head": "alter table self_improvement_log add column child_result_head text not null default ''",
+        "applied_at": "alter table self_improvement_log add column applied_at text default ''",
+        "updated_at": "alter table self_improvement_log add column updated_at text default ''",
+    })
+    c.execute("create index if not exists idx_self_improvement_child on self_improvement_log(child_task_id)")
 
 def clean_task_text(s: str) -> str:
     s = (s or "").replace("\r", "\n")
@@ -96,10 +122,7 @@ def run_script(name: str, args: list[str]) -> str:
         out += r.stderr
     out = out.strip()
     prefix = f"script={name}\nexit={r.returncode}"
-    if out:
-        out = prefix + "\n\n" + out
-    else:
-        out = prefix
+    out = prefix if not out else prefix + "\n\n" + out
     if len(out) > MAX_OUT:
         out = out[:MAX_OUT] + "\n\n[truncated]"
     return out
@@ -113,6 +136,17 @@ def fetch_rows(c):
         order by id asc
         limit 5
     """).fetchall()
+
+def update_self_improvement(c, child_task_id: int, status: str, result: str, applied: bool):
+    c.execute("""
+        update self_improvement_log
+        set status=?,
+            result=?,
+            child_result_head=?,
+            applied_at=case when ? then datetime('now') else coalesce(applied_at,'') end,
+            updated_at=datetime('now')
+        where child_task_id=?
+    """, (status, result, head(result), 1 if applied else 0, child_task_id))
 
 def mark_started(c, task_id: int):
     c.execute("""
@@ -141,6 +175,7 @@ def mark_done(c, task_id: int, cmd_id: int, reply: str):
             updated_at=datetime('now')
         where id=?
     """, (task_id, cmd_id))
+    update_self_improvement(c, task_id, "done", "queued_child_task_done", True)
 
 def mark_failed(c, task_id: int, cmd_id: int, reason: str):
     reply = f"[TASK_ID:{task_id}]\n[EXEC RESULT]\nstatus=failed\nreason={reason}"
@@ -162,6 +197,7 @@ def mark_failed(c, task_id: int, cmd_id: int, reason: str):
             updated_at=datetime('now')
         where id=?
     """, (task_id, cmd_id))
+    update_self_improvement(c, task_id, "failed", f"failed:{reason}", False)
 
 def mark_skipped(c, task_id: int, cmd_id: int, reason: str):
     reply = f"[TASK_ID:{task_id}]\n[EXEC RESULT]\nstatus=skipped\nreason={reason}"
@@ -184,6 +220,7 @@ def mark_skipped(c, task_id: int, cmd_id: int, reason: str):
             updated_at=datetime('now')
         where id=?
     """, (task_id, cmd_id))
+    update_self_improvement(c, task_id, "skipped", f"skipped:{reason}", False)
 
 def tick():
     done = 0
@@ -209,7 +246,7 @@ def tick():
                 done += 1
                 print(f"[telegram_ops_executor_v1] done task_id={task_id} script={script}", flush=True)
             except RuntimeError as e:
-                if str(e) in {"invalid_script","script_outside_allowlist","script_not_found","script_not_executable"}:
+                if str(e) in {"invalid_script", "script_outside_allowlist", "script_not_found", "script_not_executable"}:
                     mark_skipped(c, task_id, cmd_id, str(e))
                     c.commit()
                     print(f"[telegram_ops_executor_v1] skipped task_id={task_id} reason={e}", flush=True)
