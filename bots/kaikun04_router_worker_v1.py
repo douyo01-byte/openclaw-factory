@@ -28,6 +28,9 @@ ALLOWED_EXEC_SCRIPTS = {
     "gh_pr_merge.sh",
     "git_commit_push.sh",
 }
+AUTO_EXEC_MIN_WEIGHT = float(os.environ.get("KAIKUN04_AUTO_EXEC_MIN_WEIGHT", "0.8"))
+AUTO_EXEC_MIN_SUCCESS = int(os.environ.get("KAIKUN04_AUTO_EXEC_MIN_SUCCESS", "1"))
+AUTO_EXEC_PROMPT_RE = re.compile(r"(core\s*health|health\s*check|healthを|ヘルス|健[\s\u3000]*康|db[\s\u3000]*health)", re.I)
 
 def normalize_exec_block(text: str) -> str:
     s = (text or "").strip()
@@ -75,6 +78,45 @@ script=<allowlisted_script_name>
   - git_commit_push.sh
 - 実 行 が 不 要 な と き は EXEC を 出 さ な い
 """
+
+def has_exec_block(text: str) -> bool:
+    return bool(EXEC_BLOCK_RE.search((text or "").strip()))
+
+def choose_auto_exec_script() -> str:
+    try:
+        with conn() as c:
+            row = c.execute("""
+                select pattern_key
+                from learning_patterns
+                where pattern_type='self_improvement_exec'
+                  and coalesce(weight,0) >= ?
+                  and coalesce(success_count,0) >= ?
+                order by weight desc, success_count desc, sample_count desc, id desc
+                limit 1
+            """, (AUTO_EXEC_MIN_WEIGHT, AUTO_EXEC_MIN_SUCCESS)).fetchone()
+    except Exception:
+        row = None
+    key = ((row["pattern_key"] if row else "") or "").strip()
+    if not key.startswith("script="):
+        return ""
+    script = key.split("=", 1)[1].strip()
+    if script not in ALLOWED_EXEC_SCRIPTS:
+        return ""
+    return script
+
+def maybe_append_auto_exec(prompt: str, text: str) -> str:
+    s = (text or "").strip()
+    if not s:
+        return s
+    if has_exec_block(s):
+        return normalize_exec_block(s)
+    base = ((prompt or "") + "\n" + s).strip()
+    if not AUTO_EXEC_PROMPT_RE.search(base):
+        return s
+    script = choose_auto_exec_script()
+    if not script:
+        return s
+    return normalize_exec_block(f"{s}\n\n[EXEC]\nscript={script}")
 
 def load_exec_pattern_hints() -> str:
     try:
@@ -204,6 +246,7 @@ def call_llm(task_id: int, prompt: str) -> str:
     j = r.json()
     text = (((j.get("choices") or [{}])[0].get("message") or {}).get("content") or "").strip()
     text = normalize_exec_block(text)
+    text = maybe_append_auto_exec(prompt, text)
     if not text.startswith(f"[TASK_ID:{task_id}]"):
         text = f"[TASK_ID:{task_id}]\n{text}"
     return text.strip()
