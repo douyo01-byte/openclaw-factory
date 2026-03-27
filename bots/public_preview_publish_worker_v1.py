@@ -20,7 +20,7 @@ def fetch_jobs(c, limit=10):
         """
         select *
         from conversation_jobs
-        where coalesce(current_phase,'')='lp_html_export_done'
+        where coalesce(current_phase,'') in ('lp_html_export_done','lp_v2_rebuilt_done')
           and coalesce(status,'')='done'
           and id not in (
             select job_id
@@ -39,7 +39,7 @@ def get_html_export(c, job_id):
         select artifact_path
         from conversation_artifacts
         where job_id=?
-          and artifact_type='lp_html_export'
+          and artifact_type in ('lp_html_export','lp_html_export_v2')
         order by id desc
         limit 1
         """,
