@@ -45,15 +45,19 @@ def build_reply(job_id: int) -> str:
             lines.append("【改善版LP】")
             lines.append(a["artifact_body"][:900])
             lines.append("")
+        elif a["artifact_type"] == "image_plan_markdown":
+            lines.append("【画像構成案】")
+            lines.append(a["artifact_body"][:900])
+            lines.append("")
         elif a["artifact_type"] == "lp_markdown":
             lines.append(f"【LP案 v{a['version']}】")
-            lines.append(a["artifact_body"][:400])
+            lines.append(a["artifact_body"][:350])
             lines.append("")
 
     lines.append("次アクション候補:")
     lines.append("1. 改善版LPをさらに磨く")
-    lines.append("2. 商品画像構成を追加する")
-    lines.append("3. Telegram本流へ接続する")
+    lines.append("2. 商品画像URLを抽出する")
+    lines.append("3. FVラフ構成を作る")
     return "\n".join(lines).strip()
 
 def main() -> None:
