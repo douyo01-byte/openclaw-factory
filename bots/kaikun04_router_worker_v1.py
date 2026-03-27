@@ -32,6 +32,34 @@ SYSTEM_PROMPT = """あなたは OpenClaw の Kaikun04 です。
 - 返信冒頭は必ず [TASK_ID:番号]
 """
 
+def load_exec_pattern_hints() -> str:
+    try:
+        with conn() as c:
+            rows = c.execute("""
+                select pattern_key, weight
+                from learning_patterns
+                where pattern_type='self_improvement_exec'
+                order by weight desc, success_count desc, sample_count desc
+                limit 5
+            """).fetchall()
+    except Exception:
+        rows = []
+    hints = []
+    for r in rows:
+        k = (r["pattern_key"] or "").strip()
+        if not k.startswith("script="):
+            continue
+        hints.append(f"- {k} weight={float(r['weight'] or 0):.3f}")
+    if not hints:
+        return ""
+    return "\n".join([
+        "実行提案ヒント:",
+        "過去に成功した allowlisted EXEC パターンがあります。",
+        *hints,
+        "必要性が低いときは EXEC を出さないこと。",
+        "出す場合は末尾に 1つだけ出すこと。"
+    ])
+
 def conn():
     c = sqlite3.connect(DB, timeout=30)
     c.row_factory = sqlite3.Row
@@ -105,7 +133,9 @@ def validate_output(prompt: str, output: str):
 def call_llm(task_id: int, prompt: str) -> str:
     if not OPENAI_API_KEY:
         raise RuntimeError("OPENAI_API_KEY missing")
-    user_prompt = f"[TASK_ID:{task_id}]\n\n{prompt}"
+    pattern_hints = load_exec_pattern_hints()
+    prompt2 = prompt if not pattern_hints else f"{prompt}\n\n{pattern_hints}"
+    user_prompt = f"[TASK_ID:{task_id}]\n\n{prompt2}"
     r = requests.post(
         "https://api.openai.com/v1/chat/completions",
         headers={
