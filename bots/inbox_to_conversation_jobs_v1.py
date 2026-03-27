@@ -14,9 +14,6 @@ from task_decomposer_v1 import decompose
 
 DB_PATH = os.environ.get("DB_PATH", os.path.expanduser("~/AI/openclaw-factory/data/openclaw.db"))
 
-def now_expr() -> str:
-    return "datetime('now')"
-
 def connect():
     con = sqlite3.connect(DB_PATH, timeout=30)
     con.row_factory = sqlite3.Row
@@ -35,10 +32,23 @@ def ensure_cols(c):
         if k not in cols:
             c.execute(sql)
 
+def creative_eligible(text: str, source: str) -> bool:
+    t = (text or "").lower()
+    if source not in ("manual", "tg_private_chat_log", "tg_reply", "telegram"):
+        return False
+    creative_hits = [
+        "lp", "ランディングページ", "商品分析", "勝ち軸", "コピー", "バナー",
+        "画像", "動画台本", "構成", "訴求", "記事", "紹介文", "サムネ", "制作"
+    ]
+    has_url = "http://" in t or "https://" in t
+    return has_url and any(k in t for k in creative_hits)
+
 def fetch_rows(c, limit=20):
-    return c.execute(
+    rows = c.execute(
         """
-        select id, chat_id, message_id, text, coalesce(status,'') as status,
+        select id, chat_id, message_id, text,
+               coalesce(status,'') as status,
+               coalesce(source,'') as source,
                coalesce(router_status,'') as router_status,
                coalesce(conversation_job_id,0) as conversation_job_id
         from inbox_commands
@@ -49,6 +59,11 @@ def fetch_rows(c, limit=20):
         """,
         (limit,),
     ).fetchall()
+    out = []
+    for r in rows:
+        if creative_eligible(r["text"] or "", r["source"] or ""):
+            out.append(r)
+    return out
 
 def create_job(c, row):
     text = row["text"] or ""
