@@ -166,3 +166,36 @@
   - self_improvement_log id=3 -> proposal_id=-1000000003
   - self_improvement_log id=4 -> proposal_id=-1000000004
 - done / skipped の両方が self_improvement -> learning に残る状態へ統一
+
+
+## 2026-03-27 引き継ぎ追記（skipped learning bridge fix）
+
+### 反映済み
+- PR #2731 `Include skipped self improvement rows in learning bridge`
+- `bots/self_improvement_to_learning_v1.py` の fetch 条件を
+  - `coalesce(status,'')='done'`
+  から
+  - `coalesce(status,'') in ('done','skipped')`
+  へ修正
+
+### 実結果
+- skipped の self_improvement_log 行も learning_results に記録されるようになった
+- 確認済み:
+  - id=3 -> proposal_id=-1000000003 -> result_type=skipped
+  - id=4 -> proposal_id=-1000000004 -> result_type=skipped
+- 負例 `no_exec_block` が learning_patterns に蓄積される状態まで閉じた
+
+### 現在の自己改善ループ
+Kaikun04 THINK
+-> exec_bridge
+-> ops_exec child
+-> self_improvement_log
+-> learning_results
+-> learning_patterns / success_patterns
+-> Kaikun04 prompt feedback
+まで全て接続済み
+
+### 現在の運用上の見方
+- 成功 EXEC は `self_improvement_exec` として再利用候補になる
+- skipped/no_exec_block は負例として残る
+- Kaikun04 auto EXEC は allowlist + 強パターンのみで保守的に付与される
