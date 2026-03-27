@@ -31,19 +31,29 @@ def build_reply(job_id: int) -> str:
     if job["target_object"]:
         lines.append(f"対象: {job['target_object']}")
     lines.append("")
+
     for a in arts:
         if a["artifact_type"] == "analysis_markdown":
             lines.append("【分析】")
-            lines.append(a["artifact_body"][:700])
+            lines.append(a["artifact_body"][:500])
+            lines.append("")
+        elif a["artifact_type"] == "lp_review_markdown":
+            lines.append("【LPレビュー】")
+            lines.append(a["artifact_body"][:500])
+            lines.append("")
+        elif a["artifact_type"] == "lp_improved_markdown":
+            lines.append("【改善版LP】")
+            lines.append(a["artifact_body"][:900])
             lines.append("")
         elif a["artifact_type"] == "lp_markdown":
             lines.append(f"【LP案 v{a['version']}】")
-            lines.append(a["artifact_body"][:700])
+            lines.append(a["artifact_body"][:400])
             lines.append("")
+
     lines.append("次アクション候補:")
-    lines.append("1. 3案を比較して本命1案を選ぶ")
-    lines.append("2. FVを強化する")
-    lines.append("3. CTAを改善する")
+    lines.append("1. 改善版LPをさらに磨く")
+    lines.append("2. 商品画像構成を追加する")
+    lines.append("3. Telegram本流へ接続する")
     return "\n".join(lines).strip()
 
 def main() -> None:
