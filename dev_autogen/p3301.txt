@@ -1,0 +1,14 @@
+id=3301
+title=SNS品質向上テスト
+ts=2026-03-24T21:38:17Z
+source_ai=business_activation
+target_system=sns
+improvement_type=sns_script
+
+ショート動画台本:
+- テーマ: 店舗集客向けショート動画制作
+- 5秒版: フック → ベネフィット一言
+- 10秒版: 問題提起 → 解決策 → CTA
+- 15秒版: 問題提起 → 共感 → 解決策 → CTA
+- フック例:『その集客、まだ運まかせですか？』
+- カット構成: 0-3秒 / 3-8秒 / 8-15秒
