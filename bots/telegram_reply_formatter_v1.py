@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import sys
 
 def format_reply(payload: dict) -> str:
     domain = payload.get("domain", "")
@@ -19,7 +20,6 @@ def format_reply(payload: dict) -> str:
     return "\n".join(lines)
 
 def main() -> None:
-    import sys
     payload = json.loads(sys.stdin.read())
     print(format_reply(payload))
 
