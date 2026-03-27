@@ -186,3 +186,23 @@
   - ops_exec_new_remaining=0
   - kaikun04_new_remaining=0
   - kaikun04_done_sent_missing=0
+
+
+## 2026-03-27 self improvement negative feedback 反映
+
+- Kaikun04 への自己改善フィードバックに negative EXEC pattern を追加
+- `learning_patterns.pattern_type='self_improvement_exec'` の weight<=0 パターンも prompt へ反映
+- 現在の negative 代表例:
+  - `no_exec_block` weight=0.000 success=0/2
+- positive pattern と negative pattern を同時に見せることで、
+  EXEC を出すべきでないケースを学習済み知見として抑制
+- allowlisted EXEC 制約は維持
+- worker 再起動確認済み
+
+確認値
+- secretary_done_remaining=0
+- tg_private_pending=0
+- manual_pending=0
+- ops_exec_new_remaining=0
+- kaikun04_new_remaining=0
+- kaikun04_done_sent_missing=0
