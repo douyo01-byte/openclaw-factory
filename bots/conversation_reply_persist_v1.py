@@ -25,7 +25,8 @@ def fetch_jobs(c, limit=10):
           'fv_copy_final_done',
           'cta_compare_done',
           'section_body_done',
-          'lp_final_done'
+          'lp_final_done',
+          'lp_html_export_done'
         )
           and coalesce(status,'')='done'
           and coalesce(final_reply_status,'')=''
