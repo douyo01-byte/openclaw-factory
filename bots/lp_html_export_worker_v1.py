@@ -19,14 +19,19 @@ def fetch_jobs(c, limit=10):
         """
         select *
         from conversation_jobs
-        where coalesce(current_phase,'') in ('lp_final_done','public_preview_done')
+        where coalesce(current_phase,'')='lp_final_done'
           and coalesce(status,'')='done'
+          and id not in (
+            select job_id
+            from conversation_artifacts
+            where artifact_type='lp_html_export_v3'
+          )
         order by id asc
         limit ?
-        """,
+        """
+        ,
         (limit,),
     ).fetchall()
-
 def get_artifact(c, job_id, artifact_type):
     return c.execute(
         """

@@ -17,7 +17,6 @@ python3 bots/fv_copy_final_worker_v1.py
 python3 bots/cta_compare_worker_v1.py
 python3 bots/section_body_worker_v1.py
 python3 bots/lp_final_compiler_worker_v1.py
-python3 bots/lp_html_export_worker_v1.py
 python3 bots/public_preview_publish_worker_v1.py
 python3 bots/conversation_reply_persist_v1.py
 python3 bots/conversation_reply_to_outbox_v1.py
