@@ -34,19 +34,13 @@ def get_html_export(c, job_id):
         select artifact_path
         from conversation_artifacts
         where job_id=?
-          and artifact_type in (
-            'lp_html_export','lp_html_export_v2','lp_html_export_v3','lp_html_export_v4',
-            'lp_html_export_v6','lp_html_export_v7','lp_html_export_v8','lp_html_export_v9',
-            'lp_html_export_v10','lp_html_export_v11','lp_html_export_v12','lp_html_export_v13',
-            'lp_html_export_v14','lp_html_export_v15','lp_html_export_v16','lp_html_export_v17',
-            'lp_html_export_v18','lp_html_export_v19','lp_html_export_v20'
-          )
+          and artifact_type='lp_html_export_v3'
         order by id desc
         limit 1
-        """,
+        """
+        ,
         (job_id,),
     ).fetchone()
-
 def ensure_repo():
     if not PUBLIC_REPO.exists():
         raise RuntimeError(f"public_repo_missing:{PUBLIC_REPO}")
