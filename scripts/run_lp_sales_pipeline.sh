@@ -20,6 +20,21 @@ TITLE="lp_html_export_v${VERSION}_manual"
 python scripts/check_lp_json_placeholders.py "$JSON_INPUT"
 python scripts/render_lp_sales_template.py --json "$TEMPLATE" "$JSON_INPUT" "$OUT_HTML"
 ./scripts/check_lp_output.sh "$OUT_HTML"
+python - "$OUT_HTML" <<'PY2'
+from pathlib import Path
+import re
+import sys
+p = Path(sys.argv[1])
+s = p.read_text(encoding="utf-8")
+patterns = [
+    r'\n\s*<div class="visual-card">\s*<img src=""[^>]*>\s*<div class="copy">\s*</div>\s*</div>',
+    r'\n\s*<div class="card sales-card">\s*<img src=""[^>]*>\s*<div>.*?<p>.*?</p>\s*</div>\s*</div>',
+]
+for pat in patterns:
+    s = re.sub(pat, '', s, flags=re.S)
+p.write_text(s, encoding="utf-8")
+print("empty_img_blocks_pruned", p)
+PY2
 
 python bots/lp_sales_manual_publish_worker.py "$JOB_ID" "$VERSION" "$OUT_HTML" "lp_html_export_v3" "$TITLE"
 
