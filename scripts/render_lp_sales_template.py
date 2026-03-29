@@ -19,10 +19,10 @@ def collect_keys(template_text: str) -> list[str]:
 
 def normalize_rendered_html(s: str) -> str:
     s = s.replace("\r", "")
-    s = re.sub(r'[　 ]+', ' ', s)
-    s = re.sub(r' *\n *', '\n', s)
+    s = s.replace("\\n", "\n")
+    s = re.sub(r"[　 ]+", " ", s)
+    s = re.sub(r" *\n *", "\n", s)
     return s
-
 def render(template_path: str, out_path: str, values: dict[str, str]) -> None:
     p = Path(template_path)
     s = p.read_text(encoding="utf-8")
