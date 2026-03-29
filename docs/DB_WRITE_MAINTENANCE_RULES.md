@@ -42,3 +42,9 @@ SQLite の手動 cleanup や artifact 整理を行うとき、DB writer を一�
 - job 18 / 20 / 22 は legacy preview として残存しうる
 - 新規 preview は lp_html_export_v3 が無い限り publish しない
 
+
+## LEGACY LP PREVIEW JOBS
+- 18 / 20 / 22 は generic export (`lp_html_export`) 由来の legacy preview
+- これらは `lp_html_export_v3` 正本ではない
+- 正本運用の基準は job19 / job21
+- legacy job は必要になった時だけ manual v3 publish で再生成する
