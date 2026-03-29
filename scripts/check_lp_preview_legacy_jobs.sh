@@ -8,7 +8,8 @@ select
   j.status,
   max(case when a.artifact_type='lp_html_export_v3' then 1 else 0 end) as has_v3,
   max(case when a.artifact_type='lp_html_export' then 1 else 0 end) as has_generic,
-  max(case when a.artifact_type='public_preview_url' then 1 else 0 end) as has_preview
+  max(case when a.artifact_type='public_preview_url' then 1 else 0 end) as has_preview,
+  case when j.id in (18,20,22) then 'legacy' else 'unexpected' end as kind
 from conversation_jobs j
 left join conversation_artifacts a on a.job_id=j.id
 group by j.id
