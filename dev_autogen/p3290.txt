@@ -1,0 +1,18 @@
+id=3290
+title=LP制作代行案件
+ts=2026-03-24T14:37:31Z
+source_ai=business_activation
+target_system=lp
+improvement_type=lp_generation
+
+LP markdown:
+# LP制作代行案件
+
+## Hero
+中小企業向けLP制作代行 の成果につながるLP
+
+## Main copy
+中小企業向けLP制作代行 の魅力を短く強く伝え、相談導線へつなげる。
+
+## CTA
+無料相談はこちら
