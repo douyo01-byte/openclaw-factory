@@ -1,6 +1,7 @@
 # OpenClaw Docs Index
 
 ## Core
+- 03_SYSTEM_OVERVIEW.md
 - 01_SYSTEM_PROMPT.md
 - 01_SINGLE_SOURCE_OF_TRUTH.md
 - 02_MASTER_PLAN.md

@@ -17,15 +17,15 @@ cd ~/AI/openclaw-factory-daemon || exit 1
 
 uid=$(id -u)
 for s in \
-  jp.openclaw.supervisor \
-  jp.openclaw.dev_command_executor_v1 \
-  jp.openclaw.dev_pr_watcher_v1 \
-  jp.openclaw.tg_poll_loop \
-  jp.openclaw.self_healing_v2 \
-  jp.openclaw.spec_refiner_v2
+ jp.openclaw.supervisor \
+ jp.openclaw.dev_command_executor_v1 \
+ jp.openclaw.dev_pr_watcher_v1 \
+ jp.openclaw.tg_poll_loop \
+ jp.openclaw.self_healing_v2 \
+ jp.openclaw.spec_refiner_v2
 do
-  echo "===== $s ====="
-  launchctl print "gui/$uid/$s" | egrep 'state =|pid =|last exit code|stdout path|stderr path' || true
+ echo "===== $s ====="
+ launchctl print "gui/$uid/$s" | egrep 'state =|pid =|last exit code|stdout path|stderr path' || true
 done
 
 cd ~/AI/openclaw-factory || exit 1

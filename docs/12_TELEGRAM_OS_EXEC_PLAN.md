@@ -40,15 +40,15 @@ OpenClaw側は以下を自動で行う。
 表は会話、裏は厳密にする。
 
 - 表:
-  - 自然文のみ
-  - コマンド暗記不要
-  - 次アクションがすぐ選べる返答
+ - 自然文のみ
+ - コマンド暗記不要
+ - 次アクションがすぐ選べる返答
 - 裏:
-  - 案件ID管理
-  - 状態遷移管理
-  - 実行ログ管理
-  - 成果物管理
-  - 続き指示対応
+ - 案件ID管理
+ - 状態遷移管理
+ - 実行ログ管理
+ - 成果物管理
+ - 続き指示対応
 
 ## 対象領域
 ### 制作
@@ -114,39 +114,39 @@ OpenClaw側は以下を自動で行う。
 
 ## DBで持つべき情報
 - conversation_jobs
-  - id
-  - source_chat_id
-  - source_message_id
-  - domain
-  - request_text
-  - target_object
-  - current_phase
-  - status
-  - assigned_ai
-  - parent_job_id
-  - created_at
-  - updated_at
+ - id
+ - source_chat_id
+ - source_message_id
+ - domain
+ - request_text
+ - target_object
+ - current_phase
+ - status
+ - assigned_ai
+ - parent_job_id
+ - created_at
+ - updated_at
 
 - conversation_job_steps
-  - id
-  - job_id
-  - step_type
-  - step_order
-  - status
-  - input_json
-  - output_json
-  - created_at
-  - updated_at
+ - id
+ - job_id
+ - step_type
+ - step_order
+ - status
+ - input_json
+ - output_json
+ - created_at
+ - updated_at
 
 - conversation_artifacts
-  - id
-  - job_id
-  - artifact_type
-  - artifact_title
-  - artifact_body
-  - artifact_path
-  - version
-  - created_at
+ - id
+ - job_id
+ - artifact_type
+ - artifact_title
+ - artifact_body
+ - artifact_path
+ - version
+ - created_at
 
 ## 初期フェーズ
 ### Phase 1

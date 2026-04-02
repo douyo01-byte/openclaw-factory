@@ -27,11 +27,11 @@
 
 ## 現在のruntime実体
 - `jp.openclaw.ops_brain_agent_v1`
-  - `~/AI/openclaw-factory/scripts/run_ops_brain_agent.sh`
+ - `~/AI/openclaw-factory/scripts/run_ops_brain_agent.sh`
 - `jp.openclaw.private_reply_to_inbox_v1`
-  - `~/AI/openclaw-factory-daemon/scripts/run_private_reply_to_inbox_v1.sh`
+ - `~/AI/openclaw-factory-daemon/scripts/run_private_reply_to_inbox_v1.sh`
 - `jp.openclaw.secretary_llm_v1`
-  - LaunchAgent上の `program=/bin/zsh`
+ - LaunchAgent上の `program=/bin/zsh`
 
 ## DB
 - daemon側DBは以下へ統一
@@ -40,10 +40,10 @@
 
 ## 直近確認済み状態
 - watcher 24h:
-  - restarted=0
-  - escalations=0
-  - notifications=0
-  - proposals=0
+ - restarted=0
+ - escalations=0
+ - notifications=0
+ - proposals=0
 - required 3 targets running
 - DB handle は 78 -> 6 まで削減済み
 
@@ -134,9 +134,9 @@
 - self_improvement_log done 行は learning_results に自動反映される
 - live DB の learning_results schema は proposal_id 必須のため synthetic proposal_id 方式を採用
 - 直近検証:
-  - self_improvement_log id=2 -> learning_bridge_status=done
-  - learning_result_id=3052
-  - learning_results.proposal_id=-1000000002
+ - self_improvement_log id=2 -> learning_bridge_status=done
+ - learning_result_id=3052
+ - learning_results.proposal_id=-1000000002
 - 次段は learning_results / self_improvement_log を pattern 化 or 改善ルール抽出へ接続すること
 
 
@@ -146,25 +146,25 @@
 - synthetic proposal_id は `-1000000000 - self_improvement_log.id`
 - self_improvement_pattern_bridge_v1 により learning_results から learning_patterns / success_patterns へ反映済み
 - pattern_type=`self_improvement_exec` の成功例:
-  - script=db_health.sh
-  - script=status_core.sh
+ - script=db_health.sh
+ - script=status_core.sh
 - kaikun04_router_worker_v1 は learning_patterns を読み、health-check 系 THINK では強い成功パターンがある場合のみ allowlisted EXEC を末尾に 1つだけ自動付与
 - EXEC は allowlisted script のみ許可し、非許可形式は normalize_exec_block で除去
 - 直近確認:
-  - secretary_done_remaining=0
-  - tg_private_pending=0
-  - manual_pending=0
-  - ops_exec_new_remaining=0
-  - kaikun04_new_remaining=0
-  - kaikun04_done_sent_missing=0
+ - secretary_done_remaining=0
+ - tg_private_pending=0
+ - manual_pending=0
+ - ops_exec_new_remaining=0
+ - kaikun04_new_remaining=0
+ - kaikun04_done_sent_missing=0
 
 
 ## 2026-03-27 self improvement skipped rows learning bridge
 - self_improvement_to_learning_v1 が skipped 行も learning_results に反映する構成へ更新
 - skipped 事例も synthetic proposal_id で learning_results に保存
 - 検証対象:
-  - self_improvement_log id=3 -> proposal_id=-1000000003
-  - self_improvement_log id=4 -> proposal_id=-1000000004
+ - self_improvement_log id=3 -> proposal_id=-1000000003
+ - self_improvement_log id=4 -> proposal_id=-1000000004
 - done / skipped の両方が self_improvement -> learning に残る状態へ統一
 
 
@@ -173,16 +173,16 @@
 ### 反映済み
 - PR #2731 `Include skipped self improvement rows in learning bridge`
 - `bots/self_improvement_to_learning_v1.py` の fetch 条件を
-  - `coalesce(status,'')='done'`
-  から
-  - `coalesce(status,'') in ('done','skipped')`
-  へ修正
+ - `coalesce(status,'')='done'`
+ から
+ - `coalesce(status,'') in ('done','skipped')`
+ へ修正
 
 ### 実結果
 - skipped の self_improvement_log 行も learning_results に記録されるようになった
 - 確認済み:
-  - id=3 -> proposal_id=-1000000003 -> result_type=skipped
-  - id=4 -> proposal_id=-1000000004 -> result_type=skipped
+ - id=3 -> proposal_id=-1000000003 -> result_type=skipped
+ - id=4 -> proposal_id=-1000000004 -> result_type=skipped
 - 負例 `no_exec_block` が learning_patterns に蓄積される状態まで閉じた
 
 ### 現在の自己改善ループ
@@ -206,9 +206,9 @@ Kaikun04 THINK
 - Kaikun04 への自己改善フィードバックに negative EXEC pattern を追加
 - `learning_patterns.pattern_type='self_improvement_exec'` の weight<=0 パターンも prompt へ反映
 - 現在の negative 代表例:
-  - `no_exec_block` weight=0.000 success=0/2
+ - `no_exec_block` weight=0.000 success=0/2
 - positive pattern と negative pattern を同時に見せることで、
-  EXEC を出すべきでないケースを学習済み知見として抑制
+ EXEC を出すべきでないケースを学習済み知見として抑制
 - allowlisted EXEC 制約は維持
 - worker 再起動確認済み
 
@@ -257,10 +257,34 @@ Kaikun04 THINK
 - `ceo_hub_sender_v1` の自動送信再開を確認
 - `ceo_hub_events.id=35433` を指定送信し、`sent_at=2026-03-27 20:13:46` 更新を確認
 - 実送信本文に以下を確認
-  - `【 自 己 改 善 】 正 3 / 負 2`
-  - `【 EXEC 学 習 】 成 功 script=status_core.sh / 抑 制 no_exec_block x2`
-  - `【 ル ー プ 健 康 】 private=0 ops_exec=0 kaikun04=0`
+ - `【 自 己 改 善 】 正 3 / 負 2`
+ - `【 EXEC 学 習 】 成 功 script=status_core.sh / 抑 制 no_exec_block x2`
+ - `【 ル ー プ 健 康 】 private=0 ops_exec=0 kaikun04=0`
 
 ### 現在の意味
 - self improvement feedback loop は 生成 -> DB投入 -> CEO Telegram共有 まで閉じた
 - 残タスクだった Kaikun02 / CEO送信面の最終確認は完了
+
+## 2026-04-02 docs再構築
+
+### 完了
+- 欠損していた core docs を git history から復旧
+ - 01_SYSTEM_PROMPT
+ - 17_EFFICIENCY_RULES
+ - 20_DAILY_OPERATION
+ - 02_MASTER_PLAN
+ - 07_ROADMAP
+- priority docs を reference_recovered に集約
+- 03_SYSTEM_OVERVIEW を新規作成
+- docs構造を Core / Rules / Reference に整理
+- Anti-loss rule を policy に追加
+- docsとgitの乖離検出フローを確立
+
+### 現在地
+- docsは「欠損なし状態」へ復旧完了
+- reference系は隔離済み
+- INDEXベース運用へ移行済み
+
+### 次
+- docs / runtime / DB の完全一致チェック
+- reference → core昇格候補の選定

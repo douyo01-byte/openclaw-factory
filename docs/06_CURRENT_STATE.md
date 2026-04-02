@@ -21,28 +21,28 @@
 
 ## live status
 - watcher 24h:
-  - restarted=0
-  - escalations=0
-  - notifications=0
-  - proposals=0
+ - restarted=0
+ - escalations=0
+ - notifications=0
+ - proposals=0
 - health judgement:
-  - OK: no restart/escalation/notification/proposal in 24h
-  - OK: all required services running
+ - OK: no restart/escalation/notification/proposal in 24h
+ - OK: all required services running
 
 ## DB path
 - canonical:
-  - `~/AI/openclaw-factory/data/openclaw.db`
+ - `~/AI/openclaw-factory/data/openclaw.db`
 - daemon link:
-  - `~/AI/openclaw-factory-daemon/data/openclaw.db`
-  - `-> ~/AI/openclaw-factory/data/openclaw.db`
+ - `~/AI/openclaw-factory-daemon/data/openclaw.db`
+ - `-> ~/AI/openclaw-factory/data/openclaw.db`
 
 ## runtime実体
 - `jp.openclaw.ops_brain_agent_v1`
-  - `~/AI/openclaw-factory/scripts/run_ops_brain_agent.sh`
+ - `~/AI/openclaw-factory/scripts/run_ops_brain_agent.sh`
 - `jp.openclaw.private_reply_to_inbox_v1`
-  - `~/AI/openclaw-factory-daemon/scripts/run_private_reply_to_inbox_v1.sh`
+ - `~/AI/openclaw-factory-daemon/scripts/run_private_reply_to_inbox_v1.sh`
 - `jp.openclaw.secretary_llm_v1`
-  - LaunchAgent上の `program=/bin/zsh`
+ - LaunchAgent上の `program=/bin/zsh`
 
 ## 2026-03-26 Kaikun04 reply mainline 復旧
 
@@ -91,7 +91,7 @@
 ## 2026-03-26 追 記 : Kaikun04 exec bridge 本 流
 
 完 了
-- Kaikun04 reply 末 尾 の `[EXEC]` を  bridge し て `ops_exec` child task 化 す る `kaikun04_exec_bridge_v1` を 追 加
+- Kaikun04 reply 末 尾 の `[EXEC]` を bridge し て `ops_exec` child task 化 す る `kaikun04_exec_bridge_v1` を 追 加
 - `telegram_ops_executor_v1` と 接 続 し 、 allowlisted script 実 行 結 果 を Telegram 返 却 で き る 状 態 に 到 達
 - `self_improvement_log` を 追 加 し 、 parent -> child の 実 行 連 鎖 を 記 録
 - manual smoke で parent task 538 -> child task 539 -> `db_health.sh` 実 行 成 功 を 確 認
@@ -133,10 +133,10 @@
 - live schema に合わせて learning_results へ挿入する列を動的選択
 - synthetic proposal_id を使って self improvement 系 learning を永続化
 - 検証済み:
-  - self_improvement_log id=2
-  - parent=550 -> child=551
-  - learning_result_id=3052
-  - proposal_id=-1000000002
+ - self_improvement_log id=2
+ - parent=550 -> child=551
+ - learning_result_id=3052
+ - proposal_id=-1000000002
 
 
 ## 2026-03-27 self improvement feedback loop
@@ -145,25 +145,25 @@
 - synthetic proposal_id は `-1000000000 - self_improvement_log.id`
 - self_improvement_pattern_bridge_v1 により learning_results から learning_patterns / success_patterns へ反映済み
 - pattern_type=`self_improvement_exec` の成功例:
-  - script=db_health.sh
-  - script=status_core.sh
+ - script=db_health.sh
+ - script=status_core.sh
 - kaikun04_router_worker_v1 は learning_patterns を読み、health-check 系 THINK では強い成功パターンがある場合のみ allowlisted EXEC を末尾に 1つだけ自動付与
 - EXEC は allowlisted script のみ許可し、非許可形式は normalize_exec_block で除去
 - 直近確認:
-  - secretary_done_remaining=0
-  - tg_private_pending=0
-  - manual_pending=0
-  - ops_exec_new_remaining=0
-  - kaikun04_new_remaining=0
-  - kaikun04_done_sent_missing=0
+ - secretary_done_remaining=0
+ - tg_private_pending=0
+ - manual_pending=0
+ - ops_exec_new_remaining=0
+ - kaikun04_new_remaining=0
+ - kaikun04_done_sent_missing=0
 
 
 ## 2026-03-27 self improvement skipped rows learning bridge
 - self_improvement_to_learning_v1 が skipped 行も learning_results に反映する構成へ更新
 - skipped 事例も synthetic proposal_id で learning_results に保存
 - 検証対象:
-  - self_improvement_log id=3 -> proposal_id=-1000000003
-  - self_improvement_log id=4 -> proposal_id=-1000000004
+ - self_improvement_log id=3 -> proposal_id=-1000000003
+ - self_improvement_log id=4 -> proposal_id=-1000000004
 - done / skipped の両方が self_improvement -> learning に残る状態へ統一
 
 
@@ -172,20 +172,20 @@
 - self_improvement_to_learning_v1 は `status in ('done','skipped')` を対象に修正済み
 - これにより skipped 行も learning_results へ正しく流入
 - 検証済み:
-  - self_improvement_log id=3 -> learning_bridge_status=done, learning_result_id=3055
-  - self_improvement_log id=4 -> learning_bridge_status=done, learning_result_id=3056
-  - learning_results proposal_id=-1000000003 / -1000000004 を確認
+ - self_improvement_log id=3 -> learning_bridge_status=done, learning_result_id=3055
+ - self_improvement_log id=4 -> learning_bridge_status=done, learning_result_id=3056
+ - learning_results proposal_id=-1000000003 / -1000000004 を確認
 - learning_patterns:
-  - `script=status_core.sh` sample=2 success=2 weight=1.0
-  - `script=db_health.sh` sample=1 success=1 weight=1.0
-  - `no_exec_block` sample=2 success=0 weight=0.0
+ - `script=status_core.sh` sample=2 success=2 weight=1.0
+ - `script=db_health.sh` sample=1 success=1 weight=1.0
+ - `no_exec_block` sample=2 success=0 weight=0.0
 - 健康状態:
-  - secretary_done_remaining=0
-  - tg_private_pending=0
-  - manual_pending=0
-  - ops_exec_new_remaining=0
-  - kaikun04_new_remaining=0
-  - kaikun04_done_sent_missing=0
+ - secretary_done_remaining=0
+ - tg_private_pending=0
+ - manual_pending=0
+ - ops_exec_new_remaining=0
+ - kaikun04_new_remaining=0
+ - kaikun04_done_sent_missing=0
 
 
 ## 2026-03-27 self improvement negative feedback 反映
@@ -193,9 +193,9 @@
 - Kaikun04 への自己改善フィードバックに negative EXEC pattern を追加
 - `learning_patterns.pattern_type='self_improvement_exec'` の weight<=0 パターンも prompt へ反映
 - 現在の negative 代表例:
-  - `no_exec_block` weight=0.000 success=0/2
+ - `no_exec_block` weight=0.000 success=0/2
 - positive pattern と negative pattern を同時に見せることで、
-  EXEC を出すべきでないケースを学習済み知見として抑制
+ EXEC を出すべきでないケースを学習済み知見として抑制
 - allowlisted EXEC 制約は維持
 - worker 再起動確認済み
 
@@ -243,9 +243,9 @@
 - `ceo_hub_sender_v1` の自動送信再開を確認
 - `ceo_hub_events.id=35433` を指定送信し、`sent_at=2026-03-27 20:13:46` 更新を確認
 - 実送信本文に以下を確認
-  - `【 自 己 改 善 】 正 3 / 負 2`
-  - `【 EXEC 学 習 】 成 功 script=status_core.sh / 抑 制 no_exec_block x2`
-  - `【 ル ー プ 健 康 】 private=0 ops_exec=0 kaikun04=0`
+ - `【 自 己 改 善 】 正 3 / 負 2`
+ - `【 EXEC 学 習 】 成 功 script=status_core.sh / 抑 制 no_exec_block x2`
+ - `【 ル ー プ 健 康 】 private=0 ops_exec=0 kaikun04=0`
 
 意 味
 - self improvement feedback loop は `ceo_hub_events` 投入だけでなく CEO Telegram共有まで閉じた
