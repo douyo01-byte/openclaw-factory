@@ -45,3 +45,7 @@ done
 - docs / DB / runtime の不一致だけを修正する
 - required / observe のズレを増やさない
 - 新規機能追加はしない
+
+## docs整合チェック
+cd ~/AI/openclaw-factory-docs || exit 1
+python3 scripts/check_docs_integrity.py

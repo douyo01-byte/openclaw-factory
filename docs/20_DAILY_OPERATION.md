@@ -63,3 +63,7 @@ sqlite3 data/openclaw.db "select event_type,count(*) from ceo_hub_events group b
 - docsの古い情報整理
 - proposal供給量の評価
 - learning評価軸の見直し
+
+## docs確認
+- docs/00_INDEX.md と実ファイルの不一致がないか確認
+- python3 scripts/check_docs_integrity.py を実行
