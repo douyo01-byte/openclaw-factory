@@ -250,3 +250,18 @@
 意 味
 - self improvement feedback loop は `ceo_hub_events` 投入だけでなく CEO Telegram共有まで閉じた
 - 残タスクだった Kaikun02 / CEO送信面の最終確認は完了
+
+## 2026-04-02 docs/runtime/db 一致確認
+- docs integrity: OK
+- watcher 24h: restarted=0 / escalations=0 / notifications=0 / proposals=0
+- required 3 targets running を確認
+- daemon DB symlink は canonical DB を指すことを確認
+- router health:
+ - ops_exec_new_remaining = 0
+ - kaikun04_new_remaining = 0
+ - kaikun04_done_sent_missing = 0
+- inbox health:
+ - secretary_done_remaining = 0
+ - tg_private_pending = 0
+ - manual_pending = 14
+- 現状は mainline 健全、manual backlog のみ残存

@@ -288,3 +288,25 @@ Kaikun04 THINK
 ### 次
 - docs / runtime / DB の完全一致チェック
 - reference → core昇格候補の選定
+
+## 2026-04-02 docs/runtime/db 一致確認
+
+### 完了
+- docs integrity checker 実行で RESULT: OK を確認
+- watcher 24h 健全性確認
+- required 3 targets running 確認
+- daemon DB symlink 確認
+- router health 0残件確認
+
+### 現在地
+- OpenClaw 本流は健全
+- manual backlog が 14 件残っている
+- secretary_done_remaining = 0
+- tg_private_pending = 0
+- ops_exec_new_remaining = 0
+- kaikun04_new_remaining = 0
+- kaikun04_done_sent_missing = 0
+
+### 次
+- manual_pending 14件の内訳確認
+- 閉じてよい残件か、未処理依頼かを判定
