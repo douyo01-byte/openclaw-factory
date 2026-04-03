@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 import json
 import os
@@ -8,6 +9,18 @@ from difflib import SequenceMatcher
 import requests
 from bots.self_improvement_proposal_feedback_v1 import build_exec_feedback_block
 from bots.self_improvement_proposal_feedback_v1 import load_proposal_pattern_hints
+
+def decide_mode(text: str) -> str:
+    t = text.lower()
+    if "[exec]" in t or "実行" in t or "run" in t:
+        return "EXEC"
+    if "作って" in t or "生成" in t or "lp" in t:
+        return "DOC"
+    if "分析" in t or "教えて" in t:
+        return "THINK"
+    return "CHAT"
+
+
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 SLEEP = float(os.environ.get("KAIKUN04_ROUTER_WORKER_SLEEP", "5"))
@@ -158,6 +171,62 @@ def conn():
         pass
     return c
 
+def extract_exec_script(reply_text: str) -> str:
+    m = EXEC_BLOCK_RE.search((reply_text or "").strip())
+    if not m:
+        return ""
+    script = (m.group(1) or "").strip()
+    if script not in ALLOWED_EXEC_SCRIPTS:
+        return ""
+    return script
+
+def insert_exec_child(c, source_command_id: int, script: str) -> int:
+    task_text = f"[EXEC]\nscript={script}"
+    c.execute("""
+        insert into router_tasks(
+          source_command_id, mode, target_bot, task_text, status, created_at, updated_at
+        ) values(
+          ?, 'EXEC', 'ops_exec', ?, 'new', datetime('now'), datetime('now')
+        )
+    """, (source_command_id, task_text))
+    return int(c.execute("select last_insert_rowid()").fetchone()[0])
+
+def mark_exec_direct(c, parent_task_id: int, child_task_id: int):
+    cols = {r["name"] for r in c.execute("pragma table_info(router_tasks)").fetchall()}
+    if "exec_bridge_status" not in cols:
+        c.execute("alter table router_tasks add column exec_bridge_status text default ''")
+    if "exec_child_task_id" not in cols:
+        c.execute("alter table router_tasks add column exec_child_task_id integer default 0")
+    c.execute("""
+        update router_tasks
+        set exec_bridge_status='direct',
+            exec_child_task_id=?,
+            updated_at=datetime('now')
+        where id=?
+    """, (child_task_id, parent_task_id))
+
+def log_exec_direct(c, parent_task_id: int, child_task_id: int, source_command_id: int, script: str, reply_text: str):
+    c.execute("""
+        insert into self_improvement_log(
+          parent_task_id, child_task_id, source_command_id, kind,
+          problem, fix, result, reusable_pattern,
+          status, parent_reply_head, child_result_head,
+          created_at, applied_at, updated_at
+        ) values(
+          ?, ?, ?, 'exec_direct',
+          'direct exec from kaikun',
+          ?, 'queued_child_task', 'direct exec delegation',
+          'queued', ?, '',
+          datetime('now'), '', datetime('now')
+        )
+    """, (
+        parent_task_id,
+        child_task_id,
+        source_command_id,
+        f"script={script}",
+        (reply_text or "")[:300]
+    ))
+
 def ensure_schema(c):
     cols = {r["name"] for r in c.execute("pragma table_info(router_tasks)").fetchall()}
     adds = {
@@ -254,8 +323,9 @@ def call_llm(task_id: int, prompt: str) -> str:
     if not text.startswith(f"[TASK_ID:{task_id}]"):
         text = f"[TASK_ID:{task_id}]\n{text}"
     return text.strip()
-def fetch_rows(c):
 
+
+def fetch_rows(c):
 
     return c.execute("""
         select id, source_command_id, task_text, coalesce(retry_count,0) as retry_count, coalesce(status,'new') as status
@@ -323,10 +393,23 @@ def tick():
             mark_started(c, task_id)
             c.commit()
             try:
-                reply = call_llm(task_id, clean)
-                ok, reason = validate_output(clean, reply)
+                mode = decide_mode(clean)
+                prompt2 = f"[MODE:{mode}]\n{clean}"
+                reply = call_llm(task_id, prompt2)
+                ok, reason = validate_output(prompt2, reply)
                 if ok:
                     mark_done(c, task_id, r["source_command_id"], clean, reply)
+
+                    script = extract_exec_script(reply)
+                    if script:
+                        try:
+                            child_id = insert_exec_child(c, r["source_command_id"], script)
+                            mark_exec_direct(c, task_id, child_id)
+                            log_exec_direct(c, task_id, child_id, r["source_command_id"], script, reply)
+                            print(f"[kaikun04_router_worker_v1] exec_direct parent={task_id} child={child_id} script={script}", flush=True)
+                        except Exception as e:
+                            print(f"[kaikun04_router_worker_v1] exec_direct_err={e!r}", flush=True)
+
                     c.commit()
                     done += 1
                     print(f"[kaikun04_router_worker_v1] done task_id={task_id}", flush=True)

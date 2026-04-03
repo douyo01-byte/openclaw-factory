@@ -70,6 +70,7 @@ def fetch_rows(c):
           and coalesce(status,'')='done'
           and coalesce(reply_text,'')<>''
           and coalesce(exec_bridge_status,'')=''
+          and coalesce(exec_child_task_id,0)=0
         order by id asc
         limit 20
     """).fetchall()

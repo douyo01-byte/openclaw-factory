@@ -68,7 +68,7 @@ def tick():
     try:
         ensure_schema(c)
         rows = c.execute("""
-        select id, coalesce(text,'') as text
+        select id, coalesce(source,'') as source, coalesce(text,'') as text
         from inbox_commands
         where coalesce(router_status,'')=''
           and coalesce(text,'')<>''
@@ -78,8 +78,9 @@ def tick():
 
         done = 0
         for r in rows:
-            mode, target = classify(r["text"])
-            task_text = f"[{mode}]\n{shorten(r['text'])}"
+            mode, target = '', 'kaikun04'
+            body = shorten(r['text'])
+            task_text = body if not mode else f"[{mode}]\n{body}"
             c.execute("""
             insert into router_tasks(source_command_id, mode, target_bot, task_text, status, created_at, updated_at)
             values(?,?,?,?, 'new', datetime('now'), datetime('now'))

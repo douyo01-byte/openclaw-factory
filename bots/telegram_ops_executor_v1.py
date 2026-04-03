@@ -98,7 +98,10 @@ def allowed_script_path(name: str) -> Path:
         raise RuntimeError("script_not_executable")
     return p
 
-def run_script(name: str, args: list[str]) -> str:
+def run_openclaude(script: str, args: list[str]) -> str:
+    return f"OPENCLAUDE_SIMULATION script={script} args={args}"
+
+def run_local(name: str, args: list[str]) -> str:
     p = allowed_script_path(name)
     cmd = [str(p), *args]
     env = os.environ.copy()
@@ -126,6 +129,12 @@ def run_script(name: str, args: list[str]) -> str:
     if len(out) > MAX_OUT:
         out = out[:MAX_OUT] + "\n\n[truncated]"
     return out
+
+def run_script(name: str, args: list[str]) -> str:
+    provider = (os.environ.get("EXEC_PROVIDER") or "local").strip().lower()
+    if provider == "openclaude":
+        return run_openclaude(name, args)
+    return run_local(name, args)
 
 def fetch_rows(c):
     return c.execute("""
@@ -270,3 +279,11 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+if __name__ == "__main__":
+    while True:
+        try:
+            tick()
+        except Exception as e:
+            print(f"[telegram_ops_executor_v1] fatal err={e!r}", flush=True)
+        time.sleep(SLEEP)
