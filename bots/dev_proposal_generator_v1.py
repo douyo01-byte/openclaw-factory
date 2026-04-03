@@ -87,6 +87,10 @@ def recent_rows(cur, n=60):
 def sim(a, b):
     return difflib.SequenceMatcher(None, a or "", b or "").ratio()
 
+LEGACY_FALLBACK_TARGETS = {
+    "bots/ingest_private_replies_v1.py",
+}
+
 def is_semantic_duplicate(title, description, target_system, recent):
     for t, d, ts in recent:
         if ts == target_system and sim(title, t) >= 0.78:
@@ -110,7 +114,7 @@ def fallback_pool():
 
 def pick_fallback(recent):
     pool = fallback_pool()
-    fresh = [x for x in pool if not is_semantic_duplicate(x["title"], x["description"], x["target_system"], recent)]
+    fresh = [x for x in pool if str(x.get("target_system","")).strip() not in LEGACY_FALLBACK_TARGETS and not is_semantic_duplicate(x["title"], x["description"], x["target_system"], recent)]
     return random.choice(fresh if fresh else pool)
 
 def calc_quality(data):
