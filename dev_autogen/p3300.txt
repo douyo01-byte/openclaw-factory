@@ -1,0 +1,18 @@
+id=3300
+title=EC品質向上テスト
+ts=2026-03-24T21:38:07Z
+source_ai=business_activation
+target_system=ec
+improvement_type=ec_improvement
+
+before/after改善案:
+- 対象: Shopify商品ページ改善代行
+- before: 商品説明が機能列挙中心 / 比較不足 / CTA弱い
+- after: ベネフィット先頭 / 比較表 / FAQ / レビュー導線 / CTA整理
+- コピー改善1: 冒頭で対象ユーザーと得られる価値を明記
+- コピー改善2: 失敗回避・比較・導入後イメージを追加
+- 画像案1: 使用シーン
+- 画像案2: 比較表
+- 画像案3: 手順 / 導入フロー
+- SEO案: 商品カテゴリ + 課題 + 比較 + 導入事例
+- 優先度: 高 / まずFV・CTA・比較表から
