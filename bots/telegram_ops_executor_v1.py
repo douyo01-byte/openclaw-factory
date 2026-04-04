@@ -19,14 +19,22 @@ def head(text: str, n: int = 300) -> str:
     return s[:n]
 
 def conn():
-    c = sqlite3.connect(DB, timeout=30)
-    c.row_factory = sqlite3.Row
-    c.execute("pragma busy_timeout=30000")
-    try:
-        c.execute("pragma journal_mode=WAL")
-    except Exception:
-        pass
-    return c
+    last = None
+    for _ in range(5):
+        try:
+            c = sqlite3.connect(DB, timeout=30)
+            c.row_factory = sqlite3.Row
+            c.execute("pragma busy_timeout=30000")
+            try:
+                c.execute("pragma journal_mode=WAL")
+            except Exception:
+                pass
+            return c
+        except sqlite3.OperationalError as e:
+            last = e
+            import time
+            time.sleep(1)
+    raise last
 
 def ensure_cols(c, table: str, adds: dict[str, str]):
     cols = {r["name"] for r in c.execute(f"pragma table_info({table})").fetchall()}
@@ -235,6 +243,17 @@ def tick():
     done = 0
     with conn() as c:
         ensure_schema(c)
+        c.execute("""
+            update router_tasks
+            set status='new',
+                started_at=null,
+                updated_at=datetime('now')
+            where coalesce(target_bot,'')='ops_exec'
+              and coalesce(status,'')='started'
+              and started_at < datetime('now','-10 minutes')
+        """)
+        c.commit()
+
         rows = fetch_rows(c)
         for r in rows:
             task_id = r["id"]
