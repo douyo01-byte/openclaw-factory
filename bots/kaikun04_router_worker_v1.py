@@ -32,7 +32,7 @@ TAG_RE = re.compile(r"^\[(THINK|TASK|MODE:[^\]]+)\]\s*$", re.MULTILINE)
 SPACE_RE = re.compile(r"[ \t\u3000]+")
 MULTI_NL_RE = re.compile(r"\n{3,}")
 
-EXEC_BLOCK_RE = re.compile(r"(?ms)^\[EXEC\]\s*script=([A-Za-z0-9_.-]+)\s*$")
+EXEC_BLOCK_RE = re.compile(r"(?ms)\[EXEC\]\s*\n\s*script=([A-Za-z0-9_.-]+)")
 ALLOWED_EXEC_SCRIPTS = {
     "db_health.sh",
     "git_status.sh",
@@ -42,7 +42,10 @@ ALLOWED_EXEC_SCRIPTS = {
     "gh_pr_create.sh",
     "gh_pr_merge.sh",
     "git_commit_push.sh",
-}
+
+    "restart_service.sh",
+    "fix_db.sh",
+    "deploy_safe.sh",}
 AUTO_EXEC_MIN_WEIGHT = float(os.environ.get("KAIKUN04_AUTO_EXEC_MIN_WEIGHT", "0.8"))
 AUTO_EXEC_MIN_SUCCESS = int(os.environ.get("KAIKUN04_AUTO_EXEC_MIN_SUCCESS", "1"))
 AUTO_EXEC_PROMPT_RE = re.compile(r"(core\s*health|health\s*check|healthを|ヘルス|健[\s\u3000]*康|db[\s\u3000]*health)", re.I)
@@ -97,79 +100,128 @@ script=<allowlisted_script_name>
 def has_exec_block(text: str) -> bool:
     return bool(EXEC_BLOCK_RE.search((text or "").strip()))
 
-def choose_auto_exec_script() -> str:
+def choose_top_exec_scripts(prompt: str = "", text: str = "", limit: int = 3) -> list[str]:
+    context = infer_exec_context((prompt or "") + "\n" + (text or ""), "")
+    keys = []
     try:
         with conn() as c:
-            row = c.execute("""
+            rows = c.execute("""
                 select pattern_key
                 from learning_patterns
                 where pattern_type='self_improvement_exec'
                   and coalesce(weight,0) >= ?
                   and coalesce(success_count,0) >= ?
+                  and pattern_key like ?
                 order by weight desc, success_count desc, sample_count desc, id desc
-                limit 1
-            """, (AUTO_EXEC_MIN_WEIGHT, AUTO_EXEC_MIN_SUCCESS)).fetchone()
+                limit ?
+            """, (AUTO_EXEC_MIN_WEIGHT, AUTO_EXEC_MIN_SUCCESS, f"context={context}|script=%", limit)).fetchall()
+            if not rows:
+                rows = c.execute("""
+                    select pattern_key
+                    from learning_patterns
+                    where pattern_type='self_improvement_exec'
+                      and coalesce(weight,0) >= ?
+                      and coalesce(success_count,0) >= ?
+                      and pattern_key like 'script=%'
+                    order by weight desc, success_count desc, sample_count desc, id desc
+                    limit ?
+                """, (AUTO_EXEC_MIN_WEIGHT, AUTO_EXEC_MIN_SUCCESS, limit)).fetchall()
+            keys = [((r["pattern_key"] or "").strip()) for r in rows]
     except Exception:
-        row = None
-    key = ((row["pattern_key"] if row else "") or "").strip()
-    if not key.startswith("script="):
-        return ""
-    script = key.split("=", 1)[1].strip()
-    if script not in ALLOWED_EXEC_SCRIPTS:
-        return ""
-    return script
+        keys = []
+    out = []
+    for key in keys:
+        if key.startswith("context=") and "|script=" in key:
+            script = key.split("|script=", 1)[1].strip()
+        elif key.startswith("script="):
+            script = key.split("=", 1)[1].strip()
+        else:
+            continue
+        if script in ALLOWED_EXEC_SCRIPTS and script not in out:
+            out.append(script)
+    return out
+
+def choose_auto_exec_script(prompt: str = "", text: str = "") -> str:
+    prompt_context = infer_exec_context(prompt or "", "")
+    text_context = infer_exec_context(text or "", "")
+    context = prompt_context if prompt_context != "general" else text_context
+    forced_map = {
+        "db": "db_health.sh",
+        "api": "status_core.sh",
+        "service": "status_core.sh",
+        "telegram": "status_core.sh",
+        "routing": "status_core.sh",
+        "deploy": "deploy_safe.sh",
+    }
+    if context in forced_map:
+        return forced_map[context]
+    xs = choose_top_exec_scripts(prompt, text, 3)
+    return xs[0] if xs else ""
 
 def maybe_append_auto_exec(prompt: str, text: str) -> str:
     s = (text or "").strip()
     if not s:
         return s
+
+    # 強制: 既存EXECは完全無視
+    s = EXEC_BLOCK_RE.sub("", s).strip()
     if has_exec_block(s):
-        return normalize_exec_block(s)
+        forced = choose_auto_exec_script(prompt, s)
+        base = EXEC_BLOCK_RE.sub("", s).strip()
+        if forced:
+            return normalize_exec_block(f"{base}\n\n[EXEC]\nscript={forced}")
+        return normalize_exec_block(base)
     base = ((prompt or "") + "\n" + s).strip()
     if not AUTO_EXEC_PROMPT_RE.search(base):
         return s
-    script = choose_auto_exec_script()
+    script = choose_auto_exec_script(prompt, s)
     if not script:
         return s
-    return normalize_exec_block(f"{s}\n\n[EXEC]\nscript={script}")
 
-def load_exec_pattern_hints() -> str:
-    try:
-        with conn() as c:
-            rows = c.execute("""
-                select pattern_key, weight
-                from learning_patterns
-                where pattern_type='self_improvement_exec'
-                order by weight desc, success_count desc, sample_count desc
-                limit 5
-            """).fetchall()
-    except Exception:
-        rows = []
-    hints = []
-    for r in rows:
-        k = (r["pattern_key"] or "").strip()
-        if not k.startswith("script="):
-            continue
-        hints.append(f"- {k} weight={float(r['weight'] or 0):.3f}")
+    # 強制: EXECは常に上書き
+    base = EXEC_BLOCK_RE.sub("", s).strip()
+    return normalize_exec_block(f"{base}\n\n[EXEC]\nscript={script}")
+
+def load_exec_pattern_hints(prompt: str = "", text: str = "") -> str:
+    context = infer_exec_context((prompt or "") + "\n" + (text or ""), "")
+    scripts = choose_top_exec_scripts(prompt, text, 3)
+    hints = [f"- context={context}|script={x}" for x in scripts]
     if not hints:
         return ""
     return "\n".join([
-        "実行提案ヒント:",
-        "過去に成功した allowlisted EXEC パターンがあります。",
+        f"実行提案ヒント: context={context}",
+        "過去に成功した allowlisted EXEC 候補があります。",
         *hints,
         "必要性が低いときは EXEC を出さないこと。",
         "出す場合は末尾に 1つだけ出すこと。"
     ])
 
 def conn():
-    c = sqlite3.connect(DB, timeout=30)
-    c.row_factory = sqlite3.Row
-    c.execute("pragma busy_timeout=30000")
-    try:
-        c.execute("pragma journal_mode=WAL")
-    except Exception:
-        pass
-    return c
+    last = None
+    for _ in range(5):
+        try:
+            c = sqlite3.connect(DB, timeout=30)
+            c.row_factory = sqlite3.Row
+            c.execute("pragma busy_timeout=30000")
+            try:
+                c.execute("pragma journal_mode=WAL")
+            except Exception:
+                pass
+            return c
+        except sqlite3.OperationalError as e:
+            last = e
+            time.sleep(1)
+    raise last
+
+
+def force_clean_exec(text: str) -> str:
+    if not text:
+        return text
+    if "[EXEC]" in text and "script=" not in text:
+        import re
+        return re.sub(r"(?ms)\[EXEC\][\s\S]*$", "", text).strip()
+    return text
+
 
 def extract_exec_script(reply_text: str) -> str:
     m = EXEC_BLOCK_RE.search((reply_text or "").strip())
@@ -179,6 +231,36 @@ def extract_exec_script(reply_text: str) -> str:
     if script not in ALLOWED_EXEC_SCRIPTS:
         return ""
     return script
+
+def infer_exec_context(text: str, script: str) -> str:
+    raw = ((text or "") + "\n" + (script or "")).lower()
+    t = raw
+    for ch in [" ", "　", "\n", "\r", "\t"]:
+        t = t.replace(ch, "")
+
+    if any(k in t for k in ["telegram経路", "telegramの経路", "telegram", "tg_", "chat_id", "finisher", "pollloop"]):
+        return "telegram"
+    if any(k in t for k in ["サービスの状態", "サービス", "service", "launchctl", "restart", "起動", "再起動"]):
+        return "service"
+    if any(k in t for k in ["api_server", "apiserver", "api", "endpoint", "webhook"]):
+        return "api"
+    if any(k in t for k in ["routing", "routingの状態", "ルーティング"]):
+        return "routing"
+    if any(k in t for k in ["deploy", "deployの状態", "デプロイ"]):
+        return "deploy"
+    if any(k in t for k in ["db", "database", "sqlite", "データベース", "db_health"]):
+        return "db"
+    if any(k in t for k in ["health", "ヘルス", "健全", "稼働", "status_core", "coreservice", "コア"]):
+        return "health"
+    if any(k in t for k in ["route", "router", "routing", "経路", "導線"]):
+        return "routing"
+    if any(k in t for k in ["deploy", "release", "rollout", "反映", "デプロイ"]):
+        return "deploy"
+    if any(k in t for k in ["lp", "landingpage", "preview", "cta", "hero", "訴求"]):
+        return "lp"
+    if any(k in t for k in ["git", "pr", "merge", "commit", "branch"]):
+        return "git"
+    return "general"
 
 def insert_exec_child(c, source_command_id: int, script: str) -> int:
     task_text = f"[EXEC]\nscript={script}"
@@ -206,6 +288,17 @@ def mark_exec_direct(c, parent_task_id: int, child_task_id: int):
     """, (child_task_id, parent_task_id))
 
 def log_exec_direct(c, parent_task_id: int, child_task_id: int, source_command_id: int, script: str, reply_text: str):
+    source_text = ""
+    try:
+        row = c.execute(
+            "select coalesce(text,'') as text from inbox_commands where id=?",
+            (source_command_id,)
+        ).fetchone()
+        source_text = (row["text"] if row else "") or ""
+    except Exception:
+        source_text = ""
+    context = infer_exec_context(source_text, script)
+    reusable = f"context={context}|script={script}"
     c.execute("""
         insert into self_improvement_log(
           parent_task_id, child_task_id, source_command_id, kind,
@@ -215,7 +308,7 @@ def log_exec_direct(c, parent_task_id: int, child_task_id: int, source_command_i
         ) values(
           ?, ?, ?, 'exec_direct',
           'direct exec from kaikun',
-          ?, 'queued_child_task', 'direct exec delegation',
+          ?, 'queued_child_task', ?,
           'queued', ?, '',
           datetime('now'), '', datetime('now')
         )
@@ -224,6 +317,7 @@ def log_exec_direct(c, parent_task_id: int, child_task_id: int, source_command_i
         child_task_id,
         source_command_id,
         f"script={script}",
+        reusable,
         (reply_text or "")[:300]
     ))
 
@@ -290,7 +384,7 @@ def validate_output(prompt: str, output: str):
 def call_llm(task_id: int, prompt: str) -> str:
     if not OPENAI_API_KEY:
         raise RuntimeError("OPENAI_API_KEY missing")
-    exec_hints = load_exec_pattern_hints()
+    exec_hints = load_exec_pattern_hints(prompt, prompt)
     feedback_hints = build_exec_feedback_block()
     extra = "\n\n".join([x for x in [feedback_hints, exec_hints] if x])
     prompt2 = prompt if not extra else f"{prompt}\n\n{extra}"
@@ -396,6 +490,7 @@ def tick():
                 mode = decide_mode(clean)
                 prompt2 = f"[MODE:{mode}]\n{clean}"
                 reply = call_llm(task_id, prompt2)
+                reply = force_clean_exec(reply)
                 ok, reason = validate_output(prompt2, reply)
                 if ok:
                     mark_done(c, task_id, r["source_command_id"], clean, reply)
