@@ -310,3 +310,129 @@ Kaikun04 THINK
 ### 次
 - manual_pending 14件の内訳確認
 - 閉じてよい残件か、未処理依頼かを判定
+
+## 2026-04-02 handover 追記: direct EXEC primary 化 完了
+- Kaikun04 は EXEC 提案だけでなく direct child task 作成まで担当
+- 検証済み:
+ - parent task 565 -> child task 566
+ - 565: `exec_bridge_status='direct'`, `exec_child_task_id=566`
+ - 566: `ops_exec done`
+ - self_improvement_log latest: `kind='exec_direct'`, `status='done'`
+- `kaikun04_exec_bridge_v1` は fallback 条件へ変更済み
+ - `coalesce(exec_bridge_status,'')=''`
+ - `coalesce(exec_child_task_id,0)=0`
+- これにより direct EXEC が primary、exec_bridge は fallback へ移行
+- `scripts/run_kaikun04_exec_bridge_v1.sh` を追加し LaunchAgent 起動欠損も解消
+
+## 2026-04-02 handover 追記: routing 判断の Kaikun 集約
+- task_router_v1 は `target='kaikun04'` 固定の入口へ簡素化
+- `mode` も task_router では付与しない構成へ変更
+- 実質的な mode / exec 判断は Kaikun04 worker 側に集約される
+- 次段は Kaikun04 内で THINK / FAST / DOC / EXEC の判断ルールを明文化すること
+
+## 2026-04-02 handover 追記: Kaikun decision layer
+- Kaikun04 worker 側で mode 判断を持つ構成へ移行
+- 判断種別:
+ - DOC
+ - THINK
+ - EXEC
+ - CHAT
+- EXEC は policy で制御:
+ - auto
+ - confirm
+ - deny
+- 次段は `decide_mode()` と `decide_exec_policy()` の精度を上げること
+
+## 2026-04-02 handover 追記: cleanup 完了
+- 旧 failed router_tasks を削除
+- routed/new の残件を skipped 化
+- 動作上の本線は成立済みとして次段へ進む
+- 次フェーズは OSS統合設計（OpenClaude / n8n / agent orchestration）
+
+## 2026-04-02 handover 追記: exec provider abstraction
+- `ops_exec` をローカル固定実行から provider 抽象化へ変更
+- provider:
+ - local
+ - openclaude (simulation)
+- 次段は `run_openclaude()` を実API/CLI接続へ差し替えること
+
+## 2026-04-02 handover 追記: n8n 修復優先
+- 収益化より先に基盤強化を優先
+- n8n は npm 版ではなく Colima + Docker で復旧する
+- 次段は n8n 起動確認後、OpenClaw との最小連携を作る
+
+## 2026-04-03 handover 追記: n8n mainline established
+- n8n は Colima + Docker で復旧済み
+- Webhook -> HTTP Request -> api_server.py -> inbox_commands の最小構成を確立
+- n8n source の task が task_router を通って kaikun04 / ops_exec まで完走
+- telegram_ops_executor_v1 は launch script で DB_PATH を固定して安定化
+- 次段は api_server.py の常駐化と n8n workflow の正式固定
+
+## 2026-04-03 handover 追記: stabilization finalized
+- n8n mainline は修復ではなく運用状態へ移行
+- api_server は LaunchAgent 管理へ統一
+- executor / router / kaikun04 の mainline は安定
+- 次段は Telegram 入口統合と運用設計
+
+## 2026-04-03 handover 追記: Telegram entrance preparation
+- primary entrance:
+  Telegram -> n8n -> api_server -> inbox_commands
+- fallback entrance:
+  private_reply_to_inbox_v1 / manual insert
+- 次段は n8n 側 JSON を `source` + `text` に統一し Telegram入口を寄せること
+
+## 2026-04-03 handover 追記: Telegram primary established
+- Telegram 入口は n8n 経由を primary とする方針を runtime でも確認
+- スマホから Tailscale 経由で n8n に入れる状態を確認
+- n8n は `~/.n8n` bind mount で永続化
+- fallback entrance は private_reply_to_inbox_v1 / manual insert を維持
+- 次段は Telegram 直結ルートとの整理と運用ルール固定
+
+## 2026-04-03 handover 追記: route role split
+- primary:
+  Telegram -> n8n -> api_server -> inbox_commands -> task_router -> kaikun04
+- fallback:
+  private_reply_to_inbox_v1 / ingest_private_replies_kaikun04 / manual insert
+- secretary_llm_v1 は primary から外し、legacy / fallback 扱いで維持
+- 次段は LaunchAgent の required / observe / fallback 整理と Telegram直結ルート縮退方針
+
+## 2026-04-03 handover 追記: primary burn-in confirmed
+- `telegram_n8n` source の追加確認でも primary route 完走
+- 555 -> 618 -> 619 で end-to-end を確認
+- secretary_llm_v1 は停止せず維持するが、運用上は legacy / fallback 扱い
+- 次段は fallback の縮退方針と、必要なら secretary 系 LaunchAgent の observe 化
+
+## 2026-04-03 handover 追記: fallback reduction candidate
+- secretary_llm_v1 は legacy / fallback のまま維持しつつ observe candidate として扱う
+- private reply 系は emergency fallback として残す
+- 次段は primary burn-in を伸ばした上で fallback の縮退可否を判断
+
+## 2026-04-03 handover 追記: fallback status clarified
+- private_reply_to_inbox_v1 は DB env 汚染除去後に正常待機を確認
+- usable fallback:
+  private_reply_to_inbox_v1 / manual insert
+- legacy fallback:
+  ingest_private_replies_kaikun04 / secretary_llm_v1
+- ingest_private_replies_kaikun04 は名前と実体にズレあり
+- 次段は legacy fallback の命名整理 or observe 化
+
+## 2026-04-03 handover 追記: operational classification fixed
+- primary / usable fallback / legacy fallback の分類を固定
+- 今は停止や削除よりも運用分類の固定を優先
+- 次段は ingest_private_replies_kaikun04 の命名整理、または legacy の observe 扱い固定
+
+## 2026-04-03 handover 追記: telegram route runtime check added
+- `check_telegram_route_runtime.sh` を日常確認コマンドとして追加
+- 次チャット開始時は runtime doc を読むだけでなく、このスクリプト実行から入ると状態把握が速い
+
+## 2026-04-03 handover 追 記 : legacy fallback naming fixed
+- `jp.openclaw.ingest_private_replies_kaikun04` は 名前 と 実 体 に ズ レ が あ る
+- 実 体 は `bots/ingest_private_replies_v1.py`
+- 今 は rename よ り も role の 固 定 を 優 先
+- 次 段 で rename す る 場 合 も primary burn-in 後 に 行 う
+
+## 2026-04-05 EXECライン安定化
+- executor stability 修正を branch `chore/telegram-runtime-isolation` へ push 済み
+- EXEC HEALTH レポートを ceo_hub_events へ送信可能
+- 現在のEXEC集計は success 86 / failed 0 / skipped 2 / rate 97.7%
+- stale started 回収あり、ops_exec 滞留なし

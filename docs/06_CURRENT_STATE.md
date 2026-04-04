@@ -265,3 +265,137 @@
  - tg_private_pending = 0
  - manual_pending = 14
 - 現状は mainline 健全、manual backlog のみ残存
+
+## 2026-04-02 direct EXEC primary / exec_bridge fallback 化
+- Kaikun04 direct EXEC を primary とする構成を実地確認
+- 検証:
+ - router_tasks id=565 -> exec_bridge_status='direct'
+ - exec_child_task_id=566
+ - child task 566 は ops_exec done
+ - self_improvement_log latest は kind='exec_direct' status='done'
+- `kaikun04_exec_bridge_v1` は `coalesce(exec_child_task_id,0)=0` 条件を追加
+- これにより direct child 済み task は bridge が再取得しない
+- exec_bridge は fallback として待機
+
+## 2026-04-02 Kaikun mode / exec policy
+- `task_router_v1` は `target='kaikun04'` 固定・mode未付与の入口へ簡素化済み
+- `kaikun04_router_worker_v1` は `decide_mode()` で mode を内部判定
+- `kaikun04_router_worker_v1` は `decide_exec_policy()` で EXEC を `auto / confirm / deny` 制御
+- `router_tasks` に `decided_mode` / `exec_policy` を保存する構成へ更新
+
+## 2026-04-02 cleanup after Kaikun decision-layer rollout
+- 旧 failed router_tasks を整理
+- routed のまま残っていた new inbox_commands を skipped 処理
+- 直近本線は `kaikun04 -> direct child ops_exec -> self_improvement_log` で通過確認済み
+- 現在は decision metadata (`decided_mode` / `exec_policy`) 保存よりも mainline 安定を優先
+
+## 2026-04-02 exec provider abstraction
+- `telegram_ops_executor_v1.py` に `run_local()` / `run_openclaude()` / `run_script()` 分岐を導入
+- `EXEC_PROVIDER=local|openclaude` で実行先を切替可能な構造へ変更
+- 現時点では `openclaude` は simulation 実装で疎通確認までを対象
+- 本線は引き続き local 実行を維持
+
+## 2026-04-02 n8n recovery priority
+- npm 版 n8n は `isolated-vm` / `distutils` 依存で失敗
+- Docker Desktop は未導入だったため、Colima + Docker へ切替
+- n8n は Docker コンテナで起動する方針へ変更
+- 事業化より先に基盤強化を優先
+
+## 2026-04-03 n8n to OpenClaw mainline established
+- n8n webhook -> HTTP Request -> api_server.py -> inbox_commands 挿入成功
+- n8n source の inbox_commands が task_router を通り kaikun04 task 化されることを確認
+- kaikun04 done / ok を確認
+- ops_exec child task done / ok を確認
+- telegram_ops_executor_v1 は DB_PATH 固定 launch script で fresh log clean
+- 現在の本線は n8n -> API -> inbox_commands -> task_router -> kaikun04 -> ops_exec
+
+## 2026-04-03 mainline stabilization finalized
+- n8n -> api_server -> inbox_commands -> task_router -> kaikun04 -> ops_exec を継続実証
+- telegram_ops_executor_v1 fresh log は `done=0` のみで clean
+- api_server は LaunchAgent 管理へ一本化
+- n8n production webhook からの投入を正式ルートとして固定
+
+## 2026-04-03 Telegram entrance integration preparation
+- 入口方針は Telegram -> n8n -> api_server -> inbox_commands を primary とする
+- private_reply_to_inbox_v1 は既存 private ingest の fallback として維持
+- api_server.py は source 指定を受けられる入口APIへ拡張
+- task_router_v1 は空 mode の `[]` タグを出さない形へ整理
+
+## 2026-04-03 Telegram primary entrance established
+- スマホから Tailscale 経由で n8n にアクセス可能
+- n8n は `~/.n8n` bind mount で永続化
+- n8n HTTP Request は `source=telegram_n8n` + `text` 形式へ統一
+- Telegram primary entrance は `Telegram -> n8n -> api_server -> inbox_commands` として実地確認済み
+- `telegram_primary` / `telegram_n8n` source で kaikun04 / ops_exec 完走を確認
+
+## 2026-04-03 Telegram route role split
+- primary route は `Telegram -> n8n -> api_server -> inbox_commands -> task_router -> kaikun04`
+- fallback route は `private_reply_to_inbox_v1` と `manual insert`
+- `secretary_llm_v1` は current primary ではなく legacy / fallback 側の構成要素
+- current primary の reply mainline は task_router / kaikun04 / router_reply_finisher / ops_exec で成立
+
+## 2026-04-03 primary route burn-in confirmation
+- `telegram_n8n` source で primary route の burn-in を追加確認
+- inbox_commands id=555 は done / sent
+- router_tasks id=618 は kaikun04 done / ok
+- router_tasks id=619 は ops_exec done / ok
+- secretary_llm_v1 は current primary route には含まれず、legacy / fallback として扱う
+
+## 2026-04-03 fallback reduction candidate identified
+- secretary_llm_v1 は停止対象ではなく observe / fallback candidate として整理
+- private_reply_to_inbox_v1 / ingest_private_replies_kaikun04 は emergency fallback として維持
+- Telegram -> n8n primary は継続 burn-in 対象
+
+## 2026-04-03 fallback status clarified
+- global launchctl DB env 汚染を除去後、private_reply_to_inbox_v1 は error なく待機することを確認
+- private_reply_to_inbox_v1 は usable fallback として維持可能
+- ingest_private_replies_kaikun04 LaunchAgent は bots/ingest_private_replies_v1.py を実行しており、名称と実体にズレがある
+- ingest_private_replies_kaikun04 は legacy-named fallback として扱う
+
+## 2026-04-03 operational classification fixed
+- required primary:
+  api_server / task_router_v1 / kaikun04_router_worker_v1 / telegram_ops_executor_v1 / router_reply_finisher_v1
+- usable fallback:
+  private_reply_to_inbox_v1 / manual insert
+- observe or legacy fallback:
+  ingest_private_replies_kaikun04 / secretary_llm_v1
+- 現時点では observe 化の明文化を優先し、命名整理は後段とする
+
+## 2026-04-03 telegram route runtime check added
+- `scripts/check_telegram_route_runtime.sh` を追加し、primary / fallback / recent source を 1コマンドで確認可能にした
+- 日常運用では分類固定だけでなく runtime snapshot の確認を優先する
+
+## 2026-04-03 legacy fallback naming policy fixed
+- `jp.openclaw.ingest_private_replies_kaikun04` は 名 称 上 は kaikun04 ingest だ が 、 runtime 実 体 は `bots/ingest_private_replies_v1.py`
+- よ っ て 現 時 点 で は clean primary 候 補 で は な く legacy-named fallback と し て 扱 う
+- rename は primary burn-in を さ ら に 積 ん だ 後 段 へ 回 す
+
+## EXECライン安定化完了（2026-04-05）
+
+### 修正内容
+- telegram_ops_executor_v1
+  - DB接続リトライ導入
+  - stale started 回収（10分）
+- ops/telegram_exec/deploy_safe.sh
+  - executor自己再起動ループ解消
+- scripts/run_kaikun04_exec_bridge_v1.sh
+  - DB_PATH明示
+- kaikun04_router_worker_v1
+  - malformed EXEC除去（force_clean_exec）
+  - contextベースのEXEC選択強化
+
+### 状態
+- EXEC成功率: 97.7%（86/88）
+- failed: 0
+- skipped: 2（過去分のみ）
+- started/new滞留: 0
+
+### 結果
+- EXECラインは自動回復・自己修復構造へ到達
+- 手動介入なしで安定稼働
+- EXEC HEALTH は ceo_hub_events へ送信可能
+
+### 次フェーズ
+- EXECレポートの定期送信
+- EXEC精度の継続改善
+- 収益ライン接続
