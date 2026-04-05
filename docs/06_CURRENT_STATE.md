@@ -399,3 +399,34 @@
 - EXECレポートの定期送信
 - EXEC精度の継続改善
 - 収益ライン接続
+
+## 2026-04-05 TECH ADOPTION SYSTEM
+
+### 方針
+- 無料優先
+- ローカル優先
+- API依存は最小化
+- Xは発見専用（採用判断は別）
+- GitHub / 公式 / Reddit を優先ソースとする
+
+### フロー
+1. scout（収集）
+2. judge（採用判定）
+3. reporter（通知）
+4. adopter（導入）
+
+### 採用基準
+- free = 必須
+- local = 強優先
+- OpenClaw能力向上に直結
+- 実装コスト低
+
+### status
+- adopt
+- hold
+- reject
+
+### 次段
+- 案件処理テンプレ
+- 収益ライン接続
+
