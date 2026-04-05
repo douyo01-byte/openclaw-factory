@@ -1,3 +1,13 @@
+
+def adoption_report():
+    import subprocess
+    r = subprocess.run(
+        ["bash", "scripts/report_adoption.sh"],
+        capture_output=True,
+        text=True
+    )
+    return r.stdout.strip()
+
 import os,sqlite3,datetime,json
 
 DB=os.environ.get("DB_PATH") or "data/openclaw.db"
@@ -149,6 +159,17 @@ def build_text(r):
         lines += ["", *fb]
     return "\n".join(lines)
 
+
+def exec_health_report():
+    import subprocess
+    r = subprocess.run(
+        ["bash", "scripts/report_exec_health.sh"],
+        capture_output=True,
+        text=True
+    )
+    return r.stdout.strip()
+
+
 def run_once():
     done=0
     with dconn() as d, fconn() as f:
@@ -184,7 +205,37 @@ def run_once():
             mark_sent(d,key)
             d.commit()
             done+=1
-    print(f"report_done={done}", flush=True)
+
+        try:
+            body = exec_health_report()
+            key = f"exec_health:{body}"
+            if not already_sent(d, key):
+                d.execute(
+                    "insert or ignore into ceo_hub_events(source,source_key,title,body,level,created_at) values(?,?,?,?,?,?)",
+                    ("report_orchestrator_v1", key, "EXEC HEALTH", body, "info", now())
+                )
+                mark_sent(d, key)
+                d.commit()
+                done += 1
+        except Exception as e:
+            print(f"[report_orchestrator_v1] exec_health_err={e!r}", flush=True)
+
+    
+    try:
+        body = adoption_report()
+        key = f"adoption:{body}"
+        if not already_sent(d, key):
+            d.execute(
+                "insert or ignore into ceo_hub_events(source,source_key,title,body,level,created_at) values(?,?,?,?,?,?)",
+                ("report_orchestrator_v1", key, "TECH ADOPTION", body, "info", now())
+            )
+            mark_sent(d, key)
+            d.commit()
+            done += 1
+    except Exception as e:
+        print(f"[adoption_report_err]={e!r}", flush=True)
+
+        print(f"report_done={done}", flush=True)
 
 if __name__=="__main__":
     run_once()
