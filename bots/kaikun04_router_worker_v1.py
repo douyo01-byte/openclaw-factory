@@ -7,6 +7,7 @@ import sqlite3
 import time
 from difflib import SequenceMatcher
 import requests
+from bots.autoagent_text_utils_v1 import clean_text
 from bots.self_improvement_proposal_feedback_v1 import build_exec_feedback_block
 from bots.self_improvement_proposal_feedback_v1 import load_proposal_pattern_hints
 
@@ -367,12 +368,19 @@ def validate_output(prompt: str, output: str):
     o = (output or "").strip()
     if not o:
         return False, "empty"
+
+    low_p = p.lower()
+    low_o = o.lower()
+
+    if "rewrite" in low_p or "rewritten_text" in low_p:
+        if len(o) < 40:
+            return False, "too_short"
+        return True, "ok"
+
     if len(o) < 180:
         return False, "too_short"
     if similarity(p, o) > 0.88:
         return False, "too_similar"
-    low_p = p.lower()
-    low_o = o.lower()
     if "html" in low_p and "<html" not in low_o and "```html" not in low_o:
         return False, "missing_html"
     if "3案" in p and not any(x in o for x in ["1.", "1案", "A案", "①"]):
@@ -380,6 +388,7 @@ def validate_output(prompt: str, output: str):
     if "cta" in low_p and "cta" not in low_o:
         return False, "missing_cta"
     return True, "ok"
+
 
 def call_llm(task_id: int, prompt: str) -> str:
     if not OPENAI_API_KEY:
@@ -490,7 +499,9 @@ def tick():
                 mode = decide_mode(clean)
                 prompt2 = f"[MODE:{mode}]\n{clean}"
                 reply = call_llm(task_id, prompt2)
+                reply = clean_text(reply)
                 reply = force_clean_exec(reply)
+                reply = clean_text(reply)
                 ok, reason = validate_output(prompt2, reply)
                 if ok:
                     mark_done(c, task_id, r["source_command_id"], clean, reply)
