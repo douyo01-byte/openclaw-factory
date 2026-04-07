@@ -430,3 +430,34 @@
 - 案件処理テンプレ
 - 収益ライン接続
 
+## 2026-04-07 repair chain / orchestrator 修復
+- capability_watchdog_healer_v1 を導入
+- capability_registry_builder_v1 に heal overlay を導入
+- capability_watchdog_log を再計算し、healed を normal 判定へ反映
+- capability_watchdog_repair_chain_summary_reporter_v1 に HEALED_NOW を追加
+- capability_watchdog_repair_chain_planner_v1 で healed 済み capability の再起票を停止
+- kaikun04_orchestrator_planner_v1 で repair capability 系を direct improve 1段で処理できる状態まで修正
+- 古い repair capability 履歴は削除せず `[HISTORICAL_REPAIR_NOISE]` を付与して識別可能化
+- 古い `no_orchestrator_match` は `historical_no_orchestrator_match` に変更
+- 最新の正常 repair 履歴は 2081 / 2082 として維持
+
+### 現在の本当の状態
+- self_evolution:6 = normal / healed / score=1.0 / success=1 / failure=1
+- self_evolution:13 = normal / healed / score=1.0 / success=1 / failure=1
+- REPAIR_CHAIN_SUMMARY の BAD_HEALTH_NOW は空
+- HEALED_NOW に healed 2件が表示される
+- repair chain planner は新規 repair task を追加していない
+
+### DB確認
+- capability_watchdog_log
+- capability_watchdog_heal_log
+- capability_watchdog_repair_chain_log
+- capability_registry
+- kaikun04_orchestrator_plan_log
+- kaikun04_orchestrator_stage_log
+
+### 注意点
+- 過去の repair capability task 履歴は router_tasks に残っている
+- no_orchestrator_match の古い記録は履歴として残存
+- 既存履歴の整理は未実施だったが、識別可能化までは完了
+
