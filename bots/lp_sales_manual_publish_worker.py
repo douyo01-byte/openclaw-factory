@@ -93,7 +93,7 @@ def ensure_append_generated(soup, base: str):
             src = f"{base}/gen_9.webp"
             existing = { (img.get("src") or "") for img in grid.select("img") }
             if src not in existing:
-                append_item(soup, grid, src, "educate B detail extra 4", "成分イメージを補うビジュアル")
+                append_item(soup, grid, src, "educate B compare 4", "素肌感の印象を補うビジュアル")
 
     for_you = section_by_eyebrow(soup, "FOR YOU")
     if for_you:
@@ -135,7 +135,7 @@ def force_jp_normalize(text):
     text = re.sub(r'\s{2,}',' ', text)
     return text
 
-def 
+def tighten_japanese_spacing(text: str) -> str:
     jp = r'[ぁ-んァ-ン一-龥ー]'
     pat = re.compile(f'({jp})\\s+({jp})')
 
@@ -227,15 +227,12 @@ def process_html(src_path: str, generated_base_url: str, append_generated: bool,
     if normalize:
         normalize_copy(soup)
         rewrite_copy_by_section(soup)
-    normalize_copy(soup)
         html = str(soup)
         jp = r'[ぁ-んァ-ン一-龥ー]'
         pat = re.compile(f'({jp})\\s+({jp})')
         while pat.search(html):
             html = pat.sub(r'\1\2', html)
         html = re.sub(r' {2,}', ' ', html)
-        
-        html = str(soup)
         html = re.sub(r'([ぁ-んァ-ン一-龥ー])\s+([ぁ-んァ-ン一-龥ー])', r'\1\2', html)
         html = re.sub(r'\s{2,}', ' ', html)
         src.write_text(html, encoding="utf-8")

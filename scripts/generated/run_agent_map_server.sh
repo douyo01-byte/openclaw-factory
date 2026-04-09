@@ -2,4 +2,4 @@
 set -euo pipefail
 cd "$HOME/AI/openclaw-factory-daemon" || exit 1
 export DB_PATH="${DB_PATH:-$HOME/AI/openclaw-factory/data/openclaw.db}"
-exec python3 ui/agent_map_server.py
+exec "$HOME/AI/openclaw-factory-daemon/.venv/bin/python" ui/agent_map_server.py

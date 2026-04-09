@@ -1,15 +1,32 @@
 
-from __future__ import annotations
-import json
+def force_exec(text):
+    text = (text or "").strip()
+    if "[EXEC]" in text:
+        return text
+    return "[EXEC]\nscript=run_python.sh\narg=mode=auto_task;task=" + text[:80]
+
 import os
 import re
 import sqlite3
 import time
 from difflib import SequenceMatcher
+
 import requests
+
 from bots.autoagent_text_utils_v1 import clean_text
 from bots.self_improvement_proposal_feedback_v1 import build_exec_feedback_block
 from bots.self_improvement_proposal_feedback_v1 import load_proposal_pattern_hints
+
+
+def force_exec(text: str) -> str:
+    text = (text or "").strip()
+    if not text:
+        return "[EXEC]\nscript=log_check.sh"
+    if text.startswith("[EXEC]") and "script=" in text:
+        return text
+    compact = " ".join(text.split())[:120]
+    return "[EXEC]\nscript=run_python.sh\narg=mode=auto_task;task=" + compact
+
 
 def decide_mode(text: str) -> str:
     t = text.lower()
@@ -20,8 +37,6 @@ def decide_mode(text: str) -> str:
     if "分析" in t or "教えて" in t:
         return "THINK"
     return "CHAT"
-
-
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
 SLEEP = float(os.environ.get("KAIKUN04_ROUTER_WORKER_SLEEP", "5"))
@@ -43,27 +58,14 @@ ALLOWED_EXEC_SCRIPTS = {
     "gh_pr_create.sh",
     "gh_pr_merge.sh",
     "git_commit_push.sh",
-
     "restart_service.sh",
     "fix_db.sh",
-    "deploy_safe.sh",}
+    "deploy_safe.sh",
+    "run_python.sh",
+}
 AUTO_EXEC_MIN_WEIGHT = float(os.environ.get("KAIKUN04_AUTO_EXEC_MIN_WEIGHT", "0.8"))
 AUTO_EXEC_MIN_SUCCESS = int(os.environ.get("KAIKUN04_AUTO_EXEC_MIN_SUCCESS", "1"))
 AUTO_EXEC_PROMPT_RE = re.compile(r"(core\s*health|health\s*check|healthを|ヘルス|健[\s\u3000]*康|db[\s\u3000]*health)", re.I)
-
-def normalize_exec_block(text: str) -> str:
-    s = (text or "").strip()
-    m = EXEC_BLOCK_RE.search(s)
-    if not m:
-        s = re.sub(r"(?ms)\n*EXEC[^\n]*$", "", s).strip()
-        s = re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "", s).strip()
-        return s
-    script = (m.group(1) or "").strip()
-    if script not in ALLOWED_EXEC_SCRIPTS:
-        s = re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "", s).strip()
-        return s
-    clean = f"[EXEC]\nscript={script}"
-    return re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "\n\n" + clean, s).strip()
 
 SYSTEM_PROMPT = """あなたは OpenClaw の Kaikun04 です。
 目的は、タスク本文に対して実務で使える完成回答を返すことです。
@@ -79,14 +81,14 @@ SYSTEM_PROMPT = """あなたは OpenClaw の Kaikun04 です。
 - 3案を求められたら3案返す
 - 返信冒頭は必ず [TASK_ID:番号]
 
-追 加 ル ー ル :
-- EXEC を 出 す の は 本 当 に 有 用 な と き だ け
-- EXEC を 出 す 場 合 は 返 信 の 最 後 に 1つ だ け
-- EXEC 形 式 は 必 ず 次 の 2行 だ け
+追加ルール:
+- EXEC を出すのは本当に有用なときだけ
+- EXEC を出す場合は返信の最後に1つだけ
+- EXEC 形式は必ず次の2行だけ
 [EXEC]
 script=<allowlisted_script_name>
-- bash / sh / zsh / python / command列 / 引 数 直 書 き は 禁 止
-- 許 可 script:
+- bash / sh / zsh / python / command列 / 引数直書きは禁止
+- 許可 script:
   - db_health.sh
   - git_status.sh
   - status_core.sh
@@ -95,11 +97,76 @@ script=<allowlisted_script_name>
   - gh_pr_create.sh
   - gh_pr_merge.sh
   - git_commit_push.sh
-- 実 行 が 不 要 な と き は EXEC を 出 さ な い
+- 実行が不要なときは EXEC を出さない
+- CTO / CMO / COO / 開発 / 市場 / 訴求 / 運用 / 本命事業 / タスク登録 を求められた場合は、
+  reply本文中に実行可能なタスク行を3件以上含めること
+- タスク行の形式は次を使うこと
+[TASK][CTO] ...
+[TASK][CMO] ...
+[TASK][COO] ...
 """
 
 def has_exec_block(text: str) -> bool:
     return bool(EXEC_BLOCK_RE.search((text or "").strip()))
+
+def normalize_exec_block(text: str) -> str:
+    s = (text or "").strip()
+    m = EXEC_BLOCK_RE.search(s)
+    if not m:
+        s = re.sub(r"(?ms)\n*EXEC[^\n]*$", "", s).strip()
+        s = re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "", s).strip()
+        return s
+    script = (m.group(1) or "").strip()
+    if script not in ALLOWED_EXEC_SCRIPTS:
+        s = re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "", s).strip()
+        return s
+    clean = f"[EXEC]\nscript={script}"
+    return re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "\n\n" + clean, s).strip()
+
+def conn():
+    last = None
+    for _ in range(5):
+        try:
+            c = sqlite3.connect(DB, timeout=30)
+            c.row_factory = sqlite3.Row
+            c.execute("pragma busy_timeout=30000")
+            try:
+                c.execute("pragma journal_mode=WAL")
+            except Exception:
+                pass
+            return c
+        except sqlite3.OperationalError as e:
+            last = e
+            time.sleep(1)
+    raise last
+
+def infer_exec_context(text: str, script: str) -> str:
+    raw = ((text or "") + "\n" + (script or "")).lower()
+    t = raw
+    for ch in [" ", "　", "\n", "\r", "\t"]:
+        t = t.replace(ch, "")
+
+    if any(k in t for k in ["telegram経路", "telegramの経路", "telegram", "tg_", "chat_id", "finisher", "pollloop"]):
+        return "telegram"
+    if any(k in t for k in ["サービスの状態", "サービス", "service", "launchctl", "restart", "起動", "再起動"]):
+        return "service"
+    if any(k in t for k in ["api_server", "apiserver", "api", "endpoint", "webhook"]):
+        return "api"
+    if any(k in t for k in ["routing", "routingの状態", "ルーティング"]):
+        return "routing"
+    if any(k in t for k in ["deploy", "deployの状態", "デプロイ"]):
+        return "deploy"
+    if any(k in t for k in ["db", "database", "sqlite", "データベース", "db_health"]):
+        return "db"
+    if any(k in t for k in ["health", "ヘルス", "健全", "稼働", "status_core", "coreservice", "コア"]):
+        return "health"
+    if any(k in t for k in ["route", "router", "routing", "経路", "導線"]):
+        return "routing"
+    if any(k in t for k in ["lp", "landingpage", "preview", "cta", "hero", "訴求"]):
+        return "lp"
+    if any(k in t for k in ["git", "pr", "merge", "commit", "branch"]):
+        return "git"
+    return "general"
 
 def choose_top_exec_scripts(prompt: str = "", text: str = "", limit: int = 3) -> list[str]:
     context = infer_exec_context((prompt or "") + "\n" + (text or ""), "")
@@ -163,8 +230,6 @@ def maybe_append_auto_exec(prompt: str, text: str) -> str:
     s = (text or "").strip()
     if not s:
         return s
-
-    # 強制: 既存EXECは完全無視
     s = EXEC_BLOCK_RE.sub("", s).strip()
     if has_exec_block(s):
         forced = choose_auto_exec_script(prompt, s)
@@ -178,8 +243,6 @@ def maybe_append_auto_exec(prompt: str, text: str) -> str:
     script = choose_auto_exec_script(prompt, s)
     if not script:
         return s
-
-    # 強制: EXECは常に上書き
     base = EXEC_BLOCK_RE.sub("", s).strip()
     return normalize_exec_block(f"{base}\n\n[EXEC]\nscript={script}")
 
@@ -197,32 +260,12 @@ def load_exec_pattern_hints(prompt: str = "", text: str = "") -> str:
         "出す場合は末尾に 1つだけ出すこと。"
     ])
 
-def conn():
-    last = None
-    for _ in range(5):
-        try:
-            c = sqlite3.connect(DB, timeout=30)
-            c.row_factory = sqlite3.Row
-            c.execute("pragma busy_timeout=30000")
-            try:
-                c.execute("pragma journal_mode=WAL")
-            except Exception:
-                pass
-            return c
-        except sqlite3.OperationalError as e:
-            last = e
-            time.sleep(1)
-    raise last
-
-
 def force_clean_exec(text: str) -> str:
     if not text:
         return text
     if "[EXEC]" in text and "script=" not in text:
-        import re
         return re.sub(r"(?ms)\[EXEC\][\s\S]*$", "", text).strip()
     return text
-
 
 def extract_exec_script(reply_text: str) -> str:
     m = EXEC_BLOCK_RE.search((reply_text or "").strip())
@@ -232,36 +275,6 @@ def extract_exec_script(reply_text: str) -> str:
     if script not in ALLOWED_EXEC_SCRIPTS:
         return ""
     return script
-
-def infer_exec_context(text: str, script: str) -> str:
-    raw = ((text or "") + "\n" + (script or "")).lower()
-    t = raw
-    for ch in [" ", "　", "\n", "\r", "\t"]:
-        t = t.replace(ch, "")
-
-    if any(k in t for k in ["telegram経路", "telegramの経路", "telegram", "tg_", "chat_id", "finisher", "pollloop"]):
-        return "telegram"
-    if any(k in t for k in ["サービスの状態", "サービス", "service", "launchctl", "restart", "起動", "再起動"]):
-        return "service"
-    if any(k in t for k in ["api_server", "apiserver", "api", "endpoint", "webhook"]):
-        return "api"
-    if any(k in t for k in ["routing", "routingの状態", "ルーティング"]):
-        return "routing"
-    if any(k in t for k in ["deploy", "deployの状態", "デプロイ"]):
-        return "deploy"
-    if any(k in t for k in ["db", "database", "sqlite", "データベース", "db_health"]):
-        return "db"
-    if any(k in t for k in ["health", "ヘルス", "健全", "稼働", "status_core", "coreservice", "コア"]):
-        return "health"
-    if any(k in t for k in ["route", "router", "routing", "経路", "導線"]):
-        return "routing"
-    if any(k in t for k in ["deploy", "release", "rollout", "反映", "デプロイ"]):
-        return "deploy"
-    if any(k in t for k in ["lp", "landingpage", "preview", "cta", "hero", "訴求"]):
-        return "lp"
-    if any(k in t for k in ["git", "pr", "merge", "commit", "branch"]):
-        return "git"
-    return "general"
 
 def insert_exec_child(c, source_command_id: int, script: str) -> int:
     task_text = f"[EXEC]\nscript={script}"
@@ -291,10 +304,7 @@ def mark_exec_direct(c, parent_task_id: int, child_task_id: int):
 def log_exec_direct(c, parent_task_id: int, child_task_id: int, source_command_id: int, script: str, reply_text: str):
     source_text = ""
     try:
-        row = c.execute(
-            "select coalesce(text,'') as text from inbox_commands where id=?",
-            (source_command_id,)
-        ).fetchone()
+        row = c.execute("select coalesce(text,'') as text from inbox_commands where id=?", (source_command_id,)).fetchone()
         source_text = (row["text"] if row else "") or ""
     except Exception:
         source_text = ""
@@ -329,6 +339,8 @@ def ensure_schema(c):
         "validation_status": "alter table router_tasks add column validation_status text default ''",
         "validation_reason": "alter table router_tasks add column validation_reason text default ''",
         "retry_count": "alter table router_tasks add column retry_count integer default 0",
+        "parent_task_id": "alter table router_tasks add column parent_task_id integer default 0",
+        "task_role": "alter table router_tasks add column task_role text default ''",
     }
     for k, sql in adds.items():
         if k not in cols:
@@ -377,18 +389,17 @@ def validate_output(prompt: str, output: str):
             return False, "too_short"
         return True, "ok"
 
-    if len(o) < 180:
+    if len(o) < 80:
         return False, "too_short"
-    if similarity(p, o) > 0.88:
+    if similarity(p, o) > 0.92:
         return False, "too_similar"
     if "html" in low_p and "<html" not in low_o and "```html" not in low_o:
         return False, "missing_html"
-    if "3案" in p and not any(x in o for x in ["1.", "1案", "A案", "①"]):
+    if "3案" in p and not any(x in o for x in ["1.", "1案", "A案", "①", "[TASK][CTO]", "[TASK][CMO]", "[TASK][COO]"]):
         return False, "missing_3_variants"
     if "cta" in low_p and "cta" not in low_o:
         return False, "missing_cta"
     return True, "ok"
-
 
 def call_llm(task_id: int, prompt: str) -> str:
     if not OPENAI_API_KEY:
@@ -427,14 +438,12 @@ def call_llm(task_id: int, prompt: str) -> str:
         text = f"[TASK_ID:{task_id}]\n{text}"
     return text.strip()
 
-
 def fetch_rows(c):
-
     return c.execute("""
         select id, source_command_id, task_text, coalesce(retry_count,0) as retry_count, coalesce(status,'new') as status
         from router_tasks
         where coalesce(target_bot,'')='kaikun04'
-          and coalesce(reply_text,'')=''
+          
           and coalesce(status,'new') in ('new','started','invalid_output')
         order by id asc
         limit 3
@@ -462,6 +471,7 @@ def mark_retry(c, task_id: int, clean: str, reason: str):
     """, (clean, reason, task_id))
 
 def mark_done(c, task_id: int, cmd_id: int, clean: str, reply: str):
+    reply = force_exec(reply)
     c.execute("""
         update router_tasks
         set clean_prompt=?,
@@ -473,13 +483,98 @@ def mark_done(c, task_id: int, cmd_id: int, clean: str, reply: str):
             updated_at=datetime('now')
         where id=?
     """, (clean, reply, task_id))
-    c.execute("""
-        update inbox_commands
-        set router_finish_status='applied',
-            router_task_id=?,
-            updated_at=datetime('now')
-        where id=?
-    """, (task_id, cmd_id))
+    if cmd_id:
+        c.execute("""
+            update inbox_commands
+            set router_finish_status='applied',
+                router_task_id=?,
+                updated_at=datetime('now')
+            where id=?
+        """, (task_id, cmd_id))
+
+TASK_LINE_RE = re.compile(r"^\[TASK\]\[(CTO|CMO|COO)\]\s*(.+)$", re.I)
+
+def infer_target_bot_from_role(role: str) -> str:
+    return "kaikun04"
+
+def extract_business_tasks(reply_text: str) -> list[tuple[str, str]]:
+    out: list[tuple[str, str]] = []
+    for raw in (reply_text or "").splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        m = TASK_LINE_RE.match(line)
+        if not m:
+            continue
+        role = (m.group(1) or "").upper().strip()
+        body = (m.group(2) or "").strip()
+        if len(body) < 8:
+            continue
+        out.append((role, body))
+    if out:
+        return out[:6]
+
+    fallback: list[tuple[str, str]] = []
+    for raw in (reply_text or "").splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if "CTO" in line or "開発" in line:
+            fallback.append(("CTO", re.sub(r"^[-*0-9. ①②③]+", "", line).strip()))
+        elif "CMO" in line or "市場" in line or "訴求" in line or "マーケ" in line:
+            fallback.append(("CMO", re.sub(r"^[-*0-9. ①②③]+", "", line).strip()))
+        elif "COO" in line or "運用" in line or "進捗" in line:
+            fallback.append(("COO", re.sub(r"^[-*0-9. ①②③]+", "", line).strip()))
+    uniq: list[tuple[str, str]] = []
+    seen = set()
+    for role, body in fallback:
+        key = (role, body)
+        if body and key not in seen:
+            uniq.append((role, body))
+            seen.add(key)
+    return uniq[:6]
+
+def insert_business_tasks(c, parent_task_id: int, source_command_id: int, reply_text: str) -> list[int]:
+    task_specs = extract_business_tasks(reply_text)
+    child_ids: list[int] = []
+    for role, body in task_specs:
+        target_bot = infer_target_bot_from_role(role)
+        task_text = f"[ROLE:{role}]\n{body}"
+        c.execute("""
+            insert into router_tasks(
+              source_command_id, parent_task_id, task_role, mode, target_bot, task_text, status, created_at, updated_at
+            ) values(
+              ?, ?, ?, 'THINK', ?, ?, 'new', datetime('now'), datetime('now')
+            )
+        """, (source_command_id, parent_task_id, role, target_bot, task_text))
+        child_ids.append(int(c.execute("select last_insert_rowid()").fetchone()[0]))
+    return child_ids
+
+def insert_role_exec_tasks(c, source_command_id: int, parent_task_id: int, task_specs: list[tuple[str, str]]) -> list[int]:
+    child_ids: list[int] = []
+    for role, body in task_specs:
+        role = (role or "").upper().strip()
+        body = (body or "").strip()
+        if not body:
+            continue
+        if role == "CTO":
+            task_text = f"[EXEC]\nscript=run_python.sh\narg=mode=ctogen_exec;task={body}"
+        elif role == "CMO":
+            task_text = f"[EXEC]\nscript=run_python.sh\narg=mode=lpgen_exec;task={body}"
+        elif role == "COO":
+            task_text = f"[EXEC]\nscript=run_python.sh\narg=mode=runbook_gen_exec;task={body}"
+        else:
+            continue
+        c.execute("""
+            insert into router_tasks(
+              source_command_id, parent_task_id, task_role, mode, target_bot, task_text, status, created_at, updated_at
+            ) values(
+              ?, ?, ?, 'EXEC', 'ops_exec', ?, 'new', datetime('now'), datetime('now')
+            )
+        """, (source_command_id, parent_task_id, role, task_text))
+        child_ids.append(int(c.execute("select last_insert_rowid()").fetchone()[0]))
+    return child_ids
+
 
 def tick():
     done = 0
@@ -488,6 +583,7 @@ def tick():
         rows = fetch_rows(c)
         for r in rows:
             task_id = r["id"]
+            source_command_id = int(r["source_command_id"] or 0)
             clean = clean_prompt(r["task_text"])
             if not clean:
                 mark_retry(c, task_id, clean, "empty_clean_prompt")
@@ -504,17 +600,28 @@ def tick():
                 reply = clean_text(reply)
                 ok, reason = validate_output(prompt2, reply)
                 if ok:
-                    mark_done(c, task_id, r["source_command_id"], clean, reply)
+                    mark_done(c, task_id, source_command_id, clean, reply)
 
                     script = extract_exec_script(reply)
                     if script:
                         try:
-                            child_id = insert_exec_child(c, r["source_command_id"], script)
+                            child_id = insert_exec_child(c, source_command_id, script)
                             mark_exec_direct(c, task_id, child_id)
-                            log_exec_direct(c, task_id, child_id, r["source_command_id"], script, reply)
+                            log_exec_direct(c, task_id, child_id, source_command_id, script, reply)
                             print(f"[kaikun04_router_worker_v1] exec_direct parent={task_id} child={child_id} script={script}", flush=True)
                         except Exception as e:
                             print(f"[kaikun04_router_worker_v1] exec_direct_err={e!r}", flush=True)
+
+                    try:
+                        task_specs = extract_business_tasks(reply)
+                        biz_child_ids = insert_business_tasks(c, task_id, source_command_id, reply)
+                        if biz_child_ids:
+                            print(f"[kaikun04_router_worker_v1] business_tasks parent={task_id} children={biz_child_ids}", flush=True)
+                        exec_child_ids = insert_role_exec_tasks(c, source_command_id, task_id, task_specs)
+                        if exec_child_ids:
+                            print(f"[kaikun04_router_worker_v1] role_exec_tasks parent={task_id} children={exec_child_ids}", flush=True)
+                    except Exception as e:
+                        print(f"[kaikun04_router_worker_v1] business_task_err={e!r}", flush=True)
 
                     c.commit()
                     done += 1
