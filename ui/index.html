@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>OpenClaw Mothership UI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+body { font-family: -apple-system; margin:0; background:#0b1020; color:#e8ecf3;}
+header{padding:20px;background:#121933;border-bottom:1px solid #243056;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;padding:16px;}
+.card{background:#121933;border:1px solid #243056;border-radius:14px;padding:16px;}
+.value{font-size:24px;font-weight:700;}
+
+table{width:100%;border-collapse:collapse;}
+th,td{padding:8px;font-size:12px;border-bottom:1px solid #243056;}
+
+.status-new{color:#4ea1ff;}
+.status-started{color:#ffcc00;}
+.status-running{color:#ffcc00;}
+.status-done{color:#3ddc84;}
+.status-cancelled{color:#9aa4b2;}
+.status-retry{color:#ff8a3d;}
+.status-failed{color:#ff5d5d;}
+
+.badge{padding:2px 6px;border-radius:6px;font-size:10px;background:#243056;}
+
+.mono{font-family:monospace;white-space:pre-wrap;word-break:break-word;}
+
+.row{display:grid;grid-template-columns:1fr;gap:16px;padding:16px;}
+
+#detail{
+position:fixed;
+top:0;right:0;
+width:400px;height:100%;
+background:#121933;
+border-left:1px solid #243056;
+overflow:auto;
+padding:16px;
+display:none;
+}
+
+.status-chip{
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding:4px 10px;
+border-radius:999px;
+font-size:12px;
+font-weight:600;
+color:#fff;
+}
+
+.status-success{background:#10B981;}
+.status-info{background:#3B82F6;}
+.status-warning{background:#F97316;}
+.status-danger{background:#EF4444;}
+.status-neutral{background:#6B7280;}
+
+.bot-badge{
+display:inline-flex;
+align-items:center;
+gap:4px;
+padding:2px 6px;
+border-radius:8px;
+background:#0EA5E9;
+color:#fff;
+font-size:11px;
+font-weight:700;
+}
+
+.mobile-card{
+display:flex;
+flex-direction:column;
+gap:6px;
+padding:10px;
+}
+
+.mobile-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.mobile-text{
+font-size:13px;
+line-height:1.4;
+word-break:break-word;
+}
+
+
+@media (max-width: 600px){
+.grid{
+grid-template-columns:repeat(2,1fr);
+}
+
+.card{
+padding:12px;
+}
+
+.value{
+font-size:18px;
+}
+
+table{
+font-size:11px;
+}
+
+button{
+width:100%;
+padding:10px;
+margin-top:6px;
+}
+
+input, select, textarea{
+width:100%;
+margin-bottom:8px;
+}
+}
+
+
+.tasks_cards{
+display:grid;
+grid-template-columns:1fr;
+gap:10px;
+}
+
+.task_card{
+background:#121933;
+border:1px solid #243056;
+border-radius:14px;
+padding:12px;
+cursor:pointer;
+}
+
+.task_card:hover{
+background:#172044;
+}
+
+.task_card_head{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+margin-bottom:8px;
+}
+
+.task_card_meta{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+align-items:center;
+}
+
+.task_id{
+font-size:12px;
+color:#9fb0d9;
+}
+
+.task_text{
+font-size:13px;
+line-height:1.45;
+word-break:break-word;
+white-space:pre-wrap;
+margin-top:6px;
+}
+
+.task_actions{
+margin-top:10px;
+display:flex;
+gap:8px;
+}
+
+@media (max-width: 600px){
+.task_card{
+padding:10px;
+}
+.task_text{
+font-size:12px;
+}
+}
+
+
+.toolbar{
+display:grid;
+grid-template-columns:160px 160px 1fr;
+gap:8px;
+margin-bottom:12px;
+}
+
+.toolbar input,
+.toolbar select{
+padding:10px;
+background:#0b1020;
+color:#e8ecf3;
+border:1px solid #243056;
+border-radius:10px;
+}
+
+.detail-actions{
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+gap:8px;
+margin:12px 0;
+}
+
+.child-btn{
+width:100%;
+text-align:left;
+padding:10px;
+background:#0b1228;
+color:#e8ecf3;
+border:1px solid #243056;
+border-radius:10px;
+cursor:pointer;
+}
+
+.reply-collapsed{
+max-height:180px;
+overflow:auto;
+}
+
+@media (max-width: 600px){
+.toolbar{
+grid-template-columns:1fr;
+}
+.detail-actions{
+grid-template-columns:1fr;
+}
+}
+
+
+.queue_grid{
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+gap:12px;
+}
+.queue_col{
+background:#0b1228;
+border:1px solid #243056;
+border-radius:12px;
+padding:10px;
+min-height:120px;
+}
+.queue_title{
+font-size:12px;
+color:#9fb0d9;
+margin-bottom:8px;
+text-transform:uppercase;
+}
+.queue_item{
+padding:8px;
+border:1px solid #243056;
+border-radius:10px;
+margin-bottom:8px;
+background:#121933;
+cursor:pointer;
+font-size:12px;
+line-height:1.4;
+word-break:break-word;
+}
+.queue_item:last-child{
+margin-bottom:0;
+}
+.reply-collapsed{
+max-height:180px;
+overflow:auto;
+}
+@media (max-width: 900px){
+.queue_grid{
+grid-template-columns:1fr;
+}
+}
+
+
+.queue_list{
+display:grid;
+gap:8px;
+}
+
+
+#toast{
+position:fixed;
+left:50%;
+bottom:18px;
+transform:translateX(-50%);
+background:#121933;
+color:#e8ecf3;
+border:1px solid #243056;
+border-radius:12px;
+padding:10px 14px;
+z-index:1200;
+display:none;
+box-shadow:0 8px 24px rgba(0,0,0,.35);
+font-size:12px;
+}
+
+
+.artifacts_grid{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:12px;
+}
+.artifact_card{
+background:#121933;
+border:1px solid #243056;
+border-radius:12px;
+padding:12px;
+cursor:pointer;
+}
+.artifact_name{
+font-size:12px;
+font-weight:700;
+word-break:break-word;
+margin-bottom:6px;
+}
+.artifact_meta{
+font-size:11px;
+color:#9fb0d9;
+margin-bottom:8px;
+}
+.artifact_body{
+font-size:12px;
+white-space:pre-wrap;
+word-break:break-word;
+max-height:160px;
+overflow:auto;
+background:#0b1020;
+border:1px solid #243056;
+border-radius:8px;
+padding:8px;
+}
+@media (max-width: 900px){
+  .artifacts_grid{ grid-template-columns:1fr; }
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>OpenClaw Mothership UI</h2>
+</header>
+
+<div class="grid">
+<div class="card"><div>Tasks</div><div id="router_tasks" class="value">-</div></div>
+<div class="card"><div>Execs</div><div id="execs" class="value">-</div></div>
+<div class="card"><div>Artifacts</div><div id="artifacts" class="value">-</div></div>
+<div class="card"><div>Caps</div><div id="capabilities" class="value">-</div></div>
+<div class="card"><div>New</div><div id="count_new" class="value">-</div></div>
+<div class="card"><div>Started</div><div id="count_started" class="value">-</div></div>
+<div class="card"><div>Failed</div><div id="count_failed" class="value">-</div></div>
+
+
+<div class="row">
+
+  <div class="card">
+    <h3>Manual EXEC</h3>
+    <div style="display:grid;gap:8px;">
+      <select id="f_exec_script">
+        <option value="status_core.sh">status_core.sh</option>
+        <option value="db_health.sh">db_health.sh</option>
+        <option value="log_check.sh">log_check.sh</option>
+        <option value="route_smoke.sh">route_smoke.sh</option>
+        <option value="deploy_safe.sh">deploy_safe.sh</option>
+        <option value="run_python.sh">run_python.sh</option>
+      </select>
+      <input id="f_exec_args" placeholder="arg=... の中身だけ" />
+      <button onclick="submitExec()">EXEC投入</button>
+      <div id="exec_result" class="mono"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>New Task</h3>
+    <div style="display:grid;gap:8px;">
+      <input id="f_target_bot" value="kaikun04" placeholder="target_bot" style="padding:8px;background:#0b1020;color:#e8ecf3;border:1px solid #243056;border-radius:8px;">
+      <input id="f_mode" value="THINK" placeholder="mode" style="padding:8px;background:#0b1020;color:#e8ecf3;border:1px solid #243056;border-radius:8px;">
+      <input id="f_task_role" value="" placeholder="task_role (optional)" style="padding:8px;background:#0b1020;color:#e8ecf3;border:1px solid #243056;border-radius:8px;">
+      <input id="f_parent_task_id" value="" placeholder="parent_task_id (optional)" style="padding:8px;background:#0b1020;color:#e8ecf3;border:1px solid #243056;border-radius:8px;">
+      <textarea id="f_task_text" placeholder="task_text" style="min-height:120px;padding:8px;background:#0b1020;color:#e8ecf3;border:1px solid #243056;border-radius:8px;"></textarea>
+      <div style="display:flex;gap:8px;">
+        <button onclick="submitTask()">タスク投入</button>
+        <button onclick="document.getElementById('detail').style.display='none'">詳細閉じる</button>
+      </div>
+      <div id="submit_result" class="mono"></div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+
+<div>
+<h3>Tasks</h3>
+
+<div class="toolbar">
+  <select id="filter_status" onchange="persistFilters(); loadAll()">
+    <option value="">all status</option>
+    <option value="new">new</option>
+    <option value="started">started</option>
+    <option value="running">running</option>
+    <option value="done">done</option>
+    <option value="retry">retry</option>
+    <option value="failed">failed</option>
+    <option value="cancelled">cancelled</option>
+  </select>
+
+  <select id="filter_bot" onchange="persistFilters(); loadAll()">
+    <option value="">all bot</option>
+    <option value="kaikun04">kaikun04</option>
+    <option value="ops_exec">ops_exec</option>
+  </select>
+
+  <input id="filter_q" placeholder="search task text" oninput="persistFilters(); loadAll()" />
+</div>
+
+<div id="tasks_body" class="tasks_cards"></div>
+</div>
+
+<div>
+<h3>Relations</h3>
+<table>
+<thead><tr><th>Parent → Child</th></tr></thead>
+<tbody id="relations_body"></tbody>
+</table>
+</div>
+
+</div>
+
+
+<div class="row">
+  <div class="card">
+    <h3>Queue</h3>
+    <div class="queue_grid">
+      <div class="queue_col">
+        <div class="queue_title">new</div>
+        <div id="queue_new" class="queue_list"></div>
+      </div>
+      <div class="queue_col">
+        <div class="queue_title">started</div>
+        <div id="queue_started" class="queue_list"></div>
+      </div>
+      <div class="queue_col">
+        <div class="queue_title">failed</div>
+        <div id="queue_failed" class="queue_list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="row">
+  <div class="card" style="grid-column:1/-1;">
+    <h3>tmp_exec Artifacts</h3>
+    <div id="tmp_exec_body" class="artifacts_grid"></div>
+  </div>
+</div>
+
+<div id="detail_backdrop" onclick="closeDetail()"></div>
+<div id="detail"></div>
+
+<script>
+
+const API = "";
+
+
+function statusChip(s){
+const v=(s||"").toLowerCase();
+if(v==="done") return '<span class="status-chip status-success">OK</span>';
+if(v==="running"||v==="started") return '<span class="status-chip status-info">RUN</span>';
+if(v==="failed") return '<span class="status-chip status-danger">ERR</span>';
+if(v==="retry") return '<span class="status-chip status-warning">RETRY</span>';
+if(v==="cancelled") return '<span class="status-chip status-neutral">STOP</span>';
+return '<span class="status-chip status-neutral">NEW</span>';
+}
+
+function statusClass(s){
+const v=(s||"").toLowerCase();
+if(v==="started") return "status-started";
+if(v==="running") return "status-running";
+if(v==="done") return "status-done";
+if(v==="new") return "status-new";
+if(v==="cancelled") return "status-cancelled";
+if(v==="retry") return "status-retry";
+if(v==="failed") return "status-failed";
+return "";
+}
+
+async function openDetail(x){
+const d = document.getElementById("detail");
+const b = document.getElementById("detail_backdrop");
+d.style.display = "block";
+const rel = await j("/api/relations");
+const children = (rel.items || []).filter(r => Number(r.parent_id) === Number(x.id));
+const childHtml = children.length
+  ? children.map(c => `<div class="detail-box">child ${c.child_id}</div>`).join("")
+  : '<div class="detail-box">child none</div>';
+
+d.innerHTML = `
+<div class="detail-grabber"></div>
+<div class="detail-head">
+  <div class="detail-title">Task Detail</div>
+  <button class="detail-close" onclick="closeDetail()">閉じる</button>
+</div>
+
+<div class="detail-meta">
+  <div class="detail-box"><b>ID</b><br>${x.id ?? ""}</div>
+  <div class="detail-box"><b>Status</b><br>${x.status ?? ""}</div>
+  <div class="detail-box"><b>Bot</b><br>${x.target_bot ?? ""}</div>
+  <div class="detail-box"><b>Mode</b><br>${x.mode ?? ""}</div>
+  <div class="detail-box"><b>Role</b><br>${x.task_role ?? ""}</div>
+  <div class="detail-box"><b>Parent</b><br>${x.parent_task_id ?? ""}${x.parent_task_id ? `<br><button onclick="openTaskById(${x.parent_task_id})">親へ移動</button>` : ""}</div>
+</div>
+
+<div class="detail-box"><b>Task Text</b><br><pre>${x.task_text ?? ""}</pre></div>
+<br>
+<div class="detail-box"><b>Reply Text</b><br><pre>${x.reply_text ?? ""}</pre></div>
+<br>
+<div><b>Children</b></div>
+${childHtml}
+`;
+
+b.style.display = "block";
+d.classList.add("open");
+}
+
+d.innerHTML = `
+<h3>Task Detail</h3>
+<div class="mono">
+<b>ID:</b> ${x.id ?? ""}<br>
+<b>Status:</b> <span class="${statusClass(x.status)}">${x.status ?? ""}</span><br>
+<b>Bot:</b> ${x.target_bot ?? ""}<br>
+<b>Mode:</b> ${x.mode ?? ""}<br>
+<b>Role:</b> ${x.task_role ?? ""}<br>
+<b>Parent:</b> ${x.parent_task_id ?? ""}<br><br>
+
+<b>Task Text</b><br>
+<pre>${x.task_text ?? ""}</pre>
+
+<b>Reply Text</b><br>
+<pre>${x.reply_text ?? ""}</pre>
+
+<b>Children</b><br>
+${childHtml}
+</div>
+`;
+}
+
+function showToast(msg){
+const t = document.getElementById("toast");
+if(!t) return;
+t.textContent = msg || "";
+t.style.display = "block";
+clearTimeout(window.__toastTimer);
+window.__toastTimer = setTimeout(() => {
+  t.style.display = "none";
+}, 1800);
+}
+
+function persistFilters(){
+  const data = {
+    status: document.getElementById("filter_status")?.value || "",
+    bot: document.getElementById("filter_bot")?.value || "",
+    q: document.getElementById("filter_q")?.value || ""
+  };
+  localStorage.setItem("mothership_filters", JSON.stringify(data));
+}
+
+function restoreFilters(){
+  try{
+    const data = JSON.parse(localStorage.getItem("mothership_filters") || "{}");
+    if(document.getElementById("filter_status")) document.getElementById("filter_status").value = data.status || "";
+    if(document.getElementById("filter_bot")) document.getElementById("filter_bot").value = data.bot || "";
+    if(document.getElementById("filter_q")) document.getElementById("filter_q").value = data.q || "";
+  }catch(e){}
+}
+
+function closeDetail(){
+const d = document.getElementById("detail");
+const b = document.getElementById("detail_backdrop");
+d.classList.remove("open");
+setTimeout(() => {
+  d.style.display = "none";
+  b.style.display = "none";
+}, 180);
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeDetail();
+});
+async function j(url){
+const r = await fetch(url);
+return await r.json();
+}
+
+
+
+async function submitExec(){
+  const payload = {
+    script: document.getElementById("f_exec_script").value || "",
+    args: document.getElementById("f_exec_args").value || ""
+  };
+  const box = document.getElementById("exec_result");
+  const r = await fetch("/api/exec", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+  const d = await r.json();
+  box.textContent = JSON.stringify(d, null, 2);
+  if (d.ok) {
+    document.getElementById("f_exec_args").value = "";
+    await loadAll();
+  }
+}
+
+async function submitTask(){
+  const payload = {
+    target_bot: document.getElementById("f_target_bot").value || "kaikun04",
+    mode: document.getElementById("f_mode").value || "THINK",
+    task_role: document.getElementById("f_task_role").value || "",
+    parent_task_id: document.getElementById("f_parent_task_id").value ? Number(document.getElementById("f_parent_task_id").value) : null,
+    task_text: document.getElementById("f_task_text").value || ""
+  };
+  const box = document.getElementById("submit_result");
+  if (!payload.task_text.trim()) {
+    box.textContent = "task_text required";
+    return;
+  }
+  const r = await fetch("/api/tasks", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(payload)
+  });
+  const d = await r.json();
+  box.textContent = JSON.stringify(d, null, 2);
+  if (d.ok) {
+    document.getElementById("f_task_text").value = "";
+    await loadAll();
+  }
+}
+
+
+async function taskAction(id, action){
+  const r = await fetch("/api/tasks/"+id+"/action", {
+    method:"POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({action})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    showToast(`ok: ${action}${d.new_id ? " -> #" + d.new_id : ""}`);
+    closeDetail();
+    await loadAll();
+  } else {
+    showToast(`error: ${action}`);
+  }
+}
+
+function toggleReply(){
+  const el = document.getElementById("reply_pre");
+  if(!el) return;
+  if(el.classList.contains("reply-collapsed")){
+    el.classList.remove("reply-collapsed");
+  }else{
+    el.classList.add("reply-collapsed");
+  }
+}
+
+function openTaskById(id){
+  const m = window.__detailTaskMap || {};
+  const x = m[String(id)];
+  if(x) openDetail(x);
+}
+
+async function forceExec(id){
+  await fetch("/api/tasks/"+id+"/exec",{method:"POST"});
+  showToast(`exec queued: #${id}`);
+  await loadAll();
+}
+
+
+async function loadTmpExec(){
+  const d = await j("/api/tmp_exec?limit=20");
+  const body = document.getElementById("tmp_exec_body");
+  if(!body) return;
+  body.innerHTML = "";
+  (d.items || []).forEach(x => {
+    const card = document.createElement("div");
+    card.className = "artifact_card";
+    card.innerHTML = `
+      <div class="artifact_name">${x.name ?? ""}</div>
+      <div class="artifact_meta">size=${x.size ?? 0}</div>
+      <div class="artifact_body">${(x.content || "").slice(0,800)}</div>
+<div>
+<button onclick="event.stopPropagation(); window.open('https://douyo01-byte.github.io/telegram-os-public/tmp_exec_lp/'+x.name.replace('.txt','.html'))">OPEN</button>
+</div>
+    `;
+    card.onclick = () => {
+      const detail = document.getElementById("detail");
+      const back = document.getElementById("detail_backdrop");
+      if(detail && back){
+        back.style.display = "block";
+        detail.style.display = "block";
+        detail.innerHTML = `
+          <div class="detail-grabber"></div>
+          <div class="detail-head">
+            <div class="detail-title">${x.name ?? ""}</div>
+            <button class="detail-close" onclick="closeDetail()">閉じる</button>
+          </div>
+          <div class="detail-box">
+            <b>size</b><br>${x.size ?? 0}<br><br>
+            <b>content</b><br>
+            <pre>${x.content ?? ""}</pre>
+          </div>
+        `;
+      }
+    };
+    body.appendChild(card);
+  });
+}
+
+async function loadAll(){
+try{
+const s = await j("/api/summary");
+document.getElementById("router_tasks").textContent = s.router_tasks ?? "-";
+document.getElementById("execs").textContent = s.execs ?? "-";
+document.getElementById("artifacts").textContent = s.artifacts ?? "-";
+document.getElementById("capabilities").textContent = s.capabilities ?? "-";
+
+const t0 = await j("/api/tasks?limit=300");
+const items0 = t0.items || [];
+document.getElementById("count_new").textContent = items0.filter(x => (x.status||"").toLowerCase() === "new").length;
+document.getElementById("count_started").textContent = items0.filter(x => (x.status||"").toLowerCase() === "started").length;
+document.getElementById("count_failed").textContent = items0.filter(x => (x.status||"").toLowerCase() === "failed").length;
+
+const d = await j("/api/tasks?limit=300");
+tasks_body.innerHTML="";
+const statusFilter = (document.getElementById("filter_status")?.value || "").toLowerCase();
+const botFilter = (document.getElementById("filter_bot")?.value || "").toLowerCase();
+const qFilter = (document.getElementById("filter_q")?.value || "").toLowerCase();
+
+(d.items || [])
+.filter(x => !statusFilter || ((x.status||"").toLowerCase() === statusFilter))
+.filter(x => !botFilter || ((x.target_bot||"").toLowerCase() === botFilter))
+.filter(x => !qFilter || ((x.task_text||"").toLowerCase().includes(qFilter) || String(x.id||"").includes(qFilter)))
+.slice(0, 120)
+.forEach(x=>{
+const card=document.createElement("div");
+card.className="task_card";
+card.innerHTML=`
+<div class="task_card_head">
+  <div class="task_card_meta">
+    <span class="task_id">#${x.id ?? ""}</span>
+    ${statusChip(x.status)}
+    <span class="bot-badge">${x.target_bot ?? ""}</span>
+    <span class="badge">${x.mode ?? ""}</span>
+  </div>
+</div>
+<div class="task_text">${(x.task_text||"").slice(0,180)}</div>
+<div class="task_actions">
+  <button onclick="event.stopPropagation(); forceExec(${x.id})">▶ EXEC</button>
+  <button onclick="event.stopPropagation(); taskAction(${x.id}, 'rerun')">再実行</button>
+  <button onclick="event.stopPropagation(); taskAction(${x.id}, 'duplicate')">複製</button>
+  <button onclick="event.stopPropagation(); taskAction(${x.id}, 'cancel')">キャンセル</button>
+</div>
+`;
+card.onclick=()=>openDetail(x);
+tasks_body.appendChild(card);
+});
+
+const r = await j("/api/relations");
+relations_body.innerHTML="";
+
+const rels = (r.items || []).slice(0,200);
+const parentMap = new Map();
+rels.forEach(x=>{
+  const p = x.parent_id ?? "";
+  if(!parentMap.has(p)) parentMap.set(p, []);
+  parentMap.get(p).push(x.child_id);
+});
+
+Array.from(parentMap.entries())
+  .sort((a,b)=>Number(b[0]) - Number(a[0]))
+  .slice(0,50)
+  .forEach(([parentId, childIds])=>{
+    const trParent=document.createElement("tr");
+    trParent.innerHTML=`<td class="mono"><b>${parentId}</b></td>`;
+    relations_body.appendChild(trParent);
+
+    childIds.forEach(cid=>{
+      const trChild=document.createElement("tr");
+      trChild.innerHTML=`<td class="mono" style="padding-left:24px;">└─ ${cid}</td>`;
+      relations_body.appendChild(trChild);
+    });
+  });
+
+const allItems = d.items || [];
+const queueNew = document.getElementById("queue_new");
+const queueStarted = document.getElementById("queue_started");
+const queueFailed = document.getElementById("queue_failed");
+
+function renderQueue(el, items){
+  if(!el) return;
+  el.innerHTML = "";
+  items.slice(0,12).forEach(x=>{
+    const div = document.createElement("div");
+    div.className = "queue_item";
+    div.innerHTML = `<b>#${x.id ?? ""}</b><br>${(x.task_text||"").slice(0,80)}`;
+    div.onclick = () => openDetail(x);
+    el.appendChild(div);
+  });
+}
+
+renderQueue(queueNew, allItems.filter(x => (x.status||"").toLowerCase() === "new"));
+renderQueue(queueStarted, allItems.filter(x => ["started","running","retry"].includes((x.status||"").toLowerCase())));
+renderQueue(queueFailed, allItems.filter(x => ["failed","cancelled"].includes((x.status||"").toLowerCase())));
+await loadTmpExec();
+}catch(e){
+console.error(e);
+}
+}
+}
+
+restoreFilters();
+loadAll();
+setInterval(loadAll,3000);
+
+</script>
+
+<div id="toast"></div>
+</body>
+</html>

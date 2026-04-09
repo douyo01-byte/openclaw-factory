@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{TITLE}}</title>
+  <style>
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#222;background:#f7f3ee;line-height:1.7}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;align-items:center;padding:48px 0}
+    .hero img,.gallery img{width:100%;height:auto;display:block;border-radius:20px}
+    .eyebrow{font-size:12px;letter-spacing:.12em;color:#8b7765;margin-bottom:12px}
+    h1{font-size:40px;line-height:1.25;margin:0 0 18px}
+    h2{font-size:28px;line-height:1.35;margin:0 0 16px}
+    p{margin:0 0 14px}
+    .lead{font-size:17px;color:#4a4038}
+    .points{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0}
+    .point,.card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 8px 30px rgba(0,0,0,.05)}
+    .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+    .cta{display:inline-block;padding:14px 22px;border-radius:999px;text-decoration:none;background:#222;color:#fff}
+    .cta.sub{background:#d8c6b4;color:#222}
+    .section{padding:28px 0}
+    .gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .final{background:#fff;border-radius:24px;padding:28px;box-shadow:0 8px 30px rgba(0,0,0,.05)}
+    .sticky{position:sticky;bottom:0;background:rgba(247,243,238,.92);backdrop-filter:blur(8px);padding:12px 0}
+    .sticky .inner{max-width:1100px;margin:0 auto;padding:0 24px;display:flex;gap:12px}
+    @media (max-width: 900px){
+      .hero,.points,.benefits,.gallery{grid-template-columns:1fr}
+      h1{font-size:30px}
+      h2{font-size:24px}
+      .wrap{padding:18px}
+      .sticky .inner{padding:0 18px;flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">{{EYEBROW_TEXT}}</div>
+        <h1>{{HERO_TITLE}}</h1>
+        <p class="lead">{{HERO_LEAD}}</p>
+        <div class="points">
+          <div class="point">{{POINT_1}}</div>
+          <div class="point">{{POINT_2}}</div>
+          <div class="point">{{POINT_3}}</div>
+        </div>
+        <div class="cta-row">
+          <a class="cta" href="{{OFFICIAL_URL}}" target="_blank" rel="noopener noreferrer">{{CTA_MAIN}}</a>
+          <a class="cta sub" href="{{BUY_URL}}" target="_blank" rel="noopener noreferrer">{{CTA_SUB}}</a>
+        </div>
+      </div>
+      <div>
+        <img src="{{IMG_1}}" alt="{{PRODUCT_NAME}}">
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>{{VISUALS_TITLE}}</h2>
+      <div class="gallery">
+        <img src="{{IMG_2}}" alt="{{PRODUCT_NAME}} visual 2">
+        <img src="{{IMG_3}}" alt="{{PRODUCT_NAME}} visual 3">
+        <img src="{{IMG_4}}" alt="{{PRODUCT_NAME}} visual 4">
+        <img src="{{IMG_5}}" alt="{{PRODUCT_NAME}} visual 5">
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>{{FOR_YOU_TITLE}}</h2>
+      <div class="card">
+        <p>・{{TARGET_1}}</p>
+        <p>・{{TARGET_2}}</p>
+        <p>・{{TARGET_3}}</p>
+        <p>・{{TARGET_4}}</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>{{SOLUTION_TITLE}}</h2>
+      <p>{{SOLUTION_LEAD}}</p>
+      <div class="benefits">
+        <div class="card"><h3>{{FEATURE_1_TITLE}}</h3><p>{{FEATURE_1_BODY}}</p></div>
+        <div class="card"><h3>{{FEATURE_2_TITLE}}</h3><p>{{FEATURE_2_BODY}}</p></div>
+        <div class="card"><h3>{{FEATURE_3_TITLE}}</h3><p>{{FEATURE_3_BODY}}</p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="final">
+        <div class="eyebrow">FINAL</div>
+        <h2>{{FINAL_TITLE}}</h2>
+        <p>{{FINAL_MESSAGE}}</p>
+        <div class="cta-row">
+          <a class="cta" href="{{OFFICIAL_URL}}" target="_blank" rel="noopener noreferrer">{{CTA_MAIN}}</a>
+          <a class="cta sub" href="{{BUY_URL}}" target="_blank" rel="noopener noreferrer">{{CTA_SUB}}</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="sticky">
+    <div class="inner">
+      <a class="cta" href="{{OFFICIAL_URL}}" target="_blank" rel="noopener noreferrer">{{STICKY_CTA_MAIN}}</a>
+      <a class="cta sub" href="{{BUY_URL}}" target="_blank" rel="noopener noreferrer">{{STICKY_CTA_SUB}}</a>
+    </div>
+  </div>
+</body>
+</html>

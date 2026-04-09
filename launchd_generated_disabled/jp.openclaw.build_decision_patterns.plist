@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>Label</key><string>jp.openclaw.build_decision_patterns</string>
+<key>ProgramArguments</key>
+<array><string>/Users/doyopc/AI/openclaw-factory-daemon/scripts/generated/run_build_decision_patterns.sh</string></array>
+<key>WorkingDirectory</key><string>/Users/doyopc/AI/openclaw-factory-daemon</string>
+<key>RunAtLoad</key><false/>
+<key>KeepAlive</key><false/>
+<key>StandardOutPath</key><string>/Users/doyopc/AI/openclaw-factory-daemon/logs/build_decision_patterns.out</string>
+<key>StandardErrorPath</key><string>/Users/doyopc/AI/openclaw-factory-daemon/logs/build_decision_patterns.err</string>
+</dict></plist>
