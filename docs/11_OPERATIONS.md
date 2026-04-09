@@ -8,10 +8,10 @@ ls -l data/openclaw.db
 
 ## 正常条件
 - watcher 24h:
-  - restarted=0
-  - escalations=0
-  - notifications=0
-  - proposals=0
+ - restarted=0
+ - escalations=0
+ - notifications=0
+ - proposals=0
 - required 3 targets running
 - daemon DB が factory DB への symlink になっている
 
@@ -33,8 +33,8 @@ jp.openclaw.ops_brain_agent_v1 \
 jp.openclaw.private_reply_to_inbox_v1 \
 jp.openclaw.secretary_llm_v1
 do
-  echo "--- $t ---"
-  launchctl print "gui/$u/$t" | egrep 'state =|pid =|last exit code =|path =|program ='
+ echo "--- $t ---"
+ launchctl print "gui/$u/$t" | egrep 'state =|pid =|last exit code =|path =|program ='
 done
 
 ## private reply本流
@@ -45,3 +45,7 @@ done
 - docs / DB / runtime の不一致だけを修正する
 - required / observe のズレを増やさない
 - 新規機能追加はしない
+
+## docs整合チェック
+cd ~/AI/openclaw-factory-docs || exit 1
+python3 scripts/check_docs_integrity.py
