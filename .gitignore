@@ -23,3 +23,10 @@ nohup.out
 
 obs/
 reports/
+archive/generated_*
+tmp/audit_*
+tmp_exec/
+public_preview/tmp_exec_lp/
+*.bak
+*.bak_*
+*.save
