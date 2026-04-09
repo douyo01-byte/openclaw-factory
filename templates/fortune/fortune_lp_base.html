@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>{{TITLE}}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;line-height:1.7;margin:0;background:#0f1020;color:#f5f7ff}
+    .wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px}
+    .hero,.sec,.cta{background:#17192d;border:1px solid #2a2d4a;border-radius:20px;padding:28px;margin:18px 0}
+    h1,h2,h3{line-height:1.3;margin:0 0 14px}
+    h1{font-size:34px}
+    h2{font-size:24px}
+    .sub{font-size:18px;color:#c8cffc}
+    .price{font-size:30px;font-weight:700;color:#ffd46b}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+    .card{background:#101224;border:1px solid #2b3157;border-radius:16px;padding:18px}
+    .btn{display:inline-block;background:#7c5cff;color:#fff;text-decoration:none;padding:14px 22px;border-radius:999px;font-weight:700}
+    ul{padding-left:20px}
+    .small{font-size:14px;color:#aeb6e8}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>{{TITLE}}</h1>
+    <p class="sub">{{SUBTITLE}}</p>
+    <p>{{LEAD}}</p>
+    <p class="price">{{PRICE}}</p>
+    <a class="btn" href="{{CTA_LINK}}">{{CTA_TEXT}}</a>
+  </section>
+
+  <section class="sec">
+    <h2>この鑑定の特徴</h2>
+    <div class="grid">
+      <div class="card"><h3>同じ入力なら同じ結果</h3><p>ランダムに頼らず、固定ロジックで毎回同じ結論に整えます。</p></div>
+      <div class="card"><h3>多占学統合</h3><p>数秘術、命理系、質問解釈を統合し、単発の印象論で終わらせません。</p></div>
+      <div class="card"><h3>無人納品対応</h3><p>入力から鑑定文生成、納品まで自動化しやすい構造です。</p></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>入力項目</h2>
+    <ul>
+      <li>名前</li>
+      <li>生年月日</li>
+      <li>質問内容</li>
+      <li>任意で出生時間・出生地</li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <h2>納品内容</h2>
+    <ul>
+      <li>総合鑑定結果</li>
+      <li>要点サマリー</li>
+      <li>今取るべき行動3つ</li>
+      <li>避けたい注意点3つ</li>
+    </ul>
+  </section>
+
+  <section class="sec">
+    <h2>価格プラン</h2>
+    <div class="grid">
+      <div class="card"><h3>簡易鑑定</h3><p class="price">¥2,980</p><p>まず試したい人向け。</p></div>
+      <div class="card"><h3>標準鑑定</h3><p class="price">¥8,980</p><p>本命プラン。迷ったらこれ。</p></div>
+      <div class="card"><h3>深掘り鑑定</h3><p class="price">¥14,800</p><p>長文で深く読みたい人向け。</p></div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <h2>今の迷いを、再現性のある言葉に変える</h2>
+    <p>{{CTA_BODY}}</p>
+    <a class="btn" href="{{CTA_LINK}}">{{CTA_TEXT}}</a>
+    <p class="small">※ このLPはOpenClawの商売AIループ用たたき台です。</p>
+  </section>
+</div>
+</body>
+</html>
