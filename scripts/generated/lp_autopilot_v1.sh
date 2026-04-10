@@ -7,14 +7,11 @@ export LP_VARIANT_METRICS_URL="${LP_VARIANT_METRICS_URL:-https://openclaw-fortun
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
 echo "===== LP AUTOPILOT START ====="
+# manual copy guard: keep trusted public LP copies
 
 ./scripts/generated/run_lp_pattern_extractor_v1.sh || true
 ./scripts/generated/run_lp_critic_v1.sh || true
-./scripts/generated/run_lp_rewriter_v2.sh || true
 
-cp -f data/lp_research/rewritten_love_lp_A.html deploy/fortune/pages/index_A.html 2>/dev/null || true
-cp -f data/lp_research/rewritten_love_lp_B.html deploy/fortune/pages/index_B.html 2>/dev/null || true
-cp -f data/lp_research/rewritten_love_lp_C.html deploy/fortune/pages/index_C.html 2>/dev/null || true
 
 python3 - <<'PY'
 from pathlib import Path
