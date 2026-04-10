@@ -4,6 +4,7 @@ set -euo pipefail
 cd "$HOME/AI/openclaw-factory-daemon" || exit 1
 export DB_PATH="${DB_PATH:-$HOME/AI/openclaw-factory/data/openclaw.db}"
 export LP_VARIANT_METRICS_URL="${LP_VARIANT_METRICS_URL:-https://openclaw-fortune-order.openclaw-fortune.workers.dev/variant_metrics}"
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
 echo "===== LP AUTOPILOT START ====="
 
@@ -33,6 +34,6 @@ PY
 ./scripts/generated/run_lp_variant_metrics_v1.sh || true
 
 cd deploy/fortune/pages || exit 1
-wrangler pages deploy . --project-name openclaw-fortune
+/opt/homebrew/bin/wrangler pages deploy . --project-name openclaw-fortune
 
 echo "===== LP AUTOPILOT DONE ====="
