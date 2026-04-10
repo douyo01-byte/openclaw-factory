@@ -11,6 +11,7 @@ echo "===== LP AUTOPILOT START ====="
 
 ./scripts/generated/run_lp_pattern_extractor_v1.sh || true
 ./scripts/generated/run_lp_critic_v1.sh || true
+./scripts/generated/run_lp_rewriter_v3.sh || true
 
 
 python3 - <<'PY'
