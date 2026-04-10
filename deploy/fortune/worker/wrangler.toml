@@ -4,3 +4,8 @@ compatibility_date = "2026-04-10"
 
 [vars]
 TRIAL_ID = "1"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "openclaw-fortune-db"
+database_id = "aec79966-8b30-4f84-afb4-80dec2982d29"

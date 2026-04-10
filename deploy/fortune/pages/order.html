@@ -2,34 +2,100 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>AI占い注文</title>
+<title>恋愛AI鑑定 注文</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-body{font-family:sans-serif;background:#0f1020;color:#fff;padding:20px}
-input,textarea,select{width:100%;padding:10px;margin:10px 0;border-radius:8px;border:none}
-button{padding:12px 20px;background:#7c5cff;color:#fff;border:none;border-radius:999px}
+body{font-family:sans-serif;background:#0f1020;color:#fff;padding:20px;line-height:1.7}
+.wrap{max-width:720px;margin:0 auto}
+input,textarea,select{width:100%;padding:12px;margin:10px 0;border-radius:10px;border:none;box-sizing:border-box}
+button{padding:14px 20px;background:#ff4fa3;color:#fff;border:none;border-radius:999px;width:100%;font-weight:bold}
+.card{background:#17192d;border:1px solid #2a2d4a;border-radius:20px;padding:20px;margin-bottom:18px}
+.msg{margin-top:12px;font-size:14px;color:#ddd}
+.point{background:#14162a;border:1px solid #2a2d4a;border-radius:14px;padding:14px;margin:10px 0}
+.sub{color:#d7d9f3}
+.note{font-size:14px;color:#c7c9df}
 </style>
 </head>
 <body>
+<div class="wrap">
+  <div class="card">
+    <h1>連絡するべきか、待つべきか。今の答えを無料で整理します</h1>
+    <p class="sub">相手の気持ちが見えない。動くのが怖い。でも、このまま何もしないのも不安。そんな恋愛の迷いを、まずは無料で整理できます。</p>
+    <p class="note">入力は30秒ほど。無料結果で今の状況を確認したあと、必要なら続きを760円で解放できます。</p>
+  </div>
 
-<h1>AI占い注文</h1>
+  <div class="card">
+    <h2>こんな悩みありませんか？</h2>
+    <div class="point">連絡したいけど、今送ると重い気がする</div>
+    <div class="point">相手の気持ちがもう冷めているのか分からない</div>
+    <div class="point">復縁したいけど、動くべきか迷っている</div>
+  </div>
 
-<form method="POST" action="https://openclaw-fortune-order.openclaw-fortune.workers.dev/order">
-<select name="plan">
-<option>簡易鑑定</option>
-<option>標準鑑定</option>
-<option>深掘り鑑定</option>
-</select>
+  <div class="card">
+    <h2>無料で分かること</h2>
+    <div class="point">今の関係が動く余地があるか</div>
+    <div class="point">このまま待つべきか、少し動くべきか</div>
+    <div class="point">続きを見る価値がある状態か</div>
+  </div>
 
-<input name="customer_name" placeholder="名前" required>
-<input name="birth_date" type="date" required>
-<input name="birth_time" placeholder="出生時間">
-<input name="birth_place" placeholder="出生地">
-<textarea name="question" placeholder="相談内容"></textarea>
-<input name="email" type="email" placeholder="メール" required>
+  <div class="card">
+    <h2>無料診断フォーム</h2>
+    <form id="orderForm">\n      <input type="hidden" id="variantField" name="variant" value="A">
+      <select name="plan">
+        <option>簡易鑑定</option>
+        <option>標準鑑定</option>
+        <option>深掘り鑑定</option>
+      </select>
 
-<button type="submit">申し込む</button>
-</form>
+      <input name="customer_name" placeholder="名前" required>
+      <input name="birth_date" type="date" required>
+      <input name="birth_time" placeholder="出生時間">
+      <input name="birth_place" placeholder="出生地">
+      <textarea name="question" placeholder="相談内容" required></textarea>
+      <input name="email" type="email" placeholder="メール" required>
 
+      <p class="note">まずは無料結果を表示します。詳しい続きは760円で解放できます。</p>
+      <button type="submit">無料で今の状況を確認する</button>
+      <div id="msg" class="msg"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+
+const qp = new URLSearchParams(window.location.search);
+const v = qp.get("v");
+if (v && ["A","B","C"].includes(v)) {
+  const vf = document.getElementById("variantField");
+  if (vf) vf.value = v;
+}
+
+const form = document.getElementById("orderForm");
+const msg = document.getElementById("msg");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  msg.textContent = "送信中...";
+  const fd = new FormData(form);
+
+  try {
+    const res = await fetch("https://openclaw-fortune-order.openclaw-fortune.workers.dev/order", {
+      method: "POST",
+      body: fd
+    });
+
+    if (!res.ok) {
+      msg.textContent = "送信に失敗しました。";
+      return;
+    }
+
+    const data = await res.json();
+    console.log("order_response", data); localStorage.setItem("fortune_last_result", JSON.stringify(data));
+    window.location.href = "result.html";
+  } catch (err) {
+    msg.textContent = "通信エラーが発生しました。";
+  }
+});
+</script>
 </body>
 </html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>診断結果</title>
+<style>
+body{background:#0d0b1f;color:white;font-family:sans-serif;padding:20px;line-height:1.7}
+.wrap{max-width:720px;margin:0 auto}
+.box{background:#151236;padding:20px;border-radius:16px;margin-bottom:20px}
+.btn{display:block;width:100%;padding:16px;background:#ff4fa3;color:white;text-align:center;border-radius:30px;text-decoration:none;font-weight:bold;box-sizing:border-box}
+.lock{opacity:0.78}
+.price{font-size:24px;color:#ffd36b;font-weight:bold}
+.small{color:#c8c8d8;font-size:14px}
+.alert{color:#ffb3d1;font-weight:bold}
+.point{background:#111427;border:1px solid #2a2d4a;border-radius:12px;padding:12px;margin:10px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h2 id="title">あなたの診断結果</h2>
+
+<div class="box">
+  <h3>無料結果</h3>
+  <p id="summary">読み込み中...</p>
+  <p id="next">読み込み中...</p>
+  <p class="alert">今の動き方を間違えると、相手との距離がさらに開く可能性があります。</p>
+</div>
+
+<div class="box lock">
+  <h3>この先で分かること</h3>
+  <div class="point">相手が今あなたに隠している本音</div>
+  <div class="point">今連絡していいのか、待つべきか</div>
+  <div class="point">やると逆効果になるNG行動3つ</div>
+</div>
+
+<div class="box lock">
+  <h3>続きの一部</h3>
+  <p id="paidPreview">この続きでは、相手の本音、今やるべき行動3つ、NG行動3つを表示します。</p>
+</div>
+
+<div class="box">
+  <p class="price">続きを見る：760円</p>
+  <a href="unlock.html" class="btn">760円で続きを解放する</a>
+  <p class="small">無料で終わってもOKです。必要な人だけ続きを解放してください。</p>
+</div>
+</div>
+
+<script>
+const raw = localStorage.getItem("fortune_last_result");
+if (raw) {
+  try {
+    const data = JSON.parse(raw);
+    localStorage.setItem("fortune_last_order_id", String(data.order_id || ""));
+    const r = data.free_result || {};
+    document.getElementById("title").textContent = r.title || "あなたの診断結果";
+    document.getElementById("summary").textContent = r.summary || "";
+    document.getElementById("next").textContent = r.next || "";
+    document.getElementById("paidPreview").textContent = r.paid_preview || "";
+  } catch (e) {}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>続きを解放</title>
+<style>
+body{background:#120f1f;color:white;font-family:sans-serif;padding:20px;line-height:1.7}
+.wrap{max-width:720px;margin:0 auto}
+.box{background:#1b1630;padding:20px;border-radius:16px;margin-bottom:20px}
+.btn{display:block;width:100%;padding:16px;background:#ff4fa3;color:white;text-align:center;border-radius:30px;text-decoration:none;font-weight:bold;box-sizing:border-box;border:none}
+.price{font-size:28px;color:#ffd36b;font-weight:bold}
+.small{font-size:14px;color:#cfc7e6}
+#msg{margin-top:12px;color:#ddd}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="box">
+    <h1>続きを解放する</h1>
+    <p>この先では、相手の本音、今やるべき行動3つ、やってはいけない行動3つを表示します。</p>
+    <p class="price">760円</p>
+    <button id="unlockBtn" class="btn">760円で続きを解放する</button>
+    <p id="msg"></p>
+    <p class="small">今は疑似決済でログ保存まで進めます。次にStripeへつなぎます。</p>
+  </div>
+</div>
+
+<script>
+const btn = document.getElementById("unlockBtn");
+const msg = document.getElementById("msg");
+
+btn.addEventListener("click", async () => {
+  const orderId = localStorage.getItem("fortune_last_order_id");
+  if (!orderId) {
+    msg.textContent = "先に無料診断を実行してください。";
+    return;
+  }
+
+  msg.textContent = "解放処理中...";
+  try {
+    const res = await fetch("https://openclaw-fortune-order.openclaw-fortune.workers.dev/unlock", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ order_id: orderId })
+    });
+
+    if (!res.ok) {
+      msg.textContent = "解放に失敗しました。";
+      return;
+    }
+
+    const data = await res.json();
+    msg.textContent = "解放リクエストを保存しました。次は本決済接続です。";
+    localStorage.setItem("fortune_last_unlock", JSON.stringify(data));
+  } catch (err) {
+    msg.textContent = "通信エラーが発生しました。";
+  }
+});
+</script>
+</body>
+</html>
