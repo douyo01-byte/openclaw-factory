@@ -221,6 +221,90 @@ def build_fallback_action(task_type: str, target_system: str) -> str:
         return f"Defer execution and emit a validation-only plan for {target_system}."
     return "Emit validation-only plan and wait for the next safe execution step."
 
+
+def infer_exec_commands(task_type: str, target_system: str, task_text: str) -> list[str]:
+    cmds = []
+
+    if task_type == "lp_optimization":
+        cmds += [
+            "./scripts/generated/run_lp_rewriter_v3.sh",
+            "./scripts/generated/run_lp_variant_judge_v2.sh"
+        ]
+
+    if task_type == "automation_design":
+        cmds += [
+            "python3 bots/kaikun04_orchestrator_v1.py --help"
+        ]
+
+    if "deploy" in task_text.lower():
+        cmds += [
+            "/opt/homebrew/bin/wrangler pages deploy deploy/fortune/pages --project-name openclaw-fortune"
+        ]
+
+    return cmds
+
+
+
+
+def insert_learning_stub(db_path: str, plan: dict):
+    con = sqlite3.connect(db_path)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+
+    def cols(table: str) -> set[str]:
+        return {r["name"] for r in cur.execute(f"pragma table_info({table})").fetchall()}
+
+    table_cols = cols("learning_results")
+    payload = {
+        "proposal_id": -2000000000,
+        "title": plan.get("objective", ""),
+        "source_ai": "kaikun04_orchestrator",
+        "target_system": plan.get("target_system", ""),
+        "improvement_type": plan.get("task_type", ""),
+        "impact_score": 0.3,
+        "impact_level": "internal",
+        "impact_reason": "orchestrator plan generated",
+        "result_score": 1.0,
+        "result_type": "plan_generated",
+        "result_note": json.dumps(plan, ensure_ascii=False)[:2000],
+        "success_flag": 1,
+        "learning_summary": json.dumps(plan, ensure_ascii=False)[:4000],
+        "merged_at": "",
+        "created_at": "datetime('now')",
+    }
+
+    normal_cols = []
+    normal_vals = []
+    sql_vals = []
+
+    for k, v in payload.items():
+        if k not in table_cols:
+            continue
+        normal_cols.append(k)
+        if isinstance(v, str) and v == "datetime('now')":
+            sql_vals.append("datetime('now')")
+        else:
+            sql_vals.append("?")
+            normal_vals.append(v)
+
+    if not normal_cols:
+        con.close()
+        return 0
+
+    sql = f"""
+    insert into learning_results(
+      {",".join(normal_cols)}
+    ) values(
+      {",".join(sql_vals)}
+    )
+    """
+    cur.execute(sql, tuple(normal_vals))
+    rid = int(cur.execute("select last_insert_rowid()").fetchone()[0])
+    con.commit()
+    con.close()
+    return rid
+
+
 def heuristic_plan(inp: PlannerInput) -> dict[str, Any]:
     task_text = normalize_space(inp.task_text)
     task_type = detect_task_type(task_text)
@@ -238,6 +322,7 @@ def heuristic_plan(inp: PlannerInput) -> dict[str, Any]:
         "fallback_action": build_fallback_action(task_type, target_system),
         "should_execute_now": should_execute_now(task_type, task_text),
         "learn_after_completion": True,
+        "exec_commands": infer_exec_commands(task_type, target_system, task_text),
     }
     validate_plan(plan)
     return plan
@@ -370,7 +455,25 @@ def emit_router_task(db_path: str, mode: str, task_text: str, plan: dict[str, An
     task_id = int(cur.lastrowid)
     con.commit()
     con.close()
+    
+    # EXEC taskも追加
+    for cmd in plan.get("exec_commands", []):
+        c = sqlite3.connect(db_path)
+        cur = c.cursor()
+        cur.execute(
+            """
+            insert into router_tasks
+            (source_command_id, mode, target_bot, task_text, status, created_at, updated_at)
+            values
+            (0, 'EXEC', 'ops_exec', ?, 'new', datetime('now'), datetime('now'))
+            """,
+            (f"[EXEC]\nscript={cmd}",)
+        )
+        c.commit()
+        c.close()
+
     return task_id
+
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
@@ -428,7 +531,12 @@ def main() -> None:
         )
         output["router_task_id"] = router_task_id
 
+    
+    if args.save_db:
+        insert_learning_stub(args.db_path, plan)
+
     if args.pretty:
+
         print(json.dumps(output, ensure_ascii=False, indent=2))
     else:
         print(json.dumps(output, ensure_ascii=False))
