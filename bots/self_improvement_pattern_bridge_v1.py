@@ -83,8 +83,8 @@ def fetch_rows(c):
           on sil.learning_result_id = lr.id
         left join self_improvement_pattern_bridge_log p
           on p.learning_result_id = lr.id
-        where coalesce(lr.source_ai,'')='kaikun04'
-          and coalesce(lr.target_system,'')='self_improvement_loop'
+        where coalesce(lr.source_ai,'') in ('kaikun04','kaikun04_orchestrator')
+          and coalesce(lr.target_system,'') in ('self_improvement_loop','lp_autopilot')
           and p.learning_result_id is null
         order by lr.id asc
         limit 50
