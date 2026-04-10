@@ -21,12 +21,14 @@ def score_trial(cur, trial_id: int):
             revenue += int(metric_value or 0)
         if metric_type == "cost_yen":
             cost += int(metric_value or 0)
+        if metric_type == "delivery_completed":
+            revenue += 2980
 
     profit = revenue - cost
     total += max(0, min(100, profit // 100))
 
     status = "testing"
-    if total >= 120:
+    if revenue > 0 and total >= 120:
         status = "success"
     elif total <= -30:
         status = "fail"

@@ -1,3 +1,5 @@
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import os
 import sqlite3
 from bots.fortune_engine_v1 import generate_reading
