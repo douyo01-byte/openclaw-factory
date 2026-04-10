@@ -305,7 +305,55 @@ def insert_learning_stub(db_path: str, plan: dict):
     return rid
 
 
-def heuristic_plan(inp: PlannerInput) -> dict[str, Any]:
+
+def load_success_patterns(db_path: str, target_system: str = "", task_type: str = "") -> list[str]:
+    try:
+        con = sqlite3.connect(db_path)
+        cur = con.cursor()
+        rows = cur.execute("""
+            select pattern, coalesce(score,0) as score
+            from success_patterns
+            order by score desc, updated_at desc
+            limit 50
+        """).fetchall()
+        con.close()
+
+        raw = [str(r[0]) for r in rows]
+
+        bad_exact = {
+            "ai",
+            "other",
+            "executor",
+            "self_improve",
+            "no_exec_block",
+        }
+
+        good = []
+        for x in raw:
+            if not x or x in bad_exact:
+                continue
+            if target_system and target_system in x:
+                good.append(x)
+                continue
+            if task_type and task_type in x:
+                good.append(x)
+                continue
+            if "script=" in x or "context=" in x or ":" in x:
+                good.append(x)
+
+        seen = set()
+        out = []
+        for x in good:
+            if x not in seen:
+                seen.add(x)
+                out.append(x)
+
+        return out[:12]
+    except Exception:
+        return []
+
+
+def heuristic_plan(inp: PlannerInput, db_path: str = DEFAULT_DB_PATH) -> dict[str, Any]:
     task_text = normalize_space(inp.task_text)
     task_type = detect_task_type(task_text)
     priority = detect_priority(task_text, inp.mode)
@@ -313,6 +361,11 @@ def heuristic_plan(inp: PlannerInput) -> dict[str, Any]:
 
     plan = {
         "objective": task_text,
+        "success_patterns_hint": load_success_patterns(
+            db_path=db_path,
+            target_system=target_system,
+            task_type=task_type,
+        ),
         "task_type": task_type,
         "target_system": target_system,
         "priority": priority,
@@ -369,12 +422,12 @@ def maybe_openai_plan(inp: PlannerInput) -> tuple[str, dict[str, Any]]:
     system_prompt = read_system_prompt()
 
     if backend != "openai" or not api_key:
-        return "heuristic", heuristic_plan(inp)
+        return "heuristic", heuristic_plan(inp, db_path=DEFAULT_DB_PATH)
 
     try:
         from openai import OpenAI
     except Exception:
-        return "heuristic", heuristic_plan(inp)
+        return "heuristic", heuristic_plan(inp, db_path=DEFAULT_DB_PATH)
 
     client = OpenAI(api_key=api_key)
     messages = build_openai_messages(system_prompt, inp)
@@ -397,7 +450,7 @@ def maybe_openai_plan(inp: PlannerInput) -> tuple[str, dict[str, Any]]:
         validate_plan(plan)
         return "openai", plan
     except Exception:
-        return "heuristic", heuristic_plan(inp)
+        return "heuristic", heuristic_plan(inp, db_path=DEFAULT_DB_PATH)
 
 def save_plan(db_path: str, task_text: str, mode: str, target_system: str, context: dict[str, Any], backend: str, plan: dict[str, Any]) -> int:
     con = sqlite3.connect(db_path)
