@@ -147,6 +147,7 @@ def infer_required_tools(task_type: str, target_system: str, task_text: str) -> 
     return deduped or ["read_repo_files"]
 
 
+
 def build_plan_steps(task_type: str, target_system: str, task_text: str, db_path: str = DEFAULT_DB_PATH) -> list[str]:
     steps: list[str] = []
 
@@ -183,7 +184,7 @@ def build_plan_steps(task_type: str, target_system: str, task_text: str, db_path
             "Record learnable signals after completion.",
         ]
 
-    if target_system and all(target_system not in s for s in steps):
+    if target_system and all(target_system not in x for x in steps):
         steps.insert(1, f"Focus implementation on target system: {target_system}.")
     return steps
 
@@ -226,136 +227,30 @@ def build_fallback_action(task_type: str, target_system: str) -> str:
     return "Emit validation-only plan and wait for the next safe execution step."
 
 
-def infer_exec_commands(task_type: str, target_system: str, task_text: str) -> list[str]:
-    cmds = []
+
+
+def infer_exec_commands(task_type: str, target_system: str, task_text: str, db_path: str = DEFAULT_DB_PATH) -> list[str]:
+    cmds: list[str] = []
+    patterns = load_success_patterns(db_path=db_path, target_system=target_system, task_type=task_type)
 
     if task_type == "lp_optimization":
-        cmds += [
-            "./scripts/generated/run_lp_rewriter_v3.sh",
-            "./scripts/generated/run_lp_variant_judge_v2.sh"
-        ]
-
-    if task_type == "automation_design":
-        cmds += [
-            "python3 bots/kaikun04_orchestrator_v1.py --help"
-        ]
+        if any("rewrite" in p or "lp_optimization" in p for p in patterns):
+            cmds.append("./scripts/generated/run_lp_rewriter_v3.sh")
+        if any("judge" in p or "plan_generated" in p for p in patterns):
+            cmds.append("./scripts/generated/run_lp_variant_judge_v2.sh")
+        else:
+            cmds.append("./scripts/generated/run_lp_variant_judge_v2.sh")
 
     if "deploy" in task_text.lower():
-        cmds += [
-            "/opt/homebrew/bin/wrangler pages deploy deploy/fortune/pages --project-name openclaw-fortune"
-        ]
+        cmds.append("/opt/homebrew/bin/wrangler pages deploy deploy/fortune/pages --project-name openclaw-fortune")
 
-    return cmds
-
-
-
-
-def insert_learning_stub(db_path: str, plan: dict):
-    con = sqlite3.connect(db_path)
-    con.row_factory = sqlite3.Row
-    cur = con.cursor()
-
-    def cols(table: str) -> set[str]:
-        return {r["name"] for r in cur.execute(f"pragma table_info({table})").fetchall()}
-
-    table_cols = cols("learning_results")
-    payload = {
-        "proposal_id": -2000000000,
-        "title": plan.get("objective", ""),
-        "source_ai": "kaikun04_orchestrator",
-        "target_system": plan.get("target_system", ""),
-        "improvement_type": plan.get("task_type", ""),
-        "impact_score": 0.3,
-        "impact_level": "internal",
-        "impact_reason": "orchestrator plan generated",
-        "result_score": 1.0,
-        "result_type": "plan_generated",
-        "result_note": json.dumps(plan, ensure_ascii=False)[:2000],
-        "success_flag": 1,
-        "learning_summary": json.dumps(plan, ensure_ascii=False)[:4000],
-        "merged_at": "",
-        "created_at": "datetime('now')",
-    }
-
-    normal_cols = []
-    normal_vals = []
-    sql_vals = []
-
-    for k, v in payload.items():
-        if k not in table_cols:
-            continue
-        normal_cols.append(k)
-        if isinstance(v, str) and v == "datetime('now')":
-            sql_vals.append("datetime('now')")
-        else:
-            sql_vals.append("?")
-            normal_vals.append(v)
-
-    if not normal_cols:
-        con.close()
-        return 0
-
-    sql = f"""
-    insert into learning_results(
-      {",".join(normal_cols)}
-    ) values(
-      {",".join(sql_vals)}
-    )
-    """
-    cur.execute(sql, tuple(normal_vals))
-    rid = int(cur.execute("select last_insert_rowid()").fetchone()[0])
-    con.commit()
-    con.close()
-    return rid
-
-
-
-def load_success_patterns(db_path: str, target_system: str = "", task_type: str = "") -> list[str]:
-    try:
-        con = sqlite3.connect(db_path)
-        cur = con.cursor()
-        rows = cur.execute("""
-            select pattern, coalesce(score,0) as score
-            from success_patterns
-            order by score desc, updated_at desc
-            limit 50
-        """).fetchall()
-        con.close()
-
-        raw = [str(r[0]) for r in rows]
-
-        bad_exact = {
-            "ai",
-            "other",
-            "executor",
-            "self_improve",
-            "no_exec_block",
-        }
-
-        good = []
-        for x in raw:
-            if not x or x in bad_exact:
-                continue
-            if target_system and target_system in x:
-                good.append(x)
-                continue
-            if task_type and task_type in x:
-                good.append(x)
-                continue
-            if "script=" in x or "context=" in x or ":" in x:
-                good.append(x)
-
-        seen = set()
-        out = []
-        for x in good:
-            if x not in seen:
-                seen.add(x)
-                out.append(x)
-
-        return out[:12]
-    except Exception:
-        return []
-
+    seen = set()
+    out = []
+    for x in cmds:
+        if x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out
 
 def heuristic_plan(inp: PlannerInput, db_path: str = DEFAULT_DB_PATH) -> dict[str, Any]:
     task_text = normalize_space(inp.task_text)
@@ -379,7 +274,7 @@ def heuristic_plan(inp: PlannerInput, db_path: str = DEFAULT_DB_PATH) -> dict[st
         "fallback_action": build_fallback_action(task_type, target_system),
         "should_execute_now": should_execute_now(task_type, task_text),
         "learn_after_completion": True,
-        "exec_commands": infer_exec_commands(task_type, target_system, task_text),
+        "exec_commands": infer_exec_commands(task_type, target_system, task_text, db_path=db_path),
     }
     validate_plan(plan)
     return plan
