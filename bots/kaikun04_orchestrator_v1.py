@@ -148,6 +148,53 @@ def infer_required_tools(task_type: str, target_system: str, task_text: str) -> 
 
 
 
+
+def load_success_patterns(db_path: str, target_system: str = "", task_type: str = "") -> list[str]:
+    try:
+        con = sqlite3.connect(db_path)
+        cur = con.cursor()
+        rows = cur.execute("""
+            select pattern, coalesce(score,0) as score
+            from success_patterns
+            order by score desc, updated_at desc
+            limit 50
+        """).fetchall()
+        con.close()
+
+        raw = [str(r[0]) for r in rows]
+
+        bad_exact = {
+            "ai",
+            "other",
+            "executor",
+            "self_improve",
+            "no_exec_block",
+        }
+
+        good = []
+        for x in raw:
+            if not x or x in bad_exact:
+                continue
+            if target_system and target_system in x:
+                good.append(x)
+                continue
+            if task_type and task_type in x:
+                good.append(x)
+                continue
+            if "script=" in x or "context=" in x or ":" in x:
+                good.append(x)
+
+        seen = set()
+        out = []
+        for x in good:
+            if x not in seen:
+                seen.add(x)
+                out.append(x)
+
+        return out[:12]
+    except Exception:
+        return []
+
 def build_plan_steps(task_type: str, target_system: str, task_text: str, db_path: str = DEFAULT_DB_PATH) -> list[str]:
     steps: list[str] = []
 
