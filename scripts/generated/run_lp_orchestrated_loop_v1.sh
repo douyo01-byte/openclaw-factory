@@ -25,4 +25,5 @@ PY
 cd deploy/fortune/pages || exit 1
 /opt/homebrew/bin/wrangler pages deploy . --project-name openclaw-fortune
 
+cd "$(dirname "$0")/../.." || exit 1
 python3 bots/lp_winner_analyzer_v1.py
