@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>jp.openclaw.lp_autopilot_v1</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/bin/bash</string>
+      <string>/Users/doyopc/AI/openclaw-factory-daemon/scripts/generated/lp_autopilot_v1.sh</string>
+    </array>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StartInterval</key>
+    <integer>1800</integer>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/doyopc/AI/openclaw-factory-daemon</string>
+
+    <key>StandardOutPath</key>
+    <string>/Users/doyopc/AI/openclaw-factory-daemon/logs/lp_autopilot_v1.out</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/doyopc/AI/openclaw-factory-daemon/logs/lp_autopilot_v1.err</string>
+  </dict>
+</plist>
