@@ -284,19 +284,19 @@ def build_fallback_action(task_type: str, target_system: str) -> str:
 
 
 
+
 def infer_exec_commands(task_type: str, target_system: str, task_text: str, db_path: str = DEFAULT_DB_PATH) -> list[str]:
     cmds: list[str] = []
     patterns = load_success_patterns(db_path=db_path, target_system=target_system, task_type=task_type)
 
     if task_type == "lp_optimization":
-        if any("rewrite" in p or "lp_optimization" in p for p in patterns):
-            cmds.append("./scripts/generated/run_lp_rewriter_v3.sh")
-        if any("judge" in p or "plan_generated" in p for p in patterns):
-            cmds.append("./scripts/generated/run_lp_variant_judge_v2.sh")
+        if any("lp_optimization" in p or "deploy" in p or "plan_generated" in p for p in patterns):
+            cmds.append("./scripts/generated/run_lp_orchestrated_loop_v1.sh")
         else:
+            cmds.append("./scripts/generated/run_lp_rewriter_v3.sh")
             cmds.append("./scripts/generated/run_lp_variant_judge_v2.sh")
 
-    if "deploy" in task_text.lower():
+    if "deploy" in task_text.lower() and "./scripts/generated/run_lp_orchestrated_loop_v1.sh" not in cmds:
         cmds.append("/opt/homebrew/bin/wrangler pages deploy deploy/fortune/pages --project-name openclaw-fortune")
 
     seen = set()
