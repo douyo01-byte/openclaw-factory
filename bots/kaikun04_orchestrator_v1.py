@@ -149,6 +149,7 @@ def infer_required_tools(task_type: str, target_system: str, task_text: str) -> 
 
 
 
+
 def load_success_patterns(db_path: str, target_system: str = "", task_type: str = "") -> list[str]:
     try:
         con = sqlite3.connect(db_path)
@@ -161,8 +162,6 @@ def load_success_patterns(db_path: str, target_system: str = "", task_type: str 
         """).fetchall()
         con.close()
 
-        raw = [str(r[0]) for r in rows]
-
         bad_exact = {
             "ai",
             "other",
@@ -171,27 +170,36 @@ def load_success_patterns(db_path: str, target_system: str = "", task_type: str 
             "no_exec_block",
         }
 
-        good = []
-        for x in raw:
-            if not x or x in bad_exact:
+        weighted: list[tuple[float, str]] = []
+        seen: set[str] = set()
+
+        for pattern, score in rows:
+            x = str(pattern or "").strip()
+            sc = float(score or 0)
+            if not x or x in bad_exact or x in seen:
                 continue
+
+            keep = False
+            bonus = 0.0
+
             if target_system and target_system in x:
-                good.append(x)
-                continue
+                keep = True
+                bonus += 1.5
             if task_type and task_type in x:
-                good.append(x)
-                continue
+                keep = True
+                bonus += 1.2
             if "script=" in x or "context=" in x or ":" in x:
-                good.append(x)
+                keep = True
+                bonus += 0.3
 
-        seen = set()
-        out = []
-        for x in good:
-            if x not in seen:
-                seen.add(x)
-                out.append(x)
+            if not keep:
+                continue
 
-        return out[:12]
+            seen.add(x)
+            weighted.append((sc + bonus, x))
+
+        weighted.sort(key=lambda t: (-t[0], t[1]))
+        return [x for _, x in weighted[:8]]
     except Exception:
         return []
 
