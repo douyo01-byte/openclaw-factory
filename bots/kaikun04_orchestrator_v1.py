@@ -146,7 +146,8 @@ def infer_required_tools(task_type: str, target_system: str, task_text: str) -> 
             deduped.append(x)
     return deduped or ["read_repo_files"]
 
-def build_plan_steps(task_type: str, target_system: str, task_text: str) -> list[str]:
+
+def build_plan_steps(task_type: str, target_system: str, task_text: str, db_path: str = DEFAULT_DB_PATH) -> list[str]:
     steps: list[str] = []
 
     if task_type == "automation_design":
@@ -158,12 +159,15 @@ def build_plan_steps(task_type: str, target_system: str, task_text: str) -> list
             "Compile and run sample tasks, then verify JSON shape and downstream compatibility.",
         ]
     elif task_type == "lp_optimization":
+        hints = load_success_patterns(db_path=db_path, target_system=target_system, task_type=task_type)
         steps = [
             "Read latest LP judge, rewriter, and metrics paths currently in production.",
             "Map current LP improvement loop and isolate where Kaikun04 should take ownership.",
             "Implement structured planning output for rewrite, judge, deploy, and learn steps.",
-            "Run sample LP planning task and verify output is actionable.",
         ]
+        for h in hints[:5]:
+            steps.append(f"Leverage proven pattern: {h}")
+        steps.append("Run sample LP planning task and verify output is actionable.")
     elif task_type == "bugfix":
         steps = [
             "Reproduce or localize the bug from logs, code path, or failing command.",
@@ -369,7 +373,7 @@ def heuristic_plan(inp: PlannerInput, db_path: str = DEFAULT_DB_PATH) -> dict[st
         "task_type": task_type,
         "target_system": target_system,
         "priority": priority,
-        "plan_steps": build_plan_steps(task_type, target_system, task_text),
+        "plan_steps": build_plan_steps(task_type, target_system, task_text, db_path=db_path),
         "required_tools": infer_required_tools(task_type, target_system, task_text),
         "success_criteria": build_success_criteria(task_type, target_system),
         "fallback_action": build_fallback_action(task_type, target_system),
