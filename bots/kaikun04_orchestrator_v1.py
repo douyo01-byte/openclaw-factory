@@ -351,6 +351,27 @@ def save_plan(db_path: str, task_text: str, mode: str, target_system: str, conte
     con.close()
     return run_id
 
+def emit_router_task(db_path: str, mode: str, task_text: str, plan: dict[str, Any]) -> int:
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
+    cur.execute(
+        """
+        insert into router_tasks
+        (source_command_id, mode, target_bot, task_text, status, created_at, updated_at, reply_text, result_text)
+        values
+        (0, ?, 'kaikun04', ?, 'new', datetime('now'), datetime('now'), '', ?)
+        """,
+        (
+            mode,
+            task_text,
+            json.dumps(plan, ensure_ascii=False),
+        ),
+    )
+    task_id = int(cur.lastrowid)
+    con.commit()
+    con.close()
+    return task_id
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--task-text", required=True)
@@ -358,6 +379,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--target-system", default="openclaw")
     p.add_argument("--context-json", default="{}")
     p.add_argument("--save-db", action="store_true")
+    p.add_argument("--emit-router-task", action="store_true")
     p.add_argument("--db-path", default=DEFAULT_DB_PATH)
     p.add_argument("--pretty", action="store_true")
     return p.parse_args()
@@ -396,6 +418,15 @@ def main() -> None:
             plan=plan,
         )
         output["run_id"] = run_id
+
+    if args.emit_router_task:
+        router_task_id = emit_router_task(
+            db_path=args.db_path,
+            mode=args.mode,
+            task_text=args.task_text,
+            plan=plan,
+        )
+        output["router_task_id"] = router_task_id
 
     if args.pretty:
         print(json.dumps(output, ensure_ascii=False, indent=2))
