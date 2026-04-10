@@ -7,7 +7,7 @@ export LP_VARIANT_METRICS_URL="${LP_VARIANT_METRICS_URL:-https://openclaw-fortun
 
 ./scripts/generated/run_lp_rewriter_v3.sh
 ./scripts/generated/run_lp_variant_judge_v2.sh
-./scripts/generated/run_lp_traffic_v1.sh
+./scripts/generated/run_lp_traffic_v2.sh
 
 python3 - <<'PY'
 import json
@@ -24,3 +24,5 @@ PY
 
 cd deploy/fortune/pages || exit 1
 /opt/homebrew/bin/wrangler pages deploy . --project-name openclaw-fortune
+
+python3 bots/lp_winner_analyzer_v1.py
