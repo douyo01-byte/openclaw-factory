@@ -30,8 +30,8 @@ for name in ["index_A.html","index_B.html","index_C.html","index.html"]:
 print("autopilot_links_fixed")
 PY
 
-./scripts/generated/run_lp_variant_judge_v2.sh || true
 ./scripts/generated/run_lp_variant_metrics_v1.sh || true
+./scripts/generated/run_lp_variant_judge_v2.sh || true
 
 cd deploy/fortune/pages || exit 1
 /opt/homebrew/bin/wrangler pages deploy . --project-name openclaw-fortune
