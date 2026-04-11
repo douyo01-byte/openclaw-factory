@@ -13,11 +13,17 @@ body{font-family:sans-serif;background:#0f1020;color:#fff;padding:20px;line-heig
 .sub{color:#d7d9f3}
 .point{background:#111427;border:1px solid #2a2d4a;border-radius:12px;padding:12px;margin:10px 0}
 .label{display:inline-block;padding:6px 10px;border:1px solid #3b3f67;border-radius:999px;color:#d7d9f3;font-size:12px;margin-bottom:10px}
+
+.heroimg,.secimg{width:100%;border-radius:18px;display:block;margin:0 auto 18px auto;border:1px solid #2a2d4a}
+.grid2{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:760px){.grid2{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="sec">
+    <img class="heroimg" src="images/fortune_v1/hero.png" alt="恋愛診断イメージ">
     <div class="label">共感して整理するタイプ</div>
     <h1>気持ちが見えない恋愛ほど、まずは自分の迷いを整理することが大切です</h1>
     <p class="sub">不安をあおるためではなく、気持ちを落ち着かせて次の一手を考えるための恋愛診断です。</p>
@@ -33,6 +39,14 @@ body{font-family:sans-serif;background:#0f1020;color:#fff;padding:20px;line-heig
   </div>
 
   <div class="sec">
+    <div class="grid2">
+      <img class="secimg" src="images/fortune_v1/emotion.png" alt="不安と迷いのイメージ">
+      <img class="secimg" src="images/fortune_v1/solution.png" alt="整理と判断のイメージ">
+    </div>
+    <p class="sub">感情だけで動く前に、今の流れと自分に合う動き方を一度整理すると、失敗を減らしやすくなります。</p>
+  </div>
+
+  <div class="sec">
     <h2>無料で確認できること</h2>
     <div class="point">今の関係をどう見ればよいか</div>
     <div class="point">今すぐ動くべきか、少し待つべきか</div>
@@ -40,6 +54,7 @@ body{font-family:sans-serif;background:#0f1020;color:#fff;padding:20px;line-heig
   </div>
 
   <div class="sec">
+    <img class="heroimg" src="images/fortune_v1/cta.png" alt="次の一手のイメージ">
     <p class="price">詳しい読み解きと行動のヒント：760円</p>
     <a class="btn" href="order.html?v=A">無料で気持ちを整理する</a>
   </div>

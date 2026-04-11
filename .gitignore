@@ -30,3 +30,7 @@ public_preview/tmp_exec_lp/
 *.bak
 *.bak_*
 *.save
+env/*.env
+env/*.env.*
+deploy/fortune/pages/.wrangler/
+tmp/

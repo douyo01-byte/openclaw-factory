@@ -8,6 +8,7 @@ export LP_VARIANT_METRICS_URL="${LP_VARIANT_METRICS_URL:-https://openclaw-fortun
 ./scripts/generated/run_lp_rewriter_v3.sh
 ./scripts/generated/run_lp_variant_judge_v2.sh
 ./scripts/generated/run_lp_traffic_real_v1.sh
+./scripts/generated/run_lp_unlock_real_v1.sh
 
 python3 - <<'PY'
 import json

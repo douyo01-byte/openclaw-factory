@@ -41,7 +41,7 @@ export default {
       const viewsRes = await env.DB.prepare(`
         select birth_place as variant, count(*) as views
         from public_orders
-        where birth_place in ('A','B','C')
+        where birth_place in ('A','B','C','D')
         group by birth_place
       `).all()
 
@@ -49,14 +49,15 @@ export default {
         select o.birth_place as variant, count(*) as unlocks
         from public_unlocks u
         join public_orders o on o.id = u.order_id
-        where o.birth_place in ('A','B','C')
+        where o.birth_place in ('A','B','C','D')
         group by o.birth_place
       `).all()
 
       const map = {
         A: { views: 0, unlocks: 0 },
         B: { views: 0, unlocks: 0 },
-        C: { views: 0, unlocks: 0 }
+        C: { views: 0, unlocks: 0 },
+        D: { views: 0, unlocks: 0 }
       }
 
       for (const r of (viewsRes.results || [])) {
