@@ -31,7 +31,7 @@ def run_variant(page, v: str, do_unlock: bool):
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
     for v in variants:
-        for i in range(10):
+        for i in range(3):
             page = browser.new_page()
             run_variant(page, v, do_unlock=(i < 3))
             page.close()
