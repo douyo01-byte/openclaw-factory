@@ -32,7 +32,7 @@ def main():
     cols = {r["name"] for r in cur.execute("pragma table_info(learning_results)").fetchall()}
 
     data = {
-        "proposal_id": -3000000000,
+        "proposal_id": -3000000000 - int(payload.get("views",0)),
         "title": f"lp winner pattern {payload['variant']}",
         "source_ai": "lp_system",
         "target_system": "lp_autopilot",
