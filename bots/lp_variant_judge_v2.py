@@ -25,6 +25,13 @@ def main():
 
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
+    cur.execute("""
+    insert into lp_variants (variant, page_path, status, views, unlocks, score)
+    select 'D', 'deploy/fortune/pages/index_D.html', 'candidate', 0, 0, 0
+    where not exists (
+      select 1 from lp_variants where variant='D'
+    )
+    """)
 
     for variant in ("A", "B", "C", "D"):
         views = int(metrics.get(variant, {}).get("views", 0))
