@@ -34,3 +34,4 @@ env/*.env
 env/*.env.*
 deploy/fortune/pages/.wrangler/
 tmp/
+deploy/fortune/worker/.wrangler/
