@@ -3,7 +3,7 @@ set -euo pipefail
 
 URL="https://openclaw-fortune-order.openclaw-fortune.workers.dev/order"
 
-for v in A B C
+for v in A B C D
 do
   for i in {1..20}
   do
@@ -22,4 +22,4 @@ do
   done
 done
 
-echo "real_traffic_sent=60"
+echo "real_traffic_sent=80"

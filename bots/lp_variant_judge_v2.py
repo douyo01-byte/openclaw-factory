@@ -26,7 +26,7 @@ def main():
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
 
-    for variant in ("A", "B", "C"):
+    for variant in ("A", "B", "C", "D"):
         views = int(metrics.get(variant, {}).get("views", 0))
         unlocks = int(metrics.get(variant, {}).get("unlocks", 0))
         score = int((unlocks * 100) / views) if views > 0 else 0

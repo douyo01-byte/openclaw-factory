@@ -57,6 +57,7 @@ export default {
         A: { views: 0, unlocks: 0 },
         B: { views: 0, unlocks: 0 },
         C: { views: 0, unlocks: 0 },
+        D: { views: 0, unlocks: 0 },
         D: { views: 0, unlocks: 0 }
       }
 

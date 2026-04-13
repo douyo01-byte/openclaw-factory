@@ -4,7 +4,7 @@ set -euo pipefail
 ORDER_URL="https://openclaw-fortune-order.openclaw-fortune.workers.dev/order"
 UNLOCK_URL="https://openclaw-fortune-order.openclaw-fortune.workers.dev/unlock"
 
-for v in A B C
+for v in A B C D
 do
   for i in {1..5}
   do
@@ -29,4 +29,4 @@ do
   done
 done
 
-echo "real_unlock_sent=15"
+echo "real_unlock_sent=20"

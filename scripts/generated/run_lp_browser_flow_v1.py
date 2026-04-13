@@ -3,7 +3,7 @@ import random
 import time
 
 BASE = "https://chore-telegram-runtime-isola.openclaw-fortune.pages.dev"
-variants = ["A", "B", "C"]
+variants = ["A", "B", "C", "D"]
 
 def run_variant(page, v: str, do_unlock: bool):
     page.goto(f"{BASE}/index_{v}.html", wait_until="networkidle")
