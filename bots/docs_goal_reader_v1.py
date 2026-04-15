@@ -15,53 +15,51 @@ DEFAULT_DOCS = [
 
 SECTION_PATTERNS = {
     "goals": [
-        r"目的",
-        r"長期目的",
-        r"目標",
-        r"ゴール",
-        r"方針",
-        r"狙い",
-        r"vision",
-        r"goal",
-        r"objective",
+        r"目的", r"長期目的", r"目標", r"ゴール", r"方針", r"狙い", r"vision", r"goal", r"objective",
     ],
     "constraints": [
-        r"制約",
-        r"制限",
-        r"禁止",
-        r"注意",
-        r"前提",
-        r"条件",
-        r"constraint",
-        r"rule",
-        r"policy",
+        r"制約", r"制限", r"禁止", r"注意", r"前提", r"条件", r"constraint", r"rule", r"policy",
     ],
     "unfinished": [
-        r"未完",
-        r"未完了",
-        r"残課題",
-        r"課題",
-        r"問題",
-        r"TODO",
-        r"pending",
-        r"remaining",
-        r"next",
+        r"未完", r"未完了", r"残課題", r"課題", r"問題", r"今後", r"次段", r"次の段", r"次", r"未実施",
+        r"TODO", r"pending", r"remaining", r"next action", r"open issue",
     ],
     "priorities": [
-        r"優先",
-        r"重点",
-        r"次の重点",
-        r"next focus",
-        r"priority",
-        r"priorities",
-        r"focus",
+        r"優先", r"重点", r"次の重点", r"現状態", r"現在地", r"current state", r"next focus",
+        r"priority", r"priorities", r"focus",
+    ],
+}
+
+INLINE_HINTS = {
+    "unfinished": [
+        r"未完", r"未完了", r"残課題", r"課題", r"問題", r"今後", r"次段", r"未実施", r"必要", r"要確認",
+        r"todo", r"pending", r"remaining", r"followup", r"follow-up",
+    ],
+    "priorities": [
+        r"優先", r"重点", r"先に", r"最優先", r"次段", r"次の重点",
+        r"priority", r"focus", r"roadmap",
+    ],
+    "constraints": [
+        r"禁止", r"制約", r"制限", r"固定", r"前提", r"扱う", r"回す",
+        r"constraint", r"policy",
+    ],
+    "goals": [
+        r"方針", r"目的", r"目標", r"goal", r"objective", r"vision",
     ],
 }
 
 BULLET_RE = re.compile(r"^\s*(?:[-*+]|[0-9]+[.)]|[・■□◆◇▶►])\s+(.+?)\s*$")
 HEADER_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 CODE_FENCE_RE = re.compile(r"^```")
-KV_RE = re.compile(r"^\s*([A-Za-z0-9_ /-]{2,40})\s*[:：]\s*(.+?)\s*$")
+KV_RE = re.compile(r"^\s*([A-Za-z0-9_ /().-]{2,80})\s*[:：]\s*(.+?)\s*$")
+
+METRIC_LINE_RE = re.compile(
+    r"^[A-Za-z0-9_./-]+\s*=\s*-?\d+(\.\d+)?$"
+)
+STATUS_METRIC_RE = re.compile(
+    r"(pending|remaining|done|healthy|health|runtime|watcher|manual_pending|tg_private_pending|ops_exec_new_remaining|kaikun04_new_remaining|secretary_done_remaining)",
+    re.I
+)
 
 def now_sql(con: sqlite3.Connection) -> str:
     return con.execute("select datetime('now')").fetchone()[0]
@@ -82,10 +80,19 @@ def ensure_table(con: sqlite3.Connection) -> None:
     con.execute("create index if not exists idx_goal_doc_snapshots_created on goal_doc_snapshots(created_at desc)")
     con.commit()
 
-def clean_line(s: str) -> str:
-    s = s.replace("\u3000", " ").strip()
+def squeeze_jp_spaced_text(s: str) -> str:
+    s = s.replace("\u3000", " ")
+    s = re.sub(r"[ \t]+", " ", s).strip()
+    s = re.sub(r'(?<=[ぁ-んァ-ヶ一-龠A-Za-z0-9])\s(?=[ぁ-んァ-ヶ一-龠A-Za-z0-9])', '', s)
+    s = re.sub(r'(?<=[ぁ-んァ-ヶ一-龠A-Za-z0-9])\s(?=[/])', '', s)
+    s = re.sub(r'(?<=[/])\s(?=[ぁ-んァ-ヶ一-龠A-Za-z0-9])', '', s)
+    s = re.sub(r'\s+([/()（）:：、。,.])', r'\1', s)
+    s = re.sub(r'([/()（）:：])\s+', r'\1', s)
     s = re.sub(r"\s+", " ", s)
-    return s
+    return s.strip()
+
+def clean_line(s: str) -> str:
+    return squeeze_jp_spaced_text(s)
 
 def classify_heading(text: str) -> list[str]:
     t = text.lower()
@@ -94,6 +101,64 @@ def classify_heading(text: str) -> list[str]:
         if any(re.search(p, text, re.I) for p in pats) or any(p.lower() in t for p in pats):
             matched.append(key)
     return matched
+
+def classify_inline(text: str) -> set[str]:
+    out = set()
+    lower = text.lower()
+    for key, pats in INLINE_HINTS.items():
+        if any(re.search(p, text, re.I) for p in pats) or any(p.lower() in lower for p in pats):
+            out.add(key)
+    return out
+
+def is_metric_noise(text: str, heading: str, bucket: str) -> bool:
+    t = clean_line(text)
+    h = clean_line(heading)
+
+    if bucket in {"unfinished", "priorities"}:
+        if METRIC_LINE_RE.match(t):
+            return True
+        if STATUS_METRIC_RE.search(t) and re.search(r"=\s*-?\d+(\.\d+)?$", t):
+            return True
+        if re.search(r"(現在地|現状態|健全性|確認値|runtime|watcher)", h, re.I) and re.search(r"=\s*-?\d+(\.\d+)?$", t):
+            return True
+
+    return False
+
+def should_keep(text: str, heading: str, bucket: str) -> bool:
+    t = clean_line(text)
+    h = clean_line(heading)
+
+    if len(t) < 2:
+        return False
+
+    if bucket in {"unfinished", "priorities"} and is_metric_noise(t, h, bucket):
+        return False
+
+    if bucket == "goals":
+        if re.search(r"=\s*-?\d+(\.\d+)?$", t):
+            return False
+        if STATUS_METRIC_RE.search(t):
+            return False
+
+    if bucket == "priorities":
+        if re.fullmatch(r"(案件処理テンプレ|収益ライン接続)", t):
+            return False
+
+    return True
+
+def add_row(out: list[dict], section_types: set[str], text: str, idx: int, heading: str) -> None:
+    text = clean_line(text)
+    heading = clean_line(heading)
+    if not text:
+        return
+    for bucket in sorted(section_types):
+        if should_keep(text, heading, bucket):
+            out.append({
+                "section_type": bucket,
+                "item_text": text,
+                "line_no": idx,
+                "heading": heading,
+            })
 
 def extract_items(lines: list[str]) -> list[dict]:
     out: list[dict] = []
@@ -122,47 +187,33 @@ def extract_items(lines: list[str]) -> list[dict]:
         heading = active_headings[-1][1] if active_headings else ""
 
         bm = BULLET_RE.match(line)
-        if bm and active_buckets:
-            text = clean_line(bm.group(1))
-            if text:
-                for bucket in active_buckets:
-                    out.append({
-                        "section_type": bucket,
-                        "item_text": text,
-                        "line_no": idx,
-                        "heading": heading,
-                    })
+        if bm:
+            text = bm.group(1)
+            buckets = set(active_buckets) | classify_inline(text) | classify_inline(heading)
+            if buckets:
+                add_row(out, buckets, text, idx, heading)
             continue
 
         km = KV_RE.match(line)
-        if km and active_buckets:
+        if km:
             left = clean_line(km.group(1))
             right = clean_line(km.group(2))
             text = f"{left}: {right}"
-            for bucket in active_buckets:
-                out.append({
-                    "section_type": bucket,
-                    "item_text": text,
-                    "line_no": idx,
-                    "heading": heading,
-                })
+            buckets = set(active_buckets) | classify_inline(text) | classify_inline(heading)
+            if buckets:
+                add_row(out, buckets, text, idx, heading)
             continue
 
-        if active_buckets:
-            text = clean_line(line)
-            if len(text) >= 12 and not text.startswith("#"):
-                for bucket in active_buckets:
-                    out.append({
-                        "section_type": bucket,
-                        "item_text": text,
-                        "line_no": idx,
-                        "heading": heading,
-                    })
+        text = clean_line(line)
+        if len(text) >= 8 and not text.startswith("#"):
+            buckets = set(active_buckets) | classify_inline(text) | classify_inline(heading)
+            if buckets:
+                add_row(out, buckets, text, idx, heading)
 
     dedup = []
     seen = set()
     for row in out:
-        key = (row["section_type"], row["item_text"])
+        key = (row["section_type"], row["item_text"], row["heading"])
         if key in seen:
             continue
         seen.add(key)
@@ -209,7 +260,7 @@ def build_summary(con: sqlite3.Connection) -> dict:
         from goal_doc_snapshots
         where section_type = ?
         order by doc_path, line_no
-        limit 50
+        limit 80
         """, (key,)).fetchall()
         summary[key] = [
             {
