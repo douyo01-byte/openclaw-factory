@@ -9,6 +9,7 @@ import os
 import re
 import sqlite3
 import time
+from contextlib import contextmanager
 from difflib import SequenceMatcher
 
 import requests
@@ -29,6 +30,23 @@ def force_exec(text: str) -> str:
 
 
 def decide_mode(text: str) -> str:
+    t0 = (text or "").strip()
+    if "[FORCE_CHAT]" in t0:
+        return "CHAT"
+    if t0.startswith("[GOAL_PLAN]"):
+        return "THINK"
+    if "[GOAL_IMPL]" in t0:
+        return "THINK"
+    t = t0.lower()
+    if "[exec]" in t or "実 行 " in t or "run" in t:
+        return "EXEC"
+    if "作 っ て " in t or "生 成 " in t or "lp" in t:
+        return "DOC"
+    if "分 析 " in t or "教 え て " in t:
+        return "THINK"
+    return "CHAT"
+    if t0.startswith("[GOAL_PLAN]"):
+        return "THINK"
     t = text.lower()
     if "[exec]" in t or "実行" in t or "run" in t:
         return "EXEC"
@@ -49,6 +67,7 @@ SPACE_RE = re.compile(r"[ \t\u3000]+")
 MULTI_NL_RE = re.compile(r"\n{3,}")
 
 EXEC_BLOCK_RE = re.compile(r"(?ms)\[EXEC\]\s*\n\s*script=([A-Za-z0-9_.-]+)")
+EXEC_LINE_RE = re.compile(r"(?m)^(script|arg)=([^\n]*)$")
 ALLOWED_EXEC_SCRIPTS = {
     "db_health.sh",
     "git_status.sh",
@@ -123,8 +142,10 @@ def normalize_exec_block(text: str) -> str:
     clean = f"[EXEC]\nscript={script}"
     return re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "\n\n" + clean, s).strip()
 
+@contextmanager
 def conn():
     last = None
+    c = None
     for _ in range(5):
         try:
             c = sqlite3.connect(DB, timeout=30)
@@ -134,11 +155,21 @@ def conn():
                 c.execute("pragma journal_mode=WAL")
             except Exception:
                 pass
-            return c
+            break
         except sqlite3.OperationalError as e:
             last = e
             time.sleep(1)
-    raise last
+    if c is None:
+        raise last
+    try:
+        yield c
+    except Exception:
+        c.rollback()
+        raise
+    else:
+        c.commit()
+    finally:
+        c.close()
 
 def infer_exec_context(text: str, script: str) -> str:
     raw = ((text or "") + "\n" + (script or "")).lower()
@@ -215,10 +246,6 @@ def choose_auto_exec_script(prompt: str = "", text: str = "") -> str:
     context = prompt_context if prompt_context != "general" else text_context
     forced_map = {
         "db": "db_health.sh",
-        "api": "status_core.sh",
-        "service": "status_core.sh",
-        "telegram": "status_core.sh",
-        "routing": "status_core.sh",
         "deploy": "deploy_safe.sh",
     }
     if context in forced_map:
@@ -230,15 +257,16 @@ def maybe_append_auto_exec(prompt: str, text: str) -> str:
     s = (text or "").strip()
     if not s:
         return s
-    s = EXEC_BLOCK_RE.sub("", s).strip()
+    combined = ((prompt or "") + "\n" + s).strip()
+    if "[AUTO_GOAL]" in combined or "[AUTO_GOAL_TRIGGER]" in combined:
+        return normalize_exec_block(s)
     if has_exec_block(s):
         forced = choose_auto_exec_script(prompt, s)
         base = EXEC_BLOCK_RE.sub("", s).strip()
         if forced:
             return normalize_exec_block(f"{base}\n\n[EXEC]\nscript={forced}")
         return normalize_exec_block(base)
-    base = ((prompt or "") + "\n" + s).strip()
-    if not AUTO_EXEC_PROMPT_RE.search(base):
+    if not AUTO_EXEC_PROMPT_RE.search(combined):
         return s
     script = choose_auto_exec_script(prompt, s)
     if not script:
@@ -276,15 +304,24 @@ def extract_exec_script(reply_text: str) -> str:
         return ""
     return script
 
-def insert_exec_child(c, source_command_id: int, script: str) -> int:
-    task_text = f"[EXEC]\nscript={script}"
+def build_exec_child_payload(reply_text: str, script: str) -> str:
+    lines = [f"script={script}"]
+    m = re.search(r"(?ms)\[EXEC\](.*)$", reply_text or "")
+    block = m.group(1) if m else ""
+    for key, value in EXEC_LINE_RE.findall(block):
+        if key == "arg":
+            lines.append(f"arg={value.strip()}")
+    return "[EXEC]\n" + "\n".join(lines)
+
+def insert_exec_child(c, source_command_id: int, parent_task_id: int, script: str, reply_text: str = "") -> int:
+    task_text = build_exec_child_payload(reply_text, script)
     c.execute("""
         insert into router_tasks(
-          source_command_id, mode, target_bot, task_text, status, created_at, updated_at
+          source_command_id, parent_task_id, mode, target_bot, task_text, status, created_at, updated_at
         ) values(
-          ?, 'EXEC', 'ops_exec', ?, 'new', datetime('now'), datetime('now')
+          ?, ?, 'EXEC', 'ops_exec', ?, 'new', datetime('now'), datetime('now')
         )
-    """, (source_command_id, task_text))
+    """, (source_command_id, parent_task_id, task_text))
     return int(c.execute("select last_insert_rowid()").fetchone()[0])
 
 def mark_exec_direct(c, parent_task_id: int, child_task_id: int):
@@ -376,6 +413,11 @@ def similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a[:4000], b[:4000]).ratio()
 
 def validate_output(prompt: str, output: str):
+    if "[PLANNER]" in (prompt or "") or "[GOAL_IMPL]" in (prompt or ""):
+        t = (output or "").strip().lower()
+        if "[exec]" in t and "script=" in t:
+            return True, ""
+
     p = (prompt or "").strip()
     o = (output or "").strip()
     if not o:
@@ -393,7 +435,7 @@ def validate_output(prompt: str, output: str):
         return False, "too_short"
     if similarity(p, o) > 0.92:
         return False, "too_similar"
-    if "html" in low_p and "<html" not in low_o and "```html" not in low_o:
+    if "[mode:chat]" not in low_p and "html" in low_p and "<html" not in low_o and "```html" not in low_o:
         return False, "missing_html"
     if "3案" in p and not any(x in o for x in ["1.", "1案", "A案", "①", "[TASK][CTO]", "[TASK][CMO]", "[TASK][COO]"]):
         return False, "missing_3_variants"
@@ -440,12 +482,26 @@ def call_llm(task_id: int, prompt: str) -> str:
 
 def fetch_rows(c):
     return c.execute("""
-        select id, source_command_id, task_text, coalesce(retry_count,0) as retry_count, coalesce(status,'new') as status
+        select
+          id,
+          source_command_id,
+          coalesce(task_role,'') as task_role,
+          task_text,
+          coalesce(retry_count,0) as retry_count,
+          coalesce(status,'new') as status
         from router_tasks
         where coalesce(target_bot,'')='kaikun04'
-          
           and coalesce(status,'new') in ('new','started','invalid_output')
-        order by id asc
+        order by
+          case
+            when coalesce(task_text,'') like '[GOAL_PLAN]%' then 0
+            when coalesce(task_text,'') like '%[GOAL_IMPL]%' then 1
+            when coalesce(task_role,'')='PLANNER' then 2
+            when coalesce(task_role,'')='AUTO_DEV' then 3
+            when task_text like '[AUTO_GOAL%' then 3
+            else 4
+          end,
+          id asc
         limit 3
     """).fetchall()
 
@@ -471,7 +527,7 @@ def mark_retry(c, task_id: int, clean: str, reason: str):
     """, (clean, reason, task_id))
 
 def mark_done(c, task_id: int, cmd_id: int, clean: str, reply: str):
-    reply = force_exec(reply)
+    reply = (reply or "").strip()
     c.execute("""
         update router_tasks
         set clean_prompt=?,
@@ -589,37 +645,81 @@ def tick():
                 mark_retry(c, task_id, clean, "empty_clean_prompt")
                 c.commit()
                 continue
+            print(f"[k04] picked task_id={task_id}", flush=True)
             mark_started(c, task_id)
             c.commit()
             try:
-                mode = decide_mode(clean)
+                cols = set(r.keys())
+                db_mode = (r["mode"] or "").strip().upper() if "mode" in cols and r["mode"] is not None else ""
+                mode = db_mode if db_mode else decide_mode(clean)
                 prompt2 = f"[MODE:{mode}]\n{clean}"
+                print(f"[k04] calling_llm task_id={task_id} db_mode={db_mode} mode={mode}", flush=True)
                 reply = call_llm(task_id, prompt2)
+                print(f"[k04] llm_done task_id={task_id}", flush=True)
                 reply = clean_text(reply)
                 reply = force_clean_exec(reply)
                 reply = clean_text(reply)
+
+                if (r["task_role"] or "").upper() == "PLANNER":
+                    t = (reply or "").strip().lower()
+                    if not ("[exec]" in t and "script=" in t):
+                        compact = " ".join((reply or "").split())[:120]
+                        if not compact:
+                            compact = "LP改善 / 学習 / 自動化前進 の 次の1手を1つ決めて実行する"
+                        reply = "[EXEC]\nscript=run_python.sh\narg=mode=auto_task;task=" + compact
+
                 ok, reason = validate_output(prompt2, reply)
+                if (r["task_role"] or "").upper() == "PLANNER":
+                    t = (reply or "").strip().lower()
+                    if "[exec]" in t and "script=" in t:
+                        ok = True
+                        reason = ""
+                    else:
+                        ok = False
+                        reason = "planner_not_exec" ""
                 if ok:
                     mark_done(c, task_id, source_command_id, clean, reply)
+                    print(f"[k04] mark_done task_id={task_id}", flush=True)
 
                     script = extract_exec_script(reply)
-                    if script:
+                    auto_goal_task = "[AUTO_GOAL]" in clean or "[AUTO_GOAL_TRIGGER]" in clean
+                    goal_plan_task = clean.strip().startswith("[GOAL_PLAN]")
+                    goal_impl_task = "[GOAL_IMPL]" in clean
+                    if script and not auto_goal_task and not goal_plan_task and not goal_impl_task:
                         try:
-                            child_id = insert_exec_child(c, source_command_id, script)
+                            child_id = insert_exec_child(c, source_command_id, task_id, script, reply)
                             mark_exec_direct(c, task_id, child_id)
                             log_exec_direct(c, task_id, child_id, source_command_id, script, reply)
                             print(f"[kaikun04_router_worker_v1] exec_direct parent={task_id} child={child_id} script={script}", flush=True)
                         except Exception as e:
                             print(f"[kaikun04_router_worker_v1] exec_direct_err={e!r}", flush=True)
-
+                    elif script and auto_goal_task:
+                        print(f"[kaikun04_router_worker_v1] exec_direct_skip_auto_goal parent={task_id} script={script}", flush=True)
+                    elif script and goal_plan_task:
+                        print(f"[kaikun04_router_worker_v1] exec_direct_skip_goal_plan parent={task_id} script={script}", flush=True)
+                    elif script and goal_impl_task:
+                        try:
+                            child_id = insert_exec_child(c, source_command_id, task_id, script, reply)
+                            mark_exec_direct(c, task_id, child_id)
+                            log_exec_direct(c, task_id, child_id, source_command_id, script, reply)
+                            print(f"[kaikun04_router_worker_v1] exec_direct_goal_impl parent={task_id} child={child_id} script={script}", flush=True)
+                        except Exception as e:
+                            print(f"[kaikun04_router_worker_v1] exec_direct_goal_impl_err={e!r}", flush=True)
                     try:
-                        task_specs = extract_business_tasks(reply)
-                        biz_child_ids = insert_business_tasks(c, task_id, source_command_id, reply)
-                        if biz_child_ids:
-                            print(f"[kaikun04_router_worker_v1] business_tasks parent={task_id} children={biz_child_ids}", flush=True)
-                        exec_child_ids = insert_role_exec_tasks(c, source_command_id, task_id, task_specs)
-                        if exec_child_ids:
-                            print(f"[kaikun04_router_worker_v1] role_exec_tasks parent={task_id} children={exec_child_ids}", flush=True)
+                        goal_plan_task = clean.strip().startswith("[GOAL_PLAN]")
+                        goal_impl_task = "[GOAL_IMPL]" in clean
+                        if goal_plan_task or goal_impl_task:
+                            task_specs = []
+                            biz_child_ids = []
+                            exec_child_ids = []
+                        else:
+                            task_specs = extract_business_tasks(reply)
+                            biz_child_ids = insert_business_tasks(c, task_id, source_command_id, reply)
+                            if biz_child_ids:
+                                print(f"[kaikun04_router_worker_v1] business_tasks parent={task_id} children={biz_child_ids}", flush=True)
+                            exec_child_ids = insert_role_exec_tasks(c, source_command_id, task_id, task_specs)
+                            if exec_child_ids:
+                                print(f"[kaikun04_router_worker_v1] role_exec_tasks parent={task_id} children={exec_child_ids}", flush=True)
                     except Exception as e:
                         print(f"[kaikun04_router_worker_v1] business_task_err={e!r}", flush=True)
 
