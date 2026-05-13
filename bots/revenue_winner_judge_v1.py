@@ -13,16 +13,33 @@ def con():
     db.row_factory = sqlite3.Row
     return db
 
+def has_table(db, name: str) -> bool:
+    row = db.execute(
+        "select 1 from sqlite_master where type='table' and name=?",
+        (name,)
+    ).fetchone()
+    return row is not None
+
 def main():
     db = con()
 
-    rows = db.execute("""
+    bandit_filter = ""
+    if has_table(db, "revenue_variant_metrics"):
+        bandit_filter = """
+          and id not in (
+            select experiment_id
+            from revenue_variant_metrics
+          )
+        """
+
+    rows = db.execute(f"""
         select
           id,
           artifact_path,
           status
         from revenue_experiments
         where artifact_path != ''
+        {bandit_filter}
     """).fetchall()
 
     for r in rows:

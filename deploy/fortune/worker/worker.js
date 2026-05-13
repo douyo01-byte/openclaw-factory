@@ -37,12 +37,46 @@ export default {
       return json({ ok: true })
     }
 
+    if (url.pathname === "/track.js" && request.method === "GET") {
+      return new Response(`
+(function () {
+  function param(name) {
+    return new URLSearchParams(window.location.search).get(name) || "";
+  }
+  function send(eventType) {
+    navigator.sendBeacon && navigator.sendBeacon("/revenue-track", JSON.stringify({
+      path: window.location.pathname,
+      event_type: eventType,
+      variant_id: param("variant_id"),
+      traffic_source: param("traffic_source") || param("utm_source"),
+      referrer: document.referrer,
+      ua: navigator.userAgent
+    }));
+  }
+  send("page_view");
+  document.addEventListener("click", function (ev) {
+    var el = ev.target && ev.target.closest ? ev.target.closest("[data-revenue-event],a") : null;
+    if (!el) return;
+    var eventType = el.getAttribute("data-revenue-event") || (String(el.href || "").indexOf("t.me/") >= 0 ? "telegram_click" : "cta_click");
+    send(eventType);
+  });
+}());
+`, {
+        headers: { "content-type": "application/javascript; charset=utf-8" }
+      })
+    }
+
     if (url.pathname === "/revenue-track" && request.method === "POST") {
       const body = await request.json().catch(() => ({}))
 
       const path = String(body.path || "")
+      const variantId = String(body.variant_id || "")
+      const trafficSource = String(body.traffic_source || body.source || "")
       const referer = String(body.referrer || "")
       const ua = String(body.ua || "")
+      const rawEventType = String(body.event_type || "page_view")
+      const allowedEventTypes = new Set(["page_view", "cta_click", "telegram_click", "conversion"])
+      const eventType = allowedEventTypes.has(rawEventType) ? rawEventType : "page_view"
 
       const ip =
         request.headers.get("cf-connecting-ip")
@@ -59,17 +93,34 @@ export default {
 
       const now = new Date().toISOString()
 
-      await env.DB.prepare(`
-        insert into revenue_page_views
-        (path, referer, ua, ip_hash, created_at)
-        values (?, ?, ?, ?, ?)
-      `).bind(
-        path,
-        referer,
-        ua,
-        hashHex,
-        now
-      ).run()
+      try {
+        await env.DB.prepare(`
+          insert into revenue_page_views
+          (path, event_type, variant_id, traffic_source, referer, ua, ip_hash, created_at)
+          values (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          path,
+          eventType,
+          variantId,
+          trafficSource,
+          referer,
+          ua,
+          hashHex,
+          now
+        ).run()
+      } catch (err) {
+        await env.DB.prepare(`
+          insert into revenue_page_views
+          (path, referer, ua, ip_hash, created_at)
+          values (?, ?, ?, ?, ?)
+        `).bind(
+          path,
+          referer,
+          ua,
+          hashHex,
+          now
+        ).run()
+      }
 
       return json({ status: "ok" })
     }

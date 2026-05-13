@@ -21,6 +21,9 @@ create table if not exists public_unlocks (
 create table if not exists revenue_page_views (
   id integer primary key autoincrement,
   path text not null,
+  event_type text not null default 'page_view',
+  variant_id text not null default '',
+  traffic_source text not null default '',
   referer text not null default '',
   ua text not null default '',
   ip_hash text not null default '',
