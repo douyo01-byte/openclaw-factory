@@ -28,86 +28,39 @@ def table_cols(db, name: str) -> set[str]:
         return set()
     return {r["name"] for r in db.execute(f"pragma table_info({name})").fetchall()}
 
-def ensure_col(db, table: str, col: str, sql: str):
-    if col not in table_cols(db, table):
-        db.execute(sql)
+REQUIRED_SCHEMA = {
+    "revenue_variant_groups": {
+        "id", "opportunity_id", "experiment_id", "name", "strategy", "status",
+        "winner_experiment_id", "digest_summary", "created_at", "updated_at",
+    },
+    "revenue_variant_metrics": {
+        "id", "group_id", "experiment_id", "variant_key", "artifact_path",
+        "views", "clicks", "telegram_clicks", "actions", "conversions",
+        "ctr", "cvr", "score", "rank", "status", "source", "captured_at",
+    },
+    "revenue_distribution_tasks": {
+        "id", "group_id", "experiment_id", "variant_key", "distribution_type",
+        "traffic_source", "cta_url", "content", "artifact_path", "status",
+        "created_at", "updated_at",
+    },
+    "revenue_memory_patterns": {
+        "id", "memory_type", "pattern", "horizon_type", "economic_summary",
+        "portfolio_summary", "domain_summary", "evidence", "score",
+        "reuse_count", "last_used_at", "created_at", "updated_at",
+    },
+}
+
+def require_schema(db):
+    for table, required in REQUIRED_SCHEMA.items():
+        missing = sorted(required - table_cols(db, table))
+        if missing:
+            raise RuntimeError(
+                f"schema_missing table={table} cols={','.join(missing)} "
+                "apply migrations/20260513_revenue_core_schema_v2.sql first"
+            )
 
 def ensure_schema(db):
-    db.execute("""
-        create table if not exists revenue_variant_groups (
-          id integer primary key autoincrement,
-          opportunity_id integer,
-          experiment_id integer,
-          name text not null default '',
-          strategy text not null default 'epsilon_greedy',
-          status text not null default 'active',
-          winner_experiment_id integer,
-          digest_summary text not null default '',
-          created_at text not null default (datetime('now')),
-          updated_at text not null default (datetime('now'))
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_variant_metrics (
-          id integer primary key autoincrement,
-          group_id integer not null,
-          experiment_id integer not null,
-          variant_key text not null default '',
-          artifact_path text not null default '',
-          views integer not null default 0,
-          clicks integer not null default 0,
-          telegram_clicks integer not null default 0,
-          actions integer not null default 0,
-          conversions integer not null default 0,
-          ctr real not null default 0,
-          cvr real not null default 0,
-          score real not null default 0,
-          rank integer not null default 0,
-          status text not null default 'active',
-          source text not null default '',
-          captured_at text not null default (datetime('now')),
-          unique(group_id, experiment_id)
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_distribution_tasks (
-          id integer primary key autoincrement,
-          group_id integer not null,
-          experiment_id integer not null,
-          variant_key text not null default '',
-          distribution_type text not null,
-          traffic_source text not null default '',
-          cta_url text not null default '',
-          content text not null default '',
-          artifact_path text not null default '',
-          status text not null default 'planned',
-          created_at text not null default (datetime('now')),
-          updated_at text not null default (datetime('now')),
-          unique(group_id, experiment_id, distribution_type)
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_memory_patterns (
-          id integer primary key autoincrement,
-          memory_type text not null,
-          pattern text not null,
-          horizon_type text not null default 'mid_term',
-          economic_summary text not null default '',
-          portfolio_summary text not null default '',
-          domain_summary text not null default '',
-          evidence text not null default '',
-          score real not null default 1,
-          reuse_count integer not null default 0,
-          last_used_at text not null default '',
-          created_at text not null default (datetime('now')),
-          updated_at text not null default (datetime('now')),
-          unique(memory_type, pattern)
-        )
-    """)
-    ensure_col(db, "revenue_memory_patterns", "horizon_type", "alter table revenue_memory_patterns add column horizon_type text not null default 'mid_term'")
-    ensure_col(db, "revenue_memory_patterns", "economic_summary", "alter table revenue_memory_patterns add column economic_summary text not null default ''")
-    ensure_col(db, "revenue_memory_patterns", "portfolio_summary", "alter table revenue_memory_patterns add column portfolio_summary text not null default ''")
-    ensure_col(db, "revenue_memory_patterns", "domain_summary", "alter table revenue_memory_patterns add column domain_summary text not null default ''")
+    require_schema(db)
     db.execute("""
         update revenue_memory_patterns
         set score=score * 0.85,

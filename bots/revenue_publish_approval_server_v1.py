@@ -33,50 +33,31 @@ def table_cols(db, name: str) -> set[str]:
         return set()
     return {r["name"] for r in db.execute(f"pragma table_info({name})").fetchall()}
 
-def ensure_col(db, table: str, col: str, sql: str):
-    if col not in table_cols(db, table):
-        db.execute(sql)
+REQUIRED_SCHEMA = {
+    "revenue_distribution_publish_queue": {
+        "id", "distribution_task_id", "group_id", "experiment_id", "variant_key",
+        "distribution_type", "traffic_source", "artifact_path",
+        "candidate_score", "publish_status", "approval_note", "queued_at",
+        "updated_at",
+    },
+    "revenue_memory_patterns": {
+        "id", "memory_type", "pattern", "horizon_type", "economic_summary",
+        "portfolio_summary", "domain_summary", "evidence", "score",
+        "reuse_count", "last_used_at", "created_at", "updated_at",
+    },
+}
+
+def require_schema(db):
+    for table, required in REQUIRED_SCHEMA.items():
+        missing = sorted(required - table_cols(db, table))
+        if missing:
+            raise RuntimeError(
+                f"schema_missing table={table} cols={','.join(missing)} "
+                "apply migrations/20260513_revenue_core_schema_v2.sql first"
+            )
 
 def ensure_schema(db):
-    db.execute("""
-        create table if not exists revenue_distribution_publish_queue (
-          id integer primary key autoincrement,
-          distribution_task_id integer not null unique,
-          group_id integer not null,
-          experiment_id integer not null,
-          variant_key text not null default '',
-          distribution_type text not null default '',
-          traffic_source text not null default '',
-          artifact_path text not null default '',
-          candidate_score real not null default 0,
-          publish_status text not null default 'queued',
-          approval_note text not null default '',
-          queued_at text not null default (datetime('now')),
-          updated_at text not null default (datetime('now'))
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_memory_patterns (
-          id integer primary key autoincrement,
-          memory_type text not null,
-          pattern text not null,
-          horizon_type text not null default 'mid_term',
-          economic_summary text not null default '',
-          portfolio_summary text not null default '',
-          domain_summary text not null default '',
-          evidence text not null default '',
-          score real not null default 1,
-          reuse_count integer not null default 0,
-          last_used_at text not null default '',
-          created_at text not null default (datetime('now')),
-          updated_at text not null default (datetime('now')),
-          unique(memory_type, pattern)
-        )
-    """)
-    ensure_col(db, "revenue_memory_patterns", "horizon_type", "alter table revenue_memory_patterns add column horizon_type text not null default 'mid_term'")
-    ensure_col(db, "revenue_memory_patterns", "economic_summary", "alter table revenue_memory_patterns add column economic_summary text not null default ''")
-    ensure_col(db, "revenue_memory_patterns", "portfolio_summary", "alter table revenue_memory_patterns add column portfolio_summary text not null default ''")
-    ensure_col(db, "revenue_memory_patterns", "domain_summary", "alter table revenue_memory_patterns add column domain_summary text not null default ''")
+    require_schema(db)
 
 def add_memory(db, memory_type: str, pattern: str, evidence: str, score: float, horizon_type: str = "mid_term", economic_summary: str = "", portfolio_summary: str = "", domain_summary: str = ""):
     pattern = " ".join((pattern or "").split()).strip()[:240]

@@ -56,236 +56,92 @@ def table_cols(db, name: str) -> set[str]:
         return set()
     return {r["name"] for r in db.execute(f"pragma table_info({name})").fetchall()}
 
-def ensure_col(db, table: str, col: str, sql: str):
-    if col not in table_cols(db, table):
-        db.execute(sql)
+REQUIRED_SCHEMA = {
+    "revenue_opportunities": {
+        "id", "source", "domain_key", "title", "description", "market",
+        "monetization_type", "expected_profit_score", "validation_speed_score",
+        "cost_score", "automation_score", "risk_score", "total_score",
+        "status", "rationale", "created_at", "updated_at",
+    },
+    "revenue_variant_groups": {
+        "id", "opportunity_id", "experiment_id", "name", "strategy", "status",
+        "winner_experiment_id", "digest_summary", "created_at", "updated_at",
+    },
+    "revenue_variant_metrics": {
+        "id", "group_id", "experiment_id", "variant_key", "artifact_path",
+        "views", "clicks", "telegram_clicks", "actions", "conversions",
+        "ctr", "cvr", "score", "rank", "status", "source", "captured_at",
+    },
+    "revenue_variant_loser_archive": {
+        "id", "group_id", "experiment_id", "variant_key", "artifact_path",
+        "score", "reason", "archived_at",
+    },
+    "revenue_bandit_digests": {
+        "id", "group_id", "summary", "sent_to_telegram", "created_at",
+    },
+    "revenue_distribution_tasks": {
+        "id", "group_id", "experiment_id", "variant_key", "distribution_type",
+        "traffic_source", "cta_url", "content", "artifact_path", "status",
+        "created_at", "updated_at",
+    },
+    "revenue_distribution_publish_queue": {
+        "id", "distribution_task_id", "group_id", "experiment_id", "variant_key",
+        "distribution_type", "traffic_source", "artifact_path",
+        "candidate_score", "publish_status", "approval_note", "queued_at",
+        "updated_at",
+    },
+    "revenue_memory_patterns": {
+        "id", "memory_type", "pattern", "horizon_type", "economic_summary",
+        "portfolio_summary", "domain_summary", "evidence", "score",
+        "reuse_count", "last_used_at", "created_at", "updated_at",
+    },
+    "revenue_strategy_scores": {
+        "id", "group_id", "experiment_id", "horizon_type", "ctr_score",
+        "conversion_score", "approval_score", "revenue_efficiency",
+        "automation_score", "sustainability_score", "total_score", "source",
+        "captured_at",
+    },
+    "revenue_economic_metrics": {
+        "id", "group_id", "experiment_id", "estimated_cac", "estimated_ltv",
+        "payback_speed", "infra_cost", "human_cost", "automation_savings",
+        "expected_profit", "profit_efficiency", "economic_multiplier",
+        "suppressed", "source", "captured_at",
+    },
+    "revenue_real_orders": {
+        "id", "group_id", "experiment_id", "variant_key", "order_id",
+        "revenue", "gross_profit", "refund_risk", "fulfillment_cost",
+        "support_cost", "net_profit", "recovered_days", "source",
+        "created_at",
+    },
+    "revenue_capital_allocations": {
+        "id", "opportunity_id", "allocated_budget", "allocated_compute",
+        "allocated_time", "expected_roi", "realized_roi", "capital_score",
+        "risk_score", "liquidity_score", "source", "updated_at",
+    },
+    "revenue_business_domains": {
+        "id", "domain_key", "domain_type", "capital_allocated",
+        "revenue_generated", "net_profit", "volatility_score",
+        "scalability_score", "automation_fit", "moat_score", "source",
+        "updated_at",
+    },
+    "revenue_capital_migrations": {
+        "id", "from_domain", "to_domain", "migration_reason",
+        "migrated_budget", "migrated_compute", "expected_gain",
+        "realized_gain", "migration_score", "source", "created_at",
+    },
+}
+
+def require_schema(db):
+    for table, required in REQUIRED_SCHEMA.items():
+        missing = sorted(required - table_cols(db, table))
+        if missing:
+            raise RuntimeError(
+                f"schema_missing table={table} cols={','.join(missing)} "
+                "apply migrations/20260513_revenue_core_schema_v2.sql first"
+            )
 
 def ensure_schema(db):
-    db.execute("""
-        create table if not exists revenue_variant_groups (
-          id integer primary key autoincrement,
-          opportunity_id integer,
-          experiment_id integer,
-          name text not null default '',
-          strategy text not null default 'epsilon_greedy',
-          status text not null default 'active',
-          winner_experiment_id integer,
-          digest_summary text not null default '',
-          created_at text not null default (datetime('now')),
-          updated_at text not null default (datetime('now'))
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_variant_metrics (
-          id integer primary key autoincrement,
-          group_id integer not null,
-          experiment_id integer not null,
-          variant_key text not null default '',
-          artifact_path text not null default '',
-          views integer not null default 0,
-          clicks integer not null default 0,
-          telegram_clicks integer not null default 0,
-          actions integer not null default 0,
-          conversions integer not null default 0,
-          ctr real not null default 0,
-          cvr real not null default 0,
-          score real not null default 0,
-          rank integer not null default 0,
-          status text not null default 'active',
-          source text not null default '',
-          captured_at text not null default (datetime('now')),
-          unique(group_id, experiment_id)
-        )
-    """)
-    ensure_col(db, "revenue_variant_metrics", "telegram_clicks", "alter table revenue_variant_metrics add column telegram_clicks integer not null default 0")
-    ensure_col(db, "revenue_variant_metrics", "ctr", "alter table revenue_variant_metrics add column ctr real not null default 0")
-    ensure_col(db, "revenue_variant_metrics", "cvr", "alter table revenue_variant_metrics add column cvr real not null default 0")
-    db.execute("""
-        create table if not exists revenue_variant_loser_archive (
-          id integer primary key autoincrement,
-          group_id integer not null,
-          experiment_id integer not null,
-          variant_key text not null default '',
-          artifact_path text not null default '',
-          score real not null default 0,
-          reason text not null default '',
-          archived_at text not null default (datetime('now')),
-          unique(group_id, experiment_id)
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_bandit_digests (
-          id integer primary key autoincrement,
-          group_id integer not null,
-          summary text not null,
-          sent_to_telegram integer not null default 0,
-          created_at text not null default (datetime('now'))
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_distribution_tasks (
-          id integer primary key autoincrement,
-          group_id integer not null,
-          experiment_id integer not null,
-          variant_key text not null default '',
-          distribution_type text not null,
-          traffic_source text not null default '',
-          cta_url text not null default '',
-          content text not null default '',
-          artifact_path text not null default '',
-          status text not null default 'planned',
-          created_at text not null default (datetime('now')),
-          updated_at text not null default (datetime('now')),
-          unique(group_id, experiment_id, distribution_type)
-        )
-    """)
-    ensure_col(db, "revenue_distribution_tasks", "artifact_path", "alter table revenue_distribution_tasks add column artifact_path text not null default ''")
-    db.execute("""
-        create table if not exists revenue_distribution_publish_queue (
-          id integer primary key autoincrement,
-          distribution_task_id integer not null unique,
-          group_id integer not null,
-          experiment_id integer not null,
-          variant_key text not null default '',
-          distribution_type text not null default '',
-          traffic_source text not null default '',
-          artifact_path text not null default '',
-          candidate_score real not null default 0,
-          publish_status text not null default 'queued',
-          approval_note text not null default '',
-          queued_at text not null default (datetime('now')),
-          updated_at text not null default (datetime('now'))
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_memory_patterns (
-          id integer primary key autoincrement,
-          memory_type text not null,
-          pattern text not null,
-          horizon_type text not null default 'mid_term',
-          economic_summary text not null default '',
-          portfolio_summary text not null default '',
-          domain_summary text not null default '',
-          evidence text not null default '',
-          score real not null default 1,
-          reuse_count integer not null default 0,
-          last_used_at text not null default '',
-          created_at text not null default (datetime('now')),
-          updated_at text not null default (datetime('now')),
-          unique(memory_type, pattern)
-        )
-    """)
-    ensure_col(db, "revenue_memory_patterns", "horizon_type", "alter table revenue_memory_patterns add column horizon_type text not null default 'mid_term'")
-    ensure_col(db, "revenue_memory_patterns", "economic_summary", "alter table revenue_memory_patterns add column economic_summary text not null default ''")
-    ensure_col(db, "revenue_memory_patterns", "portfolio_summary", "alter table revenue_memory_patterns add column portfolio_summary text not null default ''")
-    ensure_col(db, "revenue_memory_patterns", "domain_summary", "alter table revenue_memory_patterns add column domain_summary text not null default ''")
-    if has_table(db, "revenue_opportunities"):
-        ensure_col(db, "revenue_opportunities", "domain_key", "alter table revenue_opportunities add column domain_key text not null default 'general'")
-    db.execute("""
-        create table if not exists revenue_strategy_scores (
-          id integer primary key autoincrement,
-          group_id integer not null,
-          experiment_id integer not null,
-          horizon_type text not null,
-          ctr_score real not null default 0,
-          conversion_score real not null default 0,
-          approval_score real not null default 0,
-          revenue_efficiency real not null default 0,
-          automation_score real not null default 0,
-          sustainability_score real not null default 0,
-          total_score real not null default 0,
-          source text not null default '',
-          captured_at text not null default (datetime('now')),
-          unique(group_id, experiment_id, horizon_type)
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_economic_metrics (
-          id integer primary key autoincrement,
-          group_id integer not null,
-          experiment_id integer not null,
-          estimated_cac real not null default 0,
-          estimated_ltv real not null default 0,
-          payback_speed real not null default 0,
-          infra_cost real not null default 0,
-          human_cost real not null default 0,
-          automation_savings real not null default 0,
-          expected_profit real not null default 0,
-          profit_efficiency real not null default 0,
-          economic_multiplier real not null default 1,
-          suppressed integer not null default 0,
-          source text not null default '',
-          captured_at text not null default (datetime('now')),
-          unique(group_id, experiment_id)
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_real_orders (
-          id integer primary key autoincrement,
-          group_id integer not null,
-          experiment_id integer not null,
-          variant_key text not null default '',
-          order_id text not null,
-          revenue real not null default 0,
-          gross_profit real not null default 0,
-          refund_risk real not null default 0,
-          fulfillment_cost real not null default 0,
-          support_cost real not null default 0,
-          net_profit real not null default 0,
-          recovered_days real not null default 0,
-          source text not null default 'local_ingest',
-          created_at text not null default (datetime('now')),
-          unique(order_id)
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_capital_allocations (
-          id integer primary key autoincrement,
-          opportunity_id integer not null unique,
-          allocated_budget real not null default 0,
-          allocated_compute real not null default 0,
-          allocated_time real not null default 0,
-          expected_roi real not null default 0,
-          realized_roi real not null default 0,
-          capital_score real not null default 0,
-          risk_score real not null default 0,
-          liquidity_score real not null default 100,
-          source text not null default 'local_simulation',
-          updated_at text not null default (datetime('now'))
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_business_domains (
-          id integer primary key autoincrement,
-          domain_key text not null unique,
-          domain_type text not null default '',
-          capital_allocated real not null default 0,
-          revenue_generated real not null default 0,
-          net_profit real not null default 0,
-          volatility_score real not null default 0,
-          scalability_score real not null default 50,
-          automation_fit real not null default 50,
-          moat_score real not null default 0,
-          source text not null default 'local_simulation',
-          updated_at text not null default (datetime('now'))
-        )
-    """)
-    db.execute("""
-        create table if not exists revenue_capital_migrations (
-          id integer primary key autoincrement,
-          from_domain text not null,
-          to_domain text not null,
-          migration_reason text not null default '',
-          migrated_budget real not null default 0,
-          migrated_compute real not null default 0,
-          expected_gain real not null default 0,
-          realized_gain real not null default 0,
-          migration_score real not null default 0,
-          source text not null default 'local_simulation',
-          created_at text not null default (datetime('now')),
-          unique(from_domain, to_domain, migration_reason)
-        )
-    """)
+    require_schema(db)
     db.execute("""
         update revenue_memory_patterns
         set score=score * 0.85,
