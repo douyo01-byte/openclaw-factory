@@ -1,9 +1,11 @@
 from __future__ import annotations
+ALLOW_SCRIPTS = {"status_core.sh","run_python.sh","deploy_safe.sh"}
 import os
 import re
 import sqlite3
 import subprocess
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
@@ -11,6 +13,8 @@ ROOT = Path("/Users/doyopc/AI/openclaw-factory-daemon")
 OPS_DIR = ROOT / "ops" / "telegram_exec"
 SLEEP = float(os.environ.get("TELEGRAM_OPS_EXECUTOR_SLEEP", "3"))
 MAX_OUT = int(os.environ.get("TELEGRAM_OPS_EXECUTOR_MAX_OUT", "3500"))
+MAX_TASKS = int(os.environ.get("TELEGRAM_OPS_EXECUTOR_MAX_TASKS", "5"))
+SCRIPT_TIMEOUT = float(os.environ.get("TELEGRAM_OPS_EXECUTOR_SCRIPT_TIMEOUT", "300"))
 TASK_ID_RE = re.compile(r"\[TASK_ID:\d+\]")
 TAG_RE = re.compile(r"^\[(EXEC|FAST|DOC|THINK|TASK|MODE:[^\]]+)\]\s*$", re.MULTILINE)
 
@@ -32,9 +36,30 @@ def conn():
             return c
         except sqlite3.OperationalError as e:
             last = e
-            import time
             time.sleep(1)
+    print(
+        f"[telegram_ops_executor_v1] db_open_failed err={last!r} db_path={DB} cwd={os.getcwd()} "
+        f"db_parent_exists={Path(DB).expanduser().parent.exists()}",
+        flush=True,
+    )
     raise last
+
+@contextmanager
+def db_conn():
+    c = conn()
+    try:
+        yield c
+    except Exception:
+        try:
+            c.rollback()
+        finally:
+            c.close()
+        raise
+    else:
+        c.close()
+
+def context_info() -> str:
+    return f"db_path={DB} cwd={os.getcwd()}"
 
 def ensure_cols(c, table: str, adds: dict[str, str]):
     cols = {r["name"] for r in c.execute(f"pragma table_info({table})").fetchall()}
@@ -122,7 +147,8 @@ def run_local(name: str, args: list[str]) -> str:
         env=env,
         capture_output=True,
         text=True,
-        timeout=300,
+        timeout=SCRIPT_TIMEOUT,
+        close_fds=True,
     )
     out = ""
     if r.stdout:
@@ -151,8 +177,8 @@ def fetch_rows(c):
         where coalesce(target_bot,'')='ops_exec'
           and coalesce(status,'')='new'
         order by id asc
-        limit 5
-    """).fetchall()
+        limit ?
+    """, (MAX_TASKS,)).fetchall()
 
 def update_self_improvement(c, child_task_id: int, status: str, result: str, applied: bool):
     c.execute("""
@@ -241,7 +267,7 @@ def mark_skipped(c, task_id: int, cmd_id: int, reason: str):
 
 def tick():
     done = 0
-    with conn() as c:
+    with db_conn() as c:
         ensure_schema(c)
         c.execute("""
             update router_tasks
@@ -277,15 +303,15 @@ def tick():
                 if str(e) in {"invalid_script", "script_outside_allowlist", "script_not_found", "script_not_executable"}:
                     mark_skipped(c, task_id, cmd_id, str(e))
                     c.commit()
-                    print(f"[telegram_ops_executor_v1] skipped task_id={task_id} reason={e}", flush=True)
+                    print(f"[telegram_ops_executor_v1] skipped task_id={task_id} reason={e} {context_info()}", flush=True)
                 else:
                     mark_failed(c, task_id, cmd_id, f"{type(e).__name__}:{e}")
                     c.commit()
-                    print(f"[telegram_ops_executor_v1] failed task_id={task_id} err={e!r}", flush=True)
+                    print(f"[telegram_ops_executor_v1] failed task_id={task_id} err={e!r} {context_info()}", flush=True)
             except Exception as e:
                 mark_failed(c, task_id, cmd_id, f"{type(e).__name__}:{e}")
                 c.commit()
-                print(f"[telegram_ops_executor_v1] failed task_id={task_id} err={e!r}", flush=True)
+                print(f"[telegram_ops_executor_v1] failed task_id={task_id} err={e!r} {context_info()}", flush=True)
     print(f"[telegram_ops_executor_v1] done={done}", flush=True)
 
 def main():
@@ -293,16 +319,8 @@ def main():
         try:
             tick()
         except Exception as e:
-            print(f"[telegram_ops_executor_v1] fatal err={e!r}", flush=True)
+            print(f"[telegram_ops_executor_v1] fatal err={e!r} {context_info()}", flush=True)
         time.sleep(SLEEP)
 
 if __name__ == "__main__":
     main()
-
-if __name__ == "__main__":
-    while True:
-        try:
-            tick()
-        except Exception as e:
-            print(f"[telegram_ops_executor_v1] fatal err={e!r}", flush=True)
-        time.sleep(SLEEP)
