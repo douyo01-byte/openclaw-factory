@@ -64,8 +64,8 @@ run_step () {
   if [ "$rc" -ne 0 ]; then
     if should_log_error "$name"; then
       echo "[$(date '+%F %T')] ${name} failed rc=${rc} repeated errors suppressed for ${ERROR_REPEAT_SECONDS}s" >> logs/tg_poll.log
+      step "${name} failed rc=${rc}" 1
     fi
-    step "${name} failed rc=${rc}" 1
     return 0
   fi
 
