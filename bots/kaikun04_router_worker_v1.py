@@ -480,21 +480,34 @@ def call_llm(task_id: int, prompt: str) -> str:
     extra = "\n\n".join([x for x in [feedback_hints, exec_hints] if x])
     prompt2 = prompt if not extra else f"{prompt}\n\n{extra}"
     user_prompt = f"[TASK_ID:{task_id}]\n\n{prompt2}"
-    r = requests.post(
-        "https://api.openai.com/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "model": MODEL,
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-        },
-        timeout=180,
-    )
+    retry_delays = (5, 15, 30)
+    for attempt in range(1, len(retry_delays) + 2):
+        try:
+            r = requests.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": MODEL,
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                },
+                timeout=180,
+            )
+            break
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            if attempt > len(retry_delays):
+                raise
+            print(
+                f"[kaikun04_router_worker_v1] openai_transport_retry "
+                f"task_id={task_id} attempt={attempt} err={type(e).__name__}",
+                flush=True,
+            )
+            time.sleep(retry_delays[attempt - 1])
     try:
         r.raise_for_status()
     except Exception:
