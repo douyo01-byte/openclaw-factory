@@ -16,26 +16,25 @@ def conn():
     return c
 
 def ensure_schema(c):
-    c.execute("""
-    create table if not exists router_tasks(
-      id integer primary key autoincrement,
-      source_command_id integer,
-      mode text not null default 'FAST',
-      target_bot text not null default 'kaikun04',
-      task_text text not null,
-      status text not null default 'new',
-      created_at text default (datetime('now')),
-      updated_at text default (datetime('now'))
-    )
-    """)
-    c.execute("create index if not exists idx_router_tasks_status on router_tasks(status, target_bot, mode)")
+    router_cols = {r["name"] for r in c.execute("pragma table_info(router_tasks)").fetchall()}
+    router_required = {
+        "source_command_id", "mode", "target_bot", "task_text", "status",
+        "created_at", "updated_at",
+    }
+    router_missing = sorted(router_required - router_cols)
+    if router_missing:
+        raise RuntimeError(
+            f"schema_missing table=router_tasks cols={','.join(router_missing)} "
+            "apply migrations/20260513_router_core_schema_v1.sql first"
+        )
     cols = {r["name"] for r in c.execute("pragma table_info(inbox_commands)").fetchall()}
-    if "router_status" not in cols:
-        c.execute("alter table inbox_commands add column router_status text default ''")
-    if "router_target" not in cols:
-        c.execute("alter table inbox_commands add column router_target text default ''")
-    if "router_mode" not in cols:
-        c.execute("alter table inbox_commands add column router_mode text default ''")
+    required = {"source", "text", "router_status", "router_target", "router_mode", "updated_at"}
+    missing = sorted(required - cols)
+    if missing:
+        raise RuntimeError(
+            f"schema_missing table=inbox_commands cols={','.join(missing)} "
+            "apply migrations/20260513_router_core_schema_v1.sql first"
+        )
 
 def classify(text: str):
     raw = (text or "").strip()

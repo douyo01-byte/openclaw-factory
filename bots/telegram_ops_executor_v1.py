@@ -61,44 +61,28 @@ def db_conn():
 def context_info() -> str:
     return f"db_path={DB} cwd={os.getcwd()}"
 
-def ensure_cols(c, table: str, adds: dict[str, str]):
+def require_cols(c, table: str, required: set[str]):
     cols = {r["name"] for r in c.execute(f"pragma table_info({table})").fetchall()}
-    for k, sql in adds.items():
-        if k not in cols:
-            c.execute(sql)
+    missing = sorted(required - cols)
+    if missing:
+        raise RuntimeError(
+            f"schema_missing table={table} cols={','.join(missing)} "
+            "apply migrations/20260513_router_core_schema_v1.sql first"
+        )
 
 def ensure_schema(c):
-    ensure_cols(c, "router_tasks", {
-        "reply_text": "alter table router_tasks add column reply_text text default ''",
-        "sent_message_id": "alter table router_tasks add column sent_message_id text default ''",
-        "started_at": "alter table router_tasks add column started_at text default ''",
-        "finished_at": "alter table router_tasks add column finished_at text default ''",
-        "validation_status": "alter table router_tasks add column validation_status text default ''",
-        "validation_reason": "alter table router_tasks add column validation_reason text default ''",
-        "retry_count": "alter table router_tasks add column retry_count integer default 0",
+    require_cols(c, "router_tasks", {
+        "reply_text", "sent_message_id", "started_at", "finished_at",
+        "validation_status", "validation_reason", "retry_count",
     })
-    c.execute("""
-        create table if not exists self_improvement_log(
-          id integer primary key autoincrement,
-          parent_task_id integer not null,
-          child_task_id integer,
-          source_command_id integer,
-          kind text not null default 'exec_bridge',
-          problem text not null default '',
-          fix text not null default '',
-          result text not null default '',
-          reusable_pattern text not null default '',
-          created_at text default (datetime('now'))
-        )
-    """)
-    ensure_cols(c, "self_improvement_log", {
-        "status": "alter table self_improvement_log add column status text not null default ''",
-        "parent_reply_head": "alter table self_improvement_log add column parent_reply_head text not null default ''",
-        "child_result_head": "alter table self_improvement_log add column child_result_head text not null default ''",
-        "applied_at": "alter table self_improvement_log add column applied_at text default ''",
-        "updated_at": "alter table self_improvement_log add column updated_at text default ''",
+    require_cols(c, "inbox_commands", {
+        "router_finish_status", "router_task_id", "updated_at", "status", "processed",
     })
-    c.execute("create index if not exists idx_self_improvement_child on self_improvement_log(child_task_id)")
+    require_cols(c, "self_improvement_log", {
+        "parent_task_id", "child_task_id", "source_command_id", "kind",
+        "problem", "fix", "result", "reusable_pattern", "status",
+        "parent_reply_head", "child_result_head", "applied_at", "updated_at",
+    })
 
 def clean_task_text(s: str) -> str:
     s = (s or "").replace("\r", "\n")

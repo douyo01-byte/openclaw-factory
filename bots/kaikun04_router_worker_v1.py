@@ -331,11 +331,6 @@ def insert_exec_child(c, source_command_id: int, parent_task_id: int, script: st
     return int(c.execute("select last_insert_rowid()").fetchone()[0])
 
 def mark_exec_direct(c, parent_task_id: int, child_task_id: int):
-    cols = {r["name"] for r in c.execute("pragma table_info(router_tasks)").fetchall()}
-    if "exec_bridge_status" not in cols:
-        c.execute("alter table router_tasks add column exec_bridge_status text default ''")
-    if "exec_child_task_id" not in cols:
-        c.execute("alter table router_tasks add column exec_child_task_id integer default 0")
     c.execute("""
         update router_tasks
         set exec_bridge_status='direct',
@@ -377,17 +372,45 @@ def log_exec_direct(c, parent_task_id: int, child_task_id: int, source_command_i
 
 def ensure_schema(c):
     cols = {r["name"] for r in c.execute("pragma table_info(router_tasks)").fetchall()}
-    adds = {
-        "clean_prompt": "alter table router_tasks add column clean_prompt text default ''",
-        "validation_status": "alter table router_tasks add column validation_status text default ''",
-        "validation_reason": "alter table router_tasks add column validation_reason text default ''",
-        "retry_count": "alter table router_tasks add column retry_count integer default 0",
-        "parent_task_id": "alter table router_tasks add column parent_task_id integer default 0",
-        "task_role": "alter table router_tasks add column task_role text default ''",
+    required = {
+        "clean_prompt",
+        "validation_status",
+        "validation_reason",
+        "retry_count",
+        "parent_task_id",
+        "task_role",
+        "reply_text",
+        "finished_at",
+        "started_at",
+        "exec_bridge_status",
+        "exec_child_task_id",
     }
-    for k, sql in adds.items():
-        if k not in cols:
-            c.execute(sql)
+    missing = sorted(required - cols)
+    if missing:
+        raise RuntimeError(
+            f"schema_missing table=router_tasks cols={','.join(missing)} "
+            "apply migrations/20260513_router_core_schema_v1.sql first"
+        )
+    inbox_cols = {r["name"] for r in c.execute("pragma table_info(inbox_commands)").fetchall()}
+    inbox_required = {"router_finish_status", "router_task_id", "updated_at"}
+    inbox_missing = sorted(inbox_required - inbox_cols)
+    if inbox_missing:
+        raise RuntimeError(
+            f"schema_missing table=inbox_commands cols={','.join(inbox_missing)} "
+            "apply migrations/20260513_router_core_schema_v1.sql first"
+        )
+    sil_cols = {r["name"] for r in c.execute("pragma table_info(self_improvement_log)").fetchall()}
+    sil_required = {
+        "parent_task_id", "child_task_id", "source_command_id", "kind",
+        "problem", "fix", "result", "reusable_pattern", "status",
+        "parent_reply_head", "child_result_head", "applied_at", "updated_at",
+    }
+    sil_missing = sorted(sil_required - sil_cols)
+    if sil_missing:
+        raise RuntimeError(
+            f"schema_missing table=self_improvement_log cols={','.join(sil_missing)} "
+            "apply migrations/20260513_router_core_schema_v1.sql first"
+        )
 
 def normalize_line(line: str) -> str:
     return SPACE_RE.sub(" ", line.replace("\r", "")).strip()
