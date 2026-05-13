@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import os
 import sqlite3
-from collections import defaultdict
 from pathlib import Path
 
 from bots import telegram_digest_v1
@@ -54,6 +53,55 @@ def require_schema(db):
 def compact(text: str, limit: int = 500) -> str:
     text = "\n".join(line.rstrip() for line in (text or "").strip().splitlines())
     return text[:limit]
+
+
+def inline(text: str, limit: int = 180) -> str:
+    return " ".join((text or "").replace("\r", "\n").replace("\n", " ").split())[:limit]
+
+
+def is_winner_only_new_think(row) -> bool:
+    return (
+        (row["status"] or "") == "new"
+        and (row["mode"] or "") == "THINK"
+        and (row["task_text"] or "").startswith("[WINNER_ONLY]")
+    )
+
+
+def execution_priority(row) -> int:
+    status = row["status"] or ""
+    text = " ".join(
+        [
+            row["task_text"] or "",
+            row["reply_text"] or "",
+            row["result_text"] or "",
+            row["validation_reason"] or "",
+            row["exec_bridge_reason"] or "",
+        ]
+    ).lower()
+    if status == "failed" or "risk" in text or "unknown mode" in text or "invalid arg" in text:
+        return 0
+    if "[exec]" in text or "exec result" in text:
+        return 1
+    if status == "done" or row["result_text"] or "artifact=" in text or "public_preview/" in text:
+        return 2
+    return 3
+
+
+def format_execution_row(row, idx: int) -> str:
+    family = telegram_digest_v1.task_family(row)
+    instruction = inline(row["clean_prompt"] or row["task_text"], 150)
+    execution = telegram_digest_v1.infer_execution([row])
+    result = telegram_digest_v1.infer_result([row])
+    risk = telegram_digest_v1.infer_risk([row])
+    return "\n".join(
+        [
+            f"{idx}. {family} id={row['id']} status={row['status'] or '-'}",
+            f"   instruction: {instruction}",
+            f"   execution: {inline(execution, 180)}",
+            f"   result: {inline(result, 220)}",
+            f"   risk: {risk}",
+        ]
+    )
 
 
 def q1(db, sql: str, params=(), default=0):
@@ -115,10 +163,32 @@ def execution_section(db) -> str:
     """, (f"-{WINDOW_MIN} minutes",)).fetchall()
     if not rows:
         return "Execution:\nno material execution rows"
-    body = telegram_digest_v1.build_digest(rows)
-    lines = body.splitlines()
-    useful = [line for line in lines if not line.startswith("OpenClaw execution digest") and not line.startswith("window=")]
-    return "Execution:\n" + compact("\n".join(useful).strip(), 1400)
+
+    winner_rows = [r for r in rows if is_winner_only_new_think(r)]
+    visible = [r for r in rows if not is_winner_only_new_think(r) and not telegram_digest_v1.is_noisy(r)]
+    noisy_count = len(rows) - len(visible) - len(winner_rows)
+    visible = sorted(visible, key=lambda r: (execution_priority(r), -int(r["id"])))
+
+    lines = ["Execution:"]
+    if winner_rows:
+        newest = max(int(r["id"]) for r in winner_rows)
+        oldest = min(int(r["id"]) for r in winner_rows)
+        sample = inline(winner_rows[-1]["task_text"], 180)
+        lines.append(
+            f"WINNER_ONLY new THINK compressed: count={len(winner_rows)} ids={oldest}-{newest}"
+        )
+        lines.append(f"   sample: {sample}")
+    if visible:
+        for idx, row in enumerate(visible[:5], start=1):
+            lines.append(format_execution_row(row, idx))
+    else:
+        lines.append("no priority execution rows")
+    if noisy_count:
+        lines.append(f"noise: {noisy_count} digest/report housekeeping tasks compressed")
+    rest = max(0, len(visible) - 5)
+    if rest:
+        lines.append(f"... {rest} lower-priority execution rows compressed")
+    return compact("\n".join(lines), 1500)
 
 
 def runtime_health_section(db) -> tuple[str, str]:
@@ -190,6 +260,21 @@ def codex_section(db) -> str:
     parts = ["Codex:"]
     parts.append("tasks: " + count_by_status(db, "codex_tasks", "status"))
     parts.append("review_queue: " + count_by_status(db, "codex_review_queue", "review_status"))
+    if has_table(db, "codex_review_queue"):
+        cols = table_cols(db, "codex_review_queue")
+        if {"id", "review_status", "candidate_score"}.issubset(cols):
+            row = db.execute("""
+                select id, source_task_id, candidate_score
+                from codex_review_queue
+                where review_status='queued'
+                order by candidate_score desc, id asc
+                limit 1
+            """).fetchone()
+            if row:
+                parts.append(
+                    f"next_action: review queue_id={row['id']} task_id={row['source_task_id']} "
+                    f"score={float(row['candidate_score'] or 0):.1f}"
+                )
     if has_table(db, "codex_task_runs"):
         parts.append("runs: " + count_by_status(db, "codex_task_runs", "status"))
     return "\n".join(parts)
@@ -201,6 +286,15 @@ def revenue_section(db) -> str:
         parts.append("not configured")
         return "\n".join(parts)
     parts.append("experiments: " + count_by_status(db, "revenue_experiments", "status"))
+    if has_table(db, "revenue_experiments") and "status" in table_cols(db, "revenue_experiments"):
+        winner = q1(db, "select count(*) from revenue_experiments where status like '%winner%'")
+        running = q1(db, "select count(*) from revenue_experiments where status in ('running','active')")
+        if winner:
+            parts.append(f"next_action: inspect {int(winner)} winner candidate experiment(s)")
+        elif running:
+            parts.append(f"next_action: monitor {int(running)} running experiment(s)")
+        else:
+            parts.append("next_action: queue next safe revenue experiment")
     if has_table(db, "revenue_learnings"):
         parts.append(f"learnings={q1(db, 'select count(*) from revenue_learnings')}")
     if has_table(db, "revenue_variant_groups"):
@@ -261,7 +355,7 @@ def build_digest(db) -> dict[str, str]:
         "risk": risk,
     }
     summary = topline(sections)
-    full = "\n\n".join([summary, execution, health, cleanup, codex, revenue, trend, risk])
+    full = "\n\n".join([summary, codex, revenue, execution, health, cleanup, trend, risk])
     if len(full) > MAX_CHARS:
         full = full[:MAX_CHARS] + "\n\n[truncated]"
     sections["summary"] = summary

@@ -150,6 +150,22 @@ values
  'REVENUE_BANDIT_DIGEST_READY',
  datetime('now', '-1 minutes'), datetime('now', '-1 minutes'));
 
+insert into router_tasks
+(id, parent_task_id, task_role, target_bot, mode, status, task_text, reply_text, created_at, updated_at)
+values
+(5, 0, 'instruction', 'kaikun04', 'THINK', 'new',
+ '[WINNER_ONLY] 勝ち案件だけ進める。テーマ: 今ある商品の売上改善を1件に絞る',
+ '',
+ datetime('now', '-50 seconds'), datetime('now', '-50 seconds')),
+(6, 0, 'instruction', 'kaikun04', 'THINK', 'new',
+ '[WINNER_ONLY] 勝ち案件だけ進める。テーマ: 今ある商品の売上改善を1件に絞る',
+ '',
+ datetime('now', '-40 seconds'), datetime('now', '-40 seconds')),
+(7, 0, 'instruction', 'kaikun04', 'THINK', 'new',
+ '[WINNER_ONLY] 勝ち案件だけ進める。テーマ: 今ある商品の売上改善を1件に絞る',
+ '',
+ datetime('now', '-30 seconds'), datetime('now', '-30 seconds'));
+
 insert into runtime_health_scores
 (program_key, launchd_label, category, classification, entropy_score, usefulness_score, zombie_score, observability_score, stability_score, core_weight, log_pressure_score, cleanup_priority, health_score, score_reason)
 values
@@ -187,13 +203,29 @@ rg -n "Revenue:" "$OUT" >/dev/null
 rg -n "Trend:" "$OUT" >/dev/null
 rg -n "Residual risk:" "$OUT" >/dev/null
 rg -n "public_preview/revenue/lp_a.html" "$OUT" >/dev/null
+rg -n "WINNER_ONLY new THINK compressed: count=3 ids=5-7" "$OUT" >/dev/null
 rg -n "noise: 1 digest/report housekeeping tasks compressed" "$OUT" >/dev/null
 rg -n "telegram_report_v1" "$OUT" >/dev/null
 rg -n "review_queue: queued=1" "$OUT" >/dev/null
+rg -n "next_action: review queue_id=1 task_id=1 score=42.0" "$OUT" >/dev/null
 rg -n "experiments: running=1 / winner_candidate=1" "$OUT" >/dev/null
+rg -n "next_action: inspect 1 winner candidate experiment" "$OUT" >/dev/null
 rg -n "proposals: queued=1" "$OUT" >/dev/null
 rg -n "EXEC mode routing risk" "$OUT" >/dev/null
 rg -n "runtime cleanup queue requires review" "$OUT" >/dev/null
+
+python3 - "$OUT" <<'PY'
+from pathlib import Path
+import sys
+
+text = Path(sys.argv[1]).read_text()
+required_order = ["Codex:", "Revenue:", "Execution:", "Runtime health:"]
+positions = [text.index(item) for item in required_order]
+if positions != sorted(positions):
+    raise SystemExit("sections are not prioritized as expected")
+if text.count("WINNER_ONLY new THINK compressed") != 1:
+    raise SystemExit("WINNER_ONLY compression line should appear once")
+PY
 
 if sqlite3 "$DB" "select count(*) from unified_runtime_digests;" | rg -v "^0$"; then
   echo "dry-run unexpectedly recorded unified digest" >&2
