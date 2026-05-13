@@ -139,7 +139,13 @@ def normalize_exec_block(text: str) -> str:
     if script not in ALLOWED_EXEC_SCRIPTS:
         s = re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "", s).strip()
         return s
-    clean = f"[EXEC]\nscript={script}"
+    lines = [f"script={script}"]
+    block = m.group(0) if m else ""
+    for key, value in EXEC_LINE_RE.findall(block):
+        if key == "arg":
+            lines.append(f"arg={value.strip()}")
+            break
+    clean = "[EXEC]\n" + "\n".join(lines)
     return re.sub(r"(?ms)\n*\[EXEC\][\s\S]*$", "\n\n" + clean, s).strip()
 
 @contextmanager
