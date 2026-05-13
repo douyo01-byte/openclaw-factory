@@ -17,3 +17,12 @@ create table if not exists public_unlocks (
   status text not null default 'pending',
   created_at text not null
 );
+
+create table if not exists revenue_page_views (
+  id integer primary key autoincrement,
+  path text not null,
+  referer text not null default '',
+  ua text not null default '',
+  ip_hash text not null default '',
+  created_at text not null
+);

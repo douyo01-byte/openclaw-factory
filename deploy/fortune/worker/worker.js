@@ -37,6 +37,44 @@ export default {
       return json({ ok: true })
     }
 
+    if (url.pathname === "/revenue-track" && request.method === "POST") {
+      const body = await request.json().catch(() => ({}))
+
+      const path = String(body.path || "")
+      const referer = String(body.referrer || "")
+      const ua = String(body.ua || "")
+
+      const ip =
+        request.headers.get("cf-connecting-ip")
+        || request.headers.get("x-forwarded-for")
+        || ""
+
+      const ipHash = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(ip)
+      )
+
+      const hashArray = Array.from(new Uint8Array(ipHash))
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("")
+
+      const now = new Date().toISOString()
+
+      await env.DB.prepare(`
+        insert into revenue_page_views
+        (path, referer, ua, ip_hash, created_at)
+        values (?, ?, ?, ?, ?)
+      `).bind(
+        path,
+        referer,
+        ua,
+        hashHex,
+        now
+      ).run()
+
+      return json({ status: "ok" })
+    }
+
+
     if (url.pathname === "/variant_metrics") {
       const viewsRes = await env.DB.prepare(`
         select birth_place as variant, count(*) as views
@@ -57,7 +95,6 @@ export default {
         A: { views: 0, unlocks: 0 },
         B: { views: 0, unlocks: 0 },
         C: { views: 0, unlocks: 0 },
-        D: { views: 0, unlocks: 0 },
         D: { views: 0, unlocks: 0 }
       }
 
@@ -168,7 +205,57 @@ export default {
 
       return json(rows)
     }
+// ===== experiment assign =====
+if (url.pathname.startsWith("/experiments/") && url.pathname.endsWith("/assign")) {
+  const parts = url.pathname.split("/")
+  const experimentId = Number(parts[2] || 1)
 
+  const userId = url.searchParams.get("user_id") || "u"
+  const sessionId = url.searchParams.get("session_id") || "s"
+
+  const variant = Math.random() < 0.5 ? "A" : "B"
+
+  return json({
+    experiment_id: experimentId,
+    variant_id: variant,
+    user_id: userId,
+    session_id: sessionId
+  })
+}
+
+// ===== events =====
+if (url.pathname === "/events" && request.method === "POST") {
+  const body = await request.json().catch(() => ({}))
+
+  const experimentId = Number(body.experiment_id || 0)
+  const variantId = String(body.variant_id || "")
+  const userId = String(body.user_id || "")
+  const sessionId = String(body.session_id || "")
+  const eventType = String(body.event_type || "")
+  const value = Number(body.value || 0)
+
+  if (!experimentId || !variantId || !eventType) {
+    return json({ status: "error", message: "invalid payload" }, 400)
+  }
+
+  const now = new Date().toISOString()
+
+  await env.DB.prepare(`
+    insert into experiment_events
+    (experiment_id, variant_id, user_id, session_id, event_type, value, created_at)
+    values (?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    experimentId,
+    variantId,
+    userId,
+    sessionId,
+    eventType,
+    value,
+    now
+  ).run()
+
+  return json({ status: "ok" })
+}
     return new Response("Not found", { status: 404 })
   }
 }
