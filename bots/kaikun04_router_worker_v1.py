@@ -528,12 +528,19 @@ def fetch_rows(c):
           id,
           source_command_id,
           coalesce(task_role,'') as task_role,
+          coalesce(mode,'') as mode,
           task_text,
           coalesce(retry_count,0) as retry_count,
           coalesce(status,'new') as status
         from router_tasks
         where coalesce(target_bot,'')='kaikun04'
-          and coalesce(status,'new') in ('new','started','invalid_output')
+          and (
+            coalesce(status,'new') in ('new','invalid_output')
+            or (
+              coalesce(status,'new')='started'
+              and datetime(coalesce(updated_at, started_at, created_at, '1970-01-01')) <= datetime('now', '-30 minutes')
+            )
+          )
         order by
           case
             when coalesce(task_text,'') like '[GOAL_PLAN]%' then 0
@@ -543,7 +550,8 @@ def fetch_rows(c):
             when task_text like '[AUTO_GOAL%' then 3
             else 4
           end,
-          id asc
+          datetime(coalesce(updated_at, created_at, '1970-01-01')) desc,
+          id desc
         limit 3
     """).fetchall()
 
