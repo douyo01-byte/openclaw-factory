@@ -519,6 +519,115 @@ padding:10px;
 font-size:13px;
 }
 
+.timeline{
+display:grid;
+gap:8px;
+}
+
+.timeline-item{
+display:grid;
+grid-template-columns:auto 1fr;
+gap:9px;
+align-items:start;
+background:#0b1228;
+border:1px solid #243056;
+border-radius:8px;
+padding:10px;
+}
+
+.timeline-dot{
+width:10px;
+height:10px;
+border-radius:999px;
+margin-top:5px;
+background:#3b82f6;
+}
+
+.timeline-dot.incident{background:#ef4444;}
+.timeline-dot.policy{background:#8b5cf6;}
+.timeline-dot.instability{background:#f97316;}
+.timeline-dot.remediation{background:#22c55e;}
+
+.timeline-title{
+font-size:13px;
+font-weight:800;
+line-height:1.3;
+word-break:break-word;
+}
+
+.timeline-meta{
+font-size:11px;
+color:#9fb0d9;
+margin-top:3px;
+word-break:break-word;
+}
+
+.comparison-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+gap:10px;
+}
+
+.compare-card{
+background:#0b1228;
+border:1px solid #243056;
+border-radius:8px;
+padding:12px;
+display:grid;
+gap:9px;
+}
+
+.compare-card:first-child{
+border-color:#3ddc84;
+}
+
+.compare-title{
+font-size:14px;
+font-weight:800;
+line-height:1.35;
+word-break:break-word;
+}
+
+.compare-mini-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+}
+
+.compare-mini{
+background:#121933;
+border:1px solid #243056;
+border-radius:8px;
+padding:8px;
+min-width:0;
+}
+
+.compare-mini b{
+display:block;
+font-size:15px;
+line-height:1.2;
+word-break:break-word;
+}
+
+.sparkline{
+display:flex;
+align-items:end;
+gap:3px;
+height:32px;
+padding:4px 0;
+}
+
+.sparkbar{
+flex:1;
+min-width:4px;
+border-radius:3px 3px 0 0;
+background:#3b82f6;
+}
+
+.sparkbar.critical{background:#ef4444;}
+.sparkbar.warning{background:#f97316;}
+.sparkbar.stable{background:#22c55e;}
+
 @media (max-width: 600px){
 .dev-toolbar{
 align-items:stretch;
@@ -546,6 +655,12 @@ flex-direction:column;
 .dev-chain-arrow{
 transform:rotate(90deg);
 padding-left:8px;
+}
+.comparison-grid{
+grid-template-columns:1fr;
+}
+.compare-mini-grid{
+grid-template-columns:1fr 1fr;
 }
 }
 
@@ -752,6 +867,61 @@ function chain(items){
   const values = (items || []).filter(x => String(x || "").trim());
   if(!values.length) return '<div class="dev-note">Root-cause chain unavailable.</div>';
   return `<div class="dev-chain-row">${values.map((x, idx) => `${idx ? '<span class="dev-chain-arrow">→</span>' : ''}<span class="dev-chain-chip">${esc(x)}</span>`).join("")}</div>`;
+}
+
+function sparkline(series, level){
+  const values = (series || []).map(x => Number(x) || 0);
+  if(!values.length) return '<div class="sparkline"><span class="dev-note">no trend</span></div>';
+  const max = Math.max(...values, 1);
+  return `<div class="sparkline">${values.map(v => `<span class="sparkbar ${esc(level || "stable")}" style="height:${Math.max(10, Math.round((v / max) * 32))}px"></span>`).join("")}</div>`;
+}
+
+function timeline(items){
+  const values = (items || []).slice(0, 12);
+  if(!values.length) return '<div class="dev-note">Timeline unavailable.</div>';
+  return `<div class="timeline">${values.map(x => `
+    <div class="timeline-item">
+      <span class="timeline-dot ${esc(x.kind || "")}"></span>
+      <div>
+        <div class="timeline-title">${esc(x.title || x.kind || "event")}</div>
+        <div class="timeline-meta">${esc(x.kind || "event")} · ${esc(x.at || "unknown time")} · ${esc(x.detail || "")}</div>
+      </div>
+    </div>
+  `).join("")}</div>`;
+}
+
+function comparisonCards(items){
+  const values = (items || []).slice(0, 4);
+  if(!values.length) return '<div class="dev-note">No remediation comparison available.</div>';
+  return `<div class="comparison-grid">${values.map((x, idx) => `
+    <div class="compare-card">
+      <div class="compare-title">${idx === 0 ? "Selected: " : ""}${esc(x.recommended_action || x.strategy_key || "remediation")}</div>
+      <div class="dev-note">${esc(x.tradeoff_reason || "-")}</div>
+      <div class="compare-mini-grid">
+        <div class="compare-mini"><span class="dev-label">health gain</span><b>+${esc(x.projected_health_gain ?? 0)}</b></div>
+        <div class="compare-mini"><span class="dev-label">instability reduction</span><b>${esc(x.projected_instability_reduction ?? 0)}</b></div>
+        <div class="compare-mini"><span class="dev-label">sustainability delta</span><b>${Number(x.projected_sustainability_delta || 0) >= 0 ? "+" : ""}${esc(x.projected_sustainability_delta ?? 0)}</b></div>
+        <div class="compare-mini"><span class="dev-label">confidence</span><b>${esc(x.confidence_score ?? 0)}</b></div>
+      </div>
+      <div>${riskChip(String(x.safety_alignment || "").toLowerCase() === "pass" ? "stable" : "warning")}</div>
+    </div>
+  `).join("")}</div>`;
+}
+
+function driftCards(drift){
+  const rows = [
+    ["retry amplification trend", drift?.retry_amplification_trend],
+    ["deferred queue growth trend", drift?.deferred_queue_growth_trend],
+    ["operator load trend", drift?.operator_load_trend],
+    ["policy flapping frequency", drift?.policy_flapping_frequency],
+  ];
+  return `<div class="dev-card-grid">${rows.map(([name, data]) => `
+    <div class="dev-metric">
+      <div class="dev-label">${esc(name)}</div>
+      <div class="dev-value">${esc(data?.value ?? "-")} ${riskChip(data?.label || "stable")}</div>
+      ${sparkline(data?.series, data?.label)}
+    </div>
+  `).join("")}</div>`;
 }
 
 function setDevTab(name){
@@ -995,6 +1165,7 @@ async function loadDevAutopilot(){
   const summary = c.summary || {};
   const health = summary.health || {};
   const level = riskLevel(c);
+  const explanation = c.policy_explanation || {};
   executive.innerHTML = `
     <div class="dev-card-grid">
       ${metric("status", summary.status)}
@@ -1009,6 +1180,25 @@ async function loadDevAutopilot(){
     <div class="dev-metric">
       <div class="dev-label">root-cause chain</div>
       ${chain(summary.root_chain)}
+    </div>
+    <div class="dev-metric">
+      <div class="dev-label">Operational Timeline</div>
+      ${timeline(c.timeline)}
+    </div>
+    <div class="dev-metric">
+      <div class="dev-label">System Drift</div>
+      ${driftCards(c.drift)}
+    </div>
+    <div class="dev-metric">
+      <div class="dev-label">Why this policy?</div>
+      <div class="dev-value">${esc(explanation.selected_policy || summary.selected_policy || "-")}</div>
+      <div class="dev-note" style="margin-top:6px;">${esc(explanation.reason || "-")}</div>
+      <div class="dev-note" style="margin-top:6px;">Strategy: ${esc(explanation.selected_strategy || "-")}</div>
+      <div class="dev-note" style="margin-top:6px;">Tradeoff: ${esc(explanation.selected_tradeoff || "-")}</div>
+    </div>
+    <div class="dev-metric">
+      <div class="dev-label">Remediation comparison</div>
+      ${comparisonCards(c.comparison)}
     </div>
     <div class="dev-metric">
       <div class="dev-label">do_not_do</div>
@@ -1032,6 +1222,7 @@ async function loadDevAutopilot(){
       ${metric("stability_projection", `${r.stability_projection || "-"} (${r.stability_projection_score ?? "-"})`)}
     </div>
     <div class="dev-metric"><div class="dev-label">recommended_long_horizon_focus</div><div class="dev-value">${esc(r.recommended_long_horizon_focus || "-")}</div></div>
+    <div class="dev-metric"><div class="dev-label">simulation comparison</div>${comparisonCards(risks.data?.comparison || c.comparison)}</div>
     <div class="dev-metric"><div class="dev-label">anti_patterns</div>${list(r.anti_patterns)}</div>
     <div class="dev-metric"><div class="dev-label">supporting_signals</div>${list(r.supporting_signals)}</div>
   `;
@@ -1045,7 +1236,10 @@ async function loadDevAutopilot(){
       ${metric("policy_flapping", p.transitions?.policy_flapping_detected)}
     </div>
     <div class="dev-metric"><div class="dev-label">reason</div><div class="dev-value">${esc(p.selection_reason || "-")}</div></div>
+    <div class="dev-metric"><div class="dev-label">arbitration reasoning</div><div class="dev-value">${esc(p.selected_strategy || "-")}</div><div class="dev-note" style="margin-top:6px;">${esc(p.selected_tradeoff || "-")}</div></div>
     <div class="dev-metric"><div class="dev-label">supporting_signals</div>${list(p.supporting_signals)}</div>
+    <div class="dev-metric"><div class="dev-label">rejected alternatives</div>${list((p.rejected_alternatives || []).map(x => `${x.recommended_action}: score=${x.score}; ${x.reason}`))}</div>
+    <div class="dev-metric"><div class="dev-label">policy transitions</div>${timeline((p.history || []).map(x => ({kind:"policy", at:x.selected_at, title:x.policy_name, detail:`status=${x.status} effective=${String(x.effective)}`})))}</div>
     <div class="dev-metric"><div class="dev-label">expected_behavior</div>${list(p.expected_behavior)}</div>
     <div class="dev-metric"><div class="dev-label">policy_scores</div>${list((p.policy_scores || []).map(x => `${x.policy_name}: ${x.score}`))}</div>
   `;
@@ -1062,6 +1256,7 @@ async function loadDevAutopilot(){
     </div>
     <div class="dev-metric"><div class="dev-label">root-cause chain</div>${chain(l.root_chain)}</div>
     <div class="dev-metric"><div class="dev-label">best_safe_remediation</div><div class="dev-value">${esc(l.best_safe_remediation || "-")}</div></div>
+    <div class="dev-metric"><div class="dev-label">System Drift</div>${driftCards(c.drift)}</div>
     <div class="dev-metric"><div class="dev-label">manual actions</div>${list((l.actions || []).map(x => `${x.priority || ""} ${x.type || ""}: ${x.action || ""} (${x.reason || ""})`))}</div>
     <div class="dev-metric"><div class="dev-label">decision_trace</div>${list(l.decision_trace)}</div>
   `;
@@ -1073,6 +1268,8 @@ async function loadDevAutopilot(){
       ${metric("incident_count", m.incident_count)}
       ${metric("patterns", (m.patterns || []).length)}
     </div>
+    <div class="dev-metric"><div class="dev-label">recent incidents</div>${timeline((m.incidents || []).map(x => ({kind:"incident", at:x.detected_at, title:x.pattern_key, detail:x.diagnosis?.summary || x.severity})))}</div>
+    <div class="dev-metric"><div class="dev-label">remediation attempts</div>${timeline((m.incidents || []).filter(x => x.remediation?.attempt).map(x => ({kind:"remediation", at:x.detected_at, title:x.remediation.attempt, detail:`effectiveness=${x.outcome?.effectiveness || "unknown"}`})))}</div>
     <div class="dev-metric"><div class="dev-label">recurring patterns</div>${list((m.patterns || []).map(x => `${x.pattern_name}: occurrences=${x.occurrences}, risk=${x.forecast_recurring_risk}, remediation=${x.most_effective_remediation}`))}</div>
   `;
 }

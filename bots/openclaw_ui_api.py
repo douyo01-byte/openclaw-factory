@@ -233,6 +233,132 @@ def dataclass_like(value: Any) -> dict[str, Any]:
     return {}
 
 
+def incident_like(value: Any) -> dict[str, Any]:
+    return {
+        "incident_key": getattr(value, "incident_key", ""),
+        "pattern_key": getattr(value, "pattern_key", ""),
+        "detected_at": getattr(value, "detected_at", ""),
+        "severity": getattr(value, "severity", ""),
+        "signals": getattr(value, "signals", {}),
+        "diagnosis": getattr(value, "diagnosis", {}),
+        "remediation": getattr(value, "remediation", {}),
+        "outcome": getattr(value, "outcome", {}),
+        "bottlenecks": getattr(value, "bottlenecks", []),
+        "forecast": getattr(value, "forecast", {}),
+    }
+
+
+def remediation_comparison(arbitration: dict[str, Any], plan: Any) -> list[dict[str, Any]]:
+    base_sustainability = int(getattr(plan, "sustainability_score", 0))
+    items = []
+    for row in arbitration.get("ranked", [])[:5]:
+        candidate = row.get("candidate")
+        data = dataclass_like(candidate)
+        metrics = data.get("metrics", {})
+        projected_gain = int(metrics.get("projected_health_gain", 0))
+        stability = int(metrics.get("operational_stability", 0))
+        items.append(
+            {
+                "strategy_key": data.get("strategy_key", ""),
+                "recommended_action": data.get("recommended_action", ""),
+                "priority_class": data.get("priority_class", ""),
+                "tradeoff_reason": data.get("tradeoff_reason", ""),
+                "expected_benefits": data.get("expected_benefits", []),
+                "expected_costs": data.get("expected_costs", []),
+                "projected_health_gain": projected_gain,
+                "projected_instability_reduction": max(0, stability - (100 - projected_gain)),
+                "projected_sustainability_delta": max(-30, min(30, projected_gain // 2 + stability // 8 - base_sustainability // 10)),
+                "confidence_score": int(row.get("score", 0)),
+                "safety_alignment": data.get("safety_alignment", ""),
+                "metrics": metrics,
+            }
+        )
+    return items
+
+
+def build_timeline(incidents: list[Any], policy_history: list[dict[str, Any]], loop: dict[str, Any]) -> list[dict[str, Any]]:
+    events: list[dict[str, Any]] = []
+    for incident in incidents[-8:]:
+        item = incident_like(incident)
+        signals = item["signals"] or {}
+        events.append(
+            {
+                "kind": "incident",
+                "at": item["detected_at"],
+                "title": item["pattern_key"].replace("_", " ") or item["incident_key"],
+                "detail": item["diagnosis"].get("summary", item["severity"]),
+                "severity": item["severity"],
+                "value": int(signals.get("retry_count growth", signals.get("deferred backlog", 0)) or 0),
+            }
+        )
+        attempt = str((item["remediation"] or {}).get("attempt", "")).strip()
+        if attempt:
+            events.append(
+                {
+                    "kind": "remediation",
+                    "at": item["detected_at"],
+                    "title": attempt,
+                    "detail": f"effectiveness={item['outcome'].get('effectiveness', 'unknown')}",
+                    "severity": item["severity"],
+                    "value": int((item["forecast"] or {}).get("recurring_risk", 0) or 0),
+                }
+            )
+    for row in policy_history[-8:]:
+        events.append(
+            {
+                "kind": "policy",
+                "at": str(row.get("selected_at", "")),
+                "title": str(row.get("policy_name", "")),
+                "detail": f"status={row.get('status', 'unknown')} effective={str(row.get('effective', 'unknown')).lower()}",
+                "severity": "MEDIUM" if not row.get("effective", True) else "LOW",
+                "value": 1,
+            }
+        )
+    health = loop.get("health", {})
+    events.append(
+        {
+            "kind": "instability",
+            "at": now_iso(),
+            "title": "current instability spike",
+            "detail": f"instability={health.get('instability_score', 0)} retry={health.get('retry_pressure', 0)} deferred={health.get('deferred_backlog', 0)}",
+            "severity": "HIGH" if int(health.get("instability_score", 0)) >= 55 else "LOW",
+            "value": int(health.get("instability_score", 0)),
+        }
+    )
+    return sorted(events, key=lambda x: str(x.get("at", "")), reverse=True)[:16]
+
+
+def drift_summary(loop: dict[str, Any], policy_result: dict[str, Any], plan: Any) -> dict[str, Any]:
+    health = loop.get("health", {})
+    transitions = policy_result.get("transitions", {})
+    retry = int(health.get("retry_pressure", 0))
+    deferred = int(health.get("deferred_backlog", 0))
+    operator = int(getattr(plan, "operator_load_score", 0))
+    flapping = int(transitions.get("recent_switch_count", 0))
+    return {
+        "retry_amplification_trend": {
+            "label": "critical" if retry >= 120 else "warning" if retry >= 20 else "stable",
+            "value": retry,
+            "series": [max(0, retry - 160), max(0, retry - 90), max(0, retry - 45), retry],
+        },
+        "deferred_queue_growth_trend": {
+            "label": "critical" if deferred >= 1000 else "warning" if deferred >= 50 else "stable",
+            "value": deferred,
+            "series": [max(0, deferred - 900), max(0, deferred - 460), max(0, deferred - 120), deferred],
+        },
+        "operator_load_trend": {
+            "label": "critical" if operator >= 80 else "warning" if operator >= 55 else "stable",
+            "value": operator,
+            "series": [max(0, operator - 22), max(0, operator - 12), max(0, operator - 5), operator],
+        },
+        "policy_flapping_frequency": {
+            "label": "critical" if transitions.get("policy_flapping_detected") else "warning" if flapping else "stable",
+            "value": flapping,
+            "series": [0, max(0, flapping - 2), max(0, flapping - 1), flapping],
+        },
+    }
+
+
 def compact_loop_summary(loop: dict[str, Any]) -> dict[str, Any]:
     health = loop.get("health", {})
     root = loop.get("root", {})
@@ -286,9 +412,13 @@ def compact_plan_summary(plan: Any) -> dict[str, Any]:
 @app.get("/api/dev-autopilot/compact")
 def dev_autopilot_compact():
     from dev_autopilot_executive_report_v1 import build_report, print_compact
+    from dev_autopilot_memory_v1 import load_incidents
 
     report = build_report(DB_PATH)
     plan = compact_plan_summary(report["plan"])
+    policy = report["policy"]
+    arbitration = report["arbitration"]
+    incidents, memory_source = load_incidents(DB_PATH)
     return report_response(
         render_text(print_compact, report),
         summary={
@@ -310,6 +440,26 @@ def dev_autopilot_compact():
         },
         loop=compact_loop_summary(report["loop"]),
         plan=plan,
+        timeline=build_timeline(incidents, policy["history"], report["loop"]),
+        comparison=remediation_comparison(arbitration, report["plan"]),
+        policy_explanation={
+            "selected_policy": report["selected_policy"],
+            "arbitration_mode": arbitration["mode"],
+            "reason": policy["selected"].selection_reason,
+            "supporting_signals": policy["selected"].supporting_signals,
+            "selected_strategy": arbitration["selected"].recommended_action,
+            "selected_tradeoff": arbitration["selected"].tradeoff_reason,
+            "rejected_alternatives": [
+                {
+                    "recommended_action": dataclass_like(row["candidate"]).get("recommended_action", ""),
+                    "score": row.get("score", 0),
+                    "reason": dataclass_like(row["candidate"]).get("tradeoff_reason", ""),
+                }
+                for row in arbitration.get("ranked", [])[1:5]
+            ],
+        },
+        drift=drift_summary(report["loop"], policy, report["plan"]),
+        memory_source=memory_source,
     )
 
 
@@ -342,10 +492,12 @@ def dev_autopilot_report():
 
 @app.get("/api/dev-autopilot/policy")
 def dev_autopilot_policy():
+    from dev_autopilot_arbitration_v1 import arbitrate
     from dev_autopilot_policy_v1 import print_policy, select_policy
 
     policy = select_policy(DB_PATH)
     selected = policy["selected"]
+    arbitration = arbitrate(DB_PATH, selected.policy_name)
     return report_response(
         render_text(print_policy, policy),
         selected_policy=selected.policy_name,
@@ -359,6 +511,18 @@ def dev_autopilot_policy():
             "policy_scores": [dataclass_like(score) for score in policy["scores"]],
             "transitions": policy["transitions"],
             "history_source": policy["history_source"],
+            "history": policy["history"][-12:],
+            "arbitration_mode": arbitration["mode"],
+            "selected_strategy": arbitration["selected"].recommended_action,
+            "selected_tradeoff": arbitration["selected"].tradeoff_reason,
+            "rejected_alternatives": [
+                {
+                    "recommended_action": dataclass_like(row["candidate"]).get("recommended_action", ""),
+                    "score": row.get("score", 0),
+                    "reason": dataclass_like(row["candidate"]).get("tradeoff_reason", ""),
+                }
+                for row in arbitration.get("ranked", [])[1:5]
+            ],
         },
     )
 
@@ -379,9 +543,13 @@ def dev_autopilot_loop():
 
 @app.get("/api/dev-autopilot/risks")
 def dev_autopilot_risks():
+    from dev_autopilot_arbitration_v1 import arbitrate
+    from dev_autopilot_policy_v1 import select_policy
     from dev_autopilot_planning_v1 import build_plan, print_plan
 
     plan = build_plan(DB_PATH, "7d")
+    policy = select_policy(DB_PATH)
+    arbitration = arbitrate(DB_PATH, policy["selected"].policy_name)
     return report_response(
         render_text(print_plan, plan),
         planning_horizon=plan.horizon,
@@ -389,6 +557,7 @@ def dev_autopilot_risks():
         recurrence_risk=plan.recurrence_risk,
         dominant_long_term_risk=plan.dominant_long_term_risk,
         summary=compact_plan_summary(plan),
+        comparison=remediation_comparison(arbitration, plan),
     )
 
 
@@ -403,6 +572,7 @@ def dev_autopilot_memory():
         summary={
             "source": source,
             "incident_count": len(incidents),
+            "incidents": [incident_like(x) for x in incidents[-12:]],
             "patterns": patterns[:8],
         },
     )
