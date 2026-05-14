@@ -389,6 +389,13 @@ padding:8px;
 </div>
 
 <div class="row">
+  <div class="card" style="grid-column:1/-1;">
+    <h3>Dev Autopilot</h3>
+    <pre id="dev_autopilot_report" class="mono">loading...</pre>
+  </div>
+</div>
+
+<div class="row">
 
 <div>
 <h3>Tasks</h3>
@@ -719,6 +726,17 @@ async function loadTmpExec(){
   });
 }
 
+async function loadDevAutopilot(){
+  const box = document.getElementById("dev_autopilot_report");
+  if(!box) return;
+  try{
+    const d = await j("/api/dev-autopilot/compact");
+    box.textContent = d.report || JSON.stringify(d, null, 2);
+  }catch(e){
+    box.textContent = "dev autopilot report unavailable";
+  }
+}
+
 async function loadAll(){
 try{
 const s = await j("/api/summary");
@@ -814,6 +832,7 @@ function renderQueue(el, items){
 renderQueue(queueNew, allItems.filter(x => (x.status||"").toLowerCase() === "new"));
 renderQueue(queueStarted, allItems.filter(x => ["started","running","retry"].includes((x.status||"").toLowerCase())));
 renderQueue(queueFailed, allItems.filter(x => ["failed","cancelled"].includes((x.status||"").toLowerCase())));
+await loadDevAutopilot();
 await loadTmpExec();
 }catch(e){
 console.error(e);

@@ -1,13 +1,20 @@
 from typing import Optional
 from pathlib import Path
+from contextlib import redirect_stdout
+from io import StringIO
 from fastapi import FastAPI, Query
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from bots.openclaw_db_adapter import OpenClawDBAdapter
+import datetime
 import os
+import sys
 
 DB_PATH = os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+BOT_DIR = Path(__file__).resolve().parent
+if str(BOT_DIR) not in sys.path:
+    sys.path.insert(0, str(BOT_DIR))
 
 app = FastAPI(title="OpenClaw UI API")
 
@@ -24,6 +31,82 @@ app.mount("/ui", StaticFiles(directory="ui"), name="ui")
 @app.get("/health")
 def health():
     return {"ok": True, "db_path": DB_PATH}
+
+
+def now_iso() -> str:
+    return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat()
+
+
+def render_text(fn, *args) -> str:
+    buf = StringIO()
+    with redirect_stdout(buf):
+        fn(*args)
+    return buf.getvalue().strip()
+
+
+def report_response(report: str, **extra):
+    data = {
+        "ok": True,
+        "report": report,
+        "generated_at": now_iso(),
+    }
+    data.update(extra)
+    return data
+
+
+@app.get("/api/dev-autopilot/compact")
+def dev_autopilot_compact():
+    from dev_autopilot_executive_report_v1 import build_report, print_compact
+
+    report = build_report(DB_PATH)
+    return report_response(render_text(print_compact, report))
+
+
+@app.get("/api/dev-autopilot/report")
+def dev_autopilot_report():
+    from dev_autopilot_executive_report_v1 import build_report, print_report
+
+    report = build_report(DB_PATH)
+    return report_response(render_text(print_report, report))
+
+
+@app.get("/api/dev-autopilot/policy")
+def dev_autopilot_policy():
+    from dev_autopilot_policy_v1 import print_policy, select_policy
+
+    policy = select_policy(DB_PATH)
+    return report_response(
+        render_text(print_policy, policy),
+        selected_policy=policy["selected"].policy_name,
+        selection_confidence=policy["selected"].selection_confidence,
+    )
+
+
+@app.get("/api/dev-autopilot/loop")
+def dev_autopilot_loop():
+    from dev_autopilot_loop_v1 import build_loop, print_summary
+
+    loop = build_loop(DB_PATH)
+    return report_response(
+        render_text(print_summary, loop),
+        current_mode=loop["current_mode"],
+        loop_state=loop["loop_state"],
+        top_risk=loop["top_risk"],
+    )
+
+
+@app.get("/api/dev-autopilot/risks")
+def dev_autopilot_risks():
+    from dev_autopilot_planning_v1 import build_plan, print_plan
+
+    plan = build_plan(DB_PATH, "7d")
+    return report_response(
+        render_text(print_plan, plan),
+        planning_horizon=plan.horizon,
+        sustainability_score=plan.sustainability_score,
+        recurrence_risk=plan.recurrence_risk,
+        dominant_long_term_risk=plan.dominant_long_term_risk,
+    )
 
 
 class TaskCreate(BaseModel):
