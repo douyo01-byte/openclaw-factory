@@ -2,13 +2,60 @@ from typing import Optional
 from pathlib import Path
 from contextlib import redirect_stdout
 from io import StringIO
-from fastapi import FastAPI, Query
-from pydantic import BaseModel
-from fastapi.responses import JSONResponse, FileResponse, Response
-from fastapi.staticfiles import StaticFiles
-from bots.openclaw_db_adapter import OpenClawDBAdapter
+try:
+    from fastapi import FastAPI, Query
+    from pydantic import BaseModel
+    from fastapi.responses import JSONResponse, FileResponse, Response
+    from fastapi.staticfiles import StaticFiles
+except ModuleNotFoundError:
+    def Query(default=None, **_kwargs):
+        return default
+
+    class BaseModel:
+        def __init__(self, **kwargs):
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+
+    class Response:
+        def __init__(self, content="", media_type=None):
+            self.content = content
+            self.media_type = media_type
+
+    class JSONResponse(dict):
+        pass
+
+    class FileResponse:
+        def __init__(self, path):
+            self.path = path
+
+    class StaticFiles:
+        def __init__(self, directory):
+            self.directory = directory
+
+    class FastAPI:
+        def __init__(self, title=""):
+            self.title = title
+
+        def get(self, *_args, **_kwargs):
+            return lambda fn: fn
+
+        def post(self, *_args, **_kwargs):
+            return lambda fn: fn
+
+        def mount(self, *_args, **_kwargs):
+            return None
+
+        async def __call__(self, scope, receive, send):
+            body = b"fastapi dependency missing"
+            await send({
+                "type": "http.response.start",
+                "status": 503,
+                "headers": [(b"content-type", b"text/plain")],
+            })
+            await send({"type": "http.response.body", "body": body})
 import datetime
 import os
+import sqlite3
 import sys
 
 DB_PATH = os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
@@ -18,8 +65,132 @@ if str(BOT_DIR) not in sys.path:
 
 app = FastAPI(title="OpenClaw UI API")
 
-def adapter() -> OpenClawDBAdapter:
-    return OpenClawDBAdapter(DB_PATH)
+
+def connect_db() -> sqlite3.Connection:
+    c = sqlite3.connect(DB_PATH, timeout=30)
+    c.row_factory = sqlite3.Row
+    c.execute("pragma busy_timeout=30000")
+    return c
+
+
+def table_exists(c: sqlite3.Connection, table: str) -> bool:
+    row = c.execute(
+        "select 1 from sqlite_master where type='table' and name=?",
+        (table,),
+    ).fetchone()
+    return row is not None
+
+
+def table_columns(c: sqlite3.Connection, table: str) -> set[str]:
+    if not table_exists(c, table):
+        return set()
+    return {str(r["name"]) for r in c.execute(f"pragma table_info({table})").fetchall()}
+
+
+def rows(c: sqlite3.Connection, sql: str, args=()):
+    return [dict(r) for r in c.execute(sql, args).fetchall()]
+
+
+class LocalOpenClawDBAdapter:
+    def __init__(self, db_path: str):
+        self.db_path = db_path
+
+    def get_router_tasks(self):
+        with connect_db() as c:
+            if not table_exists(c, "router_tasks"):
+                return []
+            order = "id desc" if "id" in table_columns(c, "router_tasks") else "rowid desc"
+            return rows(c, f"select * from router_tasks order by {order} limit 1000")
+
+    def get_parent_child_relations(self):
+        with connect_db() as c:
+            if not table_exists(c, "router_tasks"):
+                return []
+            cols = table_columns(c, "router_tasks")
+            if not {"id", "parent_task_id"}.issubset(cols):
+                return []
+            return rows(
+                c,
+                """
+                select parent_task_id as parent_id, id as child_id
+                from router_tasks
+                where parent_task_id is not null
+                order by parent_task_id desc, id desc
+                limit 1000
+                """,
+            )
+
+    def get_execs(self):
+        with connect_db() as c:
+            if not table_exists(c, "router_tasks"):
+                return []
+            cols = table_columns(c, "router_tasks")
+            if "mode" not in cols:
+                return []
+            return rows(
+                c,
+                """
+                select *
+                from router_tasks
+                where coalesce(mode,'')='EXEC'
+                   or coalesce(target_bot,'')='ops_exec'
+                order by id desc
+                limit 1000
+                """,
+            )
+
+    def get_logs(self, task_id: Optional[int] = None, limit: int = 100):
+        with connect_db() as c:
+            for table in ("router_task_logs", "task_logs", "logs"):
+                if not table_exists(c, table):
+                    continue
+                cols = table_columns(c, table)
+                where = ""
+                args: list[object] = []
+                if task_id is not None:
+                    if "task_id" in cols:
+                        where = "where task_id=?"
+                        args.append(task_id)
+                    elif "router_task_id" in cols:
+                        where = "where router_task_id=?"
+                        args.append(task_id)
+                order = "id desc" if "id" in cols else "rowid desc"
+                args.append(limit)
+                return rows(c, f"select * from {table} {where} order by {order} limit ?", args)
+            return []
+
+    def get_artifacts(self, task_id: Optional[int] = None):
+        with connect_db() as c:
+            for table in ("router_task_artifacts", "task_artifacts", "artifacts"):
+                if not table_exists(c, table):
+                    continue
+                cols = table_columns(c, table)
+                where = ""
+                args: list[object] = []
+                if task_id is not None:
+                    if "task_id" in cols:
+                        where = "where task_id=?"
+                        args.append(task_id)
+                    elif "router_task_id" in cols:
+                        where = "where router_task_id=?"
+                        args.append(task_id)
+                order = "id desc" if "id" in cols else "rowid desc"
+                return rows(c, f"select * from {table} {where} order by {order} limit 1000", args)
+            return []
+
+    def get_capabilities(self):
+        with connect_db() as c:
+            for table in ("capability_registry", "capabilities"):
+                if not table_exists(c, table):
+                    continue
+                cols = table_columns(c, table)
+                order = "id desc" if "id" in cols else "rowid desc"
+                return rows(c, f"select * from {table} order by {order} limit 1000")
+            return []
+
+
+def adapter() -> LocalOpenClawDBAdapter:
+    return LocalOpenClawDBAdapter(DB_PATH)
 
 @app.get("/")
 def root():
@@ -125,7 +296,6 @@ class TaskAction(BaseModel):
 
 @app.post("/api/tasks")
 def create_task(payload: TaskCreate):
-    a = adapter()
     import sqlite3
     c = sqlite3.connect(DB_PATH, timeout=30)
     c.row_factory = sqlite3.Row
