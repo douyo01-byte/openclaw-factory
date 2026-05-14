@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 from pathlib import Path
 from contextlib import redirect_stdout
 from io import StringIO
@@ -225,12 +225,92 @@ def report_response(report: str, **extra):
     return data
 
 
+def dataclass_like(value: Any) -> dict[str, Any]:
+    if hasattr(value, "__dataclass_fields__"):
+        return {key: getattr(value, key) for key in value.__dataclass_fields__}
+    if isinstance(value, dict):
+        return value
+    return {}
+
+
+def compact_loop_summary(loop: dict[str, Any]) -> dict[str, Any]:
+    health = loop.get("health", {})
+    root = loop.get("root", {})
+    hotspot = loop.get("hotspot", {})
+    return {
+        "status": loop.get("current_mode", "unknown"),
+        "loop_state": loop.get("loop_state", "unknown"),
+        "health_score": health.get("health_score", 0),
+        "instability_score": health.get("instability_score", 0),
+        "deferred_backlog": health.get("deferred_backlog", 0),
+        "retry_pressure": health.get("retry_pressure", 0),
+        "top_risk": loop.get("top_risk", "unknown"),
+        "root_cause": root.get("label", "unknown"),
+        "root_confidence": root.get("confidence", 0),
+        "root_chain": loop.get("root_chain", []),
+        "root_chain_score": loop.get("root_chain_score", 0),
+        "hotspot": hotspot.get("label", "unknown"),
+        "best_safe_remediation": loop.get("best_safe_remediation", ""),
+        "projected_health_gain": loop.get("projected_health_gain", 0),
+        "actions": loop.get("actions", []),
+        "watchlist": loop.get("watchlist", []),
+        "simulation_outcomes": loop.get("simulation_outcomes", []),
+        "historical_note": loop.get("historical_note", ""),
+        "decision_trace": loop.get("decision_trace", []),
+        "memory_source": loop.get("memory_source", "unknown"),
+        "operational_memory_update_plan": loop.get("operational_memory_update_plan", {}),
+    }
+
+
+def compact_plan_summary(plan: Any) -> dict[str, Any]:
+    return {
+        "planning_horizon": plan.horizon,
+        "planning_mode": plan.planning_mode,
+        "sustainability_score": plan.sustainability_score,
+        "recurrence_risk": plan.recurrence_risk,
+        "recurrence_risk_score": plan.recurrence_risk_score,
+        "maintenance_pressure": plan.maintenance_pressure,
+        "maintenance_pressure_score": plan.maintenance_pressure_score,
+        "operator_load": plan.operator_load,
+        "operator_load_score": plan.operator_load_score,
+        "stability_projection": plan.stability_projection,
+        "stability_projection_score": plan.stability_projection_score,
+        "dominant_long_term_risk": plan.dominant_long_term_risk,
+        "recommended_long_horizon_focus": plan.recommended_long_horizon_focus,
+        "anti_patterns": plan.anti_patterns,
+        "supporting_signals": plan.supporting_signals,
+        "scoring_examples": plan.scoring_examples,
+    }
+
+
 @app.get("/api/dev-autopilot/compact")
 def dev_autopilot_compact():
     from dev_autopilot_executive_report_v1 import build_report, print_compact
 
     report = build_report(DB_PATH)
-    return report_response(render_text(print_compact, report))
+    plan = compact_plan_summary(report["plan"])
+    return report_response(
+        render_text(print_compact, report),
+        summary={
+            "status": report["status"],
+            "health": report["overall_health"],
+            "top_risk": report["top_risk"],
+            "root_cause": report["root_cause"],
+            "root_chain": report["loop"].get("root_chain", []),
+            "selected_policy": report["selected_policy"],
+            "best_safe_next_action": report["best_safe_next_action"],
+            "sustainability_score": plan["sustainability_score"],
+            "do_not_do": [
+                "no launchctl",
+                "no deploy",
+                "no git push",
+                "no executable router_tasks",
+                "no auto Codex",
+            ],
+        },
+        loop=compact_loop_summary(report["loop"]),
+        plan=plan,
+    )
 
 
 @app.get("/api/dev-autopilot/report")
@@ -238,7 +318,26 @@ def dev_autopilot_report():
     from dev_autopilot_executive_report_v1 import build_report, print_report
 
     report = build_report(DB_PATH)
-    return report_response(render_text(print_report, report))
+    return report_response(
+        render_text(print_report, report),
+        summary={
+            "status": report["status"],
+            "health": report["overall_health"],
+            "top_risk": report["top_risk"],
+            "root_cause": report["root_cause"],
+            "root_chain": report["loop"].get("root_chain", []),
+            "selected_policy": report["selected_policy"],
+            "best_safe_next_action": report["best_safe_next_action"],
+            "sustainability_score": report["plan"].sustainability_score,
+            "do_not_do": [
+                "no launchctl",
+                "no deploy",
+                "no git push",
+                "no executable router_tasks",
+                "no auto Codex",
+            ],
+        },
+    )
 
 
 @app.get("/api/dev-autopilot/policy")
@@ -246,10 +345,21 @@ def dev_autopilot_policy():
     from dev_autopilot_policy_v1 import print_policy, select_policy
 
     policy = select_policy(DB_PATH)
+    selected = policy["selected"]
     return report_response(
         render_text(print_policy, policy),
-        selected_policy=policy["selected"].policy_name,
-        selection_confidence=policy["selected"].selection_confidence,
+        selected_policy=selected.policy_name,
+        selection_confidence=selected.selection_confidence,
+        summary={
+            "selected_policy": selected.policy_name,
+            "selection_confidence": selected.selection_confidence,
+            "selection_reason": selected.selection_reason,
+            "supporting_signals": selected.supporting_signals,
+            "expected_behavior": selected.expected_behavior,
+            "policy_scores": [dataclass_like(score) for score in policy["scores"]],
+            "transitions": policy["transitions"],
+            "history_source": policy["history_source"],
+        },
     )
 
 
@@ -263,6 +373,7 @@ def dev_autopilot_loop():
         current_mode=loop["current_mode"],
         loop_state=loop["loop_state"],
         top_risk=loop["top_risk"],
+        summary=compact_loop_summary(loop),
     )
 
 
@@ -277,6 +388,23 @@ def dev_autopilot_risks():
         sustainability_score=plan.sustainability_score,
         recurrence_risk=plan.recurrence_risk,
         dominant_long_term_risk=plan.dominant_long_term_risk,
+        summary=compact_plan_summary(plan),
+    )
+
+
+@app.get("/api/dev-autopilot/memory")
+def dev_autopilot_memory():
+    from dev_autopilot_memory_v1 import group_patterns, load_incidents, print_patterns
+
+    incidents, source = load_incidents(DB_PATH)
+    patterns = group_patterns(incidents)
+    return report_response(
+        render_text(print_patterns, patterns, source),
+        summary={
+            "source": source,
+            "incident_count": len(incidents),
+            "patterns": patterns[:8],
+        },
     )
 
 

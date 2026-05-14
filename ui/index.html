@@ -333,6 +333,222 @@ padding:8px;
   .artifacts_grid{ grid-template-columns:1fr; }
 }
 
+.dev-autopilot-shell{
+display:grid;
+gap:12px;
+}
+
+.dev-toolbar{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.dev-actions{
+display:flex;
+align-items:center;
+gap:8px;
+flex-wrap:wrap;
+}
+
+.dev-button{
+padding:9px 12px;
+background:#1f6feb;
+color:#fff;
+border:1px solid #3b82f6;
+border-radius:8px;
+font-weight:700;
+cursor:pointer;
+}
+
+.dev-safe-button{
+padding:9px 12px;
+background:#172044;
+color:#e8ecf3;
+border:1px solid #3ddc84;
+border-radius:8px;
+font-weight:700;
+cursor:pointer;
+}
+
+.dev-toggle{
+display:inline-flex;
+align-items:center;
+gap:6px;
+font-size:12px;
+color:#b8c4e8;
+}
+
+.dev-toggle input{
+width:auto;
+margin:0;
+}
+
+.dev-tabs{
+display:flex;
+gap:6px;
+overflow:auto;
+padding-bottom:2px;
+}
+
+.dev-tab{
+flex:0 0 auto;
+padding:8px 10px;
+background:#0b1228;
+color:#cdd6f4;
+border:1px solid #243056;
+border-radius:8px;
+font-weight:700;
+cursor:pointer;
+}
+
+.dev-tab.active{
+background:#e8ecf3;
+color:#0b1020;
+border-color:#e8ecf3;
+}
+
+.dev-panel{display:none;}
+.dev-panel.active{display:grid;gap:12px;}
+
+.dev-card-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:10px;
+}
+
+.dev-metric{
+background:#0b1228;
+border:1px solid #243056;
+border-radius:8px;
+padding:12px;
+min-width:0;
+}
+
+.dev-label{
+font-size:11px;
+color:#9fb0d9;
+text-transform:uppercase;
+letter-spacing:0;
+margin-bottom:6px;
+}
+
+.dev-value{
+font-size:15px;
+line-height:1.35;
+font-weight:700;
+word-break:break-word;
+}
+
+.risk-chip{
+display:inline-flex;
+align-items:center;
+padding:5px 9px;
+border-radius:999px;
+font-size:12px;
+font-weight:800;
+}
+
+.risk-critical{background:#4b1116;color:#ffb4b4;border:1px solid #ef4444;}
+.risk-warning{background:#3f2507;color:#ffd08a;border:1px solid #f97316;}
+.risk-stable{background:#07351f;color:#9cf0bd;border:1px solid #22c55e;}
+
+.dev-chip-stack{
+display:flex;
+flex-direction:column;
+gap:7px;
+}
+
+.dev-chain-row{
+display:flex;
+align-items:center;
+gap:7px;
+flex-wrap:wrap;
+}
+
+.dev-chain-chip{
+background:#162044;
+border:1px solid #33406f;
+border-radius:999px;
+padding:6px 9px;
+font-size:12px;
+font-weight:700;
+word-break:break-word;
+max-width:100%;
+}
+
+.dev-chain-arrow{
+color:#9fb0d9;
+font-size:12px;
+font-weight:800;
+}
+
+.dev-list{
+display:grid;
+gap:8px;
+margin:0;
+padding:0;
+list-style:none;
+}
+
+.dev-list li{
+background:#0b1228;
+border:1px solid #243056;
+border-radius:8px;
+padding:9px;
+font-size:13px;
+line-height:1.4;
+word-break:break-word;
+}
+
+.dev-note{
+font-size:12px;
+color:#b8c4e8;
+line-height:1.45;
+word-break:break-word;
+}
+
+.dev-error{
+background:#3b1215;
+border:1px solid #ef4444;
+color:#ffd1d1;
+border-radius:8px;
+padding:10px;
+font-size:13px;
+}
+
+@media (max-width: 600px){
+.dev-toolbar{
+align-items:stretch;
+}
+.dev-actions{
+width:100%;
+display:grid;
+grid-template-columns:1fr;
+}
+.dev-button,
+.dev-safe-button{
+width:100%;
+margin:0;
+}
+.dev-card-grid{
+grid-template-columns:1fr;
+}
+.dev-tab{
+padding:9px 10px;
+}
+.dev-chain-row{
+align-items:flex-start;
+flex-direction:column;
+}
+.dev-chain-arrow{
+transform:rotate(90deg);
+padding-left:8px;
+}
+}
+
 </style>
 </head>
 
@@ -390,8 +606,35 @@ padding:8px;
 
 <div class="row">
   <div class="card" style="grid-column:1/-1;">
-    <h3>Dev Autopilot</h3>
-    <pre id="dev_autopilot_report" class="mono">loading...</pre>
+    <div class="dev-autopilot-shell">
+      <div class="dev-toolbar">
+        <h3 style="margin:0;">Dev Autopilot</h3>
+        <div class="dev-actions">
+          <button class="dev-button" type="button" onclick="manualRefresh()">Refresh</button>
+          <label class="dev-toggle">
+            <input id="dev_autorefresh" type="checkbox" onchange="toggleAutoRefresh(this.checked)">
+            Auto-refresh
+          </label>
+        </div>
+      </div>
+
+      <div class="dev-tabs" role="tablist" aria-label="Dev Autopilot sections">
+        <button class="dev-tab active" type="button" data-dev-tab="executive" onclick="setDevTab('executive')">Executive</button>
+        <button class="dev-tab" type="button" data-dev-tab="risks" onclick="setDevTab('risks')">Risks</button>
+        <button class="dev-tab" type="button" data-dev-tab="policy" onclick="setDevTab('policy')">Policy</button>
+        <button class="dev-tab" type="button" data-dev-tab="loop" onclick="setDevTab('loop')">Loop</button>
+        <button class="dev-tab" type="button" data-dev-tab="memory" onclick="setDevTab('memory')">Memory</button>
+      </div>
+
+      <div id="dev_error"></div>
+      <div id="dev_operator_message" class="dev-note"></div>
+
+      <div id="dev_panel_executive" class="dev-panel active"></div>
+      <div id="dev_panel_risks" class="dev-panel"></div>
+      <div id="dev_panel_policy" class="dev-panel"></div>
+      <div id="dev_panel_loop" class="dev-panel"></div>
+      <div id="dev_panel_memory" class="dev-panel"></div>
+    </div>
   </div>
 </div>
 
@@ -469,6 +712,73 @@ padding:8px;
 <script>
 
 const API = "";
+let __autoRefreshTimer = null;
+let __activeDevTab = "executive";
+
+function esc(v){
+  return String(v ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
+}
+
+function riskLevel(data){
+  const instability = Number(data?.summary?.health?.instability_score ?? data?.loop?.instability_score ?? 0);
+  const sustainability = Number(data?.summary?.sustainability_score ?? data?.plan?.sustainability_score ?? 100);
+  const status = String(data?.summary?.status ?? data?.loop?.status ?? "").toLowerCase();
+  if(status.includes("critical") || instability >= 80 || sustainability < 35) return "critical";
+  if(status.includes("stabil") || instability >= 55 || sustainability < 60) return "warning";
+  return "stable";
+}
+
+function riskChip(level){
+  const label = level === "critical" ? "critical" : level === "warning" ? "warning" : "stable";
+  return `<span class="risk-chip risk-${label}">${label}</span>`;
+}
+
+function metric(label, value){
+  return `<div class="dev-metric"><div class="dev-label">${esc(label)}</div><div class="dev-value">${esc(value || "-")}</div></div>`;
+}
+
+function list(items){
+  const values = (items || []).filter(x => x !== undefined && x !== null && String(x).trim());
+  if(!values.length) return '<div class="dev-note">No items available.</div>';
+  return `<ul class="dev-list">${values.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+}
+
+function chain(items){
+  const values = (items || []).filter(x => String(x || "").trim());
+  if(!values.length) return '<div class="dev-note">Root-cause chain unavailable.</div>';
+  return `<div class="dev-chain-row">${values.map((x, idx) => `${idx ? '<span class="dev-chain-arrow">→</span>' : ''}<span class="dev-chain-chip">${esc(x)}</span>`).join("")}</div>`;
+}
+
+function setDevTab(name){
+  __activeDevTab = name;
+  document.querySelectorAll(".dev-tab").forEach(btn => btn.classList.toggle("active", btn.dataset.devTab === name));
+  document.querySelectorAll(".dev-panel").forEach(panel => panel.classList.remove("active"));
+  const panel = document.getElementById("dev_panel_" + name);
+  if(panel) panel.classList.add("active");
+}
+
+function showOperatorPlaceholder(){
+  const box = document.getElementById("dev_operator_message");
+  if(box){
+    box.textContent = "Dry-run cleanup simulation review is a local placeholder only. No request was sent, no task was created, and no database write occurred.";
+  }
+}
+
+function readOnlyNotice(action){
+  showToast(`${action} is disabled in read-only UI mode`);
+}
+
+function renderError(messages){
+  const box = document.getElementById("dev_error");
+  if(!box) return;
+  const values = messages.filter(Boolean);
+  box.innerHTML = values.length ? `<div class="dev-error">${values.map(esc).join("<br>")}</div>` : "";
+}
 
 
 function statusChip(s){
@@ -531,28 +841,6 @@ b.style.display = "block";
 d.classList.add("open");
 }
 
-d.innerHTML = `
-<h3>Task Detail</h3>
-<div class="mono">
-<b>ID:</b> ${x.id ?? ""}<br>
-<b>Status:</b> <span class="${statusClass(x.status)}">${x.status ?? ""}</span><br>
-<b>Bot:</b> ${x.target_bot ?? ""}<br>
-<b>Mode:</b> ${x.mode ?? ""}<br>
-<b>Role:</b> ${x.task_role ?? ""}<br>
-<b>Parent:</b> ${x.parent_task_id ?? ""}<br><br>
-
-<b>Task Text</b><br>
-<pre>${x.task_text ?? ""}</pre>
-
-<b>Reply Text</b><br>
-<pre>${x.reply_text ?? ""}</pre>
-
-<b>Children</b><br>
-${childHtml}
-</div>
-`;
-}
-
 function showToast(msg){
 const t = document.getElementById("toast");
 if(!t) return;
@@ -602,65 +890,20 @@ return await r.json();
 
 
 async function submitExec(){
-  const payload = {
-    script: document.getElementById("f_exec_script").value || "",
-    args: document.getElementById("f_exec_args").value || ""
-  };
   const box = document.getElementById("exec_result");
-  const r = await fetch("/api/exec", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload)
-  });
-  const d = await r.json();
-  box.textContent = JSON.stringify(d, null, 2);
-  if (d.ok) {
-    document.getElementById("f_exec_args").value = "";
-    await loadAll();
-  }
+  box.textContent = "Read-only UI mode: EXEC submission is disabled. No request was sent.";
+  readOnlyNotice("EXEC submission");
 }
 
 async function submitTask(){
-  const payload = {
-    target_bot: document.getElementById("f_target_bot").value || "kaikun04",
-    mode: document.getElementById("f_mode").value || "THINK",
-    task_role: document.getElementById("f_task_role").value || "",
-    parent_task_id: document.getElementById("f_parent_task_id").value ? Number(document.getElementById("f_parent_task_id").value) : null,
-    task_text: document.getElementById("f_task_text").value || ""
-  };
   const box = document.getElementById("submit_result");
-  if (!payload.task_text.trim()) {
-    box.textContent = "task_text required";
-    return;
-  }
-  const r = await fetch("/api/tasks", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload)
-  });
-  const d = await r.json();
-  box.textContent = JSON.stringify(d, null, 2);
-  if (d.ok) {
-    document.getElementById("f_task_text").value = "";
-    await loadAll();
-  }
+  box.textContent = "Read-only UI mode: task creation is disabled. No request was sent and no router_task was created.";
+  readOnlyNotice("Task creation");
 }
 
 
 async function taskAction(id, action){
-  const r = await fetch("/api/tasks/"+id+"/action", {
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({action})
-  });
-  const d = await r.json();
-  if (d.ok) {
-    showToast(`ok: ${action}${d.new_id ? " -> #" + d.new_id : ""}`);
-    closeDetail();
-    await loadAll();
-  } else {
-    showToast(`error: ${action}`);
-  }
+  readOnlyNotice(`${action} for task #${id}`);
 }
 
 function toggleReply(){
@@ -680,9 +923,7 @@ function openTaskById(id){
 }
 
 async function forceExec(id){
-  await fetch("/api/tasks/"+id+"/exec",{method:"POST"});
-  showToast(`exec queued: #${id}`);
-  await loadAll();
+  readOnlyNotice(`EXEC queueing for task #${id}`);
 }
 
 
@@ -727,13 +968,127 @@ async function loadTmpExec(){
 }
 
 async function loadDevAutopilot(){
-  const box = document.getElementById("dev_autopilot_report");
-  if(!box) return;
-  try{
-    const d = await j("/api/dev-autopilot/compact");
-    box.textContent = d.report || JSON.stringify(d, null, 2);
-  }catch(e){
-    box.textContent = "dev autopilot report unavailable";
+  const executive = document.getElementById("dev_panel_executive");
+  if(!executive) return;
+
+  async function safeDev(url){
+    try{
+      const r = await fetch(url);
+      if(!r.ok) throw new Error(`${url} returned ${r.status}`);
+      return {ok:true, data: await r.json()};
+    }catch(e){
+      return {ok:false, error: `${url}: ${e.message || e}`};
+    }
+  }
+
+  const [compact, risks, policy, loop, memory] = await Promise.all([
+    safeDev("/api/dev-autopilot/compact"),
+    safeDev("/api/dev-autopilot/risks"),
+    safeDev("/api/dev-autopilot/policy"),
+    safeDev("/api/dev-autopilot/loop"),
+    safeDev("/api/dev-autopilot/memory"),
+  ]);
+
+  renderError([compact, risks, policy, loop, memory].filter(x => !x.ok).map(x => x.error));
+
+  const c = compact.data || {};
+  const summary = c.summary || {};
+  const health = summary.health || {};
+  const level = riskLevel(c);
+  executive.innerHTML = `
+    <div class="dev-card-grid">
+      ${metric("status", summary.status)}
+      ${metric("health / instability", `${health.health_score ?? "-"} / ${health.instability_score ?? "-"}`)}
+      ${metric("top_risk", summary.top_risk)}
+      ${metric("root_cause", summary.root_cause)}
+      ${metric("selected_policy", summary.selected_policy)}
+      ${metric("best_safe_next_action", summary.best_safe_next_action)}
+      ${metric("sustainability_score", summary.sustainability_score)}
+      <div class="dev-metric"><div class="dev-label">risk</div><div class="dev-value">${riskChip(level)}</div></div>
+    </div>
+    <div class="dev-metric">
+      <div class="dev-label">root-cause chain</div>
+      ${chain(summary.root_chain)}
+    </div>
+    <div class="dev-metric">
+      <div class="dev-label">do_not_do</div>
+      ${list(summary.do_not_do)}
+    </div>
+    <div class="dev-metric">
+      <div class="dev-label">Operator Actions</div>
+      <button class="dev-safe-button" type="button" onclick="showOperatorPlaceholder()">Review dry-run cleanup simulation</button>
+      <div class="dev-note" style="margin-top:8px;">Placeholder only. It does not call an API endpoint or create work.</div>
+    </div>
+  `;
+
+  const r = risks.data?.summary || {};
+  document.getElementById("dev_panel_risks").innerHTML = `
+    <div class="dev-card-grid">
+      ${metric("sustainability_score", r.sustainability_score)}
+      ${metric("dominant_long_term_risk", r.dominant_long_term_risk)}
+      ${metric("recurrence_risk", `${r.recurrence_risk || "-"} (${r.recurrence_risk_score ?? "-"})`)}
+      ${metric("maintenance_pressure", `${r.maintenance_pressure || "-"} (${r.maintenance_pressure_score ?? "-"})`)}
+      ${metric("operator_load", `${r.operator_load || "-"} (${r.operator_load_score ?? "-"})`)}
+      ${metric("stability_projection", `${r.stability_projection || "-"} (${r.stability_projection_score ?? "-"})`)}
+    </div>
+    <div class="dev-metric"><div class="dev-label">recommended_long_horizon_focus</div><div class="dev-value">${esc(r.recommended_long_horizon_focus || "-")}</div></div>
+    <div class="dev-metric"><div class="dev-label">anti_patterns</div>${list(r.anti_patterns)}</div>
+    <div class="dev-metric"><div class="dev-label">supporting_signals</div>${list(r.supporting_signals)}</div>
+  `;
+
+  const p = policy.data?.summary || {};
+  document.getElementById("dev_panel_policy").innerHTML = `
+    <div class="dev-card-grid">
+      ${metric("selected_policy", p.selected_policy)}
+      ${metric("selection_confidence", p.selection_confidence)}
+      ${metric("history_source", p.history_source)}
+      ${metric("policy_flapping", p.transitions?.policy_flapping_detected)}
+    </div>
+    <div class="dev-metric"><div class="dev-label">reason</div><div class="dev-value">${esc(p.selection_reason || "-")}</div></div>
+    <div class="dev-metric"><div class="dev-label">supporting_signals</div>${list(p.supporting_signals)}</div>
+    <div class="dev-metric"><div class="dev-label">expected_behavior</div>${list(p.expected_behavior)}</div>
+    <div class="dev-metric"><div class="dev-label">policy_scores</div>${list((p.policy_scores || []).map(x => `${x.policy_name}: ${x.score}`))}</div>
+  `;
+
+  const l = loop.data?.summary || c.loop || {};
+  document.getElementById("dev_panel_loop").innerHTML = `
+    <div class="dev-card-grid">
+      ${metric("current_mode", l.status)}
+      ${metric("loop_state", l.loop_state)}
+      ${metric("health / instability", `${l.health_score ?? "-"} / ${l.instability_score ?? "-"}`)}
+      ${metric("root_confidence", l.root_confidence)}
+      ${metric("hotspot", l.hotspot)}
+      ${metric("projected_health_gain", `+${l.projected_health_gain ?? 0}`)}
+    </div>
+    <div class="dev-metric"><div class="dev-label">root-cause chain</div>${chain(l.root_chain)}</div>
+    <div class="dev-metric"><div class="dev-label">best_safe_remediation</div><div class="dev-value">${esc(l.best_safe_remediation || "-")}</div></div>
+    <div class="dev-metric"><div class="dev-label">manual actions</div>${list((l.actions || []).map(x => `${x.priority || ""} ${x.type || ""}: ${x.action || ""} (${x.reason || ""})`))}</div>
+    <div class="dev-metric"><div class="dev-label">decision_trace</div>${list(l.decision_trace)}</div>
+  `;
+
+  const m = memory.data?.summary || {};
+  document.getElementById("dev_panel_memory").innerHTML = `
+    <div class="dev-card-grid">
+      ${metric("source", m.source)}
+      ${metric("incident_count", m.incident_count)}
+      ${metric("patterns", (m.patterns || []).length)}
+    </div>
+    <div class="dev-metric"><div class="dev-label">recurring patterns</div>${list((m.patterns || []).map(x => `${x.pattern_name}: occurrences=${x.occurrences}, risk=${x.forecast_recurring_risk}, remediation=${x.most_effective_remediation}`))}</div>
+  `;
+}
+
+async function manualRefresh(){
+  await loadAll();
+  showToast("refreshed");
+}
+
+function toggleAutoRefresh(enabled){
+  if(__autoRefreshTimer){
+    clearInterval(__autoRefreshTimer);
+    __autoRefreshTimer = null;
+  }
+  if(enabled){
+    __autoRefreshTimer = setInterval(loadAll, 3000);
   }
 }
 
@@ -838,11 +1193,9 @@ await loadTmpExec();
 console.error(e);
 }
 }
-}
 
 restoreFilters();
 loadAll();
-setInterval(loadAll,3000);
 
 </script>
 
