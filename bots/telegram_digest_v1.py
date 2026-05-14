@@ -1,4 +1,5 @@
 from __future__ import annotations
+import argparse
 import os
 import json
 import sqlite3
@@ -17,6 +18,7 @@ DRY_RUN = os.environ.get("TELEGRAM_DIGEST_DRY_RUN", "0") == "1"
 NOISY_TARGETS = {"telegram_digest", "telegram_report"}
 NOISY_MODES = {"DIGEST"}
 ARTIFACT_MARKERS = ("public_preview/", "artifact=", ".html", ".md")
+IMPORTANCE_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 
 def conn():
     c = sqlite3.connect(DB, timeout=30)
@@ -142,7 +144,263 @@ def infer_risk(items) -> str:
         return "failed taskあり"
     return "明示的な残リスクなし"
 
+
+def row_text(row) -> str:
+    return " ".join(
+        str(row[k] or "")
+        for k in (
+            "task_text",
+            "clean_prompt",
+            "reply_text",
+            "result_text",
+            "validation_reason",
+            "exec_bridge_reason",
+        )
+    )
+
+
+def duplicate_group_key(row) -> str:
+    text = row_text(row)
+    if "[WINNER_ONLY]" in text:
+        theme = text.split("テーマ:", 1)[-1] if "テーマ:" in text else text
+        return "winner_only:" + compact(theme, 80)
+    if "ConnectionError" in text:
+        return "error:ConnectionError"
+    if (row["status"] or "") == "failed":
+        return f"failure:{task_family(row)}:{compact(text, 80)}"
+    parent_id = int(row["parent_task_id"] or 0)
+    key_parent = parent_id if parent_id > 0 else int(row["id"])
+    return f"{task_family(row)}:{key_parent}"
+
+
+def score_digest_item(row, compressed_count: int = 0) -> dict:
+    text = row_text(row)
+    low = text.lower()
+    status = row["status"] or ""
+    family = task_family(row)
+    if status == "failed" or "schema_missing" in low or "database is locked" in low:
+        importance = "critical"
+        actionability = "now"
+    elif "connectionerror" in low or "timeout" in low or status in {"retry", "invalid_output"}:
+        importance = "high"
+        actionability = "now" if compressed_count else "watch"
+    elif "[winner_only]" in low or status in {"new", "started", "running"}:
+        importance = "medium"
+        actionability = "later" if "[winner_only]" in low else "watch"
+    elif is_noisy(row):
+        importance = "low"
+        actionability = "ignore"
+    else:
+        importance = "low" if status == "done" else "medium"
+        actionability = "watch"
+    return {
+        "importance": importance,
+        "actionability": actionability,
+        "duplicate_group_key": duplicate_group_key(row),
+        "compressed_count": compressed_count,
+        "family": family,
+    }
+
+
+def scored_digest_items(rows) -> list[dict]:
+    groups = defaultdict(list)
+    for row in rows:
+        groups[duplicate_group_key(row)].append(row)
+    items = []
+    for key, group in groups.items():
+        group = sorted(group, key=lambda r: int(r["id"]))
+        primary = group[-1]
+        score = score_digest_item(primary, max(0, len(group) - 1))
+        statuses = defaultdict(int)
+        for row in group:
+            statuses[row["status"] or "-"] += 1
+        group_text = "\n".join(row_text(row).lower() for row in group)
+        if statuses.get("failed", 0) or "schema_missing" in group_text or "database is locked" in group_text:
+            score["importance"] = "critical"
+            score["actionability"] = "now"
+        elif "connectionerror" in group_text and len(group) > 1:
+            score["importance"] = "high"
+            score["actionability"] = "now"
+        items.append({
+            "key": key,
+            "rows": group,
+            "primary": primary,
+            "score": score,
+            "statuses": dict(statuses),
+            "count": len(group),
+        })
+    return sorted(
+        items,
+        key=lambda item: (
+            IMPORTANCE_ORDER.get(item["score"]["importance"], 9),
+            0 if item["score"]["actionability"] == "now" else 1,
+            -item["count"],
+            -int(item["primary"]["id"]),
+        ),
+    )
+
+
+def _status_line(items: list[dict]) -> str:
+    if any(i["score"]["importance"] == "critical" for i in items):
+        return "unstable / needs attention"
+    if any(i["score"]["importance"] == "high" for i in items):
+        return "degraded / watch closely"
+    return "stable / watch"
+
+
+def _top_issue(items: list[dict]) -> str:
+    if not items:
+        return "no material issue"
+    first = items[0]
+    text = row_text(first["primary"])
+    if "ConnectionError" in text:
+        return f"LLM ConnectionError repeated {first['count']} time(s)"
+    if first["key"].startswith("winner_only:") and first["count"] > 1:
+        return f"duplicate WINNER_ONLY tasks detected ({first['count']})"
+    if first["score"]["importance"] in {"critical", "high"}:
+        return compact(infer_result(first["rows"]), 120)
+    return compact(infer_instruction(first["rows"]), 120)
+
+
+def _goal_summary() -> dict:
+    try:
+        from openclaw_goal_reader_v1 import read_active_goal
+
+        return read_active_goal()
+    except Exception as e:
+        return {
+            "ok": False,
+            "active_goal": "",
+            "current_focus": "",
+            "next_best_step": "",
+            "blocked_by": [f"goal_reader_error:{e!r}"],
+            "safety_status": "read-only; goal reader unavailable",
+            "expected_value": "",
+        }
+
+
+def _latest_result(items: list[dict]) -> str:
+    for item in items:
+        for row in reversed(item["rows"]):
+            text = row["result_text"] or row["reply_text"] or row["validation_reason"] or row["exec_bridge_reason"]
+            if text:
+                return compact(text, 120)
+    if any(i["primary"]["status"] == "new" for i in items):
+        return "new task created"
+    return "no material result"
+
+
+def _runtime_health(items: list[dict]) -> str:
+    text = "\n".join(row_text(r) for item in items for r in item["rows"])
+    status_core_rows = [
+        r for item in items for r in item["rows"]
+        if "status_core.sh" in row_text(r)
+    ]
+    if status_core_rows and any((r["status"] or "") == "done" for r in status_core_rows):
+        return "status_core.sh succeeded\n- services appear running"
+    if "ConnectionError" in text:
+        return "LLM transport unstable\n- local services may still be running"
+    if any(item["score"]["importance"] == "critical" for item in items):
+        return "runtime needs attention\n- failure group present"
+    return "no local runtime failure detected"
+
+
+def _operator_next(items: list[dict]) -> str:
+    if any("ConnectionError" in row_text(r) for item in items for r in item["rows"]):
+        return "Review Dev Autopilot dashboard -> approve only dry-run cleanup simulation if recommended."
+    if any(item["key"].startswith("winner_only:") and item["count"] > 1 for item in items):
+        return "Compress duplicate WINNER_ONLY tasks, then continue only the newest safe item."
+    if any(item["score"]["importance"] == "critical" for item in items):
+        return "Inspect the top failure group before approving any execution."
+    return "Review the top recommendation and keep execution approval-gated."
+
+
+def _risk_lines(items: list[dict]) -> list[str]:
+    text = "\n".join(row_text(r) for item in items for r in item["rows"]).lower()
+    risks = []
+    if "connectionerror" in text or "timeout" in text:
+        risks.append("retry amplification")
+    if any(item["key"].startswith("winner_only:") and item["count"] > 1 for item in items):
+        risks.append("duplicate task noise")
+    if any(item["score"]["importance"] == "critical" for item in items):
+        risks.append("failed task requires review")
+    if not risks:
+        risks.append("unclear task priority")
+    return risks[:4]
+
+
+def build_readable_digest(rows) -> str:
+    visible = [r for r in rows if not is_noisy(r)]
+    noisy_count = len(rows) - len(visible)
+    items = scored_digest_items(visible)
+    compressed_count = noisy_count + sum(max(0, item["count"] - 1) for item in items)
+    hidden_count = compressed_count + max(0, len(items) - 3)
+    goal = _goal_summary()
+    winner_items = [i for i in items if i["key"].startswith("winner_only:")]
+    conn_items = [i for i in items if i["key"] == "error:ConnectionError"]
+    top_items = items[:3]
+
+    lines = [
+        f"OpenClaw digest {WINDOW_MIN}m",
+        f"Status: {_status_line(items)}",
+        f"Top issue: {_top_issue(items)}",
+        f"Queue: {len(rows)} rows, {hidden_count} compressed",
+        "",
+        "1. Goal progress",
+        f"- OpenClaw mothership goal is {'active' if goal.get('ok') else 'unavailable'}",
+        f"- current focus: {goal.get('current_focus') or '-'}",
+        f"- latest result: {_latest_result(top_items)}",
+        "",
+        "2. Revenue/WINNER loop",
+    ]
+    if winner_items:
+        newest = max(int(r["id"]) for item in winner_items for r in item["rows"])
+        duplicate_total = sum(max(0, item["count"] - 1) for item in winner_items)
+        lines.append(f"- duplicate WINNER_ONLY tasks detected: {duplicate_total} compressed, newest id={newest}")
+        lines.append("- action: compress duplicates, continue only newest")
+    else:
+        lines.append("- no duplicate WINNER_ONLY group detected")
+        lines.append("- action: keep revenue work approval-gated")
+
+    lines.extend([
+        "",
+        "3. Runtime health",
+    ])
+    for health_line in _runtime_health(items).splitlines():
+        lines.append(f"- {health_line}" if not health_line.startswith("- ") else health_line)
+    if conn_items:
+        lines.append(f"- ConnectionError count summarized once: {sum(i['count'] for i in conn_items)}")
+
+    if top_items:
+        lines.extend(["", "Top scored items:"])
+        for item in top_items:
+            score = item["score"]
+            ids = f"{item['rows'][0]['id']}-{item['rows'][-1]['id']}" if item["count"] > 1 else str(item["primary"]["id"])
+            lines.append(
+                f"- {score['importance']}/{score['actionability']} ids={ids} "
+                f"duplicate_group_key={score['duplicate_group_key']} compressed_count={score['compressed_count']}"
+            )
+
+    lines.extend([
+        "",
+        "Operator next:",
+        _operator_next(items),
+        "",
+        "Risks:",
+    ])
+    lines.extend(f"- {risk}" for risk in _risk_lines(items))
+    if hidden_count:
+        lines.append(f"- hidden/compressed count: {hidden_count}")
+
+    out = "\n".join(lines).strip()
+    return out[:3500] + ("\n\n[truncated]" if len(out) > 3500 else "")
+
+
 def build_digest(rows) -> str:
+    return build_readable_digest(rows)
+
+
+def build_legacy_digest(rows) -> str:
     visible = [r for r in rows if not is_noisy(r)]
     noisy_count = len(rows) - len(visible)
     groups = defaultdict(list)
@@ -184,6 +442,53 @@ def build_digest(rows) -> str:
     out = "\n".join(lines).strip()
     return out[:3500] + ("\n\n[truncated]" if len(out) > 3500 else "")
 
+
+def fetch_digest_rows(c, last_id: int = 0, limit: int | None = None):
+    limit_sql = f"limit {int(limit)}" if limit else ""
+    return c.execute(f"""
+        select
+          id,
+          coalesce(parent_task_id, 0) as parent_task_id,
+          coalesce(task_role, '') as task_role,
+          coalesce(target_bot, '') as target_bot,
+          coalesce(mode, '') as mode,
+          coalesce(status, '') as status,
+          coalesce(task_text, '') as task_text,
+          coalesce(clean_prompt, '') as clean_prompt,
+          coalesce(reply_text, '') as reply_text,
+          coalesce(result_text, '') as result_text,
+          coalesce(validation_reason, '') as validation_reason,
+          coalesce(exec_bridge_reason, '') as exec_bridge_reason,
+          coalesce(updated_at, created_at, '') as ts
+        from router_tasks
+        where id > ?
+          and datetime(coalesce(updated_at, created_at)) >= datetime('now', '-{WINDOW_MIN} minutes')
+        order by id asc
+        {limit_sql}
+        """, (last_id,)).fetchall()
+
+
+def fetch_recent_sample_rows(c, limit: int):
+    return list(reversed(c.execute(f"""
+        select
+          id,
+          coalesce(parent_task_id, 0) as parent_task_id,
+          coalesce(task_role, '') as task_role,
+          coalesce(target_bot, '') as target_bot,
+          coalesce(mode, '') as mode,
+          coalesce(status, '') as status,
+          coalesce(task_text, '') as task_text,
+          coalesce(clean_prompt, '') as clean_prompt,
+          coalesce(reply_text, '') as reply_text,
+          coalesce(result_text, '') as result_text,
+          coalesce(validation_reason, '') as validation_reason,
+          coalesce(exec_bridge_reason, '') as exec_bridge_reason,
+          coalesce(updated_at, created_at, '') as ts
+        from router_tasks
+        order by id desc
+        limit {int(limit)}
+        """).fetchall()))
+
 def send_tg(text: str):
     if DRY_RUN:
         print("[telegram_digest_v1] dry_run message_begin", flush=True)
@@ -221,7 +526,16 @@ def set_state(c, key: str, value: int):
       updated_at=datetime('now')
     """, (key, str(value)))
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Build and optionally send the OpenClaw Telegram digest.")
+    parser.add_argument("--sample-recent", action="store_true", help="print a digest from recent router_tasks without updating state")
+    parser.add_argument("--limit", type=int, default=40, help="row limit for --sample-recent")
+    parser.add_argument("--legacy", action="store_true", help="print the previous verbose digest format")
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
     with conn() as c:
         c.execute("""
         create table if not exists telegram_digest_state (
@@ -231,27 +545,7 @@ def main():
         )
         """)
         last_id = get_state(c, "last_router_task_id")
-
-        rows = c.execute(f"""
-        select
-          id,
-          coalesce(parent_task_id, 0) as parent_task_id,
-          coalesce(task_role, '') as task_role,
-          coalesce(target_bot, '') as target_bot,
-          coalesce(mode, '') as mode,
-          coalesce(status, '') as status,
-          coalesce(task_text, '') as task_text,
-          coalesce(clean_prompt, '') as clean_prompt,
-          coalesce(reply_text, '') as reply_text,
-          coalesce(result_text, '') as result_text,
-          coalesce(validation_reason, '') as validation_reason,
-          coalesce(exec_bridge_reason, '') as exec_bridge_reason,
-          coalesce(updated_at, created_at, '') as ts
-        from router_tasks
-        where id > ?
-          and datetime(coalesce(updated_at, created_at)) >= datetime('now', '-{WINDOW_MIN} minutes')
-        order by id asc
-        """, (last_id,)).fetchall()
+        rows = fetch_recent_sample_rows(c, args.limit) if args.sample_recent else fetch_digest_rows(c, last_id)
 
         if not rows:
             print("[telegram_digest_v1] no new rows", flush=True)
@@ -259,10 +553,10 @@ def main():
 
         max_id = max(int(r["id"]) for r in rows)
 
-        text = build_digest(rows)
+        text = build_legacy_digest(rows) if args.legacy else build_digest(rows)
 
         send_tg(text)
-        if not DRY_RUN:
+        if not DRY_RUN and not args.sample_recent:
             set_state(c, "last_router_task_id", max_id)
             c.commit()
         print(f"[telegram_digest_v1] {'dry_run' if DRY_RUN else 'sent'} rows={len(rows)} max_id={max_id}", flush=True)

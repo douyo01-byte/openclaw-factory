@@ -4,7 +4,12 @@ from __future__ import annotations
 import argparse
 import os
 import sqlite3
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from bots import telegram_digest_v1
 
@@ -164,31 +169,7 @@ def execution_section(db) -> str:
     if not rows:
         return "Execution:\nno material execution rows"
 
-    winner_rows = [r for r in rows if is_winner_only_new_think(r)]
-    visible = [r for r in rows if not is_winner_only_new_think(r) and not telegram_digest_v1.is_noisy(r)]
-    noisy_count = len(rows) - len(visible) - len(winner_rows)
-    visible = sorted(visible, key=lambda r: (execution_priority(r), -int(r["id"])))
-
-    lines = ["Execution:"]
-    if winner_rows:
-        newest = max(int(r["id"]) for r in winner_rows)
-        oldest = min(int(r["id"]) for r in winner_rows)
-        sample = inline(winner_rows[-1]["task_text"], 180)
-        lines.append(
-            f"WINNER_ONLY new THINK compressed: count={len(winner_rows)} ids={oldest}-{newest}"
-        )
-        lines.append(f"   sample: {sample}")
-    if visible:
-        for idx, row in enumerate(visible[:5], start=1):
-            lines.append(format_execution_row(row, idx))
-    else:
-        lines.append("no priority execution rows")
-    if noisy_count:
-        lines.append(f"noise: {noisy_count} digest/report housekeeping tasks compressed")
-    rest = max(0, len(visible) - 5)
-    if rest:
-        lines.append(f"... {rest} lower-priority execution rows compressed")
-    return compact("\n".join(lines), 1500)
+    return compact("Execution:\n" + telegram_digest_v1.build_digest(rows), 1500)
 
 
 def runtime_health_section(db) -> tuple[str, str]:

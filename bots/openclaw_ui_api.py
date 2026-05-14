@@ -578,6 +578,14 @@ def dev_autopilot_memory():
     )
 
 
+@app.get("/api/goals/active")
+def active_goal():
+    from openclaw_goal_reader_v1 import read_active_goal
+
+    goal = read_active_goal()
+    return JSONResponse(goal)
+
+
 class TaskCreate(BaseModel):
     target_bot: str = "kaikun04"
     mode: str = "THINK"
