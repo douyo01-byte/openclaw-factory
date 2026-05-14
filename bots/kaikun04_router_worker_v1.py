@@ -60,6 +60,8 @@ DB = os.environ.get("OCLAW_DB_PATH") or os.environ.get("FACTORY_DB_PATH") or os.
 SLEEP = float(os.environ.get("KAIKUN04_ROUTER_WORKER_SLEEP", "5"))
 OPENAI_API_KEY = (os.environ.get("OPENAI_API_KEY") or "").strip()
 MODEL = (os.environ.get("KAIKUN04_MODEL") or os.environ.get("OPENAI_MODEL") or "gpt-5-mini").strip()
+THINK_BACKLOG_HIGH_WATER = int(os.environ.get("KAIKUN04_THINK_BACKLOG_HIGH_WATER", "20"))
+THINK_FANOUT_MAX = int(os.environ.get("KAIKUN04_THINK_FANOUT_MAX", "2"))
 
 TASK_ID_RE = re.compile(r"\[TASK_ID:\d+\]")
 TAG_RE = re.compile(r"^\[(THINK|TASK|MODE:[^\]]+)\]\s*$", re.MULTILINE)
@@ -380,6 +382,7 @@ def ensure_schema(c):
         "parent_task_id",
         "task_role",
         "reply_text",
+        "result_text",
         "finished_at",
         "started_at",
         "exec_bridge_status",
@@ -472,6 +475,61 @@ def validate_output(prompt: str, output: str):
         return False, "missing_cta"
     return True, "ok"
 
+def compact_one_line(text: str, limit: int = 180) -> str:
+    return " ".join((text or "").split())[:limit]
+
+def count_kaikun04_think_new(c) -> int:
+    row = c.execute("""
+        select count(*) as n
+        from router_tasks
+        where coalesce(target_bot,'')='kaikun04'
+          and coalesce(mode,'')='THINK'
+          and coalesce(status,'new')='new'
+    """).fetchone()
+    return int((row["n"] if row else 0) or 0)
+
+def cleanup_stale_started(c) -> int:
+    cur = c.execute("""
+        update router_tasks
+        set retry_count=coalesce(retry_count,0)+1,
+            status=case
+              when coalesce(retry_count,0)+1 >= 3 then 'failed'
+              else 'new'
+            end,
+            validation_status='invalid_output',
+            validation_reason=case
+              when coalesce(retry_count,0)+1 >= 3 then 'lease_expired_max_retry'
+              else 'lease_expired_requeued'
+            end,
+            updated_at=datetime('now')
+        where coalesce(target_bot,'')='kaikun04'
+          and coalesce(mode,'')='THINK'
+          and coalesce(status,'new')='started'
+          and datetime(coalesce(updated_at, started_at, created_at, '1970-01-01')) <= datetime('now', '-30 minutes')
+    """)
+    return int(cur.rowcount or 0)
+
+def build_result_summary(reply: str, script: str = "", think_children: int = 0, exec_children: int = 0, fanout: str = "") -> str:
+    parts = ["ok"]
+    if script:
+        parts.append(f"script={script}")
+    parts.append(f"think_children={think_children}")
+    parts.append(f"exec_children={exec_children}")
+    if fanout:
+        parts.append(f"fanout={fanout}")
+    head = compact_one_line(reply, 160)
+    if head:
+        parts.append(f"summary={head}")
+    return " ".join(parts)[:500]
+
+def update_result_summary(c, task_id: int, summary: str):
+    c.execute("""
+        update router_tasks
+        set result_text=?,
+            updated_at=datetime('now')
+        where id=?
+    """, (summary, task_id))
+
 def call_llm(task_id: int, prompt: str) -> str:
     if not OPENAI_API_KEY:
         raise RuntimeError("OPENAI_API_KEY missing")
@@ -536,10 +594,6 @@ def fetch_rows(c):
         where coalesce(target_bot,'')='kaikun04'
           and (
             coalesce(status,'new') in ('new','invalid_output')
-            or (
-              coalesce(status,'new')='started'
-              and datetime(coalesce(updated_at, started_at, created_at, '1970-01-01')) <= datetime('now', '-30 minutes')
-            )
           )
         order by
           case
@@ -578,17 +632,19 @@ def mark_retry(c, task_id: int, clean: str, reason: str):
 
 def mark_done(c, task_id: int, cmd_id: int, clean: str, reply: str):
     reply = (reply or "").strip()
+    result_summary = build_result_summary(reply)
     c.execute("""
         update router_tasks
         set clean_prompt=?,
             reply_text=?,
+            result_text=?,
             validation_status='ok',
             validation_reason='',
             status='done',
             finished_at=datetime('now'),
             updated_at=datetime('now')
         where id=?
-    """, (clean, reply, task_id))
+    """, (clean, reply, result_summary, task_id))
     if cmd_id:
         c.execute("""
             update inbox_commands
@@ -640,8 +696,7 @@ def extract_business_tasks(reply_text: str) -> list[tuple[str, str]]:
             seen.add(key)
     return uniq[:6]
 
-def insert_business_tasks(c, parent_task_id: int, source_command_id: int, reply_text: str) -> list[int]:
-    task_specs = extract_business_tasks(reply_text)
+def insert_business_tasks(c, parent_task_id: int, source_command_id: int, task_specs: list[tuple[str, str]]) -> list[int]:
     child_ids: list[int] = []
     for role, body in task_specs:
         target_bot = infer_target_bot_from_role(role)
@@ -686,6 +741,10 @@ def tick():
     done = 0
     with conn() as c:
         ensure_schema(c)
+        stale = cleanup_stale_started(c)
+        if stale:
+            print(f"[kaikun04_router_worker_v1] stale_started_cleanup count={stale}", flush=True)
+            c.commit()
         rows = fetch_rows(c)
         for r in rows:
             task_id = r["id"]
@@ -732,6 +791,9 @@ def tick():
                     print(f"[k04] mark_done task_id={task_id}", flush=True)
 
                     script = extract_exec_script(reply)
+                    think_child_count = 0
+                    exec_child_count = 0
+                    fanout_status = ""
                     auto_goal_task = "[AUTO_GOAL]" in clean or "[AUTO_GOAL_TRIGGER]" in clean
                     goal_plan_task = clean.strip().startswith("[GOAL_PLAN]")
                     goal_impl_task = "[GOAL_IMPL]" in clean
@@ -740,6 +802,7 @@ def tick():
                             child_id = insert_exec_child(c, source_command_id, task_id, script, reply)
                             mark_exec_direct(c, task_id, child_id)
                             log_exec_direct(c, task_id, child_id, source_command_id, script, reply)
+                            exec_child_count += 1
                             print(f"[kaikun04_router_worker_v1] exec_direct parent={task_id} child={child_id} script={script}", flush=True)
                         except Exception as e:
                             print(f"[kaikun04_router_worker_v1] exec_direct_err={e!r}", flush=True)
@@ -752,6 +815,7 @@ def tick():
                             child_id = insert_exec_child(c, source_command_id, task_id, script, reply)
                             mark_exec_direct(c, task_id, child_id)
                             log_exec_direct(c, task_id, child_id, source_command_id, script, reply)
+                            exec_child_count += 1
                             print(f"[kaikun04_router_worker_v1] exec_direct_goal_impl parent={task_id} child={child_id} script={script}", flush=True)
                         except Exception as e:
                             print(f"[kaikun04_router_worker_v1] exec_direct_goal_impl_err={e!r}", flush=True)
@@ -762,17 +826,34 @@ def tick():
                             task_specs = []
                             biz_child_ids = []
                             exec_child_ids = []
+                            fanout_status = "skip_goal"
                         else:
                             task_specs = extract_business_tasks(reply)
-                            biz_child_ids = insert_business_tasks(c, task_id, source_command_id, reply)
+                            backlog = count_kaikun04_think_new(c)
+                            if backlog >= THINK_BACKLOG_HIGH_WATER:
+                                limited_specs = []
+                                fanout_status = f"skip_backlog:{backlog}"
+                            else:
+                                limit = max(0, min(THINK_FANOUT_MAX, THINK_BACKLOG_HIGH_WATER - backlog))
+                                limited_specs = task_specs[:limit]
+                                fanout_status = f"limit:{len(limited_specs)}/{len(task_specs)} backlog:{backlog}"
+                            biz_child_ids = insert_business_tasks(c, task_id, source_command_id, limited_specs)
+                            think_child_count += len(biz_child_ids)
                             if biz_child_ids:
                                 print(f"[kaikun04_router_worker_v1] business_tasks parent={task_id} children={biz_child_ids}", flush=True)
-                            exec_child_ids = insert_role_exec_tasks(c, source_command_id, task_id, task_specs)
+                            exec_child_ids = insert_role_exec_tasks(c, source_command_id, task_id, limited_specs)
+                            exec_child_count += len(exec_child_ids)
                             if exec_child_ids:
                                 print(f"[kaikun04_router_worker_v1] role_exec_tasks parent={task_id} children={exec_child_ids}", flush=True)
                     except Exception as e:
+                        fanout_status = f"err:{type(e).__name__}"
                         print(f"[kaikun04_router_worker_v1] business_task_err={e!r}", flush=True)
 
+                    update_result_summary(
+                        c,
+                        task_id,
+                        build_result_summary(reply, script, think_child_count, exec_child_count, fanout_status),
+                    )
                     c.commit()
                     done += 1
                     print(f"[kaikun04_router_worker_v1] done task_id={task_id}", flush=True)
