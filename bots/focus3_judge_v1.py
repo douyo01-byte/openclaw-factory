@@ -3,6 +3,8 @@ import os
 import sqlite3
 
 DB = os.environ.get("DB_PATH") or "/Users/doyopc/AI/openclaw-factory/data/openclaw.db"
+WINNER_ONLY_MAX_OPEN = int(os.environ.get("FOCUS3_WINNER_ONLY_MAX_OPEN", "3"))
+DRY_RUN = os.environ.get("FOCUS3_JUDGE_DRY_RUN", "").lower() in {"1", "true", "yes"}
 
 def score(theme: str):
     t = theme or ""
@@ -43,17 +45,6 @@ def main():
     con.row_factory = sqlite3.Row
     cur = con.cursor()
 
-    cur.execute("""
-    create table if not exists focus3_score_log (
-      id integer primary key,
-      project_id integer,
-      theme text,
-      score integer,
-      reasons text,
-      created_at text default (datetime('now'))
-    )
-    """)
-
     rows = cur.execute("""
     select id, theme
     from active_projects
@@ -66,48 +57,79 @@ def main():
         con.close()
         return
 
-    cur.execute("delete from focus3_score_log")
-
     ranked = []
     for r in rows:
         s, reasons = score(r["theme"])
         ranked.append((r["id"], r["theme"], s, reasons))
-        cur.execute("""
-        insert into focus3_score_log(project_id, theme, score, reasons, created_at)
-        values(?,?,?,?,datetime('now'))
-        """, (r["id"], r["theme"], s, reasons))
 
     ranked.sort(key=lambda x: (-x[2], x[0]))
     winner_id, winner_theme, winner_score, winner_reasons = ranked[0]
 
-    cur.execute("update active_projects set status='paused'")
-    cur.execute("update active_projects set status='winner' where id=?", (winner_id,))
+    open_winner_only = cur.execute("""
+    select count(*)
+    from router_tasks
+    where target_bot='kaikun04'
+      and mode='THINK'
+      and status in ('new','started')
+      and coalesce(task_text,'') like '[WINNER_ONLY]%'
+    """).fetchone()[0]
 
-    cur.execute("""
-    create table if not exists focus3_winner_log (
-      id integer primary key,
-      project_id integer,
-      theme text,
-      score integer,
-      reasons text,
-      created_at text default (datetime('now'))
-    )
-    """)
-    cur.execute("""
-    insert into focus3_winner_log(project_id, theme, score, reasons, created_at)
-    values(?,?,?,?,datetime('now'))
-    """, (winner_id, winner_theme, winner_score, winner_reasons))
+    should_insert = int(open_winner_only) < WINNER_ONLY_MAX_OPEN
 
-    cur.execute("""
-    insert into router_tasks
-    (task_role,target_bot,mode,status,task_text,created_at,updated_at)
-    values
-    ('AI','kaikun04','THINK','new',?,datetime('now'),datetime('now'))
-    """, (f"[WINNER_ONLY] 勝ち案件だけ進める。理由: {winner_reasons}。テーマ: {winner_theme}",))
+    if not DRY_RUN:
+        cur.execute("""
+        create table if not exists focus3_score_log (
+          id integer primary key,
+          project_id integer,
+          theme text,
+          score integer,
+          reasons text,
+          created_at text default (datetime('now'))
+        )
+        """)
+
+        cur.execute("delete from focus3_score_log")
+        for project_id, theme, project_score, reasons in ranked:
+            cur.execute("""
+            insert into focus3_score_log(project_id, theme, score, reasons, created_at)
+            values(?,?,?,?,datetime('now'))
+            """, (project_id, theme, project_score, reasons))
+
+        cur.execute("update active_projects set status='paused'")
+        cur.execute("update active_projects set status='winner' where id=?", (winner_id,))
+
+        cur.execute("""
+        create table if not exists focus3_winner_log (
+          id integer primary key,
+          project_id integer,
+          theme text,
+          score integer,
+          reasons text,
+          created_at text default (datetime('now'))
+        )
+        """)
+        cur.execute("""
+        insert into focus3_winner_log(project_id, theme, score, reasons, created_at)
+        values(?,?,?,?,datetime('now'))
+        """, (winner_id, winner_theme, winner_score, winner_reasons))
+
+        if should_insert:
+            cur.execute("""
+            insert into router_tasks
+            (task_role,target_bot,mode,status,task_text,created_at,updated_at)
+            values
+            ('AI','kaikun04','THINK','new',?,datetime('now'),datetime('now'))
+            """, (f"[WINNER_ONLY] 勝ち案件だけ進める。理由: {winner_reasons}。テーマ: {winner_theme}",))
 
     con.commit()
     con.close()
-    print(f"winner={winner_id} score={winner_score}", flush=True)
+    action = "insert" if should_insert else "skip_winner_only_gate"
+    prefix = "dry_run " if DRY_RUN else ""
+    print(
+        f"{prefix}winner={winner_id} score={winner_score} "
+        f"winner_only_open={open_winner_only} max_open={WINNER_ONLY_MAX_OPEN} action={action}",
+        flush=True,
+    )
 
 if __name__ == "__main__":
     main()
