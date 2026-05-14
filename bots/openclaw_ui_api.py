@@ -409,6 +409,224 @@ def compact_plan_summary(plan: Any) -> dict[str, Any]:
     }
 
 
+APPROVAL_STATES = ["proposed", "reviewing", "approved_dry_run", "rejected", "archived"]
+
+
+def clamp_int(value: Any, minimum: int = 0, maximum: int = 100) -> int:
+    try:
+        return max(minimum, min(maximum, int(float(value))))
+    except (TypeError, ValueError):
+        return minimum
+
+
+def parse_time(value: str) -> datetime.datetime | None:
+    if not value:
+        return None
+    try:
+        clean = value.replace("Z", "+00:00")
+        parsed = datetime.datetime.fromisoformat(clean)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=datetime.timezone.utc)
+        return parsed
+    except ValueError:
+        return None
+
+
+def recommendation_age(first_seen: str, last_updated: str) -> dict[str, Any]:
+    now = datetime.datetime.now(datetime.timezone.utc)
+    first = parse_time(first_seen)
+    updated = parse_time(last_updated)
+    age_hours = int((now - first).total_seconds() // 3600) if first else 0
+    updated_hours = int((now - updated).total_seconds() // 3600) if updated else 0
+    if age_hours >= 168:
+        stale = "high"
+    elif age_hours >= 24 or updated_hours >= 12:
+        stale = "medium"
+    else:
+        stale = "low"
+    return {
+        "first_seen": first_seen,
+        "last_updated": last_updated,
+        "recommendation_age_hours": age_hours,
+        "recommendation_age": f"{age_hours}h",
+        "stale_risk": stale,
+    }
+
+
+def text_score(text: str, keywords: list[str], base: int, bonus: int = 20) -> int:
+    low = text.lower()
+    score = base
+    for keyword in keywords:
+        if keyword.lower() in low:
+            score += bonus
+    return clamp_int(score)
+
+
+def alignment_scores(candidate: dict[str, Any], plan: dict[str, Any]) -> dict[str, int]:
+    text = " ".join(
+        str(candidate.get(key, ""))
+        for key in ("recommended_action", "strategy_key", "tradeoff_reason")
+    )
+    benefits = " ".join(str(x) for x in candidate.get("expected_benefits", []))
+    costs = " ".join(str(x) for x in candidate.get("expected_costs", []))
+    all_text = " ".join([text, benefits, costs, plan.get("recommended_long_horizon_focus", "")])
+    stability = clamp_int(candidate.get("metrics", {}).get("operational_stability", 50))
+    projected_gain = clamp_int(candidate.get("projected_health_gain", 0))
+    return {
+        "revenue_impact": text_score(all_text, ["revenue", "money", "earn", "sales", "稼ぐ", "売上", "収益"], 35),
+        "infrastructure_impact": text_score(all_text, ["runtime", "db", "queue", "service", "health", "cleanup", "infra"], 35),
+        "autonomy_progression_impact": text_score(all_text, ["approval", "dry-run", "autonomy", "policy", "governance", "自律"], 30),
+        "operational_stability_impact": clamp_int(stability + projected_gain // 3),
+    }
+
+
+def risk_level_for(candidate: dict[str, Any], plan: dict[str, Any], operator_load_score: int) -> str:
+    safety = str(candidate.get("safety_alignment", "")).lower()
+    confidence = clamp_int(candidate.get("confidence_score", 0))
+    recurrence = clamp_int(plan.get("recurrence_risk_score", 0))
+    if safety and safety != "pass":
+        return "critical"
+    if recurrence >= 80 or operator_load_score >= 80:
+        return "critical"
+    if confidence < 55 or recurrence >= 60 or operator_load_score >= 55:
+        return "high"
+    return "medium"
+
+
+def approval_state_for(risk_level: str) -> str:
+    if risk_level in {"critical", "high"}:
+        return "reviewing"
+    return "proposed"
+
+
+def build_governance_recommendations() -> dict[str, Any]:
+    generated_at = now_iso()
+    try:
+        from dev_autopilot_executive_report_v1 import build_report
+
+        report = build_report(DB_PATH)
+        plan = compact_plan_summary(report["plan"])
+        comparison = remediation_comparison(report["arbitration"], report["plan"])
+        explanation = report.get("policy", {}).get("selected")
+        policy_reason = getattr(explanation, "selection_reason", "")
+        history = report.get("policy", {}).get("history", [])
+        first_seen = str((history[0] if history else {}).get("selected_at", generated_at))
+        last_updated = str((history[-1] if history else {}).get("selected_at", generated_at))
+        operator_load_score = clamp_int(plan.get("operator_load_score", 0))
+        operator_overload = operator_load_score >= 70
+        max_items = 2 if operator_overload else 5
+        rejected = [
+            {
+                "recommendation": item.get("recommended_action", ""),
+                "reason": item.get("tradeoff_reason", ""),
+                "confidence": item.get("confidence_score", 0),
+            }
+            for item in comparison[1:5]
+        ]
+        seen: set[str] = set()
+        items = []
+        for idx, candidate in enumerate(comparison):
+            recommendation = str(candidate.get("recommended_action") or candidate.get("strategy_key") or "Review recommendation")
+            duplicate_key = " ".join(recommendation.lower().split())[:120]
+            if duplicate_key in seen:
+                continue
+            seen.add(duplicate_key)
+            risk_level = risk_level_for(candidate, plan, operator_load_score)
+            age = recommendation_age(first_seen, last_updated)
+            projected_gain = clamp_int(candidate.get("projected_health_gain", 0))
+            confidence = clamp_int(candidate.get("confidence_score", 0))
+            item_rejected = rejected if idx == 0 else [
+                {
+                    "recommendation": comparison[0].get("recommended_action", ""),
+                    "reason": "Selected item has stronger expected value under current risk.",
+                    "confidence": comparison[0].get("confidence_score", 0),
+                }
+            ]
+            items.append(
+                {
+                    "id": f"governance-{idx + 1}",
+                    "state": approval_state_for(risk_level),
+                    "recommendation": recommendation,
+                    "expected_value": "; ".join(candidate.get("expected_benefits", [])[:3]) or "Expected to improve operational reliability.",
+                    "risk": candidate.get("tradeoff_reason") or plan.get("dominant_long_term_risk", "unknown"),
+                    "risk_level": risk_level,
+                    "projected_gain": projected_gain,
+                    "rollback_difficulty": "medium" if risk_level == "medium" else "high",
+                    "confidence": confidence,
+                    "why_selected": candidate.get("tradeoff_reason") or policy_reason or "Highest ranked safe recommendation.",
+                    "rejected_alternatives": item_rejected,
+                    "governance_reasoning": {
+                        "why_now": f"{plan.get('dominant_long_term_risk', 'current risk')} with operator_load={operator_load_score}.",
+                        "why_safe": "Recommendation only. Execution is disabled; dry-run review is the maximum allowed next step.",
+                        "why_not_alternatives": "Lower-ranked alternatives have weaker expected value, confidence, or safety alignment.",
+                        "expected_downside": "; ".join(candidate.get("expected_costs", [])[:3]) or "May consume operator review attention.",
+                        "unknowns": [
+                            "Actual production impact requires dry-run evidence.",
+                            "Human approval is required before any execution-capable change.",
+                        ],
+                    },
+                    "human_review_required": risk_level in {"critical", "high"},
+                    "banner": {
+                        "requires_human_approval": risk_level in {"critical", "high"},
+                        "execution_disabled": True,
+                        "dry_run_only": True,
+                    },
+                    "aging": age,
+                    "strategic_alignment": alignment_scores(candidate, plan),
+                    "safety_contract": [
+                        "No POST",
+                        "No DB writes",
+                        "No launchctl",
+                        "No deploy",
+                        "No router_task creation",
+                        "Recommendation only",
+                    ],
+                }
+            )
+            if len(items) >= max_items:
+                break
+        return {
+            "ok": True,
+            "generated_at": generated_at,
+            "mode": "recommendation_only",
+            "allowed_states": APPROVAL_STATES,
+            "operator_load": {
+                "score": operator_load_score,
+                "level": "overload" if operator_overload else "normal",
+                "recommendation_limit": max_items,
+                "duplicate_noise_suppressed": True,
+                "policy": "show only highest expected value items" if operator_overload else "show top recommendations",
+            },
+            "count": len(items),
+            "items": items,
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "generated_at": generated_at,
+            "mode": "recommendation_only",
+            "allowed_states": APPROVAL_STATES,
+            "operator_load": {
+                "score": 0,
+                "level": "unknown",
+                "recommendation_limit": 0,
+                "duplicate_noise_suppressed": True,
+                "policy": "no recommendations while governance source is unavailable",
+            },
+            "count": 0,
+            "items": [],
+            "error": f"governance_source_unavailable:{e!r}",
+            "safety_contract": [
+                "No POST",
+                "No DB writes",
+                "No launchctl",
+                "No deploy",
+                "No router_task creation",
+                "Recommendation only",
+            ],
+        }
+
+
 @app.get("/api/dev-autopilot/compact")
 def dev_autopilot_compact():
     from dev_autopilot_executive_report_v1 import build_report, print_compact
@@ -584,6 +802,34 @@ def active_goal():
 
     goal = read_active_goal()
     return JSONResponse(goal)
+
+
+@app.get("/api/governance/approval-queue")
+def governance_approval_queue():
+    return JSONResponse(build_governance_recommendations())
+
+
+@app.get("/api/governance/summary")
+def governance_summary():
+    data = build_governance_recommendations()
+    items = data.get("items", [])
+    return JSONResponse(
+        {
+            "ok": data.get("ok", False),
+            "generated_at": data.get("generated_at", now_iso()),
+            "mode": data.get("mode", "recommendation_only"),
+            "allowed_states": data.get("allowed_states", APPROVAL_STATES),
+            "operator_load": data.get("operator_load", {}),
+            "count": len(items),
+            "states": {
+                state: len([item for item in items if item.get("state") == state])
+                for state in APPROVAL_STATES
+            },
+            "human_review_required": len([item for item in items if item.get("human_review_required")]),
+            "execution_disabled": True,
+            "dry_run_only": True,
+        }
+    )
 
 
 class TaskCreate(BaseModel):
