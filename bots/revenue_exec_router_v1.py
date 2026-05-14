@@ -10,9 +10,15 @@ DB_PATH = os.environ.get(
 )
 PUBLIC_BASE_URL = os.environ.get("REVENUE_PUBLIC_BASE_URL", "https://douyo01-byte.github.io/openclaw-factory")
 DISTRIBUTION_TYPES = ("telegram_post", "x_thread", "short_blog", "comparison_post", "reddit_style")
+DRY_RUN = os.environ.get("REVENUE_EXEC_ROUTER_DRY_RUN", "").lower() in {"1", "true", "yes"}
+EXPERIMENT_ID = os.environ.get("REVENUE_EXPERIMENT_ID", "").strip()
 
 def con():
-    db = sqlite3.connect(DB_PATH)
+    if DRY_RUN:
+        db_path = Path(DB_PATH).expanduser().resolve()
+        db = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    else:
+        db = sqlite3.connect(DB_PATH)
     db.row_factory = sqlite3.Row
     return db
 
@@ -87,7 +93,7 @@ def extract_experiment_id(task_text: str) -> int:
     m = re.search(r"Experiment:\s*- id:\s*(\d+)", task_text or "", re.S)
     return int(m.group(1)) if m else 0
 
-def memory_hints(db, limit: int = 5) -> str:
+def memory_hints(db, limit: int = 5, update_reuse: bool = True) -> str:
     rows = db.execute("""
         select id, memory_type, pattern, horizon_type, economic_summary, portfolio_summary, domain_summary
         from revenue_memory_patterns
@@ -97,14 +103,15 @@ def memory_hints(db, limit: int = 5) -> str:
     """, (limit,)).fetchall()
     if not rows:
         return ""
-    ids = [r["id"] for r in rows]
-    db.execute(f"""
-        update revenue_memory_patterns
-        set reuse_count=reuse_count+1,
-            last_used_at=datetime('now'),
-            updated_at=datetime('now')
-        where id in ({",".join("?" for _ in ids)})
-    """, ids)
+    if update_reuse:
+        ids = [r["id"] for r in rows]
+        db.execute(f"""
+            update revenue_memory_patterns
+            set reuse_count=reuse_count+1,
+                last_used_at=datetime('now'),
+                updated_at=datetime('now')
+            where id in ({",".join("?" for _ in ids)})
+        """, ids)
     return " / ".join(
         f"{r['horizon_type']}:{r['memory_type']}={r['pattern']}"
         + (f" ({r['economic_summary']})" if r["economic_summary"] else "")
@@ -133,18 +140,127 @@ def distribution_content(title: str, variant_key: str, distribution_type: str, u
         f"{hint}"
     )
 
-def main():
-    db = con()
-    ensure_schema(db)
+def selected_revenue_core_task(db, experiment_id: int | None = None):
+    if experiment_id is None:
+        return db.execute("""
+            select id, task_text
+            from router_tasks
+            where status='new'
+              and task_text like '%[REVENUE_CORE]%'
+            order by id asc
+            limit 1
+        """).fetchone()
 
-    row = db.execute("""
+    rows = db.execute("""
         select id, task_text
         from router_tasks
         where status='new'
           and task_text like '%[REVENUE_CORE]%'
         order by id asc
-        limit 1
-    """).fetchone()
+    """).fetchall()
+    for row in rows:
+        if extract_experiment_id(row["task_text"]) == experiment_id:
+            return row
+    return None
+
+def env_experiment_id() -> int | None:
+    if not EXPERIMENT_ID:
+        return None
+    try:
+        return int(EXPERIMENT_ID)
+    except ValueError as exc:
+        raise RuntimeError("REVENUE_EXPERIMENT_ID must be an integer") from exc
+
+def dry_run_preview(db, experiment_id: int | None):
+    require_schema(db)
+    row = selected_revenue_core_task(db, experiment_id)
+
+    if row:
+        exp_id = extract_experiment_id(row["task_text"])
+    elif experiment_id is not None:
+        exp_id = experiment_id
+    else:
+        print("dry_run no revenue core")
+        print("dry_run db_updates=0")
+        return
+
+    exp = db.execute("""
+        select *
+        from revenue_experiments
+        where id=?
+    """, (exp_id,)).fetchone()
+
+    if not exp:
+        print(f"dry_run missing revenue experiment id={exp_id}", flush=True)
+        print("dry_run db_updates=0")
+        return
+
+    hints = memory_hints(db, update_reuse=False)
+    source_id = row["id"] if row else "none"
+    group_name = f"revenue_exp_{exp['id']}_lp_bandit"
+
+    print("DRY_RUN revenue_exec_router_v1")
+    print("db_updates=0")
+    print(
+        "experiment "
+        f"id={exp['id']} status={exp['status']} "
+        f"experiment_type={exp['experiment_type']} title={exp['title']}"
+    )
+    print(f"source_router_task_id={source_id}")
+    print(
+        "would_create revenue_variant_group "
+        f"opportunity_id={exp['opportunity_id']} experiment_id={exp['id']} "
+        f"name={group_name} strategy=epsilon_greedy status=active"
+    )
+
+    for variant_key in ("A", "B", "C"):
+        if variant_key == "A":
+            variant_exp_id = str(exp["id"])
+        else:
+            variant_exp_id = f"new:{variant_key}"
+            print(
+                "would_create revenue_experiment "
+                f"variant={variant_key} opportunity_id={exp['opportunity_id']} "
+                f"experiment_type={exp['experiment_type']}_variant "
+                f"title={exp['title']} variant {variant_key} status=routed"
+            )
+
+        exec_text = make_exec_text(exp, variant_key, hints).rstrip()
+        print(
+            "would_create router_task "
+            f"parent_task_id={source_id} target_bot=ops_exec mode=EXEC status=new "
+            f"variant={variant_key}"
+        )
+        print(exec_text)
+        print(
+            "would_create revenue_variant_metric "
+            f"group_id=new experiment_id={variant_exp_id} variant_key={variant_key} "
+            "status=active source=router_seed"
+        )
+        for distribution_type in DISTRIBUTION_TYPES:
+            url = cta_url(variant_key, distribution_type)
+            content = distribution_content(
+                exp["title"], variant_key, distribution_type, url, hints
+            ).replace("\n", "\\n")
+            print(
+                "would_create revenue_distribution_task "
+                f"group_id=new experiment_id={variant_exp_id} "
+                f"variant_key={variant_key} distribution_type={distribution_type} "
+                f"traffic_source={distribution_type} status=planned cta_url={url} "
+                f"content={content}"
+            )
+
+    print("dry_run complete; no INSERT/UPDATE/commit executed")
+
+def main():
+    db = con()
+    if DRY_RUN:
+        dry_run_preview(db, env_experiment_id())
+        return
+
+    ensure_schema(db)
+
+    row = selected_revenue_core_task(db, env_experiment_id())
 
     if not row:
         print("no revenue core")
